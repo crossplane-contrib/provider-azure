@@ -21,6 +21,8 @@ import (
 	"encoding/base64"
 )
 
+// GeneratePassword generates a password using random data of the given length, then encodes to
+// a base64 string.
 func GeneratePassword(dataLen int) (string, error) {
 	randData := make([]byte, dataLen)
 	if _, err := rand.Read(randData); err != nil {
