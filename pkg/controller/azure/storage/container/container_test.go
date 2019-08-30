@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crossplaneio/crossplane/azure/apis"
+	"github.com/crossplaneio/stack-azure/azure/apis"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/Azure/go-autorest/autorest"
@@ -43,10 +43,11 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	"github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1"
-	v1alpha1test "github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1/test"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure/storage"
-	azurestoragefake "github.com/crossplaneio/crossplane/pkg/clients/azure/storage/fake"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	v1alpha1test "github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1/test"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/storage"
+	azurestoragefake "github.com/crossplaneio/stack-azure/pkg/clients/azure/storage/fake"
 )
 
 func init() {

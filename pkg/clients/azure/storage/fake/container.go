@@ -21,7 +21,7 @@ import (
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 
-	azurestorage "github.com/crossplaneio/crossplane/pkg/clients/azure/storage"
+	azurestorage "github.com/crossplaneio/stack-azure/pkg/clients/azure/storage"
 )
 
 // MockContainerOperations mock implementation of ContainerOperations

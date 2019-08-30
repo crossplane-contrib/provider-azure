@@ -31,7 +31,8 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
-	"github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
 )
 
 // ClaimController is responsible for adding the Account claim controller and its

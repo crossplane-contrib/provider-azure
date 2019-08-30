@@ -28,8 +28,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	azuredbv1alpha1 "github.com/crossplaneio/crossplane/azure/apis/database/v1alpha1"
-	"github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
+
+	azuredbv1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
 )
 
 const (

@@ -26,7 +26,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 )
 
 // NewStorageAccountClient create Azure storage.AccountClient using provided credentials data

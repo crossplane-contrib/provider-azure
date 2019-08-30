@@ -14,20 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package googleapi
+package test
 
 import (
-	"net/http"
-
-	"google.golang.org/api/googleapi"
+	"path/filepath"
+	"runtime"
 )
 
-// IsErrorNotFound returns true if error of type *googleapi.Error and
-// error Code = 404
-func IsErrorNotFound(err error) bool {
-	apiErr, ok := err.(*googleapi.Error)
-	if !ok {
-		return false
-	}
-	return apiErr.Code == http.StatusNotFound
+var (
+	_, b, _, _ = runtime.Caller(0)
+	crds       = filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(b))), "config", "crd")
+)
+
+// CRDs path to project crds location
+func CRDs() string {
+	return crds
 }

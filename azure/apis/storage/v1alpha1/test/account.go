@@ -23,7 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	storagev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1"
+
+	storagev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
 )
 
 // MockAccount builder for testing account object

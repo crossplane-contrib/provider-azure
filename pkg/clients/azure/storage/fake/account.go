@@ -21,7 +21,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 
-	azurestorage "github.com/crossplaneio/crossplane/pkg/clients/azure/storage"
+	azurestorage "github.com/crossplaneio/stack-azure/pkg/clients/azure/storage"
 )
 
 // MockAccountOperations mock implementation of AccountOperations

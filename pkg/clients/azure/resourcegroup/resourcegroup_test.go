@@ -22,8 +22,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
 )
 
 const (

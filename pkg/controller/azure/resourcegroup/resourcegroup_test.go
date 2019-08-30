@@ -37,9 +37,10 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure/resourcegroup"
-	fakerg "github.com/crossplaneio/crossplane/pkg/clients/azure/resourcegroup/fake"
+
+	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/resourcegroup"
+	fakerg "github.com/crossplaneio/stack-azure/pkg/clients/azure/resourcegroup/fake"
 )
 
 const (

@@ -29,7 +29,8 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
-	"github.com/crossplaneio/crossplane/azure/apis/database/v1alpha1"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
 )
 
 // NOTE(hasheddan): consider combining into single controller

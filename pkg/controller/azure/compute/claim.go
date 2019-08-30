@@ -31,7 +31,8 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	computev1alpha1 "github.com/crossplaneio/crossplane/apis/compute/v1alpha1"
-	"github.com/crossplaneio/crossplane/azure/apis/compute/v1alpha1"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
 )
 
 // AKSClusterClaimController is responsible for adding the AKSCluster

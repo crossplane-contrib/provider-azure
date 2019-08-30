@@ -32,10 +32,12 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane/azure/apis/cache/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure/redis"
+
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/cache/v1alpha1"
+	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/redis"
 )
 
 const (

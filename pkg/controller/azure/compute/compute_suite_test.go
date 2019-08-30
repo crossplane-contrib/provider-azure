@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crossplaneio/crossplane/azure/apis"
+	"github.com/crossplaneio/stack-azure/azure/apis"
 
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/onsi/gomega"
@@ -36,10 +36,12 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	"github.com/crossplaneio/crossplane/azure/apis/compute/v1alpha1"
-	computev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/compute/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	localtest "github.com/crossplaneio/crossplane/pkg/test"
+
+	localtest "github.com/crossplaneio/stack-azure/pkg/test"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
+	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
+	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
 )
 
 const (

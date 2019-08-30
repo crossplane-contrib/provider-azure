@@ -21,12 +21,13 @@ import (
 	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	azureclients "github.com/crossplaneio/crossplane/pkg/clients/azure"
-	"github.com/crossplaneio/crossplane/pkg/controller/azure/cache"
-	"github.com/crossplaneio/crossplane/pkg/controller/azure/compute"
-	"github.com/crossplaneio/crossplane/pkg/controller/azure/database"
-	"github.com/crossplaneio/crossplane/pkg/controller/azure/storage/account"
-	"github.com/crossplaneio/crossplane/pkg/controller/azure/storage/container"
+	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
+
+	"github.com/crossplaneio/stack-azure/pkg/controller/azure/cache"
+	"github.com/crossplaneio/stack-azure/pkg/controller/azure/compute"
+	"github.com/crossplaneio/stack-azure/pkg/controller/azure/database"
+	"github.com/crossplaneio/stack-azure/pkg/controller/azure/storage/account"
+	"github.com/crossplaneio/stack-azure/pkg/controller/azure/storage/container"
 )
 
 // Controllers passes down config and adds individual controllers to the manager.

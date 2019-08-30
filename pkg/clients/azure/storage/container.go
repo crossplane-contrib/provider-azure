@@ -24,7 +24,7 @@ import (
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 )
 
 // ContainerOperations interface to perform operations on Container resources

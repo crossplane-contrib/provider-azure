@@ -30,7 +30,8 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	computev1alpha1 "github.com/crossplaneio/crossplane/apis/compute/v1alpha1"
-	"github.com/crossplaneio/crossplane/azure/apis/compute/v1alpha1"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
 )
 
 var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureAKSCluster)

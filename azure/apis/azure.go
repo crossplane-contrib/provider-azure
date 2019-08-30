@@ -23,11 +23,11 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	cachev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/cache/v1alpha1"
-	computev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/compute/v1alpha1"
-	databasev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/database/v1alpha1"
-	storagev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
+	cachev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/cache/v1alpha1"
+	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
+	databasev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	storagev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
 )
 
 func init() {

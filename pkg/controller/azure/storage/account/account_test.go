@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crossplaneio/crossplane/azure/apis"
+	"github.com/crossplaneio/stack-azure/azure/apis"
 
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 	"github.com/Azure/go-autorest/autorest"
@@ -43,11 +43,12 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	"github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1"
-	v1alpha1test "github.com/crossplaneio/crossplane/azure/apis/storage/v1alpha1/test"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	azurestorage "github.com/crossplaneio/crossplane/pkg/clients/azure/storage"
-	azurestoragefake "github.com/crossplaneio/crossplane/pkg/clients/azure/storage/fake"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	v1alpha1test "github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1/test"
+	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	azurestorage "github.com/crossplaneio/stack-azure/pkg/clients/azure/storage"
+	azurestoragefake "github.com/crossplaneio/stack-azure/pkg/clients/azure/storage/fake"
 )
 
 func init() {

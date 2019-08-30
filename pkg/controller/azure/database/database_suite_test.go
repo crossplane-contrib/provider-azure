@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crossplaneio/crossplane/azure/apis"
+	"github.com/crossplaneio/stack-azure/azure/apis"
 
 	"github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -32,10 +32,12 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	"github.com/crossplaneio/crossplane/azure/apis/database/v1alpha1"
-	azuredbv1alpha1 "github.com/crossplaneio/crossplane/azure/apis/database/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	localtest "github.com/crossplaneio/crossplane/pkg/test"
+
+	localtest "github.com/crossplaneio/stack-azure/pkg/test"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	azuredbv1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
 )
 
 const (
