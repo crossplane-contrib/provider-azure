@@ -35,9 +35,9 @@ import (
 
 	localtest "github.com/crossplaneio/stack-azure/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
-	azuredbv1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
+	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -93,13 +93,13 @@ func testSecret(data []byte) *corev1.Secret {
 	}
 }
 
-func testProvider(s *corev1.Secret) *azurev1alpha1.Provider {
-	return &azurev1alpha1.Provider{
+func testProvider(s *corev1.Secret) *azurev1alpha2.Provider {
+	return &azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      providerName,
 			Namespace: s.Namespace,
 		},
-		Spec: azurev1alpha1.ProviderSpec{
+		Spec: azurev1alpha2.ProviderSpec{
 			Secret: corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
 				Key:                  secretDataKey,
@@ -108,10 +108,10 @@ func testProvider(s *corev1.Secret) *azurev1alpha1.Provider {
 	}
 }
 
-func testInstance(p *azurev1alpha1.Provider) *azuredbv1alpha1.MysqlServer {
-	return &azuredbv1alpha1.MysqlServer{
+func testInstance(p *azurev1alpha2.Provider) *azuredbv1alpha2.MysqlServer {
+	return &azuredbv1alpha2.MysqlServer{
 		ObjectMeta: metav1.ObjectMeta{Name: instanceName, Namespace: namespace},
-		Spec: azuredbv1alpha1.SQLServerSpec{
+		Spec: azuredbv1alpha2.SQLServerSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{
 					Namespace: p.GetNamespace(),
@@ -119,9 +119,9 @@ func testInstance(p *azurev1alpha1.Provider) *azuredbv1alpha1.MysqlServer {
 				},
 				WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: "coolsecret"},
 			},
-			SQLServerParameters: v1alpha1.SQLServerParameters{
+			SQLServerParameters: v1alpha2.SQLServerParameters{
 				AdminLoginName: "myadmin",
-				PricingTier: azuredbv1alpha1.PricingTierSpec{
+				PricingTier: azuredbv1alpha2.PricingTierSpec{
 					Tier: "Basic", VCores: 1, Family: "Gen4",
 				},
 			},

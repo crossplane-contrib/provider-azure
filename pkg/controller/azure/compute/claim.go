@@ -32,7 +32,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	computev1alpha1 "github.com/crossplaneio/crossplane/apis/compute/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
 )
 
 // AKSClusterClaimController is responsible for adding the AKSCluster
@@ -43,8 +43,8 @@ type AKSClusterClaimController struct{}
 func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
-		resource.ClassKind(v1alpha1.AKSClusterClassGroupVersionKind),
-		resource.ManagedKind(v1alpha1.AKSClusterGroupVersionKind),
+		resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
+		resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
@@ -54,9 +54,9 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha1.AKSCluster{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha2.AKSCluster{}}, &resource.EnqueueRequestForClaim{}).
 		For(&computev1alpha1.KubernetesCluster{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha1.AKSClusterClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind)))).
 		Complete(r)
 }
 
@@ -68,17 +68,17 @@ func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.Class
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), computev1alpha1.KubernetesClusterGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha1.AKSClusterClass)
+	rs, csok := cs.(*v1alpha2.AKSClusterClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha1.AKSClusterClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.AKSClusterClassGroupVersionKind)
 	}
 
-	i, mgok := mg.(*v1alpha1.AKSCluster)
+	i, mgok := mg.(*v1alpha2.AKSCluster)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha1.AKSClusterGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.AKSClusterGroupVersionKind)
 	}
 
-	spec := &v1alpha1.AKSClusterSpec{
+	spec := &v1alpha2.AKSClusterSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},
@@ -87,7 +87,7 @@ func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.Class
 
 	// NOTE(hasheddan): consider moving defaulting to either CRD or managed reconciler level
 	if spec.NodeCount == nil {
-		spec.NodeCount = to.IntPtr(v1alpha1.DefaultNodeCount)
+		spec.NodeCount = to.IntPtr(v1alpha2.DefaultNodeCount)
 	}
 	spec.WriteServicePrincipalSecretTo = corev1.LocalObjectReference{Name: fmt.Sprintf("principal-%s", cm.GetUID())}
 	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}

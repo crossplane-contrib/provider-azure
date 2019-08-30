@@ -30,7 +30,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha2"
 )
 
 var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureAccount)
@@ -68,19 +68,19 @@ func TestConfigureAccount(t *testing.T) {
 						PredefinedACL: &bucketPrivate,
 					},
 				},
-				cs: &v1alpha1.AccountClass{
+				cs: &v1alpha2.AccountClass{
 					ObjectMeta: metav1.ObjectMeta{Namespace: classNamespace},
-					SpecTemplate: v1alpha1.AccountClassSpecTemplate{
+					SpecTemplate: v1alpha2.AccountClassSpecTemplate{
 						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha1.Account{},
+				mg: &v1alpha2.Account{},
 			},
 			want: want{
-				mg: &v1alpha1.Account{
+				mg: &v1alpha2.Account{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: classNamespace,
 						Name:      claimName,
@@ -91,15 +91,15 @@ func TestConfigureAccount(t *testing.T) {
 							UID:        claimUID,
 						}},
 					},
-					Spec: v1alpha1.AccountSpec{
+					Spec: v1alpha2.AccountSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						AccountParameters: v1alpha1.AccountParameters{
+						AccountParameters: v1alpha2.AccountParameters{
 							StorageAccountName: bucketName,
-							StorageAccountSpec: &v1alpha1.StorageAccountSpec{},
+							StorageAccountSpec: &v1alpha2.StorageAccountSpec{},
 						},
 					},
 				},

@@ -30,7 +30,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
 )
 
 // NOTE(hasheddan): consider combining into single controller
@@ -43,8 +43,8 @@ type PostgreSQLInstanceClaimController struct{}
 func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha1.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha1.PostgresqlServerGroupVersionKind),
+		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigurePostgresqlServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
@@ -54,9 +54,9 @@ func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) e
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha1.PostgresqlServer{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha2.PostgresqlServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.PostgreSQLInstance{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha1.SQLServerClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)))).
 		Complete(r)
 }
 
@@ -69,17 +69,17 @@ func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.PostgreSQLInstanceGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha1.SQLServerClass)
+	rs, csok := cs.(*v1alpha2.SQLServerClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha1.SQLServerClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.SQLServerClassGroupVersionKind)
 	}
 
-	s, mgok := mg.(*v1alpha1.PostgresqlServer)
+	s, mgok := mg.(*v1alpha2.PostgresqlServer)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha1.PostgresqlServerGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.PostgresqlServerGroupVersionKind)
 	}
 
-	spec := &v1alpha1.SQLServerSpec{
+	spec := &v1alpha2.SQLServerSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},
@@ -107,8 +107,8 @@ type MySQLInstanceClaimController struct{}
 func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha1.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha1.MysqlServerGroupVersionKind),
+		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureMysqlServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
@@ -118,9 +118,9 @@ func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error 
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha1.MysqlServer{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha2.MysqlServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.MySQLInstance{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha1.SQLServerClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)))).
 		Complete(r)
 }
 
@@ -133,17 +133,17 @@ func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.Clas
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.MySQLInstanceGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha1.SQLServerClass)
+	rs, csok := cs.(*v1alpha2.SQLServerClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha1.SQLServerClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.SQLServerClassGroupVersionKind)
 	}
 
-	s, mgok := mg.(*v1alpha1.MysqlServer)
+	s, mgok := mg.(*v1alpha2.MysqlServer)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha1.MysqlServerGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.MysqlServerGroupVersionKind)
 	}
 
-	spec := &v1alpha1.SQLServerSpec{
+	spec := &v1alpha2.SQLServerSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},

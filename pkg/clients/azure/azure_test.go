@@ -26,7 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -49,12 +49,12 @@ func TestNewClient(t *testing.T) {
 	clientset := fake.NewSimpleClientset()
 
 	namespace := "foo-ns"
-	provider := &v1alpha1.Provider{
+	provider := &v1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "azure-provider",
 			Namespace: namespace,
 		},
-		Spec: v1alpha1.ProviderSpec{
+		Spec: v1alpha2.ProviderSpec{
 			Secret: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{Name: "azure-provider-creds"},
 				Key:                  "creds",

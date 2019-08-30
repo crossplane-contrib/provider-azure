@@ -42,28 +42,28 @@ import (
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	azuredbv1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
-	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 type mockSQLServerClient struct {
-	MockGetServer                func(ctx context.Context, instance azuredbv1alpha1.SQLServer) (*azureclients.SQLServer, error)
-	MockCreateServerBegin        func(ctx context.Context, instance azuredbv1alpha1.SQLServer, adminPassword string) ([]byte, error)
+	MockGetServer                func(ctx context.Context, instance azuredbv1alpha2.SQLServer) (*azureclients.SQLServer, error)
+	MockCreateServerBegin        func(ctx context.Context, instance azuredbv1alpha2.SQLServer, adminPassword string) ([]byte, error)
 	MockCreateServerEnd          func(createOp []byte) (bool, error)
-	MockDeleteServer             func(ctx context.Context, instance azuredbv1alpha1.SQLServer) (azurerest.Future, error)
-	MockGetFirewallRule          func(ctx context.Context, instance azuredbv1alpha1.SQLServer, firewallRuleName string) error
-	MockCreateFirewallRulesBegin func(ctx context.Context, instance azuredbv1alpha1.SQLServer, firewallRuleName string) ([]byte, error)
+	MockDeleteServer             func(ctx context.Context, instance azuredbv1alpha2.SQLServer) (azurerest.Future, error)
+	MockGetFirewallRule          func(ctx context.Context, instance azuredbv1alpha2.SQLServer, firewallRuleName string) error
+	MockCreateFirewallRulesBegin func(ctx context.Context, instance azuredbv1alpha2.SQLServer, firewallRuleName string) ([]byte, error)
 	MockCreateFirewallRulesEnd   func(createOp []byte) (bool, error)
 }
 
-func (m *mockSQLServerClient) GetServer(ctx context.Context, instance azuredbv1alpha1.SQLServer) (*azureclients.SQLServer, error) {
+func (m *mockSQLServerClient) GetServer(ctx context.Context, instance azuredbv1alpha2.SQLServer) (*azureclients.SQLServer, error) {
 	if m.MockGetServer != nil {
 		return m.MockGetServer(ctx, instance)
 	}
 	return &azureclients.SQLServer{}, nil
 }
 
-func (m *mockSQLServerClient) CreateServerBegin(ctx context.Context, instance azuredbv1alpha1.SQLServer, adminPassword string) ([]byte, error) {
+func (m *mockSQLServerClient) CreateServerBegin(ctx context.Context, instance azuredbv1alpha2.SQLServer, adminPassword string) ([]byte, error) {
 	if m.MockCreateServerBegin != nil {
 		return m.MockCreateServerBegin(ctx, instance, adminPassword)
 	}
@@ -77,21 +77,21 @@ func (m *mockSQLServerClient) CreateServerEnd(createOp []byte) (bool, error) {
 	return true, nil
 }
 
-func (m *mockSQLServerClient) DeleteServer(ctx context.Context, instance azuredbv1alpha1.SQLServer) (azurerest.Future, error) {
+func (m *mockSQLServerClient) DeleteServer(ctx context.Context, instance azuredbv1alpha2.SQLServer) (azurerest.Future, error) {
 	if m.MockDeleteServer != nil {
 		return m.MockDeleteServer(ctx, instance)
 	}
 	return azurerest.Future{}, nil
 }
 
-func (m *mockSQLServerClient) GetFirewallRule(ctx context.Context, instance azuredbv1alpha1.SQLServer, firewallRuleName string) error {
+func (m *mockSQLServerClient) GetFirewallRule(ctx context.Context, instance azuredbv1alpha2.SQLServer, firewallRuleName string) error {
 	if m.MockGetFirewallRule != nil {
 		return m.MockGetFirewallRule(ctx, instance, firewallRuleName)
 	}
 	return nil
 }
 
-func (m *mockSQLServerClient) CreateFirewallRulesBegin(ctx context.Context, instance azuredbv1alpha1.SQLServer, firewallRuleName string) ([]byte, error) {
+func (m *mockSQLServerClient) CreateFirewallRulesBegin(ctx context.Context, instance azuredbv1alpha2.SQLServer, firewallRuleName string) ([]byte, error) {
 	if m.MockCreateFirewallRulesBegin != nil {
 		return m.MockCreateFirewallRulesBegin(ctx, instance, firewallRuleName)
 	}
@@ -109,7 +109,7 @@ type mockSQLServerClientFactory struct {
 	mockClient *mockSQLServerClient
 }
 
-func (m *mockSQLServerClientFactory) CreateAPIInstance(*v1alpha1.Provider, kubernetes.Interface) (azureclients.SQLServerAPI, error) {
+func (m *mockSQLServerClientFactory) CreateAPIInstance(*v1alpha2.Provider, kubernetes.Interface) (azureclients.SQLServerAPI, error) {
 	return m.mockClient, nil
 }
 
@@ -124,7 +124,7 @@ func TestReconcile(t *testing.T) {
 	sqlServerClientFactory := &mockSQLServerClientFactory{mockClient: sqlServerClient}
 
 	getCallCount := 0
-	sqlServerClient.MockGetServer = func(ctx context.Context, instance azuredbv1alpha1.SQLServer) (*azureclients.SQLServer, error) {
+	sqlServerClient.MockGetServer = func(ctx context.Context, instance azuredbv1alpha2.SQLServer) (*azureclients.SQLServer, error) {
 		getCallCount++
 		if getCallCount <= 1 {
 			// first GET should return not found, which will cause the reconcile loop to try to create the instance
@@ -138,12 +138,12 @@ func TestReconcile(t *testing.T) {
 			FQDN:  instanceName + ".mydomain.azure.msft.com",
 		}, nil
 	}
-	sqlServerClient.MockCreateServerBegin = func(ctx context.Context, instance azuredbv1alpha1.SQLServer, adminPassword string) ([]byte, error) {
+	sqlServerClient.MockCreateServerBegin = func(ctx context.Context, instance azuredbv1alpha2.SQLServer, adminPassword string) ([]byte, error) {
 		return []byte("mocked marshalled create future"), nil
 	}
 
 	getFirewallCallCount := 0
-	sqlServerClient.MockGetFirewallRule = func(ctx context.Context, instance azuredbv1alpha1.SQLServer, firewallRuleName string) error {
+	sqlServerClient.MockGetFirewallRule = func(ctx context.Context, instance azuredbv1alpha2.SQLServer, firewallRuleName string) error {
 		getFirewallCallCount++
 		if getFirewallCallCount <= 1 {
 			// first GET should return not found, which will cause the reconcile loop to try to create the firewall rule
@@ -151,7 +151,7 @@ func TestReconcile(t *testing.T) {
 		}
 		return nil
 	}
-	sqlServerClient.MockCreateFirewallRulesBegin = func(ctx context.Context, instance azuredbv1alpha1.SQLServer, firewallRuleName string) ([]byte, error) {
+	sqlServerClient.MockCreateFirewallRulesBegin = func(ctx context.Context, instance azuredbv1alpha2.SQLServer, firewallRuleName string) ([]byte, error) {
 		return []byte("mocked marshalled firewall create future"), nil
 	}
 
@@ -185,16 +185,16 @@ func TestReconcile(t *testing.T) {
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
 
 	// after the first reconcile, the create operation should be saved on the running operation field
-	expectedStatus := azuredbv1alpha1.SQLServerStatus{
+	expectedStatus := azuredbv1alpha2.SQLServerStatus{
 		RunningOperation:     "mocked marshalled create future",
-		RunningOperationType: azuredbv1alpha1.OperationCreateServer,
+		RunningOperationType: azuredbv1alpha2.OperationCreateServer,
 	}
 	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
 	assertSQLServerStatus(g, c, expectedStatus)
 
 	// 2nd reconcile should finish the create server operation and clear out the running operation field
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	expectedStatus = azuredbv1alpha1.SQLServerStatus{
+	expectedStatus = azuredbv1alpha2.SQLServerStatus{
 		RunningOperation: "",
 	}
 	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
@@ -202,16 +202,16 @@ func TestReconcile(t *testing.T) {
 
 	// 3rd reconcile should see that there is no firewall rule yet and try to create it
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	expectedStatus = azuredbv1alpha1.SQLServerStatus{
+	expectedStatus = azuredbv1alpha2.SQLServerStatus{
 		RunningOperation:     "mocked marshalled firewall create future",
-		RunningOperationType: azuredbv1alpha1.OperationCreateFirewallRules,
+		RunningOperationType: azuredbv1alpha2.OperationCreateFirewallRules,
 	}
 	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
 	assertSQLServerStatus(g, c, expectedStatus)
 
 	// 4th reconcile should finish the create firewall operation and clear out the running operation field
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	expectedStatus = azuredbv1alpha1.SQLServerStatus{
+	expectedStatus = azuredbv1alpha2.SQLServerStatus{
 		RunningOperation: "",
 	}
 	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
@@ -222,7 +222,7 @@ func TestReconcile(t *testing.T) {
 
 	// verify that the CRD status was updated with details about the external SQL Server and that the
 	// CRD conditions show the transition from creating to running
-	expectedStatus = azuredbv1alpha1.SQLServerStatus{
+	expectedStatus = azuredbv1alpha2.SQLServerStatus{
 		Message:    "SQL Server instance test-db-instance is ready",
 		State:      "Ready",
 		ProviderID: instanceName + "-azure-id",
@@ -257,8 +257,8 @@ func TestReconcile(t *testing.T) {
 	cleanupSQLServer(t, g, c, requests, instance)
 }
 
-func cleanupSQLServer(t *testing.T, g *gomega.GomegaWithT, c client.Client, requests chan reconcile.Request, instance *azuredbv1alpha1.MysqlServer) {
-	deletedInstance := &azuredbv1alpha1.MysqlServer{}
+func cleanupSQLServer(t *testing.T, g *gomega.GomegaWithT, c client.Client, requests chan reconcile.Request, instance *azuredbv1alpha2.MysqlServer) {
+	deletedInstance := &azuredbv1alpha2.MysqlServer{}
 	if err := c.Get(ctx, expectedRequest.NamespacedName, deletedInstance); errors.IsNotFound(err) {
 		// instance has already been deleted, bail out
 		return
@@ -270,7 +270,7 @@ func cleanupSQLServer(t *testing.T, g *gomega.GomegaWithT, c client.Client, requ
 
 	// wait for the deletion timestamp to be set
 	err = wait.ExponentialBackoff(test.DefaultRetry, func() (done bool, err error) {
-		deletedInstance := &azuredbv1alpha1.MysqlServer{}
+		deletedInstance := &azuredbv1alpha2.MysqlServer{}
 		c.Get(ctx, expectedRequest.NamespacedName, deletedInstance)
 		if deletedInstance.DeletionTimestamp != nil {
 			return true, nil
@@ -284,7 +284,7 @@ func cleanupSQLServer(t *testing.T, g *gomega.GomegaWithT, c client.Client, requ
 
 	// wait for the finalizer to run and the instance to be deleted for good
 	err = wait.ExponentialBackoff(test.DefaultRetry, func() (done bool, err error) {
-		deletedInstance := &azuredbv1alpha1.MysqlServer{}
+		deletedInstance := &azuredbv1alpha2.MysqlServer{}
 		if err := c.Get(ctx, expectedRequest.NamespacedName, deletedInstance); errors.IsNotFound(err) {
 			return true, nil
 		}
@@ -293,8 +293,8 @@ func cleanupSQLServer(t *testing.T, g *gomega.GomegaWithT, c client.Client, requ
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
-func assertSQLServerStatus(g *gomega.GomegaWithT, c client.Client, expectedStatus azuredbv1alpha1.SQLServerStatus) {
-	instance := &azuredbv1alpha1.MysqlServer{}
+func assertSQLServerStatus(g *gomega.GomegaWithT, c client.Client, expectedStatus azuredbv1alpha2.SQLServerStatus) {
+	instance := &azuredbv1alpha2.MysqlServer{}
 	err := c.Get(ctx, expectedRequest.NamespacedName, instance)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 
@@ -309,7 +309,7 @@ func assertSQLServerStatus(g *gomega.GomegaWithT, c client.Client, expectedStatu
 }
 
 func assertConnectionSecret(g *gomega.GomegaWithT, c client.Client, connectionSecret *v1.Secret) {
-	instance := &azuredbv1alpha1.MysqlServer{}
+	instance := &azuredbv1alpha2.MysqlServer{}
 	err := c.Get(ctx, expectedRequest.NamespacedName, instance)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 

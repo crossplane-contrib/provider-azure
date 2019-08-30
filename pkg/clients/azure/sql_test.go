@@ -22,7 +22,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/onsi/gomega"
 
-	databasev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	databasev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
 )
 
 func TestSQLServerStatusMessage(t *testing.T) {
@@ -48,18 +48,18 @@ func TestSQLServerSkuName(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
 	cases := []struct {
-		pricingTier     databasev1alpha1.PricingTierSpec
+		pricingTier     databasev1alpha2.PricingTierSpec
 		expectedSkuName string
 		expectedErr     string
 	}{
 		// empty pricing tier spec
-		{databasev1alpha1.PricingTierSpec{}, "", "tier '' is not one of the supported values: [Basic GeneralPurpose MemoryOptimized]"},
+		{databasev1alpha2.PricingTierSpec{}, "", "tier '' is not one of the supported values: [Basic GeneralPurpose MemoryOptimized]"},
 		// spec that has unknown tier
-		{databasev1alpha1.PricingTierSpec{Tier: "Foo", Family: "Gen4", VCores: 1}, "", "tier 'Foo' is not one of the supported values: [Basic GeneralPurpose MemoryOptimized]"},
+		{databasev1alpha2.PricingTierSpec{Tier: "Foo", Family: "Gen4", VCores: 1}, "", "tier 'Foo' is not one of the supported values: [Basic GeneralPurpose MemoryOptimized]"},
 		// B_Gen4_1
-		{databasev1alpha1.PricingTierSpec{Tier: "Basic", Family: "Gen4", VCores: 1}, "B_Gen4_1", ""},
+		{databasev1alpha2.PricingTierSpec{Tier: "Basic", Family: "Gen4", VCores: 1}, "B_Gen4_1", ""},
 		// MO_Gen5_8
-		{databasev1alpha1.PricingTierSpec{Tier: "MemoryOptimized", Family: "Gen5", VCores: 8}, "MO_Gen5_8", ""},
+		{databasev1alpha2.PricingTierSpec{Tier: "MemoryOptimized", Family: "Gen5", VCores: 8}, "MO_Gen5_8", ""},
 	}
 
 	for _, tt := range cases {

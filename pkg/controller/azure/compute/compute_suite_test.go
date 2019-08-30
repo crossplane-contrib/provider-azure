@@ -39,9 +39,9 @@ import (
 
 	localtest "github.com/crossplaneio/stack-azure/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
-	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
+	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -133,13 +133,13 @@ func testSecret(data []byte) *corev1.Secret {
 	}
 }
 
-func testProvider(s *corev1.Secret) *azurev1alpha1.Provider {
-	return &azurev1alpha1.Provider{
+func testProvider(s *corev1.Secret) *azurev1alpha2.Provider {
+	return &azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      providerName,
 			Namespace: s.Namespace,
 		},
-		Spec: azurev1alpha1.ProviderSpec{
+		Spec: azurev1alpha2.ProviderSpec{
 			Secret: corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
 				Key:                  secretDataKey,
@@ -148,16 +148,16 @@ func testProvider(s *corev1.Secret) *azurev1alpha1.Provider {
 	}
 }
 
-func testInstance(p *azurev1alpha1.Provider) *computev1alpha1.AKSCluster {
+func testInstance(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
 	return &computev1alpha1.AKSCluster{
 		ObjectMeta: metav1.ObjectMeta{Name: instanceName, Namespace: namespace},
 		Spec: computev1alpha1.AKSClusterSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
-				ProviderReference:                meta.ReferenceTo(p, azurev1alpha1.ProviderGroupVersionKind),
+				ProviderReference:                meta.ReferenceTo(p, azurev1alpha2.ProviderGroupVersionKind),
 				WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: "coolSecret"},
 			},
-			AKSClusterParameters: v1alpha1.AKSClusterParameters{
+			AKSClusterParameters: v1alpha2.AKSClusterParameters{
 				WriteServicePrincipalSecretTo: corev1.LocalObjectReference{Name: "coolPrincipal"},
 				ResourceGroupName:             "rg1",
 				Location:                      "loc1",

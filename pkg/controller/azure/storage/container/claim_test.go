@@ -31,7 +31,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha2"
 )
 
 var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureContainer)
@@ -67,20 +67,20 @@ func TestConfigureContainer(t *testing.T) {
 						PredefinedACL: &bucketPrivate,
 					},
 				},
-				cs: &v1alpha1.ContainerClass{
-					SpecTemplate: v1alpha1.ContainerClassSpecTemplate{
+				cs: &v1alpha2.ContainerClass{
+					SpecTemplate: v1alpha2.ContainerClassSpecTemplate{
 						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha1.Container{},
+				mg: &v1alpha2.Container{},
 			},
 			want: want{
-				mg: &v1alpha1.Container{
-					Spec: v1alpha1.ContainerSpec{
-						ContainerParameters: v1alpha1.ContainerParameters{
+				mg: &v1alpha2.Container{
+					Spec: v1alpha2.ContainerSpec{
+						ContainerParameters: v1alpha2.ContainerParameters{
 							AccountReference: corev1.LocalObjectReference{Name: providerName},
 							Metadata:         azblob.Metadata{},
 						},

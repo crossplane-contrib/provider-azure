@@ -43,8 +43,8 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
-	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -148,7 +148,7 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 func (r *Reconciler) connect(instance *computev1alpha1.AKSCluster) (*azureclients.AKSSetupClient, error) {
 	// Fetch Provider
-	p := &azurev1alpha1.Provider{}
+	p := &azurev1alpha2.Provider{}
 	err := r.Get(ctx, meta.NamespacedNameOf(instance.Spec.ProviderReference), p)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get provider")

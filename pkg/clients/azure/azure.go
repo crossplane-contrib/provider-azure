@@ -30,7 +30,7 @@ import (
 
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -77,7 +77,7 @@ type Credentials struct {
 
 // NewClient will look up the Azure credential information from the given provider and return a client
 // that can be used to connect to Azure services.
-func NewClient(provider *v1alpha1.Provider, clientset kubernetes.Interface) (*Client, error) {
+func NewClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*Client, error) {
 	// first get the secret data that should contain all the auth/creds information
 	azureSecretData, err := util.SecretData(clientset, provider.Namespace, provider.Spec.Secret)
 	if err != nil {

@@ -31,7 +31,7 @@ import (
 
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -64,7 +64,7 @@ type ApplicationParameters struct {
 }
 
 // NewApplicationClient creates and initializes a ApplicationClient instance.
-func NewApplicationClient(provider *v1alpha1.Provider, clientset kubernetes.Interface) (*ApplicationClient, error) {
+func NewApplicationClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*ApplicationClient, error) {
 	client, err := NewClient(provider, clientset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
@@ -148,7 +148,7 @@ type ServicePrincipalClient struct {
 }
 
 // NewServicePrincipalClient creates and initializes a ServicePrincipalClient instance.
-func NewServicePrincipalClient(provider *v1alpha1.Provider, clientset kubernetes.Interface) (*ServicePrincipalClient, error) {
+func NewServicePrincipalClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*ServicePrincipalClient, error) {
 	client, err := NewClient(provider, clientset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Azure client: %+v", err)

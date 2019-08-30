@@ -39,8 +39,8 @@ import (
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	azuredbv1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 const (
@@ -60,7 +60,7 @@ type SQLReconciler struct {
 	client.Client
 	clientset           kubernetes.Interface
 	sqlServerAPIFactory azureclients.SQLServerAPIFactory
-	findInstance        func(instance azuredbv1alpha1.SQLServer) (azuredbv1alpha1.SQLServer, error)
+	findInstance        func(instance azuredbv1alpha2.SQLServer) (azuredbv1alpha2.SQLServer, error)
 	scheme              *runtime.Scheme
 	finalizer           string
 }
@@ -68,10 +68,10 @@ type SQLReconciler struct {
 // TODO(negz): This method's cyclomatic complexity is very high. Consider
 // refactoring it if you touch it.
 // nolint:gocyclo
-func (r *SQLReconciler) handleReconcile(instance azuredbv1alpha1.SQLServer) (reconcile.Result, error) {
+func (r *SQLReconciler) handleReconcile(instance azuredbv1alpha2.SQLServer) (reconcile.Result, error) {
 
 	// look up the provider information for this instance
-	provider := &azurev1alpha1.Provider{}
+	provider := &azurev1alpha2.Provider{}
 	n := meta.NamespacedNameOf(instance.GetSpec().ProviderReference)
 	if err := r.Get(ctx, n, provider); err != nil {
 		return r.fail(instance, errors.Wrapf(err, "failed to get provider %s", n))
@@ -143,7 +143,7 @@ func (r *SQLReconciler) handleReconcile(instance azuredbv1alpha1.SQLServer) (rec
 }
 
 // handle the creation of the given SQL Server instance
-func (r *SQLReconciler) handleCreation(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha1.SQLServer) (reconcile.Result, error) {
+func (r *SQLReconciler) handleCreation(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha2.SQLServer) (reconcile.Result, error) {
 	// TODO(negz): Why not use the package scoped context?
 	ctx := context.Background()
 	instance.GetStatus().SetConditions(runtimev1alpha1.Creating())
@@ -172,7 +172,7 @@ func (r *SQLReconciler) handleCreation(sqlServersClient azureclients.SQLServerAP
 	// save the create operation to the CRD status
 	status := instance.GetStatus()
 	status.RunningOperation = string(createOp)
-	status.RunningOperationType = azuredbv1alpha1.OperationCreateServer
+	status.RunningOperationType = azuredbv1alpha2.OperationCreateServer
 	status.SetConditions(runtimev1alpha1.ReconcileSuccess())
 
 	// wait until the important status fields we just set have become committed/consistent
@@ -201,7 +201,7 @@ func (r *SQLReconciler) handleCreation(sqlServersClient azureclients.SQLServerAP
 }
 
 // handle the deletion of the given SQL Server instance
-func (r *SQLReconciler) handleDeletion(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha1.SQLServer) (reconcile.Result, error) {
+func (r *SQLReconciler) handleDeletion(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha2.SQLServer) (reconcile.Result, error) {
 	// TODO(negz): Why not use the package scoped context?
 	ctx := context.Background()
 	instance.GetStatus().SetConditions(runtimev1alpha1.Deleting())
@@ -233,7 +233,7 @@ func (r *SQLReconciler) handleDeletion(sqlServersClient azureclients.SQLServerAP
 	return reconcile.Result{}, r.Update(ctx, instance)
 }
 
-func (r *SQLReconciler) handleFirewallRuleCreation(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha1.SQLServer) (reconcile.Result, error) {
+func (r *SQLReconciler) handleFirewallRuleCreation(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha2.SQLServer) (reconcile.Result, error) {
 	ctx := context.Background()
 
 	log.V(logging.Debug).Info("starting create of firewall rules for SQL Server instance", "instance", instance)
@@ -247,13 +247,13 @@ func (r *SQLReconciler) handleFirewallRuleCreation(sqlServersClient azureclients
 	// save the create operation to the CRD status
 	status := instance.GetStatus()
 	status.RunningOperation = string(createOp)
-	status.RunningOperationType = azuredbv1alpha1.OperationCreateFirewallRules
+	status.RunningOperationType = azuredbv1alpha2.OperationCreateFirewallRules
 
 	return reconcile.Result{Requeue: true}, r.Update(ctx, instance)
 }
 
 // handle a running operation for the given SQL Server instance
-func (r *SQLReconciler) handleRunningOperation(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha1.SQLServer) (reconcile.Result, error) {
+func (r *SQLReconciler) handleRunningOperation(sqlServersClient azureclients.SQLServerAPI, instance azuredbv1alpha2.SQLServer) (reconcile.Result, error) {
 	ctx := context.Background()
 
 	var done bool
@@ -262,9 +262,9 @@ func (r *SQLReconciler) handleRunningOperation(sqlServersClient azureclients.SQL
 
 	// check if the operation is done yet and if there was any error
 	switch opType {
-	case azuredbv1alpha1.OperationCreateServer:
+	case azuredbv1alpha2.OperationCreateServer:
 		done, err = sqlServersClient.CreateServerEnd([]byte(instance.GetStatus().RunningOperation))
-	case azuredbv1alpha1.OperationCreateFirewallRules:
+	case azuredbv1alpha2.OperationCreateFirewallRules:
 		done, err = sqlServersClient.CreateFirewallRulesEnd([]byte(instance.GetStatus().RunningOperation))
 	default:
 		return r.fail(instance,
@@ -295,7 +295,7 @@ func (r *SQLReconciler) handleRunningOperation(sqlServersClient azureclients.SQL
 }
 
 // fail - helper function to set fail condition with reason and message
-func (r *SQLReconciler) fail(instance azuredbv1alpha1.SQLServer, err error) (reconcile.Result, error) {
+func (r *SQLReconciler) fail(instance azuredbv1alpha2.SQLServer, err error) (reconcile.Result, error) {
 	// TODO(negz): Why don't we just use the package scoped ctx here?
 	ctx := context.Background()
 
@@ -303,11 +303,11 @@ func (r *SQLReconciler) fail(instance azuredbv1alpha1.SQLServer, err error) (rec
 	return reconcile.Result{Requeue: true}, r.Update(ctx, instance)
 }
 
-func (r *SQLReconciler) updateStatus(instance azuredbv1alpha1.SQLServer, message string, server *azureclients.SQLServer) error {
+func (r *SQLReconciler) updateStatus(instance azuredbv1alpha2.SQLServer, message string, server *azureclients.SQLServer) error {
 	ctx := context.Background()
 
 	oldStatus := instance.GetStatus()
-	status := &azuredbv1alpha1.SQLServerStatus{
+	status := &azuredbv1alpha2.SQLServerStatus{
 		ResourceStatus:       oldStatus.ResourceStatus,
 		Message:              message,
 		State:                server.State,
@@ -329,14 +329,14 @@ func (r *SQLReconciler) updateStatus(instance azuredbv1alpha1.SQLServer, message
 	return nil
 }
 
-func (r *SQLReconciler) createOrUpdateConnectionSecret(instance azuredbv1alpha1.SQLServer, password string) error {
+func (r *SQLReconciler) createOrUpdateConnectionSecret(instance azuredbv1alpha2.SQLServer, password string) error {
 	// TODO(negz): Replace with with a MustGetKind function using the scheme?
 	var kind schema.GroupVersionKind
 	switch instance.(type) {
-	case *azuredbv1alpha1.MysqlServer:
-		kind = azuredbv1alpha1.MysqlServerGroupVersionKind
-	case *azuredbv1alpha1.PostgresqlServer:
-		kind = azuredbv1alpha1.PostgresqlServerGroupVersionKind
+	case *azuredbv1alpha2.MysqlServer:
+		kind = azuredbv1alpha2.MysqlServerGroupVersionKind
+	case *azuredbv1alpha2.PostgresqlServer:
+		kind = azuredbv1alpha2.PostgresqlServerGroupVersionKind
 	}
 
 	s := resource.ConnectionSecretFor(instance, kind)

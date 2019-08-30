@@ -32,7 +32,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha2"
 )
 
 // ClaimController is responsible for adding the Account claim controller and its
@@ -43,8 +43,8 @@ type ClaimController struct{}
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
-		resource.ClassKind(v1alpha1.AccountClassGroupVersionKind),
-		resource.ManagedKind(v1alpha1.AccountGroupVersionKind),
+		resource.ClassKind(v1alpha2.AccountClassGroupVersionKind),
+		resource.ManagedKind(v1alpha2.AccountGroupVersionKind),
 		resource.WithManagedBinder(resource.NewAPIManagedStatusBinder(mgr.GetClient())),
 		resource.WithManagedFinalizer(resource.NewAPIManagedStatusUnbinder(mgr.GetClient())),
 		resource.WithManagedConfigurators(resource.ManagedConfiguratorFn(ConfigureAccount)))
@@ -53,9 +53,9 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha1.Account{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha2.Account{}}, &resource.EnqueueRequestForClaim{}).
 		For(&storagev1alpha1.Bucket{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha1.AccountClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.AccountClassGroupVersionKind)))).
 		Complete(r)
 }
 
@@ -67,21 +67,21 @@ func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.Class, m
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), storagev1alpha1.BucketGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha1.AccountClass)
+	rs, csok := cs.(*v1alpha2.AccountClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha1.AccountClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.AccountClassGroupVersionKind)
 	}
 
-	a, mgok := mg.(*v1alpha1.Account)
+	a, mgok := mg.(*v1alpha2.Account)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha1.AccountGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.AccountGroupVersionKind)
 	}
 
 	if b.Spec.Name == "" {
 		return errors.Errorf("invalid account claim: %s spec, name property is required", b.GetName())
 	}
 
-	spec := &v1alpha1.AccountSpec{
+	spec := &v1alpha2.AccountSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},
@@ -90,7 +90,7 @@ func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.Class, m
 
 	// NOTE(hasheddan): consider moving defaulting to either CRD or managed reconciler level
 	if spec.StorageAccountSpec == nil {
-		spec.StorageAccountSpec = &v1alpha1.StorageAccountSpec{}
+		spec.StorageAccountSpec = &v1alpha2.StorageAccountSpec{}
 	}
 
 	spec.StorageAccountName = b.Spec.Name

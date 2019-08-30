@@ -26,7 +26,7 @@ import (
 
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 // A GroupsClient handles CRUD operations for Azure Resource Group resources.
@@ -62,7 +62,7 @@ func NewClient(credentials []byte) (GroupsClient, error) {
 
 // NewParameters returns Resource Group resource creation parameters suitable for
 // use with the Azure API.
-func NewParameters(r *v1alpha1.ResourceGroup) resources.Group {
+func NewParameters(r *v1alpha2.ResourceGroup) resources.Group {
 	return resources.Group{
 		Name:     azure.ToStringPtr(r.Spec.Name),
 		Location: azure.ToStringPtr(r.Spec.Location),

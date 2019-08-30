@@ -28,7 +28,7 @@ import (
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	azuredbv1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
 )
 
 const (
@@ -45,7 +45,7 @@ type PostgresqlServerController struct {
 func (c *PostgresqlServerController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("Postgresqlservers." + controllerName).
-		For(&azuredbv1alpha1.PostgresqlServer{}).
+		For(&azuredbv1alpha2.PostgresqlServer{}).
 		Complete(c.Reconciler)
 }
 
@@ -74,8 +74,8 @@ type PostgreSQLReconciler struct {
 // Reconcile reads that state of the cluster for a PostgreSQLServer object and makes changes based on the state read
 // and what is in the PostgreSQLServer.Spec
 func (r *PostgreSQLReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", azuredbv1alpha1.PostgresqlServerKindAPIVersion, "request", request)
-	instance := &azuredbv1alpha1.PostgresqlServer{}
+	log.V(logging.Debug).Info("reconciling", "kind", azuredbv1alpha2.PostgresqlServerKindAPIVersion, "request", request)
+	instance := &azuredbv1alpha2.PostgresqlServer{}
 
 	// Fetch the PostgresqlServer instance
 	err := r.Get(ctx, request.NamespacedName, instance)
@@ -92,8 +92,8 @@ func (r *PostgreSQLReconciler) Reconcile(request reconcile.Request) (reconcile.R
 	return r.SQLReconciler.handleReconcile(instance)
 }
 
-func (r *PostgreSQLReconciler) findPostgreSQLInstance(instance azuredbv1alpha1.SQLServer) (azuredbv1alpha1.SQLServer, error) {
-	fetchedInstance := &azuredbv1alpha1.PostgresqlServer{}
+func (r *PostgreSQLReconciler) findPostgreSQLInstance(instance azuredbv1alpha2.SQLServer) (azuredbv1alpha2.SQLServer, error) {
+	fetchedInstance := &azuredbv1alpha2.PostgresqlServer{}
 	namespacedName := apitypes.NamespacedName{Name: instance.GetName(), Namespace: instance.GetNamespace()}
 	if err := r.Get(ctx, namespacedName, fetchedInstance); err != nil {
 		return nil, err

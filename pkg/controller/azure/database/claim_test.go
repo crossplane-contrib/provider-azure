@@ -30,7 +30,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/database/v1alpha2"
 )
 
 var (
@@ -64,25 +64,25 @@ func TestConfigurePostgresqlServer(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
 					Spec:       databasev1alpha1.PostgreSQLInstanceSpec{EngineVersion: "9.6"},
 				},
-				cs: &v1alpha1.SQLServerClass{
-					SpecTemplate: v1alpha1.SQLServerClassSpecTemplate{
+				cs: &v1alpha2.SQLServerClass{
+					SpecTemplate: v1alpha2.SQLServerClassSpecTemplate{
 						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha1.PostgresqlServer{},
+				mg: &v1alpha2.PostgresqlServer{},
 			},
 			want: want{
-				mg: &v1alpha1.PostgresqlServer{
-					Spec: v1alpha1.SQLServerSpec{
+				mg: &v1alpha2.PostgresqlServer{
+					Spec: v1alpha2.SQLServerSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						SQLServerParameters: v1alpha1.SQLServerParameters{
+						SQLServerParameters: v1alpha2.SQLServerParameters{
 							Version: "9.6",
 						},
 					},
@@ -131,25 +131,25 @@ func TestConfigureMyPostgresqlServer(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
 					Spec:       databasev1alpha1.MySQLInstanceSpec{EngineVersion: "5.6"},
 				},
-				cs: &v1alpha1.SQLServerClass{
-					SpecTemplate: v1alpha1.SQLServerClassSpecTemplate{
+				cs: &v1alpha2.SQLServerClass{
+					SpecTemplate: v1alpha2.SQLServerClassSpecTemplate{
 						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha1.MysqlServer{},
+				mg: &v1alpha2.MysqlServer{},
 			},
 			want: want{
-				mg: &v1alpha1.MysqlServer{
-					Spec: v1alpha1.SQLServerSpec{
+				mg: &v1alpha2.MysqlServer{
+					Spec: v1alpha2.SQLServerSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						SQLServerParameters: v1alpha1.SQLServerParameters{
+						SQLServerParameters: v1alpha2.SQLServerParameters{
 							Version: "5.6",
 						},
 					},

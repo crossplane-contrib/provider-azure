@@ -40,8 +40,8 @@ import (
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha1"
-	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 )
 
 var _ reconcile.Reconciler = &Reconciler{}
@@ -50,7 +50,7 @@ type mockAKSSetupClientFactory struct {
 	mockClient *mockAKSSetupClient
 }
 
-func (m *mockAKSSetupClientFactory) CreateSetupClient(*v1alpha1.Provider, kubernetes.Interface) (*azureclients.AKSSetupClient, error) {
+func (m *mockAKSSetupClientFactory) CreateSetupClient(*v1alpha2.Provider, kubernetes.Interface) (*azureclients.AKSSetupClient, error) {
 	return &azureclients.AKSSetupClient{
 		AKSClusterAPI:       m.mockClient,
 		ApplicationAPI:      m.mockClient,

@@ -30,7 +30,7 @@ import (
 
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/cache/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/cache/v1alpha2"
 )
 
 // NamePrefix is the prefix for all created Azure Cache instances.
@@ -76,7 +76,7 @@ func NewResourceName(o metav1.Object) string {
 
 // NewCreateParameters returns Redis resource creation parameters suitable for
 // use with the Azure API.
-func NewCreateParameters(r *v1alpha1.Redis) redismgmt.CreateParameters {
+func NewCreateParameters(r *v1alpha2.Redis) redismgmt.CreateParameters {
 	return redismgmt.CreateParameters{
 		Location: azure.ToStringPtr(r.Spec.Location),
 		CreateProperties: &redismgmt.CreateProperties{
@@ -92,7 +92,7 @@ func NewCreateParameters(r *v1alpha1.Redis) redismgmt.CreateParameters {
 
 // NewUpdateParameters returns Redis resource update parameters suitable for use
 // with the Azure API.
-func NewUpdateParameters(r *v1alpha1.Redis) redismgmt.UpdateParameters {
+func NewUpdateParameters(r *v1alpha2.Redis) redismgmt.UpdateParameters {
 	return redismgmt.UpdateParameters{
 		UpdateProperties: &redismgmt.UpdateProperties{
 			Sku:                NewSKU(r.Spec.SKU),
@@ -104,7 +104,7 @@ func NewUpdateParameters(r *v1alpha1.Redis) redismgmt.UpdateParameters {
 }
 
 // NewSKU returns a Redis resource SKU suitable for use with the Azure API.
-func NewSKU(s v1alpha1.SKUSpec) *redismgmt.Sku {
+func NewSKU(s v1alpha2.SKUSpec) *redismgmt.Sku {
 	return &redismgmt.Sku{
 		Name:     redismgmt.SkuName(s.Name),
 		Family:   redismgmt.SkuFamily(s.Family),
@@ -115,7 +115,7 @@ func NewSKU(s v1alpha1.SKUSpec) *redismgmt.Sku {
 // NeedsUpdate returns true if the supplied Kubernetes resource differs from the
 // supplied Azure resource. It considers only fields that can be modified in
 // place without deleting and recreating the instance.
-func NeedsUpdate(kube *v1alpha1.Redis, az redismgmt.ResourceType) bool {
+func NeedsUpdate(kube *v1alpha2.Redis, az redismgmt.ResourceType) bool {
 	up := NewUpdateParameters(kube)
 
 	switch {

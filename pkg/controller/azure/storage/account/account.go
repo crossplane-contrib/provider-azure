@@ -38,8 +38,8 @@ import (
 
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 	azurestorage "github.com/crossplaneio/stack-azure/pkg/clients/azure/storage"
 )
 
@@ -80,7 +80,7 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(controllerName).
-		For(&v1alpha1.Account{}).
+		For(&v1alpha2.Account{}).
 		Owns(&corev1.Secret{}).
 		Complete(r)
 }
@@ -88,12 +88,12 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 // Reconcile reads that state of the cluster for a Provider acct and makes changes based on the state read
 // and what is in the Provider.Spec
 func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha1.AccountKindAPIVersion, "request", request)
+	log.V(logging.Debug).Info("reconciling", "kind", v1alpha2.AccountKindAPIVersion, "request", request)
 
 	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
 	defer cancel()
 
-	b := &v1alpha1.Account{}
+	b := &v1alpha2.Account{}
 	if err := r.Get(ctx, request.NamespacedName, b); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -116,15 +116,15 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 type syncdeleterMaker interface {
-	newSyncdeleter(context.Context, *v1alpha1.Account) (syncdeleter, error)
+	newSyncdeleter(context.Context, *v1alpha2.Account) (syncdeleter, error)
 }
 
 type accountSyncdeleterMaker struct {
 	client.Client
 }
 
-func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha1.Account) (syncdeleter, error) {
-	p := &azurev1alpha1.Provider{}
+func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha2.Account) (syncdeleter, error) {
+	p := &azurev1alpha2.Provider{}
 	n := meta.NamespacedNameOf(b.Spec.ProviderReference)
 	if err := m.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
@@ -179,10 +179,10 @@ type accountSyncDeleter struct {
 	createupdater
 	azurestorage.AccountOperations
 	kube client.Client
-	acct *v1alpha1.Account
+	acct *v1alpha2.Account
 }
 
-func newAccountSyncDeleter(ao azurestorage.AccountOperations, kube client.Client, b *v1alpha1.Account) *accountSyncDeleter {
+func newAccountSyncDeleter(ao azurestorage.AccountOperations, kube client.Client, b *v1alpha2.Account) *accountSyncDeleter {
 	return &accountSyncDeleter{
 		createupdater:     newAccountCreateUpdater(ao, kube, b),
 		AccountOperations: ao,
@@ -243,12 +243,12 @@ type accountCreateUpdater struct {
 	syncbacker
 	azurestorage.AccountOperations
 	kube      client.Client
-	acct      *v1alpha1.Account
+	acct      *v1alpha2.Account
 	projectID string
 }
 
 // newAccountCreateUpdater new instance of accountCreateUpdater
-func newAccountCreateUpdater(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha1.Account) *accountCreateUpdater {
+func newAccountCreateUpdater(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha2.Account) *accountCreateUpdater {
 	return &accountCreateUpdater{
 		syncbacker:        newAccountSyncBacker(ao, kube, acct),
 		AccountOperations: ao,
@@ -269,7 +269,7 @@ func (acu *accountCreateUpdater) create(ctx context.Context) (reconcile.Result, 
 	}
 	acu.acct.Spec.StorageAccountSpec.Tags[uidTag] = string(acu.acct.GetUID())
 
-	accountSpec := v1alpha1.ToStorageAccountCreate(acu.acct.Spec.StorageAccountSpec)
+	accountSpec := v1alpha2.ToStorageAccountCreate(acu.acct.Spec.StorageAccountSpec)
 
 	a, err := acu.Create(ctx, accountSpec)
 	if err != nil {
@@ -286,13 +286,13 @@ func (acu *accountCreateUpdater) update(ctx context.Context, account *storage.Ac
 		acu.acct.Status.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(acu.acct)
 
-		current := v1alpha1.NewStorageAccountSpec(account)
+		current := v1alpha2.NewStorageAccountSpec(account)
 		if reflect.DeepEqual(current, acu.acct.Spec.StorageAccountSpec) {
 			acu.acct.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
 			return requeueOnSuccess, acu.kube.Status().Update(ctx, acu.acct)
 		}
 
-		a, err := acu.Update(ctx, v1alpha1.ToStorageAccountUpdate(acu.acct.Spec.StorageAccountSpec))
+		a, err := acu.Update(ctx, v1alpha2.ToStorageAccountUpdate(acu.acct.Spec.StorageAccountSpec))
 		if err != nil {
 			acu.acct.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 			return resultRequeue, acu.kube.Status().Update(ctx, acu.acct)
@@ -305,11 +305,11 @@ func (acu *accountCreateUpdater) update(ctx context.Context, account *storage.Ac
 
 type accountSyncbacker struct {
 	secretupdater
-	acct *v1alpha1.Account
+	acct *v1alpha2.Account
 	kube client.Client
 }
 
-func newAccountSyncBacker(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha1.Account) *accountSyncbacker {
+func newAccountSyncBacker(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha2.Account) *accountSyncbacker {
 	return &accountSyncbacker{
 		secretupdater: newAccountSecretUpdater(ao, kube, acct),
 		kube:          kube,
@@ -318,12 +318,12 @@ func newAccountSyncBacker(ao azurestorage.AccountOperations, kube client.Client,
 }
 
 func (asb *accountSyncbacker) syncback(ctx context.Context, acct *storage.Account) (reconcile.Result, error) {
-	asb.acct.Spec.StorageAccountSpec = v1alpha1.NewStorageAccountSpec(acct)
+	asb.acct.Spec.StorageAccountSpec = v1alpha2.NewStorageAccountSpec(acct)
 	if err := asb.kube.Update(ctx, asb.acct); err != nil {
 		return resultRequeue, err
 	}
 
-	asb.acct.Status.StorageAccountStatus = v1alpha1.NewStorageAccountStatus(acct)
+	asb.acct.Status.StorageAccountStatus = v1alpha2.NewStorageAccountStatus(acct)
 
 	if acct.ProvisioningState != storage.Succeeded {
 		asb.acct.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
@@ -341,11 +341,11 @@ func (asb *accountSyncbacker) syncback(ctx context.Context, acct *storage.Accoun
 
 type accountSecretUpdater struct {
 	azurestorage.AccountOperations
-	acct *v1alpha1.Account
+	acct *v1alpha2.Account
 	kube client.Client
 }
 
-func newAccountSecretUpdater(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha1.Account) *accountSecretUpdater {
+func newAccountSecretUpdater(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha2.Account) *accountSecretUpdater {
 	return &accountSecretUpdater{
 		AccountOperations: ao,
 		acct:              acct,
@@ -354,7 +354,7 @@ func newAccountSecretUpdater(ao azurestorage.AccountOperations, kube client.Clie
 }
 
 func (asu *accountSecretUpdater) updatesecret(ctx context.Context, acct *storage.Account) error {
-	secret := resource.ConnectionSecretFor(asu.acct, v1alpha1.AccountGroupVersionKind)
+	secret := resource.ConnectionSecretFor(asu.acct, v1alpha2.AccountGroupVersionKind)
 	key := types.NamespacedName{Namespace: secret.Namespace, Name: secret.Name}
 
 	if acct.PrimaryEndpoints != nil {

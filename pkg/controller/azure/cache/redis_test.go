@@ -39,8 +39,8 @@ import (
 
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/cache/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/cache/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure/redis"
 	fakeredis "github.com/crossplaneio/stack-azure/pkg/clients/azure/redis/fake"
 )
@@ -58,8 +58,8 @@ const (
 	sslPort                = 6380
 	enableNonSSLPort       = true
 	shardCount             = 3
-	skuName                = v1alpha1.SKUNameBasic
-	skuFamily              = v1alpha1.SKUFamilyC
+	skuName                = v1alpha2.SKUNameBasic
+	skuFamily              = v1alpha2.SKUFamilyC
 	skuCapacity            = 1
 
 	primaryAccessKey = "sosecret"
@@ -77,9 +77,9 @@ var (
 	errorBoom          = errors.New("boom")
 	redisConfiguration = map[string]string{"cool": "socool"}
 
-	provider = azurev1alpha1.Provider{
+	provider = azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
-		Spec: azurev1alpha1.ProviderSpec{
+		Spec: azurev1alpha2.ProviderSpec{
 			Secret: corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{Name: providerSecretName},
 				Key:                  providerSecretKey,
@@ -93,79 +93,79 @@ var (
 	}
 )
 
-type redisResourceModifier func(*v1alpha1.Redis)
+type redisResourceModifier func(*v1alpha2.Redis)
 
 func withConditions(c ...runtimev1alpha1.Condition) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1alpha2.Redis) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withBindingPhase(p runtimev1alpha1.BindingPhase) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.SetBindingPhase(p) }
+	return func(r *v1alpha2.Redis) { r.Status.SetBindingPhase(p) }
 }
 
 func withState(s string) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.State = s }
+	return func(r *v1alpha2.Redis) { r.Status.State = s }
 }
 
 func withFinalizers(f ...string) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.ObjectMeta.Finalizers = f }
+	return func(r *v1alpha2.Redis) { r.ObjectMeta.Finalizers = f }
 }
 
 func withReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Spec.ReclaimPolicy = p }
+	return func(r *v1alpha2.Redis) { r.Spec.ReclaimPolicy = p }
 }
 
 func withResourceName(n string) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.ResourceName = n }
+	return func(r *v1alpha2.Redis) { r.Status.ResourceName = n }
 }
 
 func withProviderID(id string) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.ProviderID = id }
+	return func(r *v1alpha2.Redis) { r.Status.ProviderID = id }
 }
 
 func withEndpoint(e string) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.Endpoint = e }
+	return func(r *v1alpha2.Redis) { r.Status.Endpoint = e }
 }
 
 func withPort(p int) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.Port = p }
+	return func(r *v1alpha2.Redis) { r.Status.Port = p }
 }
 
 func withSSLPort(p int) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.Status.SSLPort = p }
+	return func(r *v1alpha2.Redis) { r.Status.SSLPort = p }
 }
 
 func withDeletionTimestamp(t time.Time) redisResourceModifier {
-	return func(r *v1alpha1.Redis) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
+	return func(r *v1alpha2.Redis) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
 }
 
-func redisResource(rm ...redisResourceModifier) *v1alpha1.Redis {
-	r := &v1alpha1.Redis{
+func redisResource(rm ...redisResourceModifier) *v1alpha2.Redis {
+	r := &v1alpha2.Redis{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:  namespace,
 			Name:       redisResourceName,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha1.RedisSpec{
+		Spec: v1alpha2.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference:                &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 				WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: connectionSecretName},
 			},
-			RedisParameters: v1alpha1.RedisParameters{
+			RedisParameters: v1alpha2.RedisParameters{
 				ResourceGroupName:  redisResourceGroupName,
 				Location:           location,
 				RedisConfiguration: redisConfiguration,
 				EnableNonSSLPort:   enableNonSSLPort,
 				ShardCount:         shardCount,
-				SKU: v1alpha1.SKUSpec{
+				SKU: v1alpha2.SKUSpec{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
 				},
 			},
 		},
-		Status: v1alpha1.RedisStatus{
+		Status: v1alpha2.RedisStatus{
 			Endpoint:   host,
 			Port:       port,
 			ProviderID: qualifiedName,
@@ -186,8 +186,8 @@ func TestCreate(t *testing.T) {
 	cases := []struct {
 		name        string
 		csdk        createsyncdeletekeyer
-		r           *v1alpha1.Redis
-		want        *v1alpha1.Redis
+		r           *v1alpha2.Redis
+		want        *v1alpha2.Redis
 		wantRequeue bool
 	}{
 		{
@@ -239,8 +239,8 @@ func TestSync(t *testing.T) {
 	cases := []struct {
 		name        string
 		csdk        createsyncdeletekeyer
-		r           *v1alpha1.Redis
-		want        *v1alpha1.Redis
+		r           *v1alpha2.Redis
+		want        *v1alpha2.Redis
 		wantRequeue bool
 	}{
 		{
@@ -254,7 +254,7 @@ func TestSync(t *testing.T) {
 				withResourceName(redisResourceName),
 			),
 			want: redisResource(
-				withState(v1alpha1.ProvisioningStateCreating),
+				withState(v1alpha2.ProvisioningStateCreating),
 				withResourceName(redisResourceName),
 				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess()),
 			),
@@ -272,7 +272,7 @@ func TestSync(t *testing.T) {
 			),
 			want: redisResource(
 				withResourceName(redisResourceName),
-				withState(v1alpha1.ProvisioningStateDeleting),
+				withState(v1alpha2.ProvisioningStateDeleting),
 				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess()),
 			),
 			wantRequeue: false,
@@ -289,7 +289,7 @@ func TestSync(t *testing.T) {
 			),
 			want: redisResource(
 				withResourceName(redisResourceName),
-				withState(v1alpha1.ProvisioningStateUpdating),
+				withState(v1alpha2.ProvisioningStateUpdating),
 				withConditions(runtimev1alpha1.ReconcileSuccess()),
 			),
 			wantRequeue: true,
@@ -322,7 +322,7 @@ func TestSync(t *testing.T) {
 			),
 			want: redisResource(
 				withResourceName(redisResourceName),
-				withState(v1alpha1.ProvisioningStateSucceeded),
+				withState(v1alpha2.ProvisioningStateSucceeded),
 				withProviderID(qualifiedName),
 				withEndpoint(host),
 				withPort(port),
@@ -366,7 +366,7 @@ func TestSync(t *testing.T) {
 			),
 			want: redisResource(
 				withResourceName(redisResourceName),
-				withState(v1alpha1.ProvisioningStateSucceeded),
+				withState(v1alpha2.ProvisioningStateSucceeded),
 				withProviderID(qualifiedName),
 				withEndpoint(host),
 				withPort(port),
@@ -423,7 +423,7 @@ func TestSync(t *testing.T) {
 			),
 			want: redisResource(
 				withResourceName(redisResourceName),
-				withState(v1alpha1.ProvisioningStateSucceeded),
+				withState(v1alpha2.ProvisioningStateSucceeded),
 				withProviderID(qualifiedName),
 				withEndpoint(host),
 				withPort(port),
@@ -454,8 +454,8 @@ func TestDelete(t *testing.T) {
 	cases := []struct {
 		name        string
 		csdk        createsyncdeletekeyer
-		r           *v1alpha1.Redis
-		want        *v1alpha1.Redis
+		r           *v1alpha2.Redis
+		want        *v1alpha2.Redis
 		wantRequeue bool
 	}{
 		{
@@ -521,8 +521,8 @@ func TestKey(t *testing.T) {
 	cases := []struct {
 		name    string
 		csdk    createsyncdeletekeyer
-		r       *v1alpha1.Redis
-		want    *v1alpha1.Redis
+		r       *v1alpha2.Redis
+		want    *v1alpha2.Redis
 		wantKey string
 	}{
 		{
@@ -567,7 +567,7 @@ func TestConnect(t *testing.T) {
 	cases := []struct {
 		name    string
 		conn    connecter
-		i       *v1alpha1.Redis
+		i       *v1alpha2.Redis
 		want    createsyncdeletekeyer
 		wantErr error
 	}{
@@ -577,7 +577,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
 					case client.ObjectKey{Namespace: namespace, Name: providerName}:
-						*obj.(*azurev1alpha1.Provider) = provider
+						*obj.(*azurev1alpha2.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						*obj.(*corev1.Secret) = providerSecret
 					}
@@ -605,7 +605,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
 					case client.ObjectKey{Namespace: namespace, Name: providerName}:
-						*obj.(*azurev1alpha1.Provider) = provider
+						*obj.(*azurev1alpha2.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
 					}
@@ -622,7 +622,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
 					case client.ObjectKey{Namespace: namespace, Name: providerName}:
-						*obj.(*azurev1alpha1.Provider) = provider
+						*obj.(*azurev1alpha2.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						*obj.(*corev1.Secret) = providerSecret
 					}
@@ -652,33 +652,33 @@ func TestConnect(t *testing.T) {
 }
 
 type mockConnector struct {
-	MockConnect func(ctx context.Context, i *v1alpha1.Redis) (createsyncdeletekeyer, error)
+	MockConnect func(ctx context.Context, i *v1alpha2.Redis) (createsyncdeletekeyer, error)
 }
 
-func (c *mockConnector) Connect(ctx context.Context, i *v1alpha1.Redis) (createsyncdeletekeyer, error) {
+func (c *mockConnector) Connect(ctx context.Context, i *v1alpha2.Redis) (createsyncdeletekeyer, error) {
 	return c.MockConnect(ctx, i)
 }
 
 type mockCSDK struct {
-	MockCreate func(ctx context.Context, i *v1alpha1.Redis) bool
-	MockSync   func(ctx context.Context, i *v1alpha1.Redis) bool
-	MockDelete func(ctx context.Context, i *v1alpha1.Redis) bool
-	MockKey    func(ctx context.Context, i *v1alpha1.Redis) string
+	MockCreate func(ctx context.Context, i *v1alpha2.Redis) bool
+	MockSync   func(ctx context.Context, i *v1alpha2.Redis) bool
+	MockDelete func(ctx context.Context, i *v1alpha2.Redis) bool
+	MockKey    func(ctx context.Context, i *v1alpha2.Redis) string
 }
 
-func (csdk *mockCSDK) Create(ctx context.Context, i *v1alpha1.Redis) bool {
+func (csdk *mockCSDK) Create(ctx context.Context, i *v1alpha2.Redis) bool {
 	return csdk.MockCreate(ctx, i)
 }
 
-func (csdk *mockCSDK) Sync(ctx context.Context, i *v1alpha1.Redis) bool {
+func (csdk *mockCSDK) Sync(ctx context.Context, i *v1alpha2.Redis) bool {
 	return csdk.MockSync(ctx, i)
 }
 
-func (csdk *mockCSDK) Delete(ctx context.Context, i *v1alpha1.Redis) bool {
+func (csdk *mockCSDK) Delete(ctx context.Context, i *v1alpha2.Redis) bool {
 	return csdk.MockDelete(ctx, i)
 }
 
-func (csdk *mockCSDK) Key(ctx context.Context, i *v1alpha1.Redis) string {
+func (csdk *mockCSDK) Key(ctx context.Context, i *v1alpha2.Redis) string {
 	return csdk.MockKey(ctx, i)
 }
 
@@ -693,12 +693,12 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "SuccessfulDelete",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockDelete: func(_ context.Context, _ *v1alpha1.Redis) bool { return false }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
+					return &mockCSDK{MockDelete: func(_ context.Context, _ *v1alpha2.Redis) bool { return false }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha1.Redis) = *(redisResource(withResourceName(redisResourceName), withDeletionTimestamp(time.Now())))
+						*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName), withDeletionTimestamp(time.Now())))
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -711,12 +711,12 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "SuccessfulCreate",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockCreate: func(_ context.Context, _ *v1alpha1.Redis) bool { return true }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
+					return &mockCSDK{MockCreate: func(_ context.Context, _ *v1alpha2.Redis) bool { return true }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha1.Redis) = *(redisResource())
+						*obj.(*v1alpha2.Redis) = *(redisResource())
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -729,17 +729,17 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "SuccessfulSync",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
 					return &mockCSDK{
-						MockSync: func(_ context.Context, _ *v1alpha1.Redis) bool { return false },
-						MockKey:  func(_ context.Context, _ *v1alpha1.Redis) string { return "" },
+						MockSync: func(_ context.Context, _ *v1alpha2.Redis) bool { return false },
+						MockKey:  func(_ context.Context, _ *v1alpha2.Redis) string { return "" },
 					}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
 						case client.ObjectKey{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha1.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
+							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
 						case client.ObjectKey{Namespace: namespace, Name: connectionSecretName}:
 							return kerrors.NewNotFound(schema.GroupResource{}, connectionSecretName)
 						}
@@ -784,17 +784,17 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "FailedToConnect",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
 					return nil, errorBoom
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha1.Redis) = *(redisResource())
+						*obj.(*v1alpha2.Redis) = *(redisResource())
 						return nil
 					},
 					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
 						want := redisResource(withConditions(runtimev1alpha1.ReconcileError(errorBoom)))
-						got := obj.(*v1alpha1.Redis)
+						got := obj.(*v1alpha2.Redis)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
 							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
 						}
@@ -809,8 +809,8 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "FailedToGetConnectionSecret",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha1.Redis) string { return "" }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
+					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha2.Redis) string { return "" }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
@@ -818,7 +818,7 @@ func TestReconcile(t *testing.T) {
 						case types.NamespacedName{Namespace: namespace, Name: connectionSecretName}:
 							return errorBoom
 						case types.NamespacedName{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha1.Redis) = *(redisResource(withResourceName(redisResourceName)))
+							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName)))
 						}
 						return nil
 					},
@@ -829,7 +829,7 @@ func TestReconcile(t *testing.T) {
 								runtimev1alpha1.ReconcileError(errors.Wrapf(errorBoom, "cannot get secret %s/%s", namespace, connectionSecretName)),
 							),
 						)
-						got := obj.(*v1alpha1.Redis)
+						got := obj.(*v1alpha2.Redis)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
 							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
 						}
@@ -844,8 +844,8 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "FailedToCreateConnectionSecret",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha1.Redis) string { return "" }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
+					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha2.Redis) string { return "" }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
@@ -853,7 +853,7 @@ func TestReconcile(t *testing.T) {
 						case types.NamespacedName{Namespace: namespace, Name: connectionSecretName}:
 							return kerrors.NewNotFound(schema.GroupResource{}, connectionSecretName)
 						case types.NamespacedName{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha1.Redis) = *(redisResource(withResourceName(redisResourceName)))
+							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName)))
 						}
 						return nil
 					},
@@ -864,7 +864,7 @@ func TestReconcile(t *testing.T) {
 								runtimev1alpha1.ReconcileError(errors.Wrapf(errorBoom, "cannot create secret %s/%s", namespace, connectionSecretName)),
 							),
 						)
-						got := obj.(*v1alpha1.Redis)
+						got := obj.(*v1alpha2.Redis)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
 							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
 						}
@@ -880,8 +880,8 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "FailedToUpdateConnectionSecret",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha1.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha1.Redis) string { return "" }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
+					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha2.Redis) string { return "" }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
@@ -889,7 +889,7 @@ func TestReconcile(t *testing.T) {
 						case types.NamespacedName{Namespace: namespace, Name: connectionSecretName}:
 							return nil
 						case types.NamespacedName{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha1.Redis) = *(redisResource(withResourceName(redisResourceName)))
+							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName)))
 						}
 						return nil
 					},
@@ -897,7 +897,7 @@ func TestReconcile(t *testing.T) {
 						switch got := obj.(type) {
 						case *corev1.Secret:
 							return errorBoom
-						case *v1alpha1.Redis:
+						case *v1alpha2.Redis:
 							want := redisResource(
 								withResourceName(redisResourceName),
 								withConditions(
@@ -936,7 +936,7 @@ func TestReconcile(t *testing.T) {
 func TestConnectionSecret(t *testing.T) {
 	cases := []struct {
 		name     string
-		r        *v1alpha1.Redis
+		r        *v1alpha2.Redis
 		password string
 		want     *corev1.Secret
 	}{
@@ -948,7 +948,7 @@ func TestConnectionSecret(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:            connectionSecretName,
 					Namespace:       namespace,
-					OwnerReferences: []metav1.OwnerReference{meta.AsController(meta.ReferenceTo(redisResource(), v1alpha1.RedisGroupVersionKind))},
+					OwnerReferences: []metav1.OwnerReference{meta.AsController(meta.ReferenceTo(redisResource(), v1alpha2.RedisGroupVersionKind))},
 				},
 				Data: map[string][]byte{
 					runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(host),

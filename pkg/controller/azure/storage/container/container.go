@@ -38,7 +38,7 @@ import (
 
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
-	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha1"
+	"github.com/crossplaneio/stack-azure/azure/apis/storage/v1alpha2"
 	"github.com/crossplaneio/stack-azure/pkg/clients/azure/storage"
 )
 
@@ -77,19 +77,19 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(controllerName).
-		For(&v1alpha1.Container{}).
+		For(&v1alpha2.Container{}).
 		Complete(r)
 }
 
 // Reconcile reads that state of the cluster for a Provider acct and makes changes based on the state read
 // and what is in the Provider.Spec
 func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha1.ContainerKindAPIVersion, "request", request)
+	log.V(logging.Debug).Info("reconciling", "kind", v1alpha2.ContainerKindAPIVersion, "request", request)
 
 	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
 	defer cancel()
 
-	c := &v1alpha1.Container{}
+	c := &v1alpha2.Container{}
 	if err := r.Get(ctx, request.NamespacedName, c); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -112,16 +112,16 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 type syncdeleterMaker interface {
-	newSyncdeleter(context.Context, *v1alpha1.Container) (syncdeleter, error)
+	newSyncdeleter(context.Context, *v1alpha2.Container) (syncdeleter, error)
 }
 
 type containerSyncdeleterMaker struct {
 	client.Client
 }
 
-func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha1.Container) (syncdeleter, error) {
+func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha2.Container) (syncdeleter, error) {
 	// Retrieve storage account reference object
-	acct := &v1alpha1.Account{}
+	acct := &v1alpha2.Account{}
 	n := types.NamespacedName{Namespace: c.GetNamespace(), Name: c.Spec.AccountReference.Name}
 	if err := m.Get(ctx, n, acct); err != nil {
 		// For storage account not found errors - check if we are on deletion path
@@ -153,7 +153,7 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 
 	// set owner reference on the container to storage account, thus
 	// if the account is delete - container is garbage collected as well
-	or := meta.AsOwner(meta.ReferenceTo(acct, v1alpha1.AccountGroupVersionKind))
+	or := meta.AsOwner(meta.ReferenceTo(acct, v1alpha2.AccountGroupVersionKind))
 	or.BlockOwnerDeletion = to.BoolPtr(true)
 	meta.AddOwnerReference(c, or)
 
@@ -194,7 +194,7 @@ type containerSyncdeleter struct {
 	createupdater
 	storage.ContainerOperations
 	kube      client.Client
-	container *v1alpha1.Container
+	container *v1alpha2.Container
 }
 
 func (csd *containerSyncdeleter) delete(ctx context.Context) (reconcile.Result, error) {
@@ -236,7 +236,7 @@ type createupdater interface {
 type containerCreateUpdater struct {
 	storage.ContainerOperations
 	kube      client.Client
-	container *v1alpha1.Container
+	container *v1alpha2.Container
 }
 
 var _ createupdater = &containerCreateUpdater{}
