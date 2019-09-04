@@ -298,7 +298,7 @@ func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha1.MysqlServerVirtualN
 		Name: ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 			VirtualNetworkSubnetID:           ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
-			IgnoreMissingVnetServiceEndpoint: ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint),
+			IgnoreMissingVnetServiceEndpoint: ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, FieldRequired),
 		},
 	}
 }
@@ -553,7 +553,7 @@ func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha1.PostgresqlServ
 		Name: ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 			VirtualNetworkSubnetID:           ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
-			IgnoreMissingVnetServiceEndpoint: ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint),
+			IgnoreMissingVnetServiceEndpoint: ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, FieldRequired),
 		},
 	}
 }
