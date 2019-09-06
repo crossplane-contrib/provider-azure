@@ -32,6 +32,7 @@ import (
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/resourcegroup"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/storage/account"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/storage/container"
+	computeclients "github.com/crossplaneio/stack-gcp/pkg/clients/azure/compute"
 )
 
 // Controllers passes down config and adds individual controllers to the manager.
@@ -61,7 +62,7 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 	}
 
 	if err := (&compute.AKSClusterController{
-		Reconciler: compute.NewAKSClusterReconciler(mgr, &azureclients.AKSSetupClientFactory{}, clientset),
+		Reconciler: compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{}, clientset),
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}

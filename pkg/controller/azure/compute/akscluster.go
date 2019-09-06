@@ -43,8 +43,10 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
-	computev1alpha1 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
+	computev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
 	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
+	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/compute"
 )
 
 const (
@@ -65,7 +67,7 @@ var (
 type Reconciler struct {
 	client.Client
 	clientset          kubernetes.Interface
-	aksSetupAPIFactory azureclients.AKSSetupAPIFactory
+	aksSetupAPIFactory compute.AKSSetupAPIFactory
 	scheme             *runtime.Scheme
 }
 
@@ -80,12 +82,12 @@ type AKSClusterController struct {
 func (c *AKSClusterController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		Named("AKSCluster-controller").
-		For(&computev1alpha1.AKSCluster{}).
+		For(&computev1alpha2.AKSCluster{}).
 		Complete(c.Reconciler)
 }
 
 // NewAKSClusterReconciler returns a new reconcile.Reconciler
-func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory azureclients.AKSSetupAPIFactory,
+func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory compute.AKSSetupAPIFactory,
 	clientset kubernetes.Interface) *Reconciler {
 
 	return &Reconciler{
@@ -99,9 +101,9 @@ func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory azureclient
 // Reconcile reads that state of the cluster for a AKSCluster object and makes changes based on the state read
 // and what is in its spec.
 func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", computev1alpha1.AKSClusterKindAPIVersion, "request", request)
+	log.V(logging.Debug).Info("reconciling", "kind", computev1alpha2.AKSClusterKindAPIVersion, "request", request)
 	// Fetch the CRD instance
-	instance := &computev1alpha1.AKSCluster{}
+	instance := &computev1alpha2.AKSCluster{}
 	err := r.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
@@ -146,7 +148,7 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	return r.sync(instance, aksClient)
 }
 
-func (r *Reconciler) connect(instance *computev1alpha1.AKSCluster) (*azureclients.AKSSetupClient, error) {
+func (r *Reconciler) connect(instance *computev1alpha2.AKSCluster) (*compute.AKSSetupClient, error) {
 	// Fetch Provider
 	p := &azurev1alpha2.Provider{}
 	err := r.Get(ctx, meta.NamespacedNameOf(instance.Spec.ProviderReference), p)
@@ -160,7 +162,7 @@ func (r *Reconciler) connect(instance *computev1alpha1.AKSCluster) (*azureclient
 // TODO(negz): This method's cyclomatic complexity is a little high. Consider
 // refactoring to reduce said complexity if you touch it.
 // nolint:gocyclo
-func (r *Reconciler) create(instance *computev1alpha1.AKSCluster, aksClient *azureclients.AKSSetupClient) (reconcile.Result, error) {
+func (r *Reconciler) create(instance *computev1alpha2.AKSCluster, aksClient *compute.AKSSetupClient) (reconcile.Result, error) {
 	instance.Status.SetConditions(runtimev1alpha1.Creating())
 	// create or fetch the secret for the AD application and its service principal the cluster will use for Azure APIs
 	spSecret, err := r.servicePrincipalSecret(instance)
@@ -203,9 +205,19 @@ func (r *Reconciler) create(instance *computev1alpha1.AKSCluster, aksClient *azu
 		r.Update(ctx, instance) // nolint:errcheck
 	}
 
+	// create the role assignment for the service principal if subnet defined
+	if instance.Spec.VnetSubnetID != "" {
+		log.V(logging.Debug).Info("starting create of role assignment for service principal for AKS cluster", "instance", instance)
+		name := string(instance.GetUID())
+		_, err := aksClient.RoleAssignmentsAPI.CreateRoleAssignment(ctx, instance.Status.ServicePrincipalID, instance.Spec.VnetSubnetID, name)
+		if err != nil {
+			return r.fail(instance, errors.Wrapf(err, "failed to create role assignment for service principal for AKS cluster %s", instance.Name))
+		}
+	}
+
 	// start the creation of the AKS cluster
 	log.V(logging.Debug).Info("starting create of AKS cluster", "instance", instance)
-	clusterName := azureclients.SanitizeClusterName(instance.Name)
+	clusterName := compute.SanitizeClusterName(instance.Name)
 	createOp, err := aksClient.AKSClusterAPI.CreateOrUpdateBegin(ctx, *instance, clusterName, *app.AppID, spSecret)
 	if err != nil {
 		return r.fail(instance, errors.Wrapf(err, "failed to start create operation for AKS cluster %s", instance.Name))
@@ -230,7 +242,7 @@ func (r *Reconciler) create(instance *computev1alpha1.AKSCluster, aksClient *azu
 		// the update went through, let's do a get to verify the fields are committed/consistent
 		// TODO(negz): Is this necessary? The update call should populate the
 		// instance struct with the latest view of the world.
-		fetchedInstance := &computev1alpha1.AKSCluster{}
+		fetchedInstance := &computev1alpha2.AKSCluster{}
 		if err := r.Get(ctx, types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, fetchedInstance); err != nil {
 			return false, nil
 		}
@@ -248,7 +260,7 @@ func (r *Reconciler) create(instance *computev1alpha1.AKSCluster, aksClient *azu
 	return resultRequeue, updateWaitErr
 }
 
-func (r *Reconciler) waitForCompletion(instance *computev1alpha1.AKSCluster, aksClient *azureclients.AKSSetupClient) (reconcile.Result, error) {
+func (r *Reconciler) waitForCompletion(instance *computev1alpha2.AKSCluster, aksClient *compute.AKSSetupClient) (reconcile.Result, error) {
 	// check if the operation is done yet and if there was any error
 	done, err := aksClient.AKSClusterAPI.CreateOrUpdateEnd([]byte(instance.Status.RunningOperation))
 	if !done {
@@ -269,11 +281,11 @@ func (r *Reconciler) waitForCompletion(instance *computev1alpha1.AKSCluster, aks
 	return resultRequeue, r.Update(ctx, instance)
 }
 
-func (r *Reconciler) created(instance *computev1alpha1.AKSCluster) bool {
+func (r *Reconciler) created(instance *computev1alpha2.AKSCluster) bool {
 	return instance.Status.ClusterName != ""
 }
 
-func (r *Reconciler) sync(instance *computev1alpha1.AKSCluster, aksClient *azureclients.AKSSetupClient) (reconcile.Result, error) {
+func (r *Reconciler) sync(instance *computev1alpha2.AKSCluster, aksClient *compute.AKSSetupClient) (reconcile.Result, error) {
 	cluster, err := aksClient.AKSClusterAPI.Get(ctx, *instance)
 	if err != nil {
 		return r.fail(instance, err)
@@ -305,7 +317,7 @@ func (r *Reconciler) sync(instance *computev1alpha1.AKSCluster, aksClient *azure
 }
 
 // delete performs a deletion of the AKS cluster if needed
-func (r *Reconciler) delete(instance *computev1alpha1.AKSCluster, aksClient *azureclients.AKSSetupClient) (reconcile.Result, error) {
+func (r *Reconciler) delete(instance *computev1alpha2.AKSCluster, aksClient *compute.AKSSetupClient) (reconcile.Result, error) { // nolint:gocyclo
 	instance.Status.SetConditions(runtimev1alpha1.Deleting())
 	if instance.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
 		// delete the AKS cluster
@@ -317,18 +329,28 @@ func (r *Reconciler) delete(instance *computev1alpha1.AKSCluster, aksClient *azu
 		deleteFutureJSON, _ := deleteFuture.MarshalJSON()
 		log.V(logging.Debug).Info("started delete of AKS cluster", "instance", instance, "operation", string(deleteFutureJSON))
 
+		// delete the role assignment if created
+		if instance.Spec.VnetSubnetID != "" {
+			log.V(logging.Debug).Info("deleting role assignment for service principal for AKS cluster", "instance", instance)
+			name := string(instance.GetUID())
+			err = aksClient.RoleAssignmentsAPI.DeleteRoleAssignment(ctx, instance.Spec.VnetSubnetID, name)
+			if err != nil && !azureclients.IsNotFound(err) {
+				return r.fail(instance, errors.Wrap(err, "failed to delete role assignment for service principal"))
+			}
+		}
+
 		// delete the service principal
 		log.V(logging.Debug).Info("deleting service principal for AKS cluster", "instance", instance)
 		err = aksClient.ServicePrincipalAPI.DeleteServicePrincipal(ctx, instance.Status.ServicePrincipalID)
 		if err != nil && !azureclients.IsNotFound(err) {
-			return r.fail(instance, errors.Wrap(err, "failed to service principal"))
+			return r.fail(instance, errors.Wrap(err, "failed to delete service principal"))
 		}
 
 		// delete the AD application
 		log.V(logging.Debug).Info("deleting app for AKS cluster", "instance", instance)
 		err = aksClient.ApplicationAPI.DeleteApplication(ctx, instance.Status.ApplicationObjectID)
 		if err != nil && !azureclients.IsNotFound(err) {
-			return r.fail(instance, errors.Wrap(err, "failed to AD application"))
+			return r.fail(instance, errors.Wrap(err, "failed to delete AD application"))
 		}
 
 		log.V(logging.Debug).Info("all resources deleted for AKS cluster", "instance", instance)
@@ -340,12 +362,12 @@ func (r *Reconciler) delete(instance *computev1alpha1.AKSCluster, aksClient *azu
 }
 
 // fail - helper function to set fail condition with reason and message
-func (r *Reconciler) fail(instance *computev1alpha1.AKSCluster, err error) (reconcile.Result, error) {
+func (r *Reconciler) fail(instance *computev1alpha2.AKSCluster, err error) (reconcile.Result, error) {
 	instance.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 	return resultRequeue, r.Update(ctx, instance)
 }
 
-func (r *Reconciler) servicePrincipalSecret(instance *computev1alpha1.AKSCluster) (string, error) {
+func (r *Reconciler) servicePrincipalSecret(instance *computev1alpha2.AKSCluster) (string, error) {
 	// check to see if the secret already exists
 	selector := v1.SecretKeySelector{LocalObjectReference: instance.Spec.WriteServicePrincipalSecretTo, Key: spSecretKey}
 	spSecretValue, err := util.SecretData(r.clientset, instance.Namespace, selector)
@@ -360,7 +382,7 @@ func (r *Reconciler) servicePrincipalSecret(instance *computev1alpha1.AKSCluster
 	}
 
 	// save the service principal secret
-	ref := meta.AsController(meta.ReferenceTo(instance, computev1alpha1.AKSClusterGroupVersionKind))
+	ref := meta.AsController(meta.ReferenceTo(instance, computev1alpha2.AKSClusterGroupVersionKind))
 	spSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            selector.Name,
@@ -377,7 +399,7 @@ func (r *Reconciler) servicePrincipalSecret(instance *computev1alpha1.AKSCluster
 	return newSPSecretValue.String(), nil
 }
 
-func (r *Reconciler) connectionSecret(instance *computev1alpha1.AKSCluster, client *azureclients.AKSSetupClient) (*v1.Secret, error) {
+func (r *Reconciler) connectionSecret(instance *computev1alpha2.AKSCluster, client *compute.AKSSetupClient) (*v1.Secret, error) {
 	creds, err := client.ListClusterAdminCredentials(ctx, *instance)
 	if err != nil {
 		return nil, err
@@ -409,7 +431,7 @@ func (r *Reconciler) connectionSecret(instance *computev1alpha1.AKSCluster, clie
 		return nil, errors.Errorf("auth-info configuration is not found: %s", kctx.AuthInfo)
 	}
 
-	secret := resource.ConnectionSecretFor(instance, computev1alpha1.AKSClusterGroupVersionKind)
+	secret := resource.ConnectionSecretFor(instance, computev1alpha2.AKSClusterGroupVersionKind)
 	secret.Data = map[string][]byte{
 		runtimev1alpha1.ResourceCredentialsSecretEndpointKey:   []byte(cluster.Server),
 		runtimev1alpha1.ResourceCredentialsSecretCAKey:         cluster.CertificateAuthorityData,
