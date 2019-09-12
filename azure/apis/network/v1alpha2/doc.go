@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha2 contains managed resources for Azure storage services such
-// as containers and accounts.
+// Package v1alpha2 contains managed resources for Azure network services such
+// as virtual networks.
 // +kubebuilder:object:generate=true
-// +groupName=storage.azure.crossplane.io
+// +groupName=network.azure.crossplane.io
 // +versionName=v1alpha2
 package v1alpha2
