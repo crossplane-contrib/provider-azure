@@ -14,5 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha2 contains API Schema definitions for the database v1alpha2 API group
+// Package v1alpha2 contains managed resources for Azure database services such
+// as SQL server.
+// +kubebuilder:object:generate=true
+// +groupName=database.azure.crossplane.io
+// +versionName=v1alpha2
 package v1alpha2

@@ -14,5 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha2 contains API Schema definitions for the container v1alpha2 API group
+// Package v1alpha2 contains managed resources for Azure compute services such
+// as AKS.
+// +kubebuilder:object:generate=true
+// +groupName=compute.azure.crossplane.io
+// +versionName=v1alpha2
 package v1alpha2
