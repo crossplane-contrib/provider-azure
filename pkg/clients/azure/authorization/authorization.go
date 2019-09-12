@@ -25,8 +25,8 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 )
 
 const (
@@ -46,7 +46,7 @@ type RoleAssignmentsClient struct {
 }
 
 // NewRoleAssignmentsClient returns a new Azure Role Assignments client.
-func NewRoleAssignmentsClient(provider *v1alpha1.Provider, clientset kubernetes.Interface) (*RoleAssignmentsClient, error) {
+func NewRoleAssignmentsClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*RoleAssignmentsClient, error) {
 	client, err := azure.NewClient(provider, clientset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Azure client: %+v", err)

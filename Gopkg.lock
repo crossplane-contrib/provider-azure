@@ -112,7 +112,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:529c9ffa7fa7b9b637a7a845e88b41728e396a829d28cdc9fae23853a3b53ce6"
+  digest = "1:e891dabca719a29f484ab3becd8ebdf009856ade6cc5baa46c5d97ad8703788a"
   name = "github.com/crossplaneio/crossplane"
   packages = [
     "apis",
@@ -130,14 +130,6 @@
     "apis/storage/v1alpha1",
     "apis/workload",
     "apis/workload/v1alpha1",
-    "azure/apis/database/v1alpha1",
-    "azure/apis/network/v1alpha1",
-    "azure/apis/v1alpha1",
-    "pkg/clients/azure",
-    "pkg/clients/azure/fake",
-    "pkg/clients/azure/network",
-    "pkg/clients/azure/network/fake",
-    "pkg/test",
   ]
   pruneopts = "UT"
   revision = "442d65948ea42ac54e2564e8e3b1f9cab47e167d"
@@ -1260,14 +1252,6 @@
     "github.com/crossplaneio/crossplane/apis/compute/v1alpha1",
     "github.com/crossplaneio/crossplane/apis/database/v1alpha1",
     "github.com/crossplaneio/crossplane/apis/storage/v1alpha1",
-    "github.com/crossplaneio/crossplane/azure/apis/database/v1alpha1",
-    "github.com/crossplaneio/crossplane/azure/apis/network/v1alpha1",
-    "github.com/crossplaneio/crossplane/azure/apis/v1alpha1",
-    "github.com/crossplaneio/crossplane/pkg/clients/azure",
-    "github.com/crossplaneio/crossplane/pkg/clients/azure/fake",
-    "github.com/crossplaneio/crossplane/pkg/clients/azure/network",
-    "github.com/crossplaneio/crossplane/pkg/clients/azure/network/fake",
-    "github.com/crossplaneio/crossplane/pkg/test",
     "github.com/google/go-cmp/cmp",
     "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/google/uuid",

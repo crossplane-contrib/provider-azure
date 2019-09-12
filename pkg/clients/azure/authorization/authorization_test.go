@@ -25,7 +25,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure/authorization/fake"
+
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/authorization/fake"
 )
 
 const (

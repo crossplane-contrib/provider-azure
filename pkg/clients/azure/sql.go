@@ -293,7 +293,7 @@ func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) 
 }
 
 // NewMySQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
-func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha1.MysqlServerVirtualNetworkRule) mysql.VirtualNetworkRule {
+func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha2.MysqlServerVirtualNetworkRule) mysql.VirtualNetworkRule {
 	return mysql.VirtualNetworkRule{
 		Name: ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
@@ -304,7 +304,7 @@ func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha1.MysqlServerVirtualN
 }
 
 // MySQLServerVirtualNetworkRuleNeedsUpdate determines if a virtual network rule needs to be updated
-func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha1.MysqlServerVirtualNetworkRule, az mysql.VirtualNetworkRule) bool {
+func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.MysqlServerVirtualNetworkRule, az mysql.VirtualNetworkRule) bool {
 	up := NewMySQLVirtualNetworkRuleParameters(kube)
 
 	switch {
@@ -318,8 +318,8 @@ func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha1.MysqlServerV
 }
 
 // MySQLVirtualNetworkRuleStatusFromAzure converts an Azure subnet to a SubnetStatus
-func MySQLVirtualNetworkRuleStatusFromAzure(az mysql.VirtualNetworkRule) azuredbv1alpha1.VirtualNetworkRuleStatus {
-	return azuredbv1alpha1.VirtualNetworkRuleStatus{
+func MySQLVirtualNetworkRuleStatusFromAzure(az mysql.VirtualNetworkRule) azuredbv1alpha2.VirtualNetworkRuleStatus {
+	return azuredbv1alpha2.VirtualNetworkRuleStatus{
 		State: string(az.VirtualNetworkRuleProperties.State),
 		ID:    ToString(az.ID),
 		Type:  ToString(az.Type),
@@ -548,7 +548,7 @@ func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []b
 }
 
 // NewPostgreSQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
-func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha1.PostgresqlServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
+func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha2.PostgresqlServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
 	return postgresql.VirtualNetworkRule{
 		Name: ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
@@ -559,7 +559,7 @@ func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha1.PostgresqlServ
 }
 
 // PostgreSQLServerVirtualNetworkRuleNeedsUpdate determines if a virtual network rule needs to be updated
-func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha1.PostgresqlServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) bool {
+func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.PostgresqlServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) bool {
 	up := NewPostgreSQLVirtualNetworkRuleParameters(kube)
 
 	switch {
@@ -573,8 +573,8 @@ func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha1.Postgre
 }
 
 // PostgreSQLVirtualNetworkRuleStatusFromAzure converts an Azure subnet to a SubnetStatus
-func PostgreSQLVirtualNetworkRuleStatusFromAzure(az postgresql.VirtualNetworkRule) azuredbv1alpha1.VirtualNetworkRuleStatus {
-	return azuredbv1alpha1.VirtualNetworkRuleStatus{
+func PostgreSQLVirtualNetworkRuleStatusFromAzure(az postgresql.VirtualNetworkRule) azuredbv1alpha2.VirtualNetworkRuleStatus {
+	return azuredbv1alpha2.VirtualNetworkRuleStatus{
 		State: string(az.State),
 		ID:    ToString(az.ID),
 		Type:  ToString(az.Type),

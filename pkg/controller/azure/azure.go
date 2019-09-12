@@ -22,6 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
+	computeclients "github.com/crossplaneio/stack-azure/pkg/clients/azure/compute"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/cache"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/compute"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/database"
@@ -32,7 +33,6 @@ import (
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/resourcegroup"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/storage/account"
 	"github.com/crossplaneio/stack-azure/pkg/controller/azure/storage/container"
-	computeclients "github.com/crossplaneio/stack-gcp/pkg/clients/azure/compute"
 )
 
 // Controllers passes down config and adds individual controllers to the manager.

@@ -35,11 +35,12 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	"github.com/crossplaneio/crossplane/azure/apis/network/v1alpha1"
-	azurev1alpha1 "github.com/crossplaneio/crossplane/azure/apis/v1alpha1"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
-	networkclient "github.com/crossplaneio/crossplane/pkg/clients/azure/network"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure/network/fake"
+
+	"github.com/crossplaneio/stack-azure/azure/apis/network/v1alpha2"
+	azurev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
+	networkclient "github.com/crossplaneio/stack-azure/pkg/clients/azure/network"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/network/fake"
 )
 
 const (
@@ -61,9 +62,9 @@ var (
 	errorBoom = errors.New("boom")
 	tags      = map[string]string{"one": "test", "two": "test"}
 
-	provider = azurev1alpha1.Provider{
+	provider = azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
-		Spec: azurev1alpha1.ProviderSpec{
+		Spec: azurev1alpha2.ProviderSpec{
 			Secret: corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{Name: providerSecretName},
 				Key:                  providerSecretKey,
@@ -85,32 +86,32 @@ type testCase struct {
 	wantErr error
 }
 
-type virtualNetworkModifier func(*v1alpha1.VirtualNetwork)
+type virtualNetworkModifier func(*v1alpha2.VirtualNetwork)
 
 func withConditions(c ...runtimev1alpha1.Condition) virtualNetworkModifier {
-	return func(r *v1alpha1.VirtualNetwork) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1alpha2.VirtualNetwork) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withState(s string) virtualNetworkModifier {
-	return func(r *v1alpha1.VirtualNetwork) { r.Status.State = s }
+	return func(r *v1alpha2.VirtualNetwork) { r.Status.State = s }
 }
 
-func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha1.VirtualNetwork {
-	r := &v1alpha1.VirtualNetwork{
+func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha2.VirtualNetwork {
+	r := &v1alpha2.VirtualNetwork{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:  namespace,
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha1.VirtualNetworkSpec{
+		Spec: v1alpha2.VirtualNetworkSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
 			Name:              name,
 			ResourceGroupName: resourceGroupName,
-			VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-				AddressSpace: v1alpha1.AddressSpace{
+			VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+				AddressSpace: v1alpha2.AddressSpace{
 					AddressPrefixes: []string{addressPrefix},
 				},
 				EnableDDOSProtection: true,
@@ -119,7 +120,7 @@ func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha1.VirtualNetwork {
 			Location: location,
 			Tags:     tags,
 		},
-		Status: v1alpha1.VirtualNetworkStatus{},
+		Status: v1alpha2.VirtualNetworkStatus{},
 	}
 
 	for _, m := range vm {
@@ -138,8 +139,8 @@ func TestCreate(t *testing.T) {
 		{
 			name:    "NotVirtualNetwok",
 			e:       &external{client: &fake.MockVirtualNetworksClient{}},
-			r:       &v1alpha1.Subnet{},
-			want:    &v1alpha1.Subnet{},
+			r:       &v1alpha2.Subnet{},
+			want:    &v1alpha2.Subnet{},
 			wantErr: errors.New(errNotVirtualNetwork),
 		},
 		{
@@ -189,8 +190,8 @@ func TestObserve(t *testing.T) {
 		{
 			name:    "NotVirtualNetwok",
 			e:       &external{client: &fake.MockVirtualNetworksClient{}},
-			r:       &v1alpha1.Subnet{},
-			want:    &v1alpha1.Subnet{},
+			r:       &v1alpha2.Subnet{},
+			want:    &v1alpha2.Subnet{},
 			wantErr: errors.New(errNotVirtualNetwork),
 		},
 		{
@@ -270,8 +271,8 @@ func TestUpdate(t *testing.T) {
 		{
 			name:    "NotVirtualNetwok",
 			e:       &external{client: &fake.MockVirtualNetworksClient{}},
-			r:       &v1alpha1.Subnet{},
-			want:    &v1alpha1.Subnet{},
+			r:       &v1alpha2.Subnet{},
+			want:    &v1alpha2.Subnet{},
 			wantErr: errors.New(errNotVirtualNetwork),
 		},
 		{
@@ -380,8 +381,8 @@ func TestDelete(t *testing.T) {
 		{
 			name:    "NotVirtualNetwok",
 			e:       &external{client: &fake.MockVirtualNetworksClient{}},
-			r:       &v1alpha1.Subnet{},
-			want:    &v1alpha1.Subnet{},
+			r:       &v1alpha2.Subnet{},
+			want:    &v1alpha2.Subnet{},
 			wantErr: errors.New(errNotVirtualNetwork),
 		},
 		{
@@ -451,7 +452,7 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "NotVirtualNetwork",
 			conn:    &connecter{client: &test.MockClient{}},
-			i:       &v1alpha1.Subnet{},
+			i:       &v1alpha2.Subnet{},
 			want:    nil,
 			wantErr: errors.New(errNotVirtualNetwork),
 		},
@@ -462,7 +463,7 @@ func TestConnect(t *testing.T) {
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
 						case client.ObjectKey{Namespace: namespace, Name: providerName}:
-							*obj.(*azurev1alpha1.Provider) = provider
+							*obj.(*azurev1alpha2.Provider) = provider
 						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 							*obj.(*corev1.Secret) = providerSecret
 						}

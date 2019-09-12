@@ -28,8 +28,8 @@ import (
 	computev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
 	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
 
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure/authorization"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/authorization"
 )
 
 const (

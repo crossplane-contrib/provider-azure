@@ -176,18 +176,18 @@ func TestNewMySQLVirtualNetworkRulesClient(t *testing.T) {
 func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *databasev1alpha1.MysqlServerVirtualNetworkRule
+		r    *databasev1alpha2.MysqlServerVirtualNetworkRule
 		want mysql.VirtualNetworkRule
 	}{
 		{
 			name: "Successful",
-			r: &databasev1alpha1.MysqlServerVirtualNetworkRule{
+			r: &databasev1alpha2.MysqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -203,13 +203,13 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &databasev1alpha1.MysqlServerVirtualNetworkRule{
+			r: &databasev1alpha2.MysqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID: vnetSubnetID,
 					},
 				},
@@ -237,19 +237,19 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *databasev1alpha1.MysqlServerVirtualNetworkRule
+		kube *databasev1alpha2.MysqlServerVirtualNetworkRule
 		az   mysql.VirtualNetworkRule
 		want bool
 	}{
 		{
 			name: "NoUpdateNeeded",
-			kube: &databasev1alpha1.MysqlServerVirtualNetworkRule{
+			kube: &databasev1alpha2.MysqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -266,13 +266,13 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededVirtualNetworkSubnetID",
-			kube: &databasev1alpha1.MysqlServerVirtualNetworkRule{
+			kube: &databasev1alpha2.MysqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -289,13 +289,13 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededIgnoreMissingVnetServiceEndpoint",
-			kube: &databasev1alpha1.MysqlServerVirtualNetworkRule{
+			kube: &databasev1alpha2.MysqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -326,7 +326,7 @@ func TestMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 	cases := []struct {
 		name string
 		r    mysql.VirtualNetworkRule
-		want databasev1alpha1.VirtualNetworkRuleStatus
+		want databasev1alpha2.VirtualNetworkRuleStatus
 	}{
 		{
 			name: "SuccessfulFull",
@@ -340,7 +340,7 @@ func TestMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            mysql.Ready,
 				},
 			},
-			want: databasev1alpha1.VirtualNetworkRuleStatus{
+			want: databasev1alpha2.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 				Type:  resourceType,
@@ -357,7 +357,7 @@ func TestMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            mysql.Ready,
 				},
 			},
-			want: databasev1alpha1.VirtualNetworkRuleStatus{
+			want: databasev1alpha2.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 			},
@@ -409,18 +409,18 @@ func TestNewPostgreSQLVirtualNetworkRulesClient(t *testing.T) {
 func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *databasev1alpha1.PostgresqlServerVirtualNetworkRule
+		r    *databasev1alpha2.PostgresqlServerVirtualNetworkRule
 		want postgresql.VirtualNetworkRule
 	}{
 		{
 			name: "Successful",
-			r: &databasev1alpha1.PostgresqlServerVirtualNetworkRule{
+			r: &databasev1alpha2.PostgresqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -436,13 +436,13 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &databasev1alpha1.PostgresqlServerVirtualNetworkRule{
+			r: &databasev1alpha2.PostgresqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID: vnetSubnetID,
 					},
 				},
@@ -470,19 +470,19 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *databasev1alpha1.PostgresqlServerVirtualNetworkRule
+		kube *databasev1alpha2.PostgresqlServerVirtualNetworkRule
 		az   postgresql.VirtualNetworkRule
 		want bool
 	}{
 		{
 			name: "NoUpdateNeeded",
-			kube: &databasev1alpha1.PostgresqlServerVirtualNetworkRule{
+			kube: &databasev1alpha2.PostgresqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -499,13 +499,13 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededVirtualNetworkSubnetID",
-			kube: &databasev1alpha1.PostgresqlServerVirtualNetworkRule{
+			kube: &databasev1alpha2.PostgresqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -522,13 +522,13 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededIgnoreMissingVnetServiceEndpoint",
-			kube: &databasev1alpha1.PostgresqlServerVirtualNetworkRule{
+			kube: &databasev1alpha2.PostgresqlServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha1.VirtualNetworkRuleSpec{
+				Spec: databasev1alpha2.VirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha1.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: databasev1alpha2.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -559,7 +559,7 @@ func TestPostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 	cases := []struct {
 		name string
 		r    postgresql.VirtualNetworkRule
-		want databasev1alpha1.VirtualNetworkRuleStatus
+		want databasev1alpha2.VirtualNetworkRuleStatus
 	}{
 		{
 			name: "SuccessfulFull",
@@ -573,7 +573,7 @@ func TestPostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            postgresql.Ready,
 				},
 			},
-			want: databasev1alpha1.VirtualNetworkRuleStatus{
+			want: databasev1alpha2.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 				Type:  resourceType,
@@ -590,7 +590,7 @@ func TestPostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            postgresql.Ready,
 				},
 			},
-			want: databasev1alpha1.VirtualNetworkRuleStatus{
+			want: databasev1alpha2.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 			},

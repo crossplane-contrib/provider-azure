@@ -171,7 +171,7 @@ func testInstance(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
 	}
 }
 
-func testInstanceInSubnet(p *azurev1alpha1.Provider) *computev1alpha1.AKSCluster {
+func testInstanceInSubnet(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
 	instance := testInstance(p)
 	instance.Spec.AKSClusterParameters.VnetSubnetID = "/path/to/cool/subnet"
 	return instance

@@ -52,7 +52,7 @@ type mockAKSSetupClientFactory struct {
 	mockClient *mockAKSSetupClient
 }
 
-func (m *mockAKSSetupClientFactory) CreateSetupClient(*v1alpha2.Provider, kubernetes.Interface) (*azureclients.AKSSetupClient, error) {
+func (m *mockAKSSetupClientFactory) CreateSetupClient(*v1alpha2.Provider, kubernetes.Interface) (*compute.AKSSetupClient, error) {
 	return &compute.AKSSetupClient{
 		AKSClusterAPI:       m.mockClient,
 		ApplicationAPI:      m.mockClient,

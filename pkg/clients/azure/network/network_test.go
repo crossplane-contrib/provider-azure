@@ -26,8 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/crossplaneio/crossplane/azure/apis/network/v1alpha1"
-	"github.com/crossplaneio/crossplane/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/azure/apis/network/v1alpha2"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
 )
 
 var (
@@ -96,17 +96,17 @@ func TestNewVirtualNetworksClient(t *testing.T) {
 func TestNewVirtualNetworkParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *v1alpha1.VirtualNetwork
+		r    *v1alpha2.VirtualNetwork
 		want networkmgmt.VirtualNetwork
 	}{
 		{
 			name: "SuccessfulFull",
-			r: &v1alpha1.VirtualNetwork{
+			r: &v1alpha2.VirtualNetwork{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha1.VirtualNetworkSpec{
+				Spec: v1alpha2.VirtualNetworkSpec{
 					Location: location,
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: addressPrefixes,
 						},
 						EnableDDOSProtection: enableDDOSProtection,
@@ -128,12 +128,12 @@ func TestNewVirtualNetworkParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &v1alpha1.VirtualNetwork{
+			r: &v1alpha2.VirtualNetwork{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha1.VirtualNetworkSpec{
+				Spec: v1alpha2.VirtualNetworkSpec{
 					Location: location,
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: addressPrefixes,
 						},
 						EnableDDOSProtection: enableDDOSProtection,
@@ -167,16 +167,16 @@ func TestNewVirtualNetworkParameters(t *testing.T) {
 func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *v1alpha1.VirtualNetwork
+		kube *v1alpha2.VirtualNetwork
 		az   networkmgmt.VirtualNetwork
 		want bool
 	}{
 		{
 			name: "NeedsUpdateAddressSpace",
-			kube: &v1alpha1.VirtualNetwork{
-				Spec: v1alpha1.VirtualNetworkSpec{
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+			kube: &v1alpha2.VirtualNetwork{
+				Spec: v1alpha2.VirtualNetworkSpec{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: []string{"10.3.0.0/16"},
 						},
 						EnableDDOSProtection: enableDDOSProtection,
@@ -199,10 +199,10 @@ func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsUpdateDdosProtection",
-			kube: &v1alpha1.VirtualNetwork{
-				Spec: v1alpha1.VirtualNetworkSpec{
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+			kube: &v1alpha2.VirtualNetwork{
+				Spec: v1alpha2.VirtualNetworkSpec{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: addressPrefixes,
 						},
 						EnableDDOSProtection: !enableDDOSProtection,
@@ -225,10 +225,10 @@ func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsUpdateVMProtection",
-			kube: &v1alpha1.VirtualNetwork{
-				Spec: v1alpha1.VirtualNetworkSpec{
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+			kube: &v1alpha2.VirtualNetwork{
+				Spec: v1alpha2.VirtualNetworkSpec{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: addressPrefixes,
 						},
 						EnableDDOSProtection: enableDDOSProtection,
@@ -251,10 +251,10 @@ func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsUpdateTags",
-			kube: &v1alpha1.VirtualNetwork{
-				Spec: v1alpha1.VirtualNetworkSpec{
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+			kube: &v1alpha2.VirtualNetwork{
+				Spec: v1alpha2.VirtualNetworkSpec{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: addressPrefixes,
 						},
 						EnableDDOSProtection: enableDDOSProtection,
@@ -277,10 +277,10 @@ func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NoUpdate",
-			kube: &v1alpha1.VirtualNetwork{
-				Spec: v1alpha1.VirtualNetworkSpec{
-					VirtualNetworkPropertiesFormat: v1alpha1.VirtualNetworkPropertiesFormat{
-						AddressSpace: v1alpha1.AddressSpace{
+			kube: &v1alpha2.VirtualNetwork{
+				Spec: v1alpha2.VirtualNetworkSpec{
+					VirtualNetworkPropertiesFormat: v1alpha2.VirtualNetworkPropertiesFormat{
+						AddressSpace: v1alpha2.AddressSpace{
 							AddressPrefixes: addressPrefixes,
 						},
 						EnableDDOSProtection: enableDDOSProtection,
@@ -317,7 +317,7 @@ func TestVirtualNetworkStatusFromAzure(t *testing.T) {
 	cases := []struct {
 		name string
 		r    networkmgmt.VirtualNetwork
-		want v1alpha1.VirtualNetworkStatus
+		want v1alpha2.VirtualNetworkStatus
 	}{
 		{
 			name: "SuccessfulFull",
@@ -337,7 +337,7 @@ func TestVirtualNetworkStatusFromAzure(t *testing.T) {
 					ResourceGUID:      azure.ToStringPtr(string(uid)),
 				},
 			},
-			want: v1alpha1.VirtualNetworkStatus{
+			want: v1alpha2.VirtualNetworkStatus{
 				State:        string(networkmgmt.Succeeded),
 				ID:           id,
 				Etag:         etag,
@@ -361,7 +361,7 @@ func TestVirtualNetworkStatusFromAzure(t *testing.T) {
 					ResourceGUID:      azure.ToStringPtr(string(uid)),
 				},
 			},
-			want: v1alpha1.VirtualNetworkStatus{
+			want: v1alpha2.VirtualNetworkStatus{
 				State:        string(networkmgmt.Succeeded),
 				ResourceGUID: string(uid),
 				Type:         resourceType,
@@ -414,15 +414,15 @@ func TestNewSubnetsClient(t *testing.T) {
 func TestNewSubnetParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *v1alpha1.Subnet
+		r    *v1alpha2.Subnet
 		want networkmgmt.Subnet
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha1.Subnet{
+			r: &v1alpha2.Subnet{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha1.SubnetSpec{
-					SubnetPropertiesFormat: v1alpha1.SubnetPropertiesFormat{
+				Spec: v1alpha2.SubnetSpec{
+					SubnetPropertiesFormat: v1alpha2.SubnetPropertiesFormat{
 						AddressPrefix: addressPrefix,
 					},
 				},
@@ -449,17 +449,17 @@ func TestNewSubnetParameters(t *testing.T) {
 func TestNewServiceEndpoints(t *testing.T) {
 	cases := []struct {
 		name string
-		r    []v1alpha1.ServiceEndpointPropertiesFormat
+		r    []v1alpha2.ServiceEndpointPropertiesFormat
 		want *[]networkmgmt.ServiceEndpointPropertiesFormat
 	}{
 		{
 			name: "SuccessfulNotSet",
-			r:    []v1alpha1.ServiceEndpointPropertiesFormat{},
+			r:    []v1alpha2.ServiceEndpointPropertiesFormat{},
 			want: &[]networkmgmt.ServiceEndpointPropertiesFormat{},
 		},
 		{
 			name: "SuccessfulSet",
-			r: []v1alpha1.ServiceEndpointPropertiesFormat{
+			r: []v1alpha2.ServiceEndpointPropertiesFormat{
 				{Service: serviceEndpoint},
 			},
 			want: &[]networkmgmt.ServiceEndpointPropertiesFormat{
@@ -481,15 +481,15 @@ func TestNewServiceEndpoints(t *testing.T) {
 func TestSubnetNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *v1alpha1.Subnet
+		kube *v1alpha2.Subnet
 		az   networkmgmt.Subnet
 		want bool
 	}{
 		{
 			name: "NeedsUpdate",
-			kube: &v1alpha1.Subnet{
-				Spec: v1alpha1.SubnetSpec{
-					SubnetPropertiesFormat: v1alpha1.SubnetPropertiesFormat{
+			kube: &v1alpha2.Subnet{
+				Spec: v1alpha2.SubnetSpec{
+					SubnetPropertiesFormat: v1alpha2.SubnetPropertiesFormat{
 						AddressPrefix: "10.1.0.0/16",
 					},
 				},
@@ -503,9 +503,9 @@ func TestSubnetNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NoUpdate",
-			kube: &v1alpha1.Subnet{
-				Spec: v1alpha1.SubnetSpec{
-					SubnetPropertiesFormat: v1alpha1.SubnetPropertiesFormat{
+			kube: &v1alpha2.Subnet{
+				Spec: v1alpha2.SubnetSpec{
+					SubnetPropertiesFormat: v1alpha2.SubnetPropertiesFormat{
 						AddressPrefix: addressPrefix,
 					},
 				},
@@ -533,7 +533,7 @@ func TestSubnetStatusFromAzure(t *testing.T) {
 	cases := []struct {
 		name string
 		r    networkmgmt.Subnet
-		want v1alpha1.SubnetStatus
+		want v1alpha2.SubnetStatus
 	}{
 		{
 			name: "SuccessfulFull",
@@ -545,7 +545,7 @@ func TestSubnetStatusFromAzure(t *testing.T) {
 					ProvisioningState: azure.ToStringPtr("Succeeded"),
 				},
 			},
-			want: v1alpha1.SubnetStatus{
+			want: v1alpha2.SubnetStatus{
 				State:   string(networkmgmt.Succeeded),
 				ID:      id,
 				Etag:    etag,
@@ -560,7 +560,7 @@ func TestSubnetStatusFromAzure(t *testing.T) {
 					ProvisioningState: azure.ToStringPtr("Succeeded"),
 				},
 			},
-			want: v1alpha1.SubnetStatus{
+			want: v1alpha2.SubnetStatus{
 				State: string(networkmgmt.Succeeded),
 				ID:    id,
 			},
