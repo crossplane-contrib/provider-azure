@@ -18,14 +18,20 @@
   version = "v0.2.2"
 
 [[projects]]
-  digest = "1:a00971f1bc0fd79e6a971865e29194779e14a858e70d1aa018a268f5fc4d138d"
+  digest = "1:b3bf942ed748b03be9b042051660c02185dc99cdc8eb591b176d58cb1d40f804"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
     "profiles/latest/redis/mgmt/redis/redisapi",
+    "services/authorization/mgmt/2015-07-01/authorization",
+    "services/authorization/mgmt/2015-07-01/authorization/authorizationapi",
     "services/containerservice/mgmt/2018-03-31/containerservice",
     "services/graphrbac/1.6/graphrbac",
     "services/mysql/mgmt/2017-12-01/mysql",
+    "services/mysql/mgmt/2017-12-01/mysql/mysqlapi",
+    "services/network/mgmt/2019-06-01/network",
+    "services/network/mgmt/2019-06-01/network/networkapi",
     "services/postgresql/mgmt/2017-12-01/postgresql",
+    "services/postgresql/mgmt/2017-12-01/postgresql/postgresqlapi",
     "services/redis/mgmt/2018-03-01/redis",
     "services/redis/mgmt/2018-03-01/redis/redisapi",
     "services/resources/mgmt/2018-05-01/resources",
@@ -34,8 +40,8 @@
     "version",
   ]
   pruneopts = "UT"
-  revision = "2ea98fc438b9d78aa2ab32bab44c7f68e506385e"
-  version = "v25.1.0"
+  revision = "07e904809009c506339e781db6167dd06e95cde6"
+  version = "v32.5.0"
 
 [[projects]]
   digest = "1:9d3a690fcd29a7efbc783d7a8c9c173c2c67d33c0d2b6ac4be10c78d4ae46df2"
@@ -46,7 +52,7 @@
   version = "v0.7.0"
 
 [[projects]]
-  digest = "1:52f0502e8f9dc8e145766280d26ed58246ec8c952f6eba55b0323fba2784f92a"
+  digest = "1:2f970ab81ab26e2540a0e139a048d242425f734775365a9a3356174127b4e877"
   name = "github.com/Azure/go-autorest"
   packages = [
     "autorest",
@@ -61,8 +67,8 @@
     "tracing",
   ]
   pruneopts = "UT"
-  revision = "562d3769ef2f0f56bc52749babd3e88367e28588"
-  version = "v11.9.0"
+  revision = "880eb0e2aca291c40538ddef66e5914fb1cc1d7f"
+  version = "v12.4.3"
 
 [[projects]]
   branch = "master"
@@ -106,7 +112,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6db867bd95d611ab2e413b2c84c12aeb2716336c6fcaba65611a923a4e3d2840"
+  digest = "1:e891dabca719a29f484ab3becd8ebdf009856ade6cc5baa46c5d97ad8703788a"
   name = "github.com/crossplaneio/crossplane"
   packages = [
     "apis",
@@ -126,7 +132,7 @@
     "apis/workload/v1alpha1",
   ]
   pruneopts = "UT"
-  revision = "1aa66a9e1d6d393cce4c66cc3c90e7f96d2ce269"
+  revision = "442d65948ea42ac54e2564e8e3b1f9cab47e167d"
 
 [[projects]]
   branch = "master"
@@ -515,18 +521,16 @@
   version = "v1.0.3"
 
 [[projects]]
-  digest = "1:70d93dbdd2910a5359572a7048a9972b04dc3e703f0ed05489e3da42cd851022"
+  digest = "1:68ae31afcc798f19f7ef86b08121b06a852ea1dad4bebe8b81d2240bcb6c825a"
   name = "go.opencensus.io"
   packages = [
     ".",
+    "exemplar",
     "internal",
     "internal/tagencoding",
-    "metric/metricdata",
-    "metric/metricproducer",
     "plugin/ochttp",
     "plugin/ochttp/propagation/b3",
     "plugin/ochttp/propagation/tracecontext",
-    "resource",
     "stats",
     "stats/internal",
     "stats/view",
@@ -537,8 +541,7 @@
     "trace/tracestate",
   ]
   pruneopts = "UT"
-  revision = "43463a80402d8447b7fce0d2c58edf1687ff0b58"
-  version = "v0.19.3"
+  revision = "aab39bd6a98b853ab66c8a564f5d6cfcad59ce8a"
 
 [[projects]]
   digest = "1:a5158647b553c61877aa9ae74f4015000294e47981e6b8b07525edcbb0747c81"
@@ -1216,10 +1219,16 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis/redisapi",
+    "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization",
+    "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization/authorizationapi",
     "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice",
     "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
     "github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql",
+    "github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi",
+    "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network",
+    "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi",
     "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql",
+    "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql/postgresqlapi",
     "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis",
     "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi",
     "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources",

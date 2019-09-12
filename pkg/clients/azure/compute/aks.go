@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package azure
+package compute
 
 import (
 	"context"
@@ -27,6 +27,9 @@ import (
 
 	computev1alpha2 "github.com/crossplaneio/stack-azure/azure/apis/compute/v1alpha2"
 	"github.com/crossplaneio/stack-azure/azure/apis/v1alpha2"
+
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure"
+	"github.com/crossplaneio/stack-azure/pkg/clients/azure/authorization"
 )
 
 const (
@@ -40,8 +43,9 @@ const (
 // AKSSetupClient is a type that implements all of the AKS setup interface
 type AKSSetupClient struct {
 	AKSClusterAPI
-	ApplicationAPI
-	ServicePrincipalAPI
+	azure.ApplicationAPI
+	azure.ServicePrincipalAPI
+	authorization.RoleAssignmentsAPI
 }
 
 // AKSSetupAPIFactory is an interface that can create instances of the AKSSetupClient
@@ -60,12 +64,17 @@ func (f *AKSSetupClientFactory) CreateSetupClient(provider *v1alpha2.Provider, c
 		return nil, err
 	}
 
-	appClient, err := NewApplicationClient(provider, clientset)
+	appClient, err := azure.NewApplicationClient(provider, clientset)
 	if err != nil {
 		return nil, err
 	}
 
-	spClient, err := NewServicePrincipalClient(provider, clientset)
+	spClient, err := azure.NewServicePrincipalClient(provider, clientset)
+	if err != nil {
+		return nil, err
+	}
+
+	raClient, err := authorization.NewRoleAssignmentsClient(provider, clientset)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +83,7 @@ func (f *AKSSetupClientFactory) CreateSetupClient(provider *v1alpha2.Provider, c
 		AKSClusterAPI:       aksClusterClient,
 		ApplicationAPI:      appClient,
 		ServicePrincipalAPI: spClient,
+		RoleAssignmentsAPI:  raClient,
 	}, nil
 }
 
@@ -93,14 +103,14 @@ type AKSClusterClient struct {
 
 // NewAKSClusterClient creates and initializes a AKSClusterClient instance.
 func NewAKSClusterClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*AKSClusterClient, error) {
-	client, err := NewClient(provider, clientset)
+	client, err := azure.NewClient(provider, clientset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
 	}
 
 	aksClustersClient := containerservice.NewManagedClustersClient(client.SubscriptionID)
 	aksClustersClient.Authorizer = client.Authorizer
-	aksClustersClient.AddToUserAgent(UserAgent)
+	aksClustersClient.AddToUserAgent(azure.UserAgent)
 
 	return &AKSClusterClient{aksClustersClient}, nil
 }
@@ -129,9 +139,10 @@ func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance com
 			DNSPrefix:         &spec.DNSNamePrefix,
 			AgentPoolProfiles: &[]containerservice.ManagedClusterAgentPoolProfile{
 				{
-					Name:   to.StringPtr(AgentPoolProfileName),
-					Count:  &nodeCount,
-					VMSize: containerservice.VMSizeTypes(spec.NodeVMSize),
+					Name:         to.StringPtr(AgentPoolProfileName),
+					Count:        &nodeCount,
+					VMSize:       containerservice.VMSizeTypes(spec.NodeVMSize),
+					VnetSubnetID: to.StringPtr(spec.VnetSubnetID),
 				},
 			},
 			ServicePrincipalProfile: &containerservice.ManagedClusterServicePrincipalProfile{
@@ -140,6 +151,12 @@ func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance com
 			},
 			EnableRBAC: &enableRBAC,
 		},
+	}
+
+	if spec.VnetSubnetID != "" {
+		createParams.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfile{
+			NetworkPlugin: containerservice.Azure,
+		}
 	}
 
 	createFuture, err := c.CreateOrUpdate(ctx, instance.Spec.ResourceGroupName, clusterName, createParams)
@@ -165,7 +182,7 @@ func (c *AKSClusterClient) CreateOrUpdateEnd(op []byte) (done bool, err error) {
 	}
 
 	// check if the operation is done yet
-	done, err = future.Done(c.Client)
+	done, err = future.DoneWithContext(context.Background(), c.Client)
 	if !done {
 		return false, err
 	}
