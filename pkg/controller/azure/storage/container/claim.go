@@ -43,7 +43,7 @@ type ClaimController struct{}
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
-		resource.ClassKind(v1alpha2.ContainerClassGroupVersionKind),
+		resource.ClassKinds{Portable: storagev1alpha1.BucketClassGroupVersionKind, NonPortable: v1alpha2.ContainerClassGroupVersionKind},
 		resource.ManagedKind(v1alpha2.ContainerGroupVersionKind),
 		resource.WithManagedBinder(resource.NewAPIManagedStatusBinder(mgr.GetClient())),
 		resource.WithManagedFinalizer(resource.NewAPIManagedStatusUnbinder(mgr.GetClient())),
@@ -58,13 +58,13 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.Container{}}, &resource.EnqueueRequestForClaim{}).
 		For(&storagev1alpha1.Bucket{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.ContainerClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: storagev1alpha1.BucketClassGroupVersionKind, NonPortable: v1alpha2.ContainerClassGroupVersionKind}))).
 		Complete(r)
 }
 
 // ConfigureContainer configures the supplied resource (presumed to be an Container)
 // using the supplied resource claim (presumed to be a Bucket) and resource class.
-func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
 	if _, cmok := cm.(*storagev1alpha1.Bucket); !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), storagev1alpha1.BucketGroupVersionKind)
 	}

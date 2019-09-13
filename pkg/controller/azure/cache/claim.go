@@ -41,7 +41,7 @@ type RedisClaimController struct{}
 func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
-		resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
+		resource.ClassKinds{Portable: cachev1alpha1.RedisClusterGroupVersionKind, NonPortable: v1alpha2.RedisClassGroupVersionKind},
 		resource.ManagedKind(v1alpha2.RedisGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureRedis),
@@ -54,14 +54,14 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.Redis{}}, &resource.EnqueueRequestForClaim{}).
 		For(&cachev1alpha1.RedisCluster{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.RedisClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: cachev1alpha1.RedisClusterGroupVersionKind, NonPortable: v1alpha2.RedisClassGroupVersionKind}))).
 		Complete(r)
 }
 
 // ConfigureRedis configures the supplied resource (presumed
 // to be a Redis) using the supplied resource claim (presumed
 // to be a RedisCluster) and resource class.
-func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
 	rc, cmok := cm.(*cachev1alpha1.RedisCluster)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), cachev1alpha1.RedisClusterGroupVersionKind)

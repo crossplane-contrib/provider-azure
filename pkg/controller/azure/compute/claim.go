@@ -43,7 +43,7 @@ type AKSClusterClaimController struct{}
 func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
-		resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
+		resource.ClassKinds{Portable: computev1alpha1.KubernetesClusterClassGroupVersionKind, NonPortable: v1alpha2.AKSClusterClassGroupVersionKind},
 		resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
@@ -56,14 +56,14 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.AKSCluster{}}, &resource.EnqueueRequestForClaim{}).
 		For(&computev1alpha1.KubernetesCluster{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: computev1alpha1.KubernetesClusterClassGroupVersionKind, NonPortable: v1alpha2.AKSClusterClassGroupVersionKind}))).
 		Complete(r)
 }
 
 // ConfigureAKSCluster configures the supplied resource (presumed to be a
 // AKSCluster) using the supplied resource claim (presumed to be a
 // KubernetesCluster) and resource class.
-func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
 	if _, cmok := cm.(*computev1alpha1.KubernetesCluster); !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), computev1alpha1.KubernetesClusterGroupVersionKind)
 	}

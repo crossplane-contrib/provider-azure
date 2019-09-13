@@ -84,7 +84,7 @@ func (tc *MockContainer) WithFinalizers(f []string) *MockContainer {
 
 // WithSpecClassRef set class reference
 func (tc *MockContainer) WithSpecClassRef(ref *corev1.ObjectReference) *MockContainer {
-	tc.Spec.ClassReference = ref
+	tc.Spec.NonPortableClassReference = ref
 	return tc
 }
 
