@@ -112,7 +112,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e891dabca719a29f484ab3becd8ebdf009856ade6cc5baa46c5d97ad8703788a"
+  digest = "1:d5f7d37aa4379b8811e62190f6577de2b019ebd80148b2d890497c098babbf44"
   name = "github.com/crossplaneio/crossplane"
   packages = [
     "apis",
@@ -132,7 +132,7 @@
     "apis/workload/v1alpha1",
   ]
   pruneopts = "UT"
-  revision = "442d65948ea42ac54e2564e8e3b1f9cab47e167d"
+  revision = "a5489468a5b1be40f7157c42ed183ae21cdbd6a0"
 
 [[projects]]
   branch = "master"
@@ -1277,6 +1277,7 @@
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/config",
     "sigs.k8s.io/controller-runtime/pkg/client/fake",
+    "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
     "sigs.k8s.io/controller-runtime/pkg/manager",
     "sigs.k8s.io/controller-runtime/pkg/reconcile",
     "sigs.k8s.io/controller-runtime/pkg/runtime/log",
