@@ -43,7 +43,7 @@ type PostgreSQLInstanceClaimController struct{}
 func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		resource.ClassKinds{Portable: databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind},
 		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigurePostgresqlServer),
@@ -56,14 +56,14 @@ func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) e
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.PostgresqlServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.PostgreSQLInstance{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind}))).
 		Complete(r)
 }
 
 // ConfigurePostgresqlServer configures the supplied resource (presumed to be a
 // PostgresqlServer) using the supplied resource claim (presumed to be a
 // PostgreSQLInstance) and resource class.
-func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
 	pg, cmok := cm.(*databasev1alpha1.PostgreSQLInstance)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.PostgreSQLInstanceGroupVersionKind)
@@ -107,7 +107,7 @@ type MySQLInstanceClaimController struct{}
 func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		resource.ClassKinds{Portable: databasev1alpha1.MySQLInstanceGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind},
 		resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureMysqlServer),
@@ -120,14 +120,14 @@ func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error 
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.MysqlServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.MySQLInstance{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)))).
+		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: databasev1alpha1.MySQLInstanceGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind}))).
 		Complete(r)
 }
 
 // ConfigureMysqlServer configures the supplied resource (presumed to be
 // a MysqlServer) using the supplied resource claim (presumed to be a
 // MySQLInstance) and resource class.
-func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
 	my, cmok := cm.(*databasev1alpha1.MySQLInstance)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.MySQLInstanceGroupVersionKind)

@@ -81,7 +81,7 @@ func (ta *MockAccount) WithFinalizers(f []string) *MockAccount {
 
 // WithSpecClassRef set class reference
 func (ta *MockAccount) WithSpecClassRef(ref *corev1.ObjectReference) *MockAccount {
-	ta.Spec.ClassReference = ref
+	ta.Spec.NonPortableClassReference = ref
 	return ta
 }
 

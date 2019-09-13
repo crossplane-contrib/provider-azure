@@ -45,7 +45,7 @@ func TestConfigureRedis(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
-		cs  resource.Class
+		cs  resource.NonPortableClass
 		mg  resource.Managed
 	}
 
@@ -69,7 +69,7 @@ func TestConfigureRedis(t *testing.T) {
 				},
 				cs: &v1alpha2.RedisClass{
 					SpecTemplate: v1alpha2.RedisClassSpecTemplate{
-						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
+						NonPortableClassSpecTemplate: runtimev1alpha1.NonPortableClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},

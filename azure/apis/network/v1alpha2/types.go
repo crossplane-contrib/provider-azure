@@ -119,14 +119,14 @@ func (c *VirtualNetwork) GetClaimReference() *corev1.ObjectReference {
 	return c.Spec.ClaimReference
 }
 
-// SetClassReference of this VirtualNetwork.
-func (c *VirtualNetwork) SetClassReference(r *corev1.ObjectReference) {
-	c.Spec.ClassReference = r
+// SetNonPortableClassReference of this VirtualNetwork.
+func (c *VirtualNetwork) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	c.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this VirtualNetwork.
-func (c *VirtualNetwork) GetClassReference() *corev1.ObjectReference {
-	return c.Spec.ClassReference
+// GetNonPortableClassReference of this VirtualNetwork.
+func (c *VirtualNetwork) GetNonPortableClassReference() *corev1.ObjectReference {
+	return c.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this VirtualNetwork.
@@ -253,14 +253,14 @@ func (c *Subnet) GetClaimReference() *corev1.ObjectReference {
 	return c.Spec.ClaimReference
 }
 
-// SetClassReference of this Subnet.
-func (c *Subnet) SetClassReference(r *corev1.ObjectReference) {
-	c.Spec.ClassReference = r
+// SetNonPortableClassReference of this Subnet.
+func (c *Subnet) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	c.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this Subnet.
-func (c *Subnet) GetClassReference() *corev1.ObjectReference {
-	return c.Spec.ClassReference
+// GetNonPortableClassReference of this Subnet.
+func (c *Subnet) GetNonPortableClassReference() *corev1.ObjectReference {
+	return c.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this Subnet.

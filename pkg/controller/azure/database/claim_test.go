@@ -42,7 +42,7 @@ func TestConfigurePostgresqlServer(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
-		cs  resource.Class
+		cs  resource.NonPortableClass
 		mg  resource.Managed
 	}
 
@@ -66,7 +66,7 @@ func TestConfigurePostgresqlServer(t *testing.T) {
 				},
 				cs: &v1alpha2.SQLServerClass{
 					SpecTemplate: v1alpha2.SQLServerClassSpecTemplate{
-						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
+						NonPortableClassSpecTemplate: runtimev1alpha1.NonPortableClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
@@ -109,7 +109,7 @@ func TestConfigureMyPostgresqlServer(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
-		cs  resource.Class
+		cs  resource.NonPortableClass
 		mg  resource.Managed
 	}
 
@@ -133,7 +133,7 @@ func TestConfigureMyPostgresqlServer(t *testing.T) {
 				},
 				cs: &v1alpha2.SQLServerClass{
 					SpecTemplate: v1alpha2.SQLServerClassSpecTemplate{
-						ResourceClassSpecTemplate: runtimev1alpha1.ResourceClassSpecTemplate{
+						NonPortableClassSpecTemplate: runtimev1alpha1.NonPortableClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},

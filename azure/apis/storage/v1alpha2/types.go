@@ -93,14 +93,14 @@ func (a *Account) GetClaimReference() *corev1.ObjectReference {
 	return a.Spec.ClaimReference
 }
 
-// SetClassReference of this Account.
-func (a *Account) SetClassReference(r *corev1.ObjectReference) {
-	a.Spec.ClassReference = r
+// SetNonPortableClassReference of this Account.
+func (a *Account) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	a.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this Account.
-func (a *Account) GetClassReference() *corev1.ObjectReference {
-	return a.Spec.ClassReference
+// GetNonPortableClassReference of this Account.
+func (a *Account) GetNonPortableClassReference() *corev1.ObjectReference {
+	return a.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this Account.
@@ -134,11 +134,12 @@ type AccountList struct {
 
 // AccountClassSpecTemplate is the Schema for the resource class
 type AccountClassSpecTemplate struct {
-	runtimev1alpha1.ResourceClassSpecTemplate `json:",inline"`
-	AccountParameters                         `json:",inline"`
+	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
+	AccountParameters                            `json:",inline"`
 }
 
-var _ resource.Class = &AccountClass{}
+// All non-portable classes must implement the NonPortableClass interface.
+var _ resource.NonPortableClass = &AccountClass{}
 
 // +kubebuilder:object:root=true
 
@@ -200,7 +201,7 @@ type ContainerSpec struct {
 
 	WriteConnectionSecretToReference corev1.LocalObjectReference   `json:"writeConnectionSecretToRef,omitempty"`
 	ClaimReference                   *corev1.ObjectReference       `json:"claimRef,omitempty"`
-	ClassReference                   *corev1.ObjectReference       `json:"classRef,omitempty"`
+	NonPortableClassReference        *corev1.ObjectReference       `json:"classRef,omitempty"`
 	ReclaimPolicy                    runtimev1alpha1.ReclaimPolicy `json:"reclaimPolicy,omitempty"`
 }
 
@@ -252,14 +253,14 @@ func (c *Container) GetClaimReference() *corev1.ObjectReference {
 	return c.Spec.ClaimReference
 }
 
-// SetClassReference of this Container.
-func (c *Container) SetClassReference(r *corev1.ObjectReference) {
-	c.Spec.ClassReference = r
+// SetNonPortableClassReference of this Container.
+func (c *Container) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	c.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this Container.
-func (c *Container) GetClassReference() *corev1.ObjectReference {
-	return c.Spec.ClassReference
+// GetNonPortableClassReference of this Container.
+func (c *Container) GetNonPortableClassReference() *corev1.ObjectReference {
+	return c.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this Container.
@@ -311,11 +312,12 @@ type ContainerList struct {
 
 // ContainerClassSpecTemplate is the Schema for the resource class
 type ContainerClassSpecTemplate struct {
-	runtimev1alpha1.ResourceClassSpecTemplate `json:",inline"`
-	ContainerParameters                       `json:",inline"`
+	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
+	ContainerParameters                          `json:",inline"`
 }
 
-var _ resource.Class = &ContainerClass{}
+// All non-portable classes must implement the NonPortableClass interface.
+var _ resource.NonPortableClass = &ContainerClass{}
 
 // +kubebuilder:object:root=true
 

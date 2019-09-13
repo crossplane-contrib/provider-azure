@@ -189,14 +189,14 @@ func (rd *Redis) GetClaimReference() *corev1.ObjectReference {
 	return rd.Spec.ClaimReference
 }
 
-// SetClassReference of this Redis.
-func (rd *Redis) SetClassReference(r *corev1.ObjectReference) {
-	rd.Spec.ClassReference = r
+// SetNonPortableClassReference of this Redis.
+func (rd *Redis) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	rd.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this Redis.
-func (rd *Redis) GetClassReference() *corev1.ObjectReference {
-	return rd.Spec.ClassReference
+// GetNonPortableClassReference of this Redis.
+func (rd *Redis) GetNonPortableClassReference() *corev1.ObjectReference {
+	return rd.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this Redis.
@@ -230,11 +230,12 @@ type RedisList struct {
 
 // RedisClassSpecTemplate is the Schema for the resource class
 type RedisClassSpecTemplate struct {
-	runtimev1alpha1.ResourceClassSpecTemplate `json:",inline"`
-	RedisParameters                           `json:",inline"`
+	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
+	RedisParameters                              `json:",inline"`
 }
 
-var _ resource.Class = &RedisClass{}
+// All non-portable classes must implement the NonPortableClass interface.
+var _ resource.NonPortableClass = &RedisClass{}
 
 // +kubebuilder:object:root=true
 

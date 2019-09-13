@@ -144,14 +144,14 @@ func (c *AKSCluster) GetClaimReference() *corev1.ObjectReference {
 	return c.Spec.ClaimReference
 }
 
-// SetClassReference of this AKSCluster.
-func (c *AKSCluster) SetClassReference(r *corev1.ObjectReference) {
-	c.Spec.ClassReference = r
+// SetNonPortableClassReference of this AKSCluster.
+func (c *AKSCluster) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	c.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this AKSCluster.
-func (c *AKSCluster) GetClassReference() *corev1.ObjectReference {
-	return c.Spec.ClassReference
+// GetNonPortableClassReference of this AKSCluster.
+func (c *AKSCluster) GetNonPortableClassReference() *corev1.ObjectReference {
+	return c.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this AKSCluster.
@@ -185,11 +185,12 @@ type AKSClusterList struct {
 
 // AKSClusterClassSpecTemplate is the Schema for the resource class
 type AKSClusterClassSpecTemplate struct {
-	runtimev1alpha1.ResourceClassSpecTemplate `json:",inline"`
-	AKSClusterParameters                      `json:",inline"`
+	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
+	AKSClusterParameters                         `json:",inline"`
 }
 
-var _ resource.Class = &AKSClusterClass{}
+// All non-portable classes must implement the NonPortableClass interface.
+var _ resource.NonPortableClass = &AKSClusterClass{}
 
 // +kubebuilder:object:root=true
 

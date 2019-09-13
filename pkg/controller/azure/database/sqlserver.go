@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/pkg/errors"
@@ -36,7 +37,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane-runtime/pkg/util"
+	runtimeutil "github.com/crossplaneio/crossplane-runtime/pkg/util"
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients/azure"
 
@@ -142,7 +143,7 @@ func (r *SQLReconciler) handleCreation(sqlServersClient azureclients.SQLServerAP
 	instance.GetStatus().SetConditions(runtimev1alpha1.Creating())
 
 	// generate a password for the admin user
-	adminPassword, err := util.GeneratePassword(passwordDataLen)
+	adminPassword, err := runtimeutil.GeneratePassword(passwordDataLen)
 	if err != nil {
 		return r.fail(instance, errors.Wrapf(err, "failed to create password for SQL Server instance %s", instance.GetName()))
 	}
@@ -169,7 +170,7 @@ func (r *SQLReconciler) handleCreation(sqlServersClient azureclients.SQLServerAP
 	status.SetConditions(runtimev1alpha1.ReconcileSuccess())
 
 	// wait until the important status fields we just set have become committed/consistent
-	updateWaitErr := wait.ExponentialBackoff(util.DefaultUpdateRetry, func() (done bool, err error) {
+	updateWaitErr := wait.ExponentialBackoff(runtimeutil.DefaultUpdateRetry, func() (done bool, err error) {
 		if err := r.Update(ctx, instance); err != nil {
 			return false, nil
 		}
@@ -314,7 +315,7 @@ func (r *SQLReconciler) createOrUpdateConnectionSecret(instance azuredbv1alpha2.
 	}
 
 	s := resource.ConnectionSecretFor(instance, kind)
-	return errors.Wrapf(util.CreateOrUpdate(ctx, r.Client, s, func() error {
+	_, err := util.CreateOrUpdate(ctx, r.Client, s, func() error {
 		// TODO(negz): Make sure we own any existing secret before overwriting it.
 		s.Data[runtimev1alpha1.ResourceCredentialsSecretEndpointKey] = []byte(instance.GetStatus().Endpoint)
 		s.Data[runtimev1alpha1.ResourceCredentialsSecretUserKey] = []byte(fmt.Sprintf("%s@%s", instance.GetSpec().AdminLoginName, instance.GetName()))
@@ -324,5 +325,6 @@ func (r *SQLReconciler) createOrUpdateConnectionSecret(instance azuredbv1alpha2.
 			s.Data[runtimev1alpha1.ResourceCredentialsSecretPasswordKey] = []byte(password)
 		}
 		return nil
-	}), "could not create or update connection secret %s", s.GetName())
+	})
+	return errors.Wrapf(err, "could not create or update connection secret %s", s.GetName())
 }

@@ -101,14 +101,14 @@ func (s *MysqlServer) GetClaimReference() *corev1.ObjectReference {
 	return s.Spec.ClaimReference
 }
 
-// SetClassReference of this MysqlServer.
-func (s *MysqlServer) SetClassReference(r *corev1.ObjectReference) {
-	s.Spec.ClassReference = r
+// SetNonPortableClassReference of this MysqlServer.
+func (s *MysqlServer) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	s.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this MysqlServer.
-func (s *MysqlServer) GetClassReference() *corev1.ObjectReference {
-	return s.Spec.ClassReference
+// GetNonPortableClassReference of this MysqlServer.
+func (s *MysqlServer) GetNonPortableClassReference() *corev1.ObjectReference {
+	return s.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this MysqlServer.
@@ -196,14 +196,14 @@ func (s *PostgresqlServer) GetClaimReference() *corev1.ObjectReference {
 	return s.Spec.ClaimReference
 }
 
-// SetClassReference of this PostgresqlServer.
-func (s *PostgresqlServer) SetClassReference(r *corev1.ObjectReference) {
-	s.Spec.ClassReference = r
+// SetNonPortableClassReference of this PostgresqlServer.
+func (s *PostgresqlServer) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	s.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this PostgresqlServer.
-func (s *PostgresqlServer) GetClassReference() *corev1.ObjectReference {
-	return s.Spec.ClassReference
+// GetNonPortableClassReference of this PostgresqlServer.
+func (s *PostgresqlServer) GetNonPortableClassReference() *corev1.ObjectReference {
+	return s.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this PostgresqlServer.
@@ -237,11 +237,12 @@ type PostgresqlServerList struct {
 
 // SQLServerClassSpecTemplate is the Schema for the resource class
 type SQLServerClassSpecTemplate struct {
-	runtimev1alpha1.ResourceClassSpecTemplate `json:",inline"`
-	SQLServerParameters                       `json:",inline"`
+	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
+	SQLServerParameters                          `json:",inline"`
 }
 
-var _ resource.Class = &SQLServerClass{}
+// All non-portable classes must implement the NonPortableClass interface.
+var _ resource.NonPortableClass = &SQLServerClass{}
 
 // +kubebuilder:object:root=true
 
@@ -417,14 +418,14 @@ func (s *PostgresqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectR
 	return s.Spec.ClaimReference
 }
 
-// SetClassReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
-	s.Spec.ClassReference = r
+// SetNonPortableClassReference of this PostgresqlServerVirtualNetworkRule.
+func (s *PostgresqlServerVirtualNetworkRule) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	s.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
-	return s.Spec.ClassReference
+// GetNonPortableClassReference of this PostgresqlServerVirtualNetworkRule.
+func (s *PostgresqlServerVirtualNetworkRule) GetNonPortableClassReference() *corev1.ObjectReference {
+	return s.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
@@ -496,14 +497,14 @@ func (s *MysqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectRefere
 	return s.Spec.ClaimReference
 }
 
-// SetClassReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
-	s.Spec.ClassReference = r
+// SetNonPortableClassReference of this MysqlServerVirtualNetworkRule.
+func (s *MysqlServerVirtualNetworkRule) SetNonPortableClassReference(r *corev1.ObjectReference) {
+	s.Spec.NonPortableClassReference = r
 }
 
-// GetClassReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
-	return s.Spec.ClassReference
+// GetNonPortableClassReference of this MysqlServerVirtualNetworkRule.
+func (s *MysqlServerVirtualNetworkRule) GetNonPortableClassReference() *corev1.ObjectReference {
+	return s.Spec.NonPortableClassReference
 }
 
 // SetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
