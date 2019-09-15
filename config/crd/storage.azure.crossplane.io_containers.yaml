@@ -164,14 +164,18 @@ spec:
           description: ContainerStatus sub-resource for Container object
           properties:
             bindingPhase:
-              description: Phase represents the binding phase of the resource.
+              description: Phase represents the binding phase of a managed resource
+                or claim. Unbindable resources cannot be bound, typically because
+                they are currently unavailable, or still being created. Unbound resource
+                are available for binding, and Bound resources have successfully bound
+                to another resource.
               enum:
               - Unbindable
               - Unbound
               - Bound
               type: string
             conditions:
-              description: Conditions of the managed resource.
+              description: Conditions of the resource.
               items:
                 description: A Condition that may apply to a managed resource.
                 properties:
@@ -194,7 +198,7 @@ spec:
                     type: string
                   type:
                     description: Type of this condition. At most one of each condition
-                      type may apply to a managed resource at any point in time.
+                      type may apply to a resource at any point in time.
                     type: string
                 required:
                 - lastTransitionTime

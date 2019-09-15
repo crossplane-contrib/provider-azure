@@ -39,22 +39,36 @@ type RedisClaimController struct{}
 
 // SetupWithManager adds a controller that reconciles RedisCluster resource claims.
 func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
+		cachev1alpha1.RedisClusterKind,
+		v1alpha2.RedisKind,
+		v1alpha2.Group))
+
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
-		resource.ClassKinds{Portable: cachev1alpha1.RedisClusterGroupVersionKind, NonPortable: v1alpha2.RedisClassGroupVersionKind},
+		resource.ClassKinds{
+			Portable:    cachev1alpha1.RedisClusterClassGroupVersionKind,
+			NonPortable: v1alpha2.RedisClassGroupVersionKind,
+		},
 		resource.ManagedKind(v1alpha2.RedisGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureRedis),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", cachev1alpha1.RedisClusterKind, controllerName))
+	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind)),
+		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.RedisClassGroupVersionKind)),
+		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
+			Portable:    cachev1alpha1.RedisClusterClassGroupVersionKind,
+			NonPortable: v1alpha2.RedisClassGroupVersionKind,
+		})))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.Redis{}}, &resource.EnqueueRequestForClaim{}).
 		For(&cachev1alpha1.RedisCluster{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: cachev1alpha1.RedisClusterGroupVersionKind, NonPortable: v1alpha2.RedisClassGroupVersionKind}))).
+		WithEventFilter(p).
 		Complete(r)
 }
 

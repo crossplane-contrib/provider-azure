@@ -41,9 +41,17 @@ type ClaimController struct{}
 
 // SetupWithManager adds a controller that reconciles Bucket resource claims.
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
+		storagev1alpha1.BucketKind,
+		v1alpha2.ContainerKind,
+		v1alpha2.Group))
+
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
-		resource.ClassKinds{Portable: storagev1alpha1.BucketClassGroupVersionKind, NonPortable: v1alpha2.ContainerClassGroupVersionKind},
+		resource.ClassKinds{
+			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
+			NonPortable: v1alpha2.ContainerClassGroupVersionKind,
+		},
 		resource.ManagedKind(v1alpha2.ContainerGroupVersionKind),
 		resource.WithManagedBinder(resource.NewAPIManagedStatusBinder(mgr.GetClient())),
 		resource.WithManagedFinalizer(resource.NewAPIManagedStatusUnbinder(mgr.GetClient())),
@@ -52,13 +60,19 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", storagev1alpha1.BucketKind, controllerName))
+	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.ContainerGroupVersionKind)),
+		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.ContainerClassGroupVersionKind)),
+		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
+			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
+			NonPortable: v1alpha2.ContainerClassGroupVersionKind,
+		})))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.Container{}}, &resource.EnqueueRequestForClaim{}).
 		For(&storagev1alpha1.Bucket{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: storagev1alpha1.BucketClassGroupVersionKind, NonPortable: v1alpha2.ContainerClassGroupVersionKind}))).
+		WithEventFilter(p).
 		Complete(r)
 }
 

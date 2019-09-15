@@ -41,22 +41,36 @@ type PostgreSQLInstanceClaimController struct{}
 
 // SetupWithManager adds a controller that reconciles PostgreSQLInstance instance claims.
 func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
+		databasev1alpha1.PostgreSQLInstanceKind,
+		v1alpha2.PostgresqlServerKind,
+		v1alpha2.Group))
+
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-		resource.ClassKinds{Portable: databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind},
+		resource.ClassKinds{
+			Portable:    databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind,
+			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
+		},
 		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigurePostgresqlServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", databasev1alpha1.PostgreSQLInstanceKind, controllerName))
+	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind)),
+		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
+		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
+			Portable:    databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind,
+			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
+		})))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.PostgresqlServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.PostgreSQLInstance{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind}))).
+		WithEventFilter(p).
 		Complete(r)
 }
 
@@ -105,22 +119,36 @@ type MySQLInstanceClaimController struct{}
 
 // SetupWithManager adds a controller that reconciles MySQLInstance instance claims.
 func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
+		databasev1alpha1.MySQLInstanceKind,
+		v1alpha2.MysqlServerKind,
+		v1alpha2.Group))
+
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-		resource.ClassKinds{Portable: databasev1alpha1.MySQLInstanceGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind},
+		resource.ClassKinds{
+			Portable:    databasev1alpha1.MySQLInstanceClassGroupVersionKind,
+			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
+		},
 		resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureMysqlServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", databasev1alpha1.MySQLInstanceKind, controllerName))
+	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind)),
+		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
+		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
+			Portable:    databasev1alpha1.MySQLInstanceClassGroupVersionKind,
+			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
+		})))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		Watches(&source.Kind{Type: &v1alpha2.MysqlServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.MySQLInstance{}).
-		WithEventFilter(resource.NewPredicates(resource.HasClassReferenceKinds(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{Portable: databasev1alpha1.MySQLInstanceGroupVersionKind, NonPortable: v1alpha2.SQLServerClassGroupVersionKind}))).
+		WithEventFilter(p).
 		Complete(r)
 }
 
