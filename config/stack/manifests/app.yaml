@@ -1,8 +1,14 @@
 # Human readable title of application.
 title: Microsoft Azure Crossplane Stack
 
+overviewShort: The Azure Crossplane Stack enables resource management with the Microsft Azure Cloud Platform.
+overview: |-
+ The Microsoft Azure Cloud Platform Crossplane Stack adds support for managing Azure resources in Kubernetes.
+
+ Azure Kubernetes Service, Azure SQL Database, Azure Cache for Redis, and Azure Blob Storage Containers resources can be provisioned, updated, and deleted by this stack.
+
 # Markdown description of this entry
-description: |
+readme: |
  This `stack-azure` repository is the implementation of a Crossplane infrastructure
  [stack](https://github.com/crossplaneio/crossplane/blob/master/design/design-doc-stacks.md) for
  [Microsoft Azure](https://azure.microsoft.com/).
