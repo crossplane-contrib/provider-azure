@@ -23,19 +23,18 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 )
 
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// ProviderSpec defines the desired state of Provider
+// A ProviderSpec defines the desired state of a Provider.
 type ProviderSpec struct {
-	// Important: Run "make generate" to regenerate code after modifying this file
-
 	// Azure service principal credentials json secret key reference
+	// A Secret containing JSON encoded credentials for an Azure Service
+	// Principal that will be used to authenticate to this Azure Provider.
 	Secret corev1.SecretKeySelector `json:"credentialsSecretRef"`
 }
 
 // +kubebuilder:object:root=true
 
-// Provider is the Schema for the instances API
+// A Provider configures an Azure 'provider', i.e. a connection to a particular
+// Azure account using a particular Azure Service Principal.
 // +kubebuilder:printcolumn:name="SECRET-NAME",type="string",JSONPath=".spec.credentialsSecretRef.name",priority=1
 type Provider struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -53,27 +52,32 @@ type ProviderList struct {
 	Items           []Provider `json:"items"`
 }
 
-// ResourceGroupSpec defines the desired state of Resource Group
+// A ResourceGroupSpec defines the desired state of a ResourceGroup.
 type ResourceGroupSpec struct {
-	// Important: Run "make generate" to regenerate code after modifying this file
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
-	// Name of the resource group
+	// Name of the resource group.
 	Name string `json:"name,omitempty"`
-	// See official list of valid regions - https://azure.microsoft.com/en-us/global-infrastructure/regions/
+
+	// Location of the resource group. See the  official list of valid regions -
+	// https://azure.microsoft.com/en-us/global-infrastructure/regions/
 	Location string `json:"location,omitempty"`
 }
 
-// ResourceGroupStatus is the status for this resource group
+// A ResourceGroupStatus represents the observed status of a ResourceGroup.
 type ResourceGroupStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
+	// TODO(negz): Do we really need the name in both spec and status?
+
+	// Name of the resource group.
 	Name string `json:"name"`
 }
 
 // +kubebuilder:object:root=true
 
-// ResourceGroup is the Schema for the instances API
+// A ResourceGroup is a managed resource that represents an Azure Resource
+// Group.
 type ResourceGroup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

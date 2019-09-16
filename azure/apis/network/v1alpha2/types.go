@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,24 +23,34 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AddressSpace contains an array of IP address ranges that can be used by subnets of the
-// virtual network.
+// AddressSpace contains an array of IP address ranges that can be used by
+// subnets of the virtual network.
 type AddressSpace struct {
-	// AddressPrefixes - A list of address blocks reserved for this virtual network in CIDR notation.
+	// AddressPrefixes - A list of address blocks reserved for this virtual
+	// network in CIDR notation.
 	AddressPrefixes []string `json:"addressPrefixes"`
 }
 
-// VirtualNetworkPropertiesFormat properties of the virtual network.
+// VirtualNetworkPropertiesFormat defines properties of a VirtualNetwork.
 type VirtualNetworkPropertiesFormat struct {
-	// AddressSpace - The AddressSpace that contains an array of IP address ranges that can be used by subnets.
+	// AddressSpace - The AddressSpace that contains an array of IP address
+	// ranges that can be used by subnets.
+	// +optional
 	AddressSpace AddressSpace `json:"addressSpace"`
-	// EnableDDOSProtection - Indicates if DDoS protection is enabled for all the protected resources in the virtual network. It requires a DDoS protection plan associated with the resource.
+
+	// EnableDDOSProtection - Indicates if DDoS protection is enabled for all
+	// the protected resources in the virtual network. It requires a DDoS
+	// protection plan associated with the resource.
+	// +optional
 	EnableDDOSProtection bool `json:"enableDdosProtection,omitempty"`
-	// EnableVMProtection - Indicates if VM protection is enabled for all the subnets in the virtual network.
+
+	// EnableVMProtection - Indicates if VM protection is enabled for all the
+	// subnets in the virtual network.
+	// +optional
 	EnableVMProtection bool `json:"enableVmProtection,omitempty"`
 }
 
-// VirtualNetworkSpec virtual Network resource.
+// A VirtualNetworkSpec defines the desired state of a VirtualNetwork.
 type VirtualNetworkSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
@@ -57,29 +67,39 @@ type VirtualNetworkSpec struct {
 	Location string `json:"location"`
 
 	// Tags - Resource tags.
+	// +optional
 	Tags map[string]string `json:"tags,omitempty"`
 }
 
-// VirtualNetworkStatus is the status of the virtual network
+// A VirtualNetworkStatus represents the observed state of a VirtualNetwork.
 type VirtualNetworkStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	State   string `json:"state,omitempty"`
+	// State of this VirtualNetwork.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this VirtualNetwork, if
+	// any.
 	Message string `json:"message,omitempty"`
 
-	// ID - Resource ID.
+	// ID of this VirtualNetwork.
 	ID string `json:"id,omitempty"`
-	// Etag - Gets a unique read-only string that changes whenever the resource is updated.
+
+	// Etag - A unique read-only string that changes whenever the resource is
+	// updated.
 	Etag string `json:"etag,omitempty"`
-	// ResourceGUID - The resourceGuid property of the Virtual Network resource.
+
+	// ResourceGUID - The GUID of this VirtualNetwork.
 	ResourceGUID string `json:"resourceGuid,omitempty"`
-	// Type - Resource type.
+
+	// Type of this VirtualNetwork.
 	Type string `json:"type,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// VirtualNetwork is the Schema for the instances API
+// A VirtualNetwork is a managed resource that represents an Azure Virtual
+// Network.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
@@ -158,17 +178,22 @@ type VirtualNetworkList struct {
 	Items           []VirtualNetwork `json:"items"`
 }
 
-// ServiceEndpointPropertiesFormat the service endpoint properties.
+// ServiceEndpointPropertiesFormat defines properties of a service endpoint.
 type ServiceEndpointPropertiesFormat struct {
 	// Service - The type of the endpoint service.
+	// +optional
 	Service string `json:"service,omitempty"`
+
 	// Locations - A list of locations.
+	// +optional
 	Locations []string `json:"locations,omitempty"`
+
 	// ProvisioningState - The provisioning state of the resource.
+	// +optional
 	ProvisioningState string `json:"provisioningState,omitempty"`
 }
 
-// SubnetPropertiesFormat properties of the subnet.
+// SubnetPropertiesFormat defines properties of a Subnet.
 type SubnetPropertiesFormat struct {
 	// AddressPrefix - The address prefix for the subnet.
 	AddressPrefix string `json:"addressPrefix"`
@@ -177,11 +202,12 @@ type SubnetPropertiesFormat struct {
 	ServiceEndpoints []ServiceEndpointPropertiesFormat `json:"serviceEndpoints,omitempty"`
 }
 
-// SubnetSpec subnet resource.
+// A SubnetSpec defines the desired state of a Subnet.
 type SubnetSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
-	// Name - The name of the resource that is unique within a resource group. This name can be used to access the resource.
+	// Name - The name of the resource that is unique within a resource group.
+	// This name can be used to access the resource.
 	Name string `json:"name"`
 
 	// VirtualNetworkName - Name of the Subnet's virtual network.
@@ -194,26 +220,30 @@ type SubnetSpec struct {
 	SubnetPropertiesFormat `json:"properties"`
 }
 
-// SubnetStatus is the status of the subnet
+// A SubnetStatus represents the observed state of a Subnet.
 type SubnetStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	State   string `json:"state,omitempty"`
+	// State of this Subnet.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this Subnet, if any.
 	Message string `json:"message,omitempty"`
 
-	// Etag - A unique read-only string that changes whenever the resource is updated.
+	// Etag - A unique string that changes whenever the resource is updated.
 	Etag string `json:"etag,omitempty"`
 
-	// ID - Resource ID.
+	// ID of this Subnet.
 	ID string `json:"id,omitempty"`
 
-	// Purpose - A read-only string identifying the intention of use for this subnet based on delegations and other user-defined properties.
+	// Purpose - A string identifying the intention of use for this subnet based
+	// on delegations and other user-defined properties.
 	Purpose string `json:"purpose,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// Subnet is the Schema for the subnet API
+// A Subnet is a managed resource that represents an Azure Subnet.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"

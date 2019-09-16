@@ -26,7 +26,9 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: AccountClass is the Schema for the resource class
+      description: An AccountClass is a non-portable resource class. It defines the
+        desired spec of resource claims that use it to dynamically provision a managed
+        resource.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,7 +43,8 @@ spec:
         metadata:
           type: object
         specTemplate:
-          description: AccountClassSpecTemplate is the Schema for the resource class
+          description: SpecTemplate is a template for the spec of a dynamically provisioned
+            Account.
           properties:
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -90,15 +93,16 @@ spec:
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
             resourceGroupName:
-              description: ResourceGroupName azure group name
+              description: ResourceGroupName specifies the resource group for this
+                Account.
               type: string
             storageAccountName:
-              description: StorageAccountName for azure blob storage
+              description: StorageAccountName specifies the name for this Account.
               maxLength: 24
               type: string
             storageAccountSpec:
-              description: StorageAccountSpec the parameters used when creating a
-                storage account.
+              description: StorageAccountSpec specifies the desired state of this
+                Account.
               properties:
                 identity:
                   description: Identity - The identity of the resource.
@@ -114,19 +118,16 @@ spec:
                       type: string
                   type: object
                 kind:
-                  description: 'Kind - Required. Indicates the type of storage account.
-                    Possible values include: ''Storage'', ''BlobStorage'''
+                  description: 'Kind - Indicates the type of storage account. Possible
+                    values include: ''Storage'', ''BlobStorage'''
                   enum:
                   - Storage
                   - BlobStorage
                   type: string
                 location:
-                  description: 'Location - Required. Gets or sets the location of
-                    the resource. This will be one of the supported and registered
-                    Azure Geo Regions (e.g. West US, East US, Southeast Asia, etc.).
-                    The geo region of a resource cannot be changed once it is created,
-                    but if an identical geo region is specified on update, the request
-                    will succeed. NOTE: not updatable'
+                  description: Location - The location of the resource. This will
+                    be one of the supported and registered Azure Geo Regions (e.g.
+                    West US, East US, Southeast Asia, etc.).
                   type: string
                 properties:
                   description: StorageAccountSpecProperties - The parameters used
@@ -153,7 +154,7 @@ spec:
                           type: string
                         useSubDomainName:
                           description: UseSubDomainName - Indicates whether indirect
-                            CName validation is enabled.
+                            CNAME validation is enabled.
                           type: boolean
                       type: object
                     encryption:
@@ -266,7 +267,7 @@ spec:
                       type: boolean
                   type: object
                 sku:
-                  description: Sku - Required. Gets or sets the sku name.
+                  description: Sku of the storage account.
                   properties:
                     capabilities:
                       description: Capabilities - The capability information in the
@@ -335,13 +336,17 @@ spec:
                 tags:
                   additionalProperties:
                     type: string
-                  description: Tags - Gets or sets a list of key value pairs that
-                    describe the resource. These tags can be used for viewing and
-                    grouping this resource (across resource groups). A maximum of
-                    15 tags can be provided for a resource. Each tag must have a key
-                    with a length no greater than 128 characters and a value with
-                    a length no greater than 256 characters.
+                  description: Tags - A list of key value pairs that describe the
+                    resource. These tags can be used for viewing and grouping this
+                    resource (across resource groups). A maximum of 15 tags can be
+                    provided for a resource. Each tag must have a key with a length
+                    no greater than 128 characters and a value with a length no greater
+                    than 256 characters.
                   type: object
+              required:
+              - kind
+              - location
+              - sku
               type: object
           required:
           - providerRef

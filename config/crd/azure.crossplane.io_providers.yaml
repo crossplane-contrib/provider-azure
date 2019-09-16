@@ -21,7 +21,8 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: Provider is the Schema for the instances API
+      description: A Provider configures an Azure 'provider', i.e. a connection to
+        a particular Azure account using a particular Azure Service Principal.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -36,10 +37,12 @@ spec:
         metadata:
           type: object
         spec:
-          description: ProviderSpec defines the desired state of Provider
+          description: A ProviderSpec defines the desired state of a Provider.
           properties:
             credentialsSecretRef:
               description: Azure service principal credentials json secret key reference
+                A Secret containing JSON encoded credentials for an Azure Service
+                Principal that will be used to authenticate to this Azure Provider.
               properties:
                 key:
                   description: The key of the secret to select from.  Must be a valid

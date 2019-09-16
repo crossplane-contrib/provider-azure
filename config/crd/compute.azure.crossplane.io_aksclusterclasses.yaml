@@ -26,7 +26,9 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: AKSClusterClass is the Schema for the resource class
+      description: An AKSClusterClass is a non-portable resource class. It defines
+        the desired spec of resource claims that use it to dynamically provision a
+        managed resource.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,8 +43,8 @@ spec:
         metadata:
           type: object
         specTemplate:
-          description: AKSClusterClassSpecTemplate is the Schema for the resource
-            class
+          description: SpecTemplate is a template for the spec of a dynamically provisioned
+            AKSCluster.
           properties:
             disableRBAC:
               description: DisableRBAC determines whether RBAC will be disabled or
@@ -66,8 +68,7 @@ spec:
               type: integer
             nodeVMSize:
               description: NodeVMSize is the name of the worker node VM size, e.g.,
-                Standard_B2s, Standard_F2s_v2, etc. This value cannot be changed after
-                cluster creation.
+                Standard_B2s, Standard_F2s_v2, etc.
               type: string
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -138,9 +139,7 @@ spec:
                   type: string
               type: object
           required:
-          - dnsNamePrefix
           - location
-          - nodeVMSize
           - providerRef
           - resourceGroupName
           - version

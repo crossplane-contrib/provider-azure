@@ -26,35 +26,36 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 )
 
-// AccountParameters define the configuration for Account object
+// AccountParameters define the desired state of an Azure Blob Storage Account.
 type AccountParameters struct {
-	// ResourceGroupName azure group name
+	// ResourceGroupName specifies the resource group for this Account.
 	ResourceGroupName string `json:"resourceGroupName"`
 
-	// StorageAccountName for azure blob storage
+	// StorageAccountName specifies the name for this Account.
 	// +kubebuilder:validation:MaxLength=24
 	StorageAccountName string `json:"storageAccountName"`
 
-	// StorageAccountSpec the parameters used when creating a storage account.
+	// StorageAccountSpec specifies the desired state of this Account.
 	StorageAccountSpec *StorageAccountSpec `json:"storageAccountSpec"`
 }
 
-// AccountSpec is the schema for Account object
+// An AccountSpec defines the desired state of an Account.
 type AccountSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 	AccountParameters            `json:",inline"`
 }
 
-// AccountStatus defines the observed state of StorageAccountStatus
+// An AccountStatus represents the observed state of an Account.
 type AccountStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	*StorageAccountStatus `json:"accountStatus,inline"`
+	*StorageAccountStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
 
-// Account is the Schema for the Account API
+// An Account is a managed resource that represents an Azure Blob Service
+// Account.
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="RESOURCE_GROUP",type="string",JSONPath=".spec.resourceGroupName"
 // +kubebuilder:printcolumn:name="ACCOUNT_NAME",type="string",JSONPath=".spec.storageAccountName"
@@ -125,14 +126,15 @@ func (a *Account) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// AccountList contains a list of AzureBuckets
+// AccountList contains a list of Account.
 type AccountList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Account `json:"items"`
 }
 
-// AccountClassSpecTemplate is the Schema for the resource class
+// An AccountClassSpecTemplate is a template for the spec of a dynamically
+// provisioned Account.
 type AccountClassSpecTemplate struct {
 	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
 	AccountParameters                            `json:",inline"`
@@ -143,7 +145,8 @@ var _ resource.NonPortableClass = &AccountClass{}
 
 // +kubebuilder:object:root=true
 
-// AccountClass is the Schema for the resource class
+// An AccountClass is a non-portable resource class. It defines the desired spec
+// of resource claims that use it to dynamically provision a managed resource.
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -151,6 +154,8 @@ type AccountClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// SpecTemplate is a template for the spec of a dynamically provisioned
+	// Account.
 	SpecTemplate AccountClassSpecTemplate `json:"specTemplate,omitempty"`
 }
 
@@ -166,32 +171,38 @@ func (i *AccountClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// AccountClassList contains a list of cloud memorystore resource classes.
+// AccountClassList contains a list of AccountClass.
 type AccountClassList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AccountClass `json:"items"`
 }
 
-// ContainerParameters define the configuration for Container object
+// ContainerParameters define the desired state of an Azure Blob Storage
+// Container.
 type ContainerParameters struct {
-	// NameFormat to format container name passing it a object UID
-	// If not provided, defaults to "%s", i.e. UID value
-	NameFormat string `json:"nameFormat,omitempty"`
+	// NameFormat specifies the name of the external Container. The first
+	// instance of the string '%s' will be replaced with the Kubernetes
+	// UID of this Container.
+	NameFormat string `json:"nameFormat"`
 
-	// Container metadata
+	// Metadata for this Container.
+	// +optional
 	Metadata azblob.Metadata `json:"metadata,omitempty"`
 
-	// PublicAccessType
+	// PublicAccessType for this container; either "blob" or "container".
+	// +optional
 	PublicAccessType azblob.PublicAccessType `json:"publicAccessType,omitempty"`
 
-	// AccountReference to azure storage account object
+	// AccountReference to the Azure Blob Storage Account this Container will
+	// reside within.
 	AccountReference corev1.LocalObjectReference `json:"accountReference"`
 }
 
-// ContainerSpec is the schema for ContainerSpec object
+// A ContainerSpec defines the desired state of a Container.
 type ContainerSpec struct {
 	ContainerParameters `json:",inline"`
+
 	// NOTE(negz): Container is the only Crossplane type that does not use a
 	// Provider (it reads credentials from its associated Account instead). This
 	// means we can't embed a coreruntimev1alpha1.ResourceSpec, as doing so would
@@ -199,22 +210,50 @@ type ContainerSpec struct {
 	// most of that struct here; the below values should be kept in sync with
 	// coreruntimev1alpha1.ResourceSpec.
 
-	WriteConnectionSecretToReference corev1.LocalObjectReference   `json:"writeConnectionSecretToRef,omitempty"`
-	ClaimReference                   *corev1.ObjectReference       `json:"claimRef,omitempty"`
-	NonPortableClassReference        *corev1.ObjectReference       `json:"classRef,omitempty"`
-	ReclaimPolicy                    runtimev1alpha1.ReclaimPolicy `json:"reclaimPolicy,omitempty"`
+	// WriteConnectionSecretToReference specifies the name of a Secret, in the
+	// same namespace as this managed resource, to which any connection details
+	// for this managed resource should be written. Connection details
+	// frequently include the endpoint, username, and password required to
+	// connect to the managed resource.
+	// +optional
+	WriteConnectionSecretToReference corev1.LocalObjectReference `json:"writeConnectionSecretToRef,omitempty"`
+
+	// ClaimReference specifies the resource claim to which this managed
+	// resource will be bound. ClaimReference is set automatically during
+	// dynamic provisioning. Crossplane does not currently support setting this
+	// field manually, per https://github.com/crossplaneio/crossplane-runtime/issues/19
+	// +optional
+	ClaimReference *corev1.ObjectReference `json:"claimRef,omitempty"`
+
+	// NonPortableClassReference specifies the non-portable resource class that
+	// was used to dynamically provision this managed resource, if any.
+	// Crossplane does not currently support setting this field manually, per
+	// https://github.com/crossplaneio/crossplane-runtime/issues/20
+	// +optional
+	NonPortableClassReference *corev1.ObjectReference `json:"classRef,omitempty"`
+
+	// ReclaimPolicy specifies what will happen to the external resource this
+	// managed resource manages when the managed resource is deleted. "Delete"
+	// deletes the external resource, while "Retain" (the default) does not.
+	// Note this behaviour is subtly different from other uses of the
+	// ReclaimPolicy concept within the Kubernetes ecosystem per
+	// https://github.com/crossplaneio/crossplane-runtime/issues/21
+	// +optional
+	ReclaimPolicy runtimev1alpha1.ReclaimPolicy `json:"reclaimPolicy,omitempty"`
 }
 
-// ContainerStatus sub-resource for Container object
+// A ContainerStatus represents the observed status of a Container.
 type ContainerStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
+	// Name of this Container.
 	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// Container is the Schema for the Container
+// A Container is a managed resource that represents an Azure Blob Storage
+// Container.
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="STORAGE_ACCOUNT",type="string",JSONPath=".spec.accountRef.name"
 // +kubebuilder:printcolumn:name="PUBLIC_ACCESS_TYPE",type="string",JSONPath=".spec.publicAccessType"
@@ -310,7 +349,8 @@ type ContainerList struct {
 	Items           []Container `json:"items"`
 }
 
-// ContainerClassSpecTemplate is the Schema for the resource class
+// A ContainerClassSpecTemplate is a template for the spec of a dynamically
+// provisioned Container.
 type ContainerClassSpecTemplate struct {
 	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
 	ContainerParameters                          `json:",inline"`
@@ -321,7 +361,9 @@ var _ resource.NonPortableClass = &ContainerClass{}
 
 // +kubebuilder:object:root=true
 
-// ContainerClass is the Schema for the resource class
+// A ContainerClass is a non-portable resource class. It defines the desired
+// spec of resource claims that use it to dynamically provision a managed
+// resource.
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -329,6 +371,8 @@ type ContainerClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// SpecTemplate is a template for the spec of a dynamically provisioned
+	// Container.
 	SpecTemplate ContainerClassSpecTemplate `json:"specTemplate,omitempty"`
 }
 

@@ -33,7 +33,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Subnet is the Schema for the subnet API
+      description: A Subnet is a managed resource that represents an Azure Subnet.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -48,7 +48,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: SubnetSpec subnet resource.
+          description: A SubnetSpec defines the desired state of a Subnet.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -141,8 +141,8 @@ spec:
                 serviceEndpoints:
                   description: ServiceEndpoints - An array of service endpoints.
                   items:
-                    description: ServiceEndpointPropertiesFormat the service endpoint
-                      properties.
+                    description: ServiceEndpointPropertiesFormat defines properties
+                      of a service endpoint.
                     properties:
                       locations:
                         description: Locations - A list of locations.
@@ -232,7 +232,7 @@ spec:
           - virtualNetworkName
           type: object
         status:
-          description: SubnetStatus is the status of the subnet
+          description: A SubnetStatus represents the observed state of a Subnet.
           properties:
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -279,20 +279,22 @@ spec:
                 type: object
               type: array
             etag:
-              description: Etag - A unique read-only string that changes whenever
-                the resource is updated.
+              description: Etag - A unique string that changes whenever the resource
+                is updated.
               type: string
             id:
-              description: ID - Resource ID.
+              description: ID of this Subnet.
               type: string
             message:
+              description: A Message providing detail about the state of this Subnet,
+                if any.
               type: string
             purpose:
-              description: Purpose - A read-only string identifying the intention
-                of use for this subnet based on delegations and other user-defined
-                properties.
+              description: Purpose - A string identifying the intention of use for
+                this subnet based on delegations and other user-defined properties.
               type: string
             state:
+              description: State of this Subnet.
               type: string
           type: object
       type: object

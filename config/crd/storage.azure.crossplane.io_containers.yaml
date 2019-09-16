@@ -33,7 +33,8 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Container is the Schema for the Container
+      description: A Container is a managed resource that represents an Azure Blob
+        Storage Container.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -48,10 +49,11 @@ spec:
         metadata:
           type: object
         spec:
-          description: ContainerSpec is the schema for ContainerSpec object
+          description: A ContainerSpec defines the desired state of a Container.
           properties:
             accountReference:
-              description: AccountReference to azure storage account object
+              description: AccountReference to the Azure Blob Storage Account this
+                Container will reside within.
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -59,8 +61,10 @@ spec:
                   type: string
               type: object
             claimRef:
-              description: ObjectReference contains enough information to let you
-                inspect or modify the referred object.
+              description: ClaimReference specifies the resource claim to which this
+                managed resource will be bound. ClaimReference is set automatically
+                during dynamic provisioning. Crossplane does not currently support
+                setting this field manually, per https://github.com/crossplaneio/crossplane-runtime/issues/19
               properties:
                 apiVersion:
                   description: API version of the referent.
@@ -96,8 +100,10 @@ spec:
                   type: string
               type: object
             classRef:
-              description: ObjectReference contains enough information to let you
-                inspect or modify the referred object.
+              description: NonPortableClassReference specifies the non-portable resource
+                class that was used to dynamically provision this managed resource,
+                if any. Crossplane does not currently support setting this field manually,
+                per https://github.com/crossplaneio/crossplane-runtime/issues/20
               properties:
                 apiVersion:
                   description: API version of the referent.
@@ -135,22 +141,30 @@ spec:
             metadata:
               additionalProperties:
                 type: string
-              description: Container metadata
+              description: Metadata for this Container.
               type: object
             nameFormat:
-              description: NameFormat to format container name passing it a object
-                UID If not provided, defaults to "%s", i.e. UID value
+              description: NameFormat specifies the name of the external Container.
+                The first instance of the string '%s' will be replaced with the Kubernetes
+                UID of this Container.
               type: string
             publicAccessType:
-              description: PublicAccessType
+              description: PublicAccessType for this container; either "blob" or "container".
               type: string
             reclaimPolicy:
-              description: A ReclaimPolicy determines what should happen to managed
-                resources when their bound resource claims are deleted.
+              description: ReclaimPolicy specifies what will happen to the external
+                resource this managed resource manages when the managed resource is
+                deleted. "Delete" deletes the external resource, while "Retain" (the
+                default) does not. Note this behaviour is subtly different from other
+                uses of the ReclaimPolicy concept within the Kubernetes ecosystem
+                per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
             writeConnectionSecretToRef:
-              description: LocalObjectReference contains enough information to let
-                you locate the referenced object inside the same namespace.
+              description: WriteConnectionSecretToReference specifies the name of
+                a Secret, in the same namespace as this managed resource, to which
+                any connection details for this managed resource should be written.
+                Connection details frequently include the endpoint, username, and
+                password required to connect to the managed resource.
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -159,9 +173,10 @@ spec:
               type: object
           required:
           - accountReference
+          - nameFormat
           type: object
         status:
-          description: ContainerStatus sub-resource for Container object
+          description: A ContainerStatus represents the observed status of a Container.
           properties:
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -208,6 +223,7 @@ spec:
                 type: object
               type: array
             name:
+              description: Name of this Container.
               type: string
           type: object
       type: object

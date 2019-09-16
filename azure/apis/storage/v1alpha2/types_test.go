@@ -19,6 +19,7 @@ package v1alpha2
 import (
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/google/go-cmp/cmp"
 	"github.com/onsi/gomega"
@@ -63,7 +64,12 @@ func TestAzureStorageAccount(t *testing.T) {
 			AccountParameters: AccountParameters{
 				ResourceGroupName:  "test-group",
 				StorageAccountName: "test-name",
-				StorageAccountSpec: &StorageAccountSpec{},
+				StorageAccountSpec: &StorageAccountSpec{
+					Sku: &Sku{
+						Name: storage.StandardLRS,
+					},
+					Kind: storage.Storage,
+				},
 			},
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &core.ObjectReference{},

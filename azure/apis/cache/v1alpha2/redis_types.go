@@ -58,7 +58,9 @@ const (
 	SupportedRedisVersion = "3.2"
 )
 
-// RedisParameters defines the desired state of Redis
+// RedisParameters define the desired state of an Azure Redis cluster. Most
+// fields map directly to an Azure Redis resource:
+// https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
 type RedisParameters struct {
 	// ResourceGroupName in which to create this resource.
 	ResourceGroupName string `json:"resourceGroupName"`
@@ -71,38 +73,36 @@ type RedisParameters struct {
 
 	// EnableNonSSLPort specifies whether the non-ssl Redis server port (6379)
 	// is enabled.
+	// +optional
 	EnableNonSSLPort bool `json:"enableNonSslPort,omitempty"`
 
 	// ShardCount specifies the number of shards to be created on a Premium
 	// Cluster Cache.
+	// +optional
 	ShardCount int `json:"shardCount,omitempty"`
 
 	// StaticIP address. Required when deploying a Redis cache inside an
 	// existing Azure Virtual Network.
+	// +optional
 	StaticIP string `json:"staticIP,omitempty"`
 
 	// SubnetID specifies the full resource ID of a subnet in a virtual network
 	// to deploy the Redis cache in. Example format:
 	// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1
+	// +optional
 	SubnetID string `json:"subnetId,omitempty"`
 
 	// RedisConfiguration specifies Redis Settings.
+	// +optional
 	RedisConfiguration map[string]string `json:"redisConfiguration,omitempty"`
-}
-
-// RedisSpec defines the desired state of Redis
-// Most fields map directly to an Azure Redis resource.
-// https://docs.microsoft.com/en-us/rest/api/redis/redis/get#redisresource
-type RedisSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	RedisParameters              `json:",inline"`
 }
 
 // TODO(negz): Rename SKU to PricingTier? Both SQL databases and Redis caches
 // call this an 'SKU' in their API, but we call it a PricingTier in our Azure
 // SQL database CRD.
 
-// SKUSpec represents the performance and cost oriented properties of the server
+// An SKUSpec represents the performance and cost oriented properties of a
+// Redis.
 type SKUSpec struct {
 	// Name specifies what type of Redis cache to deploy. Valid values: (Basic,
 	// Standard, Premium). Possible values include: 'Basic', 'Standard',
@@ -122,15 +122,21 @@ type SKUSpec struct {
 	Capacity int `json:"capacity"`
 }
 
-// RedisStatus defines the observed state of Redis
+// A RedisSpec defines the desired state of a Redis.
+type RedisSpec struct {
+	runtimev1alpha1.ResourceSpec `json:",inline"`
+	RedisParameters              `json:",inline"`
+}
+
+// A RedisStatus represents the observed state of a Redis.
 type RedisStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	State   string `json:"state,omitempty"`
-	Message string `json:"message,omitempty"`
+	// State represents the state of an Azure Redis.
+	State string `json:"state,omitempty"`
 
 	// ProviderID is the external ID to identify this resource in the cloud
-	// provider
+	// provider.
 	ProviderID string `json:"providerID,omitempty"`
 
 	// Endpoint of the Redis resource used in connection strings.
@@ -151,7 +157,7 @@ type RedisStatus struct {
 
 // +kubebuilder:object:root=true
 
-// Redis is the Schema for the instances API
+// A Redis is a managed resource that represents an Azure Redis cluster.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".status.redisVersion"
@@ -221,14 +227,15 @@ func (rd *Redis) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// RedisList contains a list of Redis
+// RedisList contains a list of Redis.
 type RedisList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Redis `json:"items"`
 }
 
-// RedisClassSpecTemplate is the Schema for the resource class
+// A RedisClassSpecTemplate is a template for the spec of a dynamically
+// provisioned Redis.
 type RedisClassSpecTemplate struct {
 	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
 	RedisParameters                              `json:",inline"`
@@ -239,7 +246,8 @@ var _ resource.NonPortableClass = &RedisClass{}
 
 // +kubebuilder:object:root=true
 
-// RedisClass is the Schema for the resource class
+// A RedisClass is a non-portable resource class. It defines the desired spec of
+// resource claims that use it to dynamically provision a managed resource.
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -247,6 +255,8 @@ type RedisClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// SpecTemplate is a template for the spec of a dynamically provisioned
+	// Redis.
 	SpecTemplate RedisClassSpecTemplate `json:"specTemplate,omitempty"`
 }
 
