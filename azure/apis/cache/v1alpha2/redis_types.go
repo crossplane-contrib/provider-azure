@@ -257,7 +257,7 @@ type RedisClass struct {
 
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// Redis.
-	SpecTemplate RedisClassSpecTemplate `json:"specTemplate,omitempty"`
+	SpecTemplate RedisClassSpecTemplate `json:"specTemplate"`
 }
 
 // GetReclaimPolicy of this RedisClass.

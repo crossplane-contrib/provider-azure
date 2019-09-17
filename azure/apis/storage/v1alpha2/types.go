@@ -156,7 +156,7 @@ type AccountClass struct {
 
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// Account.
-	SpecTemplate AccountClassSpecTemplate `json:"specTemplate,omitempty"`
+	SpecTemplate AccountClassSpecTemplate `json:"specTemplate"`
 }
 
 // GetReclaimPolicy of this AccountClass.
@@ -373,7 +373,7 @@ type ContainerClass struct {
 
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// Container.
-	SpecTemplate ContainerClassSpecTemplate `json:"specTemplate,omitempty"`
+	SpecTemplate ContainerClassSpecTemplate `json:"specTemplate"`
 }
 
 // GetReclaimPolicy of this ContainerClass.

@@ -262,7 +262,7 @@ type SQLServerClass struct {
 
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// SQLServer.
-	SpecTemplate SQLServerClassSpecTemplate `json:"specTemplate,omitempty"`
+	SpecTemplate SQLServerClassSpecTemplate `json:"specTemplate"`
 }
 
 // GetReclaimPolicy of this PostgresqlServerClass.
