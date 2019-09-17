@@ -33,7 +33,8 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: VirtualNetwork is the Schema for the instances API
+      description: A VirtualNetwork is a managed resource that represents an Azure
+        Virtual Network.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -48,7 +49,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: VirtualNetworkSpec virtual Network resource.
+          description: A VirtualNetworkSpec defines the desired state of a VirtualNetwork.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -160,8 +161,6 @@ spec:
                   description: EnableVMProtection - Indicates if VM protection is
                     enabled for all the subnets in the virtual network.
                   type: boolean
-              required:
-              - addressSpace
               type: object
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -237,7 +236,7 @@ spec:
           - resourceGroupName
           type: object
         status:
-          description: VirtualNetworkStatus is the status of the virtual network
+          description: A VirtualNetworkStatus represents the observed state of a VirtualNetwork.
           properties:
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -284,22 +283,24 @@ spec:
                 type: object
               type: array
             etag:
-              description: Etag - Gets a unique read-only string that changes whenever
+              description: Etag - A unique read-only string that changes whenever
                 the resource is updated.
               type: string
             id:
-              description: ID - Resource ID.
+              description: ID of this VirtualNetwork.
               type: string
             message:
+              description: A Message providing detail about the state of this VirtualNetwork,
+                if any.
               type: string
             resourceGuid:
-              description: ResourceGUID - The resourceGuid property of the Virtual
-                Network resource.
+              description: ResourceGUID - The GUID of this VirtualNetwork.
               type: string
             state:
+              description: State of this VirtualNetwork.
               type: string
             type:
-              description: Type - Resource type.
+              description: Type of this VirtualNetwork.
               type: string
           type: object
       type: object

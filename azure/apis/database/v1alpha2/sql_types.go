@@ -26,9 +26,12 @@ import (
 )
 
 const (
-	// OperationCreateServer is the operation type for creating a new mysql server
+	// OperationCreateServer is the operation type for creating a new mysql
+	// server.
 	OperationCreateServer = "createServer"
-	// OperationCreateFirewallRules is the operation type for creating a firewall rule
+
+	// OperationCreateFirewallRules is the operation type for creating a
+	// firewall rule.
 	OperationCreateFirewallRules = "createFirewallRules"
 )
 
@@ -43,11 +46,10 @@ type SQLServer interface {
 	SetStatus(*SQLServerStatus)
 }
 
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // +kubebuilder:object:root=true
 
-// MysqlServer is the Schema for the instances API
+// A MysqlServer is a managed resource that represents an Azure MySQL Database
+// Server.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
@@ -133,7 +135,7 @@ func (s *MysqlServer) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// MysqlServerList contains a list of MysqlServer
+// MysqlServerList contains a list of MysqlServer.
 type MysqlServerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -142,7 +144,8 @@ type MysqlServerList struct {
 
 // +kubebuilder:object:root=true
 
-// PostgresqlServer is the Schema for the instances API
+// A PostgresqlServer is a managed resource that represents an Azure PostgreSQL
+// Database Server.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
@@ -228,14 +231,15 @@ func (s *PostgresqlServer) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// PostgresqlServerList contains a list of PostgresqlServer
+// PostgresqlServerList contains a list of PostgresqlServer.
 type PostgresqlServerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []PostgresqlServer `json:"items"`
 }
 
-// SQLServerClassSpecTemplate is the Schema for the resource class
+// A SQLServerClassSpecTemplate is a template for the spec of a dynamically
+// provisioned MysqlServer or PostgresqlServer.
 type SQLServerClassSpecTemplate struct {
 	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
 	SQLServerParameters                          `json:",inline"`
@@ -246,7 +250,9 @@ var _ resource.NonPortableClass = &SQLServerClass{}
 
 // +kubebuilder:object:root=true
 
-// SQLServerClass is the Schema for the resource class
+// A SQLServerClass is a non-portable resource class. It defines the desired
+// spec of resource claims that use it to dynamically provision a managed
+// resource.
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -254,6 +260,8 @@ type SQLServerClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// SpecTemplate is a template for the spec of a dynamically provisioned
+	// SQLServer.
 	SpecTemplate SQLServerClassSpecTemplate `json:"specTemplate,omitempty"`
 }
 
@@ -269,65 +277,99 @@ func (i *SQLServerClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// SQLServerClassList contains a list of cloud memorystore resource classes.
+// SQLServerClassList contains a list of SQLServerClass.
 type SQLServerClassList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []SQLServerClass `json:"items"`
 }
 
-// SQLServerParameters defines the desired state of SQLServer
+// SQLServerParameters define the desired state of an Azure SQL Database, either
+// PostgreSQL or MySQL.
 type SQLServerParameters struct {
-	ResourceGroupName string             `json:"resourceGroupName"`
-	Location          string             `json:"location"`
-	PricingTier       PricingTierSpec    `json:"pricingTier"`
-	StorageProfile    StorageProfileSpec `json:"storageProfile"`
-	AdminLoginName    string             `json:"adminLoginName"`
-	Version           string             `json:"version"`
-	SSLEnforced       bool               `json:"sslEnforced,omitempty"`
+
+	// ResourceGroupName specifies the name of the resource group that should
+	// contain this SQLServer.
+	ResourceGroupName string `json:"resourceGroupName"`
+
+	// Location specifies the location of this SQLServer.
+	Location string `json:"location"`
+
+	// PricingTier specifies the pricing tier (aka SKU) for this SQLServer.
+	PricingTier PricingTierSpec `json:"pricingTier"`
+
+	// StorageProfile configures the storage profile of this SQLServer.
+	StorageProfile StorageProfileSpec `json:"storageProfile"`
+
+	// AdminLoginName specifies the administrator login name for this SQLServer.
+	AdminLoginName string `json:"adminLoginName"`
+
+	// Version specifies the version of this server, for
+	// example "5.6", or "9.6".
+	Version string `json:"version"`
+
+	// SSLEnforced specifies whether SSL is required to connect to this
+	// SQLServer.
+	// +optional
+	SSLEnforced bool `json:"sslEnforced,omitempty"`
 }
 
-// SQLServerSpec defines the desired state of SQLServer
+// A SQLServerSpec defines the desired state of a SQLServer.
 type SQLServerSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 	SQLServerParameters          `json:",inline"`
 }
 
-// SQLServerStatus defines the observed state of SQLServer
+// A SQLServerStatus represents the observed state of a SQLServer.
 type SQLServerStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	State   string `json:"state,omitempty"`
+	// State of this SQLServer.
+	State string `json:"state,omitempty"`
+
+	// A Message containing detail on the state of this SQLServer, if any.
 	Message string `json:"message,omitempty"`
 
-	// the external ID to identify this resource in the cloud provider
+	// ProviderID is the external ID to identify this resource in the cloud
+	// provider.
 	ProviderID string `json:"providerID,omitempty"`
 
-	// Endpoint of the MySQL Server instance used in connection strings
+	// Endpoint of the MySQL Server instance used in connection strings.
 	Endpoint string `json:"endpoint,omitempty"`
 
-	// RunningOperation stores any current long running operation for this instance across
-	// reconciliation attempts.  This will be a serialized Azure MySQL Server API object that will
-	// be used to check the status and completion of the operation during each reconciliation.
-	// Once the operation has completed, this field will be cleared out.
+	// RunningOperation stores any current long running operation for this
+	// instance across reconciliation attempts.
 	RunningOperation string `json:"runningOperation,omitempty"`
 
-	// RunningOperationType is the type of the currently running operation
+	// RunningOperationType is the type of the currently running operation.
 	RunningOperationType string `json:"runningOperationType,omitempty"`
 }
 
-// PricingTierSpec represents the performance and cost oriented properties of the server
+// PricingTierSpec represents the performance and cost oriented properties of a
+// SQLServer.
 type PricingTierSpec struct {
-	Tier   string `json:"tier"`
-	VCores int    `json:"vcores"`
+	// Tier of the particular SKU, e.g. Basic. Possible values include: 'Basic',
+	// 'GeneralPurpose', 'MemoryOptimized'
+	Tier string `json:"tier"`
+
+	// VCores (aka Capacity) specifies how many virtual cores this SQLServer
+	// requires.
+	VCores int `json:"vcores"`
+
+	// Family of hardware.
 	Family string `json:"family"`
 }
 
-// StorageProfileSpec represents storage related properties of the server
+// A StorageProfileSpec represents storage related properties of a SQLServer.
 type StorageProfileSpec struct {
-	StorageGB           int  `json:"storageGB"`
-	BackupRetentionDays int  `json:"backupRetentionDays,omitempty"`
-	GeoRedundantBackup  bool `json:"geoRedundantBackup,omitempty"`
+	// StorageGB configures the maximum storage allowed.
+	StorageGB int `json:"storageGB"`
+
+	// BackupRetentionDays configures how many days backups will be retained.
+	BackupRetentionDays int `json:"backupRetentionDays,omitempty"`
+
+	// GeoRedundantBackup enables geo-redunndant backups.
+	GeoRedundantBackup bool `json:"geoRedundantBackup,omitempty"`
 }
 
 // ValidMySQLVersionValues returns the valid set of engine version values.
@@ -340,15 +382,18 @@ func ValidPostgreSQLVersionValues() []string {
 	return []string{"9.5", "9.6", "10", "10.0", "10.2"}
 }
 
-// VirtualNetworkRuleProperties defines the properties of the VirtualNetworkRule
+// VirtualNetworkRuleProperties defines the properties of a VirtualNetworkRule.
 type VirtualNetworkRuleProperties struct {
-	// VirtualNetworkSubnetID - The ARM resource id of the virtual network subnet.
+	// VirtualNetworkSubnetID - The ARM resource id of the virtual network
+	// subnet.
 	VirtualNetworkSubnetID string `json:"virtualNetworkSubnetId"`
-	// IgnoreMissingVnetServiceEndpoint - Create firewall rule before the virtual network has vnet service endpoint enabled.
+
+	// IgnoreMissingVnetServiceEndpoint - Create firewall rule before the
+	// virtual network has vnet service endpoint enabled.
 	IgnoreMissingVnetServiceEndpoint bool `json:"ignoreMissingVnetServiceEndpoint,omitempty"`
 }
 
-// VirtualNetworkRuleSpec defines the desired state of VirtualNetworkRule
+// A VirtualNetworkRuleSpec defines the desired state of a VirtualNetworkRule.
 type VirtualNetworkRuleSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
@@ -365,22 +410,29 @@ type VirtualNetworkRuleSpec struct {
 	VirtualNetworkRuleProperties `json:"properties"`
 }
 
-// VirtualNetworkRuleStatus defines the current state of VirtualNetworkRule
+// A VirtualNetworkRuleStatus represents the observed state of a
+// VirtualNetworkRule.
 type VirtualNetworkRuleStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	State   string `json:"state,omitempty"`
+	// State of this virtual network rule.
+	State string `json:"state,omitempty"`
+
+	// A Message containing details about the state of this virtual network
+	// rule, if any.
 	Message string `json:"message,omitempty"`
 
 	// ID - Resource ID
 	ID string `json:"id,omitempty"`
+
 	// Type - Resource type.
 	Type string `json:"type,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// PostgresqlServerVirtualNetworkRule is the Schema for the instances API
+// A PostgresqlServerVirtualNetworkRule is a managed resource that represents
+// an Azure PostgreSQL Database virtual network rule.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -450,7 +502,7 @@ func (s *PostgresqlServerVirtualNetworkRule) SetReclaimPolicy(p runtimev1alpha1.
 
 // +kubebuilder:object:root=true
 
-// PostgresqlServerVirtualNetworkRuleList contains a list of PostgresqlServerVirtualNetworkRule
+// PostgresqlServerVirtualNetworkRuleList contains a list of PostgresqlServerVirtualNetworkRule.
 type PostgresqlServerVirtualNetworkRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -459,7 +511,8 @@ type PostgresqlServerVirtualNetworkRuleList struct {
 
 // +kubebuilder:object:root=true
 
-// MysqlServerVirtualNetworkRule is the Schema for the instances API
+// A MysqlServerVirtualNetworkRule is a managed resource that represents an
+// Azure MySQL Database virtual network rule.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -529,7 +582,8 @@ func (s *MysqlServerVirtualNetworkRule) SetReclaimPolicy(p runtimev1alpha1.Recla
 
 // +kubebuilder:object:root=true
 
-// MysqlServerVirtualNetworkRuleList contains a list of MysqlServerVirtualNetworkRule
+// MysqlServerVirtualNetworkRuleList contains a list of
+// MysqlServerVirtualNetworkRule.
 type MysqlServerVirtualNetworkRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

@@ -33,7 +33,8 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Account is the Schema for the Account API
+      description: An Account is a managed resource that represents an Azure Blob
+        Service Account.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -48,7 +49,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: AccountSpec is the schema for Account object
+          description: An AccountSpec defines the desired state of an Account.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -174,15 +175,16 @@ spec:
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
             resourceGroupName:
-              description: ResourceGroupName azure group name
+              description: ResourceGroupName specifies the resource group for this
+                Account.
               type: string
             storageAccountName:
-              description: StorageAccountName for azure blob storage
+              description: StorageAccountName specifies the name for this Account.
               maxLength: 24
               type: string
             storageAccountSpec:
-              description: StorageAccountSpec the parameters used when creating a
-                storage account.
+              description: StorageAccountSpec specifies the desired state of this
+                Account.
               properties:
                 identity:
                   description: Identity - The identity of the resource.
@@ -198,19 +200,16 @@ spec:
                       type: string
                   type: object
                 kind:
-                  description: 'Kind - Required. Indicates the type of storage account.
-                    Possible values include: ''Storage'', ''BlobStorage'''
+                  description: 'Kind - Indicates the type of storage account. Possible
+                    values include: ''Storage'', ''BlobStorage'''
                   enum:
                   - Storage
                   - BlobStorage
                   type: string
                 location:
-                  description: 'Location - Required. Gets or sets the location of
-                    the resource. This will be one of the supported and registered
-                    Azure Geo Regions (e.g. West US, East US, Southeast Asia, etc.).
-                    The geo region of a resource cannot be changed once it is created,
-                    but if an identical geo region is specified on update, the request
-                    will succeed. NOTE: not updatable'
+                  description: Location - The location of the resource. This will
+                    be one of the supported and registered Azure Geo Regions (e.g.
+                    West US, East US, Southeast Asia, etc.).
                   type: string
                 properties:
                   description: StorageAccountSpecProperties - The parameters used
@@ -237,7 +236,7 @@ spec:
                           type: string
                         useSubDomainName:
                           description: UseSubDomainName - Indicates whether indirect
-                            CName validation is enabled.
+                            CNAME validation is enabled.
                           type: boolean
                       type: object
                     encryption:
@@ -350,7 +349,7 @@ spec:
                       type: boolean
                   type: object
                 sku:
-                  description: Sku - Required. Gets or sets the sku name.
+                  description: Sku of the storage account.
                   properties:
                     capabilities:
                       description: Capabilities - The capability information in the
@@ -419,13 +418,17 @@ spec:
                 tags:
                   additionalProperties:
                     type: string
-                  description: Tags - Gets or sets a list of key value pairs that
-                    describe the resource. These tags can be used for viewing and
-                    grouping this resource (across resource groups). A maximum of
-                    15 tags can be provided for a resource. Each tag must have a key
-                    with a length no greater than 128 characters and a value with
-                    a length no greater than 256 characters.
+                  description: Tags - A list of key value pairs that describe the
+                    resource. These tags can be used for viewing and grouping this
+                    resource (across resource groups). A maximum of 15 tags can be
+                    provided for a resource. Each tag must have a key with a length
+                    no greater than 128 characters and a value with a length no greater
+                    than 256 characters.
                   type: object
+              required:
+              - kind
+              - location
+              - sku
               type: object
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the name of
@@ -446,7 +449,7 @@ spec:
           - storageAccountSpec
           type: object
         status:
-          description: AccountStatus defines the observed state of StorageAccountStatus
+          description: An AccountStatus represents the observed state of an Account.
           properties:
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -493,14 +496,13 @@ spec:
                 type: object
               type: array
             id:
-              description: ID - Resource Id
+              description: ID of this Account.
               type: string
             name:
-              description: Name - Resource name
+              description: Name of this Account.
               type: string
             properties:
-              description: StorageAccountStatusProperties - account status properties
-                of the storage account.
+              description: Properties of this Account.
               properties:
                 creationTime:
                   description: CreationTime - the creation date and time of the storage
@@ -586,7 +588,7 @@ spec:
                   type: string
               type: object
             type:
-              description: Type - Resource type
+              description: Type of this Account.
               type: string
           type: object
       type: object

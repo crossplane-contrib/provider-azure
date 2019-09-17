@@ -26,7 +26,9 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: SQLServerClass is the Schema for the resource class
+      description: A SQLServerClass is a non-portable resource class. It defines the
+        desired spec of resource claims that use it to dynamically provision a managed
+        resource.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,21 +43,30 @@ spec:
         metadata:
           type: object
         specTemplate:
-          description: SQLServerClassSpecTemplate is the Schema for the resource class
+          description: SpecTemplate is a template for the spec of a dynamically provisioned
+            SQLServer.
           properties:
             adminLoginName:
+              description: AdminLoginName specifies the administrator login name for
+                this SQLServer.
               type: string
             location:
+              description: Location specifies the location of this SQLServer.
               type: string
             pricingTier:
-              description: PricingTierSpec represents the performance and cost oriented
-                properties of the server
+              description: PricingTier specifies the pricing tier (aka SKU) for this
+                SQLServer.
               properties:
                 family:
+                  description: Family of hardware.
                   type: string
                 tier:
+                  description: 'Tier of the particular SKU, e.g. Basic. Possible values
+                    include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
                   type: string
                 vcores:
+                  description: VCores (aka Capacity) specifies how many virtual cores
+                    this SQLServer requires.
                   type: integer
               required:
               - family
@@ -109,23 +120,32 @@ spec:
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
             resourceGroupName:
+              description: ResourceGroupName specifies the name of the resource group
+                that should contain this SQLServer.
               type: string
             sslEnforced:
+              description: SSLEnforced specifies whether SSL is required to connect
+                to this SQLServer.
               type: boolean
             storageProfile:
-              description: StorageProfileSpec represents storage related properties
-                of the server
+              description: StorageProfile configures the storage profile of this SQLServer.
               properties:
                 backupRetentionDays:
+                  description: BackupRetentionDays configures how many days backups
+                    will be retained.
                   type: integer
                 geoRedundantBackup:
+                  description: GeoRedundantBackup enables geo-redunndant backups.
                   type: boolean
                 storageGB:
+                  description: StorageGB configures the maximum storage allowed.
                   type: integer
               required:
               - storageGB
               type: object
             version:
+              description: Version specifies the version of this server, for example
+                "5.6", or "9.6".
               type: string
           required:
           - adminLoginName

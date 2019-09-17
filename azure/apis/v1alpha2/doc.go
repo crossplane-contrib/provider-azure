@@ -14,5 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha2 contains API Schema definitions for the azure v1alpha2 API group
+// Package v1alpha2 contains core resources for Microsoft Azure.
+// +kubebuilder:object:generate=true
+// +groupName=azure.crossplane.io
+// +versionName=v1alpha2
 package v1alpha2

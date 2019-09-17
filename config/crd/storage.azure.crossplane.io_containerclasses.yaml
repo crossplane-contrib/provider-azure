@@ -26,7 +26,9 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: ContainerClass is the Schema for the resource class
+      description: A ContainerClass is a non-portable resource class. It defines the
+        desired spec of resource claims that use it to dynamically provision a managed
+        resource.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,10 +43,12 @@ spec:
         metadata:
           type: object
         specTemplate:
-          description: ContainerClassSpecTemplate is the Schema for the resource class
+          description: SpecTemplate is a template for the spec of a dynamically provisioned
+            Container.
           properties:
             accountReference:
-              description: AccountReference to azure storage account object
+              description: AccountReference to the Azure Blob Storage Account this
+                Container will reside within.
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -54,11 +58,12 @@ spec:
             metadata:
               additionalProperties:
                 type: string
-              description: Container metadata
+              description: Metadata for this Container.
               type: object
             nameFormat:
-              description: NameFormat to format container name passing it a object
-                UID If not provided, defaults to "%s", i.e. UID value
+              description: NameFormat specifies the name of the external Container.
+                The first instance of the string '%s' will be replaced with the Kubernetes
+                UID of this Container.
               type: string
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -99,7 +104,7 @@ spec:
                   type: string
               type: object
             publicAccessType:
-              description: PublicAccessType
+              description: PublicAccessType for this container; either "blob" or "container".
               type: string
             reclaimPolicy:
               description: ReclaimPolicy specifies what will happen to external resources
@@ -111,6 +116,7 @@ spec:
               type: string
           required:
           - accountReference
+          - nameFormat
           - providerRef
           type: object
       type: object

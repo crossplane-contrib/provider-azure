@@ -41,7 +41,8 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: AKSCluster is the Schema for the instances API
+      description: An AKSCluster is a managed resource that represents an Azure Kubernetes
+        Engine cluster.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -56,7 +57,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: AKSClusterSpec is the spec for AKS cluster resources
+          description: An AKSClusterSpec defines the desired state of a AKSCluster.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -158,8 +159,7 @@ spec:
               type: integer
             nodeVMSize:
               description: NodeVMSize is the name of the worker node VM size, e.g.,
-                Standard_B2s, Standard_F2s_v2, etc. This value cannot be changed after
-                cluster creation.
+                Standard_B2s, Standard_F2s_v2, etc.
               type: string
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -241,20 +241,18 @@ spec:
                   type: string
               type: object
           required:
-          - dnsNamePrefix
           - location
-          - nodeVMSize
           - providerRef
           - resourceGroupName
           - version
           - writeServicePrincipalTo
           type: object
         status:
-          description: AKSClusterStatus is the status for AKS cluster resources
+          description: An AKSClusterStatus represents the observed state of an AKSCluster.
           properties:
             appObjectID:
               description: ApplicationObjectID is the object ID of the AD application
-                the cluster uses for Azure APIs
+                the cluster uses for Azure APIs.
               type: string
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -269,7 +267,7 @@ spec:
               type: string
             clusterName:
               description: ClusterName is the name of the cluster as registered with
-                the cloud provider
+                the cloud provider.
               type: string
             conditions:
               description: Conditions of the resource.
@@ -309,21 +307,18 @@ spec:
               type: string
             providerID:
               description: ProviderID is the external ID to identify this resource
-                in the cloud provider
+                in the cloud provider.
               type: string
             runningOperation:
               description: RunningOperation stores any current long running operation
-                for this instance across reconciliation attempts.  This will be a
-                serialized Azure AKS cluster API object that will be used to check
-                the status and completion of the operation during each reconciliation.
-                Once the operation has completed, this field will be cleared out.
+                for this instance across reconciliation attempts.
               type: string
             servicePrincipalID:
               description: ServicePrincipalID is the ID of the service principal the
-                AD application uses
+                AD application uses.
               type: string
             state:
-              description: State is the current state of the cluster
+              description: State is the current state of the cluster.
               type: string
           required:
           - endpoint

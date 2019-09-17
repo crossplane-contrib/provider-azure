@@ -27,8 +27,8 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: PostgresqlServerVirtualNetworkRule is the Schema for the instances
-        API
+      description: A PostgresqlServerVirtualNetworkRule is a managed resource that
+        represents an Azure PostgreSQL Database virtual network rule.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -43,7 +43,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: VirtualNetworkRuleSpec defines the desired state of VirtualNetworkRule
+          description: A VirtualNetworkRuleSpec defines the desired state of a VirtualNetworkRule.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -212,7 +212,8 @@ spec:
           - serverName
           type: object
         status:
-          description: VirtualNetworkRuleStatus defines the current state of VirtualNetworkRule
+          description: A VirtualNetworkRuleStatus represents the observed state of
+            a VirtualNetworkRule.
           properties:
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -262,8 +263,11 @@ spec:
               description: ID - Resource ID
               type: string
             message:
+              description: A Message containing details about the state of this virtual
+                network rule, if any.
               type: string
             state:
+              description: State of this virtual network rule.
               type: string
             type:
               description: Type - Resource type.

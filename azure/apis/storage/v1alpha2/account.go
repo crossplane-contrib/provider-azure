@@ -31,11 +31,16 @@ var (
 	log = logging.Logger.WithName(Group)
 )
 
-// CustomDomain the custom domain assigned to this storage account.
+// CustomDomain specifies the custom domain assigned to this storage account.
 type CustomDomain struct {
-	// Name - custom domain name assigned to the storage account. Name is the CNAME source.
+	// Name - custom domain name assigned to the storage account. Name is the
+	// CNAME source.
+	// +optional
 	Name string `json:"name,omitempty"`
-	// UseSubDomainName - Indicates whether indirect CName validation is enabled.
+
+	// UseSubDomainName - Indicates whether indirect CNAME validation is
+	// enabled.
+	// +optional
 	UseSubDomainName bool `json:"useSubDomainName,omitempty"`
 }
 
@@ -379,7 +384,7 @@ func toStorageSkuCapability(s skuCapability) storage.SKUCapability {
 	}
 }
 
-// Sku the Sku of the storage account.
+// Sku of an Azure Blob Storage Account.
 type Sku struct {
 	// Capabilities - The capability information in the specified sku, including
 	// file encryption, network acls, change notification, etc.
@@ -560,7 +565,7 @@ func toStorageAccountUpdateProperties(s *StorageAccountSpecProperties) *storage.
 	}
 }
 
-// StorageAccountStatusProperties - account status properties of the storage account.
+// StorageAccountStatusProperties represent the observed state of an Account.
 type StorageAccountStatusProperties struct {
 
 	// CreationTime - the creation date and time of the storage account in UTC.
@@ -631,34 +636,37 @@ func newStorageAccountStatusProperties(s *storage.AccountProperties) *StorageAcc
 	}
 }
 
-// StorageAccountSpec the parameters used when creating or updating a storage account.
+// A StorageAccountSpec defines the desired state of an Azure Blob Storage
+// account.
 type StorageAccountSpec struct {
 	// Identity - The identity of the resource.
+	// +optional
 	Identity *Identity `json:"identity,omitempty"`
 
-	// Kind - Required. Indicates the type of storage account.
+	// Kind - Indicates the type of storage account.
 	// Possible values include: 'Storage', 'BlobStorage'
 	// +kubebuilder:validation:Enum=Storage;BlobStorage
-	Kind storage.Kind `json:"kind,omitempty"`
+	Kind storage.Kind `json:"kind"`
 
-	// Location - Required. Gets or sets the location of the resource.
-	// This will be one of the supported and registered Azure Geo Regions (e.g. West US, East US, Southeast Asia, etc.).
-	// The geo region of a resource cannot be changed once it is created,
-	// but if an identical geo region is specified on update, the request will succeed.
-	// NOTE: not updatable
-	Location string `json:"location,omitempty"`
+	// Location - The location of the resource. This will be one of the
+	// supported and registered Azure Geo Regions (e.g. West US, East US,
+	// Southeast Asia, etc.).
+	Location string `json:"location"`
 
-	// Sku - Required. Gets or sets the sku name.
-	Sku *Sku `json:"sku,omitempty"`
+	// Sku of the storage account.
+	Sku *Sku `json:"sku"`
 
-	// StorageAccountSpecProperties - The parameters used to create the storage account.
+	// StorageAccountSpecProperties - The parameters used to create the storage
+	// account.
+	// +optional
 	*StorageAccountSpecProperties `json:"properties,omitempty"`
 
-	// Tags - Gets or sets a list of key value pairs that describe the resource.
-	// These tags can be used for viewing and grouping this resource (across resource groups).
-	// A maximum of 15 tags can be provided for a resource.
-	// Each tag must have a key with a length no greater than 128 characters and
-	// a value with a length no greater than 256 characters.
+	// Tags - A list of key value pairs that describe the resource. These tags
+	// can be used for viewing and grouping this resource (across resource
+	// groups). A maximum of 15 tags can be provided for a resource. Each tag
+	// must have a key with a length no greater than 128 characters and a value
+	// with a length no greater than 256 characters.
+	// +optional
 	Tags map[string]string `json:"tags,omitempty"`
 }
 
@@ -723,17 +731,18 @@ func ToStorageAccountUpdate(s *StorageAccountSpec) storage.AccountUpdateParamete
 	}
 }
 
-// StorageAccountStatus the storage account.
+// A StorageAccountStatus represents the observed status of an Account.
 type StorageAccountStatus struct {
-	// ID - Resource Id
+	// ID of this Account.
 	ID string `json:"id,omitempty"`
 
-	// Name - Resource name
+	// Name of this Account.
 	Name string `json:"name,omitempty"`
 
-	// Type - Resource type
+	// Type of this Account.
 	Type string `json:"type,omitempty"`
 
+	// Properties of this Account.
 	*StorageAccountStatusProperties `json:"properties,omitempty"`
 }
 

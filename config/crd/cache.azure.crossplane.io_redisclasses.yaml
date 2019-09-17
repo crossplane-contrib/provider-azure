@@ -26,7 +26,8 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: RedisClass is the Schema for the resource class
+      description: A RedisClass is a non-portable resource class. It defines the desired
+        spec of resource claims that use it to dynamically provision a managed resource.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,7 +42,8 @@ spec:
         metadata:
           type: object
         specTemplate:
-          description: RedisClassSpecTemplate is the Schema for the resource class
+          description: SpecTemplate is a template for the spec of a dynamically provisioned
+            Redis.
           properties:
             enableNonSslPort:
               description: EnableNonSSLPort specifies whether the non-ssl Redis server

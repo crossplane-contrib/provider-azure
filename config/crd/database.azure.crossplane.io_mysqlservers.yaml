@@ -32,7 +32,8 @@ spec:
   subresources: {}
   validation:
     openAPIV3Schema:
-      description: MysqlServer is the Schema for the instances API
+      description: A MysqlServer is a managed resource that represents an Azure MySQL
+        Database Server.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -47,9 +48,11 @@ spec:
         metadata:
           type: object
         spec:
-          description: SQLServerSpec defines the desired state of SQLServer
+          description: A SQLServerSpec defines the desired state of a SQLServer.
           properties:
             adminLoginName:
+              description: AdminLoginName specifies the administrator login name for
+                this SQLServer.
               type: string
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -130,16 +133,22 @@ spec:
                   type: string
               type: object
             location:
+              description: Location specifies the location of this SQLServer.
               type: string
             pricingTier:
-              description: PricingTierSpec represents the performance and cost oriented
-                properties of the server
+              description: PricingTier specifies the pricing tier (aka SKU) for this
+                SQLServer.
               properties:
                 family:
+                  description: Family of hardware.
                   type: string
                 tier:
+                  description: 'Tier of the particular SKU, e.g. Basic. Possible values
+                    include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
                   type: string
                 vcores:
+                  description: VCores (aka Capacity) specifies how many virtual cores
+                    this SQLServer requires.
                   type: integer
               required:
               - family
@@ -192,23 +201,32 @@ spec:
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
             resourceGroupName:
+              description: ResourceGroupName specifies the name of the resource group
+                that should contain this SQLServer.
               type: string
             sslEnforced:
+              description: SSLEnforced specifies whether SSL is required to connect
+                to this SQLServer.
               type: boolean
             storageProfile:
-              description: StorageProfileSpec represents storage related properties
-                of the server
+              description: StorageProfile configures the storage profile of this SQLServer.
               properties:
                 backupRetentionDays:
+                  description: BackupRetentionDays configures how many days backups
+                    will be retained.
                   type: integer
                 geoRedundantBackup:
+                  description: GeoRedundantBackup enables geo-redunndant backups.
                   type: boolean
                 storageGB:
+                  description: StorageGB configures the maximum storage allowed.
                   type: integer
               required:
               - storageGB
               type: object
             version:
+              description: Version specifies the version of this server, for example
+                "5.6", or "9.6".
               type: string
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the name of
@@ -232,7 +250,7 @@ spec:
           - version
           type: object
         status:
-          description: SQLServerStatus defines the observed state of SQLServer
+          description: A SQLServerStatus represents the observed state of a SQLServer.
           properties:
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
@@ -280,26 +298,26 @@ spec:
               type: array
             endpoint:
               description: Endpoint of the MySQL Server instance used in connection
-                strings
+                strings.
               type: string
             message:
+              description: A Message containing detail on the state of this SQLServer,
+                if any.
               type: string
             providerID:
-              description: the external ID to identify this resource in the cloud
-                provider
+              description: ProviderID is the external ID to identify this resource
+                in the cloud provider.
               type: string
             runningOperation:
               description: RunningOperation stores any current long running operation
-                for this instance across reconciliation attempts.  This will be a
-                serialized Azure MySQL Server API object that will be used to check
-                the status and completion of the operation during each reconciliation.
-                Once the operation has completed, this field will be cleared out.
+                for this instance across reconciliation attempts.
               type: string
             runningOperationType:
               description: RunningOperationType is the type of the currently running
-                operation
+                operation.
               type: string
             state:
+              description: State of this SQLServer.
               type: string
           type: object
       type: object

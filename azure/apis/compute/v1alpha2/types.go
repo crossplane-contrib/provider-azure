@@ -25,44 +25,56 @@ import (
 )
 
 const (
-	// ClusterProvisioningStateSucceeded is the state for a cluster that has succeeded provisioning
+	// ClusterProvisioningStateSucceeded is the state for a cluster that has
+	// succeeded provisioning.
 	ClusterProvisioningStateSucceeded = "Succeeded"
-	// DefaultReclaimPolicy is the default reclaim policy to use
+
+	// DefaultReclaimPolicy is the default reclaim policy to use.
 	DefaultReclaimPolicy = runtimev1alpha1.ReclaimRetain
-	// DefaultNodeCount is the default node count for a cluster
+
+	// DefaultNodeCount is the default node count for a cluster.
 	DefaultNodeCount = 1
 )
 
-// AKSClusterParameters define the configuration for AKS cluster resources
+// AKSClusterParameters define the desired state of an Azure Kubernetes Engine
+// cluster.
 type AKSClusterParameters struct {
-	// ResourceGroupName is the name of the resource group that the cluster will be created in
-	ResourceGroupName string `json:"resourceGroupName"` //--resource-group
+	// ResourceGroupName is the name of the resource group that the cluster will
+	// be created in
+	ResourceGroupName string `json:"resourceGroupName"`
 
 	// Location is the Azure location that the cluster will be created in
-	Location string `json:"location"` //--location
+	Location string `json:"location"`
 
 	// Version is the Kubernetes version that will be deployed to the cluster
-	Version string `json:"version"` //--kubernetes-version
+	Version string `json:"version"`
 
 	// VnetSubnetID is the subnet to which the cluster will be deployed.
+	// +optional
 	VnetSubnetID string `json:"vnetSubnetID,omitempty"`
 
-	// NodeCount is the number of nodes that the cluster will initially be created with.  This can
-	// be scaled over time and defaults to 1.
+	// NodeCount is the number of nodes that the cluster will initially be
+	// created with.  This can be scaled over time and defaults to 1.
 	// +kubebuilder:validation:Maximum=100
 	// +kubebuilder:validation:Minimum=0
-	NodeCount *int `json:"nodeCount,omitempty"` //--node-count
+	// +optional
+	NodeCount *int `json:"nodeCount,omitempty"`
 
-	// NodeVMSize is the name of the worker node VM size, e.g., Standard_B2s, Standard_F2s_v2, etc.
-	// This value cannot be changed after cluster creation.
-	NodeVMSize string `json:"nodeVMSize"` //--node-vm-size
+	// NodeVMSize is the name of the worker node VM size, e.g., Standard_B2s,
+	// Standard_F2s_v2, etc.
+	// +optional
+	NodeVMSize string `json:"nodeVMSize"`
 
-	// DNSNamePrefix is the DNS name prefix to use with the hosted Kubernetes API server FQDN. You
-	// will use this to connect to the Kubernetes API when managing containers after creating the cluster.
-	DNSNamePrefix string `json:"dnsNamePrefix"` //--dns-name-prefix
+	// DNSNamePrefix is the DNS name prefix to use with the hosted Kubernetes
+	// API server FQDN. You will use this to connect to the Kubernetes API when
+	// managing containers after creating the cluster.
+	// +optional
+	DNSNamePrefix string `json:"dnsNamePrefix"`
 
-	// DisableRBAC determines whether RBAC will be disabled or enabled in the cluster.
-	DisableRBAC bool `json:"disableRBAC,omitempty"` //--disable-rbac
+	// DisableRBAC determines whether RBAC will be disabled or enabled in the
+	// cluster.
+	// +optional
+	DisableRBAC bool `json:"disableRBAC,omitempty"`
 
 	// WriteServicePrincipalSecretTo the specified Secret. The service principal
 	// is automatically generated and used by the AKS cluster to interact with
@@ -70,39 +82,47 @@ type AKSClusterParameters struct {
 	WriteServicePrincipalSecretTo corev1.LocalObjectReference `json:"writeServicePrincipalTo"`
 }
 
-// AKSClusterSpec is the spec for AKS cluster resources
+// An AKSClusterSpec defines the desired state of a AKSCluster.
 type AKSClusterSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 	AKSClusterParameters         `json:",inline"`
 }
 
-// AKSClusterStatus is the status for AKS cluster resources
+// An AKSClusterStatus represents the observed state of an AKSCluster.
 type AKSClusterStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	// ClusterName is the name of the cluster as registered with the cloud provider
+	// ClusterName is the name of the cluster as registered with the cloud
+	// provider.
 	ClusterName string `json:"clusterName,omitempty"`
-	// State is the current state of the cluster
+
+	// State is the current state of the cluster.
 	State string `json:"state,omitempty"`
-	// ProviderID is the external ID to identify this resource in the cloud provider
+
+	// ProviderID is the external ID to identify this resource in the cloud
+	// provider.
 	ProviderID string `json:"providerID,omitempty"`
+
 	// Endpoint is the endpoint where the cluster can be reached
 	Endpoint string `json:"endpoint"`
-	// ApplicationObjectID is the object ID of the AD application the cluster uses for Azure APIs
+
+	// ApplicationObjectID is the object ID of the AD application the cluster
+	// uses for Azure APIs.
 	ApplicationObjectID string `json:"appObjectID,omitempty"`
-	// ServicePrincipalID is the ID of the service principal the AD application uses
+
+	// ServicePrincipalID is the ID of the service principal the AD application
+	// uses.
 	ServicePrincipalID string `json:"servicePrincipalID,omitempty"`
 
-	// RunningOperation stores any current long running operation for this instance across
-	// reconciliation attempts.  This will be a serialized Azure AKS cluster API object that will
-	// be used to check the status and completion of the operation during each reconciliation.
-	// Once the operation has completed, this field will be cleared out.
+	// RunningOperation stores any current long running operation for this
+	// instance across reconciliation attempts.
 	RunningOperation string `json:"runningOperation,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// AKSCluster is the Schema for the instances API
+// An AKSCluster is a managed resource that represents an Azure Kubernetes
+// Engine cluster.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="CLUSTER-NAME",type="string",JSONPath=".status.clusterName"
@@ -176,14 +196,15 @@ func (c *AKSCluster) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 
 // +kubebuilder:object:root=true
 
-// AKSClusterList contains a list of AKSCluster items
+// AKSClusterList contains a list of AKSCluster.
 type AKSClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AKSCluster `json:"items"`
 }
 
-// AKSClusterClassSpecTemplate is the Schema for the resource class
+// An AKSClusterClassSpecTemplate is a template for the spec of a dynamically
+// provisioned AKSCluster.
 type AKSClusterClassSpecTemplate struct {
 	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
 	AKSClusterParameters                         `json:",inline"`
@@ -194,7 +215,9 @@ var _ resource.NonPortableClass = &AKSClusterClass{}
 
 // +kubebuilder:object:root=true
 
-// AKSClusterClass is the Schema for the resource class
+// An AKSClusterClass is a non-portable resource class. It defines the desired
+// spec of resource claims that use it to dynamically provision a managed
+// resource.
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -202,6 +225,8 @@ type AKSClusterClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
+	// SpecTemplate is a template for the spec of a dynamically provisioned
+	// AKSCluster.
 	SpecTemplate AKSClusterClassSpecTemplate `json:"specTemplate,omitempty"`
 }
 
