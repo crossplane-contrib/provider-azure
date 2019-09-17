@@ -1,0 +1,16 @@
+id: virtualnetwork
+title: Azure Virtual Network
+titlePlural: Azure Virtual Networks
+category: Networking
+overviewShort: "A VirtualNetwork is a managed resource that represents an Azure Virtual Network."
+overview: |
+ A VirtualNetwork is a managed resource that represents an Azure Virtual Network.
+readme: |
+ ## Azure Virtual Network
+
+ Azure Virtual Network (VNet) is the fundamental building block for your private network in Azure. VNet enables many types of Azure resources, such as Azure Virtual Machines (VM), to securely communicate with each other, the internet, and on-premises networks. VNet is similar to a traditional network that you'd operate in your own data center, but brings with it additional benefits of Azure's infrastructure such as scale, availability, and isolation.
+
+ ---
+
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview), you can learn more at <https://azure.microsoft.com/en-us/services/virtual-network/>.
+ 

@@ -1,0 +1,11 @@
+id: containerclass
+title: Azure Blob Storage Container Class
+titlePlural: Azure Blob Storage Container Classes
+category: Storage
+overviewShort: "A ContainerClass is a non-portable resource class. It defines the desired spec of resource claims that use it to dynamically provision a managed resource."
+overview: |
+ A ContainerClass is a non-portable resource class. It defines the desired spec of resource claims that use it to dynamically provision a managed resource.
+readme: |
+ Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides object storage buckets, which are satisfied by [Azure Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction).
+
+ Full documentation can be found in the Crossplane [API Reference docs](https://crossplane.io/docs/master/api/crossplaneio/stack-azure/storage-azure-crossplane-io-v1alpha2.html#ContainerClass).

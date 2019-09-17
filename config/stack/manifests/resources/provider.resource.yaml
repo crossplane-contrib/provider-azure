@@ -1,0 +1,11 @@
+id: provider
+title: Azure Provider
+titlePlural: Azure Providers
+category: Provider
+overviewShort: "A Provider configures an Azure 'provider', i.e. a connection to a particular Azure account using a particular Azure Service Principal."
+overview: |
+ A Provider configures an Azure 'provider', i.e. a connection to a particular Azure account using a particular Azure Service Principal.
+readme: |
+ ## Azure Provider
+ 
+ The Crossplane Azure Provider Resource configures an Azure 'provider', i.e. a connection to a particular Azure account using a particular Azure Service Principal.

@@ -1,0 +1,19 @@
+id: resourcegroup
+title: Azure Resource Group
+titlePlural: Azure Resource Groups
+category: ""
+overviewShort: "A ResourceGroup is a managed resource that represents an Azure Resource Group."
+overview: |
+ A ResourceGroup is a managed resource that represents an Azure Resource Group.
+readme: |
+ ## Azure Resource Management: Resource Groups
+ 
+ Typically, you deploy Azure resources to a resource group in your Azure subscription. However, you can also create Azure resource groups, and create Azure resources at the subscription level. To deploy templates at the subscription level, you use Azure CLI and Azure PowerShell. The Azure portal doesn't support deployment in the subscription level.
+ 
+ To create a resource group in an Azure Resource Manager template, define a [Microsoft.Resources/resourceGroups](https://docs.microsoft.com/en-us/azure/templates/microsoft.resources/allversions) resource with a name and location for the resource group. You can create a resource group and deploy resources to that resource group in the same template. The resources that you can deploy at the subscription level include':' [Policies](https://docs.microsoft.com/en-us/azure/governance/policy/overview), and [Role-based access control](https://docs.microsoft.com/en-us/azure/role-based-access-control/overview).
+ 
+ ---
+ 
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/deploy-to-subscription), you can learn more at <https://azure.microsoft.com/en-us/features/resource-manager/>.
+
+

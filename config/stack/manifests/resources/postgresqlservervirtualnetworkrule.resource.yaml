@@ -1,0 +1,15 @@
+id: postgresqlservervirtualnetworkrule
+title: PostgreSQL Server Virtual Network Rule
+titlePlural: PostgreSQL Server Virtual Network Rules
+category: Database
+overviewShort: "A PostgresqlServerVirtualNetworkRule is a managed resource that represents an Azure PostgreSQL Database virtual network rule."
+overview: |
+ A PostgresqlServerVirtualNetworkRule is a managed resource that represents an Azure PostgreSQL Database virtual network rule.
+readme: |
+ ## Azure Database for PostgreSQL: Virtual Network
+
+ Virtual network rules are one firewall security feature that controls whether your Azure Database for PostgreSQL server accepts communications that are sent from particular subnets in virtual networks. This article explains why the virtual network rule feature is sometimes your best option for securely allowing communication to your Azure Database for PostgreSQL server.
+
+ --- 
+
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/postgresql/concepts-data-access-and-security-vnet), you can learn more at <https://azure.microsoft.com/en-us/services/postgresql/>.

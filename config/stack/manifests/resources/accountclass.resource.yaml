@@ -1,0 +1,11 @@
+id: accountclass
+title: Azure Blob Storage Account Resource Class
+titlePlural: Azure Blob Storage Account Resource Classes
+category: Storage
+overviewShort: "An AccountClass is a non-portable resource class. It defines the desired spec of resource claims that use it to dynamically provision a managed resource."
+overview: |
+ An AccountClass is a non-portable resource class. It defines the desired spec of resource claims that use it to dynamically provision a managed resource.
+readme: |
+ Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides a storage account, which is satisfied by [Azure Blob Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview).
+
+ Full documentation can be found in the Crossplane [API Reference docs](https://crossplane.io/docs/master/api/crossplaneio/stack-azure/storage-azure-crossplane-io-v1alpha2.html#AccountClass).

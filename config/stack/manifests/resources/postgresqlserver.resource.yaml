@@ -1,0 +1,15 @@
+id: postgresqlserver
+title: PostgreSQL Server
+titlePlural: PostgreSQL Servers
+category: Database
+overviewShort: "A PostgresqlServer is a managed resource that represents an Azure PostgreSQL Database Server."
+overview: |
+ A PostgresqlServer is a managed resource that represents an Azure PostgreSQL Database Server.
+readme: |
+ ## Azure Database for PostgreSQL
+ 
+ Azure Database for PostgreSQL is a relational database service based on the open-source Postgres database engine. It's a fully managed database-as-a-service offering that can handle mission-critical workloads with predictable performance, security, high availability, and dynamic scalability. It's available in two deployment options, as a single server and as a Hyperscale (Citus) cluster (preview). The Hyperscale (Citus) option horizontally scales queries across multiple machines using sharding, and serves applications that require greater scale and performance. Learn how to use Azure Database for PostgreSQL with our quickstarts, tutorials, and samples.
+
+ --- 
+
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/postgresql/), you can learn more at <https://azure.microsoft.com/en-us/services/postgresql/>.
