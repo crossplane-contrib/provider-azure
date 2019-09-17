@@ -227,7 +227,7 @@ type AKSClusterClass struct {
 
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// AKSCluster.
-	SpecTemplate AKSClusterClassSpecTemplate `json:"specTemplate,omitempty"`
+	SpecTemplate AKSClusterClassSpecTemplate `json:"specTemplate"`
 }
 
 // GetReclaimPolicy of this AKSClusterClass.
