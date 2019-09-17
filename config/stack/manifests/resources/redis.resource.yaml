@@ -1,0 +1,19 @@
+id: redis
+title: Azure Cache for Redis Cluster
+titlePlural: Azure Cache for Redis Clusters
+category: Cache
+overviewShort: "A Redis is a managed resource that represents an Azure Redis cluster."
+overview: |
+ A Redis is a managed resource that represents an Azure Redis cluster.
+readme: |
+ ## Azure Cache for Redis
+ 
+ Azure Cache for Redis is based on the popular software Redis. It is typically used as a cache to improve the performance and scalability of systems that rely heavily on backend data-stores. Performance is improved by temporarily copying frequently accessed data to fast storage located close to the application. With Azure Cache for Redis, this fast storage is located in-memory with Azure Cache for Redis instead of being loaded from disk by a database.
+ 
+ Azure Cache for Redis can also be used as an in-memory data structure store, a distributed non-relational database, and a message broker. Application performance is improved by taking advantage of the low-latency, high-throughput performance of the Redis engine.
+ 
+ Azure Cache for Redis provides you access to a secure, dedicated Redis cache. Azure Cache for Redis is managed by Microsoft, hosted within Azure, and accessible to any application within or outside of Azure.
+
+ ---
+ 
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview), you can learn more at <https://azure.microsoft.com/en-us/services/cache/>.
