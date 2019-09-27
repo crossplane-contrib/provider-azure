@@ -58,7 +58,7 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind)),
-		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.RedisClassGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind), mgr.GetScheme()),
 		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
 			Portable:    cachev1alpha1.RedisClusterClassGroupVersionKind,
 			NonPortable: v1alpha2.RedisClassGroupVersionKind,

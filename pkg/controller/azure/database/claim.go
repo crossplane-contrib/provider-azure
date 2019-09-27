@@ -60,7 +60,7 @@ func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) e
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind)),
-		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind), mgr.GetScheme()),
 		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
 			Portable:    databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind,
 			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
@@ -138,7 +138,7 @@ func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error 
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind)),
-		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind), mgr.GetScheme()),
 		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
 			Portable:    databasev1alpha1.MySQLInstanceClassGroupVersionKind,
 			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,

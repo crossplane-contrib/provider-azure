@@ -62,7 +62,7 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.ContainerGroupVersionKind)),
-		resource.HasDirectClassReferenceKind(resource.NonPortableClassKind(v1alpha2.ContainerClassGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha2.ContainerGroupVersionKind), mgr.GetScheme()),
 		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
 			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
 			NonPortable: v1alpha2.ContainerClassGroupVersionKind,
