@@ -4,9 +4,9 @@ RUN apk --no-cache add ca-certificates bash
 ARG ARCH
 ARG TINI_VERSION
 
-ADD stack-azure /usr/local/bin/
+ADD stack /usr/local/bin/crossplane-azure-stack
 
 COPY stack-package /
 
 EXPOSE 8080
-ENTRYPOINT ["stack-azure"]
+ENTRYPOINT ["crosplane-azure-stack"]
