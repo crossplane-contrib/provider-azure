@@ -9,4 +9,4 @@ ADD stack /usr/local/bin/crossplane-azure-stack
 COPY stack-package /
 
 EXPOSE 8080
-ENTRYPOINT ["crosplane-azure-stack"]
+ENTRYPOINT ["crossplane-azure-stack"]
