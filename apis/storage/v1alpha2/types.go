@@ -22,7 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 )
 
@@ -69,61 +68,6 @@ type Account struct {
 	Status            AccountStatus `json:"status,omitempty"`
 }
 
-// SetBindingPhase of this Account.
-func (a *Account) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	a.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this Account.
-func (a *Account) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return a.Status.GetBindingPhase()
-}
-
-// SetConditions of this Account.
-func (a *Account) SetConditions(c ...runtimev1alpha1.Condition) {
-	a.Status.SetConditions(c...)
-}
-
-// SetClaimReference of this Account.
-func (a *Account) SetClaimReference(r *corev1.ObjectReference) {
-	a.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this Account.
-func (a *Account) GetClaimReference() *corev1.ObjectReference {
-	return a.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this Account.
-func (a *Account) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	a.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this Account.
-func (a *Account) GetNonPortableClassReference() *corev1.ObjectReference {
-	return a.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this Account.
-func (a *Account) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	a.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this Account.
-func (a *Account) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return a.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this Account.
-func (a *Account) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return a.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this Account.
-func (a *Account) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	a.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // AccountList contains a list of Account.
@@ -140,9 +84,6 @@ type AccountClassSpecTemplate struct {
 	AccountParameters                            `json:",inline"`
 }
 
-// All non-portable classes must implement the NonPortableClass interface.
-var _ resource.NonPortableClass = &AccountClass{}
-
 // +kubebuilder:object:root=true
 
 // An AccountClass is a non-portable resource class. It defines the desired spec
@@ -157,16 +98,6 @@ type AccountClass struct {
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// Account.
 	SpecTemplate AccountClassSpecTemplate `json:"specTemplate"`
-}
-
-// GetReclaimPolicy of this AccountClass.
-func (i *AccountClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return i.SpecTemplate.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this AccountClass.
-func (i *AccountClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	i.SpecTemplate.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true
@@ -356,9 +287,6 @@ type ContainerClassSpecTemplate struct {
 	ContainerParameters                          `json:",inline"`
 }
 
-// All non-portable classes must implement the NonPortableClass interface.
-var _ resource.NonPortableClass = &ContainerClass{}
-
 // +kubebuilder:object:root=true
 
 // A ContainerClass is a non-portable resource class. It defines the desired
@@ -374,16 +302,6 @@ type ContainerClass struct {
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// Container.
 	SpecTemplate ContainerClassSpecTemplate `json:"specTemplate"`
-}
-
-// GetReclaimPolicy of this ContainerClass.
-func (i *ContainerClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return i.SpecTemplate.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this ContainerClass.
-func (i *ContainerClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	i.SpecTemplate.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true
