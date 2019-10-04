@@ -19,7 +19,6 @@ package v1alpha2
 import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
@@ -78,61 +77,6 @@ func (s *MysqlServer) SetStatus(status *SQLServerStatus) {
 	s.Status = *status
 }
 
-// SetBindingPhase of this MysqlServer.
-func (s *MysqlServer) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	s.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this MysqlServer.
-func (s *MysqlServer) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return s.Status.GetBindingPhase()
-}
-
-// SetConditions of this MysqlServer.
-func (s *MysqlServer) SetConditions(c ...runtimev1alpha1.Condition) {
-	s.Status.SetConditions(c...)
-}
-
-// SetClaimReference of this MysqlServer.
-func (s *MysqlServer) SetClaimReference(r *corev1.ObjectReference) {
-	s.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this MysqlServer.
-func (s *MysqlServer) GetClaimReference() *corev1.ObjectReference {
-	return s.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this MysqlServer.
-func (s *MysqlServer) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	s.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this MysqlServer.
-func (s *MysqlServer) GetNonPortableClassReference() *corev1.ObjectReference {
-	return s.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this MysqlServer.
-func (s *MysqlServer) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	s.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this MysqlServer.
-func (s *MysqlServer) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return s.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this MysqlServer.
-func (s *MysqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return s.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this MysqlServer.
-func (s *MysqlServer) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	s.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // MysqlServerList contains a list of MysqlServer.
@@ -174,61 +118,6 @@ func (s *PostgresqlServer) SetStatus(status *SQLServerStatus) {
 	s.Status = *status
 }
 
-// SetBindingPhase of this PostgresqlServer.
-func (s *PostgresqlServer) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	s.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this PostgresqlServer.
-func (s *PostgresqlServer) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return s.Status.GetBindingPhase()
-}
-
-// SetConditions of this PostgresqlServer.
-func (s *PostgresqlServer) SetConditions(c ...runtimev1alpha1.Condition) {
-	s.Status.SetConditions(c...)
-}
-
-// SetClaimReference of this PostgresqlServer.
-func (s *PostgresqlServer) SetClaimReference(r *corev1.ObjectReference) {
-	s.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this PostgresqlServer.
-func (s *PostgresqlServer) GetClaimReference() *corev1.ObjectReference {
-	return s.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this PostgresqlServer.
-func (s *PostgresqlServer) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	s.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this PostgresqlServer.
-func (s *PostgresqlServer) GetNonPortableClassReference() *corev1.ObjectReference {
-	return s.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this PostgresqlServer.
-func (s *PostgresqlServer) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	s.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this PostgresqlServer.
-func (s *PostgresqlServer) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return s.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this PostgresqlServer.
-func (s *PostgresqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return s.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this PostgresqlServer.
-func (s *PostgresqlServer) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	s.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // PostgresqlServerList contains a list of PostgresqlServer.
@@ -245,9 +134,6 @@ type SQLServerClassSpecTemplate struct {
 	SQLServerParameters                          `json:",inline"`
 }
 
-// All non-portable classes must implement the NonPortableClass interface.
-var _ resource.NonPortableClass = &SQLServerClass{}
-
 // +kubebuilder:object:root=true
 
 // A SQLServerClass is a non-portable resource class. It defines the desired
@@ -263,16 +149,6 @@ type SQLServerClass struct {
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// SQLServer.
 	SpecTemplate SQLServerClassSpecTemplate `json:"specTemplate"`
-}
-
-// GetReclaimPolicy of this PostgresqlServerClass.
-func (i *SQLServerClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return i.SpecTemplate.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this PostgresqlServerClass.
-func (i *SQLServerClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	i.SpecTemplate.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true
@@ -445,61 +321,6 @@ type PostgresqlServerVirtualNetworkRule struct {
 	Status VirtualNetworkRuleStatus `json:"status,omitempty"`
 }
 
-// SetBindingPhase of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	s.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return s.Status.GetBindingPhase()
-}
-
-// SetConditions of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
-	s.Status.SetConditions(c...)
-}
-
-// SetClaimReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectReference) {
-	s.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectReference {
-	return s.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	s.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) GetNonPortableClassReference() *corev1.ObjectReference {
-	return s.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	s.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return s.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return s.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
-func (s *PostgresqlServerVirtualNetworkRule) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	s.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // PostgresqlServerVirtualNetworkRuleList contains a list of PostgresqlServerVirtualNetworkRule.
@@ -523,61 +344,6 @@ type MysqlServerVirtualNetworkRule struct {
 
 	Spec   VirtualNetworkRuleSpec   `json:"spec,omitempty"`
 	Status VirtualNetworkRuleStatus `json:"status,omitempty"`
-}
-
-// SetBindingPhase of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	s.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return s.Status.GetBindingPhase()
-}
-
-// SetConditions of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
-	s.Status.SetConditions(c...)
-}
-
-// SetClaimReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectReference) {
-	s.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectReference {
-	return s.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	s.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) GetNonPortableClassReference() *corev1.ObjectReference {
-	return s.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	s.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return s.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return s.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this MysqlServerVirtualNetworkRule.
-func (s *MysqlServerVirtualNetworkRule) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	s.Spec.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true

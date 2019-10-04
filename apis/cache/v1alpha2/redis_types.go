@@ -18,10 +18,8 @@ package v1alpha2
 
 import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -170,61 +168,6 @@ type Redis struct {
 	Status RedisStatus `json:"status,omitempty"`
 }
 
-// SetBindingPhase of this Redis.
-func (rd *Redis) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	rd.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this Redis.
-func (rd *Redis) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return rd.Status.GetBindingPhase()
-}
-
-// SetConditions of this Redis.
-func (rd *Redis) SetConditions(c ...runtimev1alpha1.Condition) {
-	rd.Status.SetConditions(c...)
-}
-
-// SetClaimReference of this Redis.
-func (rd *Redis) SetClaimReference(r *corev1.ObjectReference) {
-	rd.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this Redis.
-func (rd *Redis) GetClaimReference() *corev1.ObjectReference {
-	return rd.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this Redis.
-func (rd *Redis) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	rd.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this Redis.
-func (rd *Redis) GetNonPortableClassReference() *corev1.ObjectReference {
-	return rd.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this Redis.
-func (rd *Redis) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	rd.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this Redis.
-func (rd *Redis) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return rd.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this S3Bucket.
-func (rd *Redis) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return rd.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this Redis.
-func (rd *Redis) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	rd.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // RedisList contains a list of Redis.
@@ -241,9 +184,6 @@ type RedisClassSpecTemplate struct {
 	RedisParameters                              `json:",inline"`
 }
 
-// All non-portable classes must implement the NonPortableClass interface.
-var _ resource.NonPortableClass = &RedisClass{}
-
 // +kubebuilder:object:root=true
 
 // A RedisClass is a non-portable resource class. It defines the desired spec of
@@ -258,16 +198,6 @@ type RedisClass struct {
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// Redis.
 	SpecTemplate RedisClassSpecTemplate `json:"specTemplate"`
-}
-
-// GetReclaimPolicy of this RedisClass.
-func (i *RedisClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return i.SpecTemplate.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this RedisClass.
-func (i *RedisClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	i.SpecTemplate.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true

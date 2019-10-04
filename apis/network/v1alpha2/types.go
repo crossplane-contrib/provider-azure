@@ -19,7 +19,6 @@ package v1alpha2
 import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -114,61 +113,6 @@ type VirtualNetwork struct {
 	Status VirtualNetworkStatus `json:"status,omitempty"`
 }
 
-// SetBindingPhase of this VirtualNetwork.
-func (c *VirtualNetwork) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	c.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this VirtualNetwork.
-func (c *VirtualNetwork) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return c.Status.GetBindingPhase()
-}
-
-// SetConditions of this VirtualNetwork.
-func (c *VirtualNetwork) SetConditions(cd ...runtimev1alpha1.Condition) {
-	c.Status.SetConditions(cd...)
-}
-
-// SetClaimReference of this VirtualNetwork.
-func (c *VirtualNetwork) SetClaimReference(r *corev1.ObjectReference) {
-	c.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this VirtualNetwork.
-func (c *VirtualNetwork) GetClaimReference() *corev1.ObjectReference {
-	return c.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this VirtualNetwork.
-func (c *VirtualNetwork) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	c.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this VirtualNetwork.
-func (c *VirtualNetwork) GetNonPortableClassReference() *corev1.ObjectReference {
-	return c.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this VirtualNetwork.
-func (c *VirtualNetwork) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	c.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this VirtualNetwork.
-func (c *VirtualNetwork) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return c.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this VirtualNetwork.
-func (c *VirtualNetwork) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return c.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this VirtualNetwork.
-func (c *VirtualNetwork) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	c.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // VirtualNetworkList contains a list of VirtualNetwork items
@@ -256,61 +200,6 @@ type Subnet struct {
 
 	Spec   SubnetSpec   `json:"spec,omitempty"`
 	Status SubnetStatus `json:"status,omitempty"`
-}
-
-// SetBindingPhase of this Subnet.
-func (c *Subnet) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	c.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this Subnet.
-func (c *Subnet) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return c.Status.GetBindingPhase()
-}
-
-// SetConditions of this Subnet.
-func (c *Subnet) SetConditions(cd ...runtimev1alpha1.Condition) {
-	c.Status.SetConditions(cd...)
-}
-
-// SetClaimReference of this Subnet.
-func (c *Subnet) SetClaimReference(r *corev1.ObjectReference) {
-	c.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this Subnet.
-func (c *Subnet) GetClaimReference() *corev1.ObjectReference {
-	return c.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this Subnet.
-func (c *Subnet) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	c.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this Subnet.
-func (c *Subnet) GetNonPortableClassReference() *corev1.ObjectReference {
-	return c.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this Subnet.
-func (c *Subnet) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	c.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this Subnet.
-func (c *Subnet) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return c.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this Subnet.
-func (c *Subnet) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return c.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this Subnet.
-func (c *Subnet) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	c.Spec.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true

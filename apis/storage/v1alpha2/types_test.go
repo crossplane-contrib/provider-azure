@@ -26,10 +26,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 )
 
-var (
-	_ resource.Managed = &Account{}
-	_ resource.Managed = &Container{}
-)
+var _ resource.Managed = &Container{}
 
 func TestContainer_GetContainerName(t *testing.T) {
 	om := metav1.ObjectMeta{

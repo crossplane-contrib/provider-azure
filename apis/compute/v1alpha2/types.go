@@ -18,7 +18,6 @@ package v1alpha2
 
 import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -139,61 +138,6 @@ type AKSCluster struct {
 	Status AKSClusterStatus `json:"status,omitempty"`
 }
 
-// SetBindingPhase of this AKSCluster.
-func (c *AKSCluster) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	c.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this AKSCluster.
-func (c *AKSCluster) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return c.Status.GetBindingPhase()
-}
-
-// SetConditions of this AKSCluster.
-func (c *AKSCluster) SetConditions(cd ...runtimev1alpha1.Condition) {
-	c.Status.SetConditions(cd...)
-}
-
-// SetClaimReference of this AKSCluster.
-func (c *AKSCluster) SetClaimReference(r *corev1.ObjectReference) {
-	c.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this AKSCluster.
-func (c *AKSCluster) GetClaimReference() *corev1.ObjectReference {
-	return c.Spec.ClaimReference
-}
-
-// SetNonPortableClassReference of this AKSCluster.
-func (c *AKSCluster) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	c.Spec.NonPortableClassReference = r
-}
-
-// GetNonPortableClassReference of this AKSCluster.
-func (c *AKSCluster) GetNonPortableClassReference() *corev1.ObjectReference {
-	return c.Spec.NonPortableClassReference
-}
-
-// SetWriteConnectionSecretToReference of this AKSCluster.
-func (c *AKSCluster) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
-	c.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this AKSCluster.
-func (c *AKSCluster) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
-	return c.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this AKSCluster.
-func (c *AKSCluster) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return c.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this AKSCluster.
-func (c *AKSCluster) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	c.Spec.ReclaimPolicy = p
-}
-
 // +kubebuilder:object:root=true
 
 // AKSClusterList contains a list of AKSCluster.
@@ -210,9 +154,6 @@ type AKSClusterClassSpecTemplate struct {
 	AKSClusterParameters                         `json:",inline"`
 }
 
-// All non-portable classes must implement the NonPortableClass interface.
-var _ resource.NonPortableClass = &AKSClusterClass{}
-
 // +kubebuilder:object:root=true
 
 // An AKSClusterClass is a non-portable resource class. It defines the desired
@@ -228,16 +169,6 @@ type AKSClusterClass struct {
 	// SpecTemplate is a template for the spec of a dynamically provisioned
 	// AKSCluster.
 	SpecTemplate AKSClusterClassSpecTemplate `json:"specTemplate"`
-}
-
-// GetReclaimPolicy of this AKSClusterClass.
-func (i *AKSClusterClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return i.SpecTemplate.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this AKSClusterClass.
-func (i *AKSClusterClass) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	i.SpecTemplate.ReclaimPolicy = p
 }
 
 // +kubebuilder:object:root=true
