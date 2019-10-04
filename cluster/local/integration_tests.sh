@@ -32,20 +32,68 @@ echo_error(){
     exit 1
 }
 
+# k8s watchers
+wait_for_deployment_create(){
+    local timeout=$1
+    local counter=0
+    echo -n "waiting for deployment in $2..." >&2
+    while "${KUBECTL}" -n $2 get deployments -o yaml | grep -q  'items: \[\]'; do
+        if [ "$counter" -ge "$timeout" ]; then echo "TIMEOUT"; exit -1; else (( counter+=5 )); fi
+        echo -n "." >&2
+        sleep 5
+    done
+}
+
+wait_for_pods_in_namespace(){
+    local timeout=$1
+    shift
+    namespace=$1
+    shift 
+    arr=("$@")
+    local counter=0
+    for i in "${arr[@]}";
+        do
+            echo -n "waiting for pod $i in namespace $namespace..." >&2
+            while ! ("${KUBECTL}" -n $namespace get pod $i) &>/dev/null; do
+                if [ "$counter" -ge "$timeout" ]; then echo "TIMEOUT"; exit -1; else (( counter+=5 )); fi
+                echo -n "." >&2
+                sleep 5
+            done
+            echo "FOUND POD!" >&2
+        done
+}
+
 # ------------------------------
 projectdir="$( cd "$( dirname "${BASH_SOURCE[0]}")"/../.. && pwd )"
 
 # get the build environment variables from the special build.vars target in the main makefile
 eval $(make --no-print-directory -C ${projectdir} build.vars)
 
+# ------------------------------
+
+HELM_VERSION="helm-v2.10.0"
+HOST_PLATFORM="${HOSTOS}_${HOSTARCH}"
+TOOLS_DIR="${CACHE_DIR}/tools"
+TOOLS_HOST_DIR="${TOOLS_DIR}/${HOST_PLATFORM}"
+HELM="${TOOLS_HOST_DIR}/${HELM_VERSION}"
+echo_step "installing helm ${HOSTOS}-${HOSTARCH}"
+mkdir -p ${TOOLS_HOST_DIR}/tmp-helm
+curl -fsSL https://storage.googleapis.com/kubernetes-helm/${HELM_VERSION}-${HOSTOS}-${HOSTARCH}.tar.gz | tar -xz -C ${TOOLS_HOST_DIR}/tmp-helm
+mv ${TOOLS_HOST_DIR}/tmp-helm/${HOSTOS}-${HOSTARCH}/helm ${HELM}
+rm -fr ${TOOLS_HOST_DIR}/tmp-helm
+echo_success "installing helm ${HOSTOS}-${HOSTARCH}"
+
 HOSTARCH="${HOSTARCH:-amd64}"
 BUILD_IMAGE="${BUILD_REGISTRY}/${PROJECT_NAME}-${HOSTARCH}"
 
-helm_tag="$(cat ${projectdir}/_output/version)"
-CROSSPLANE_IMAGE="${DOCKER_REGISTRY}/${PROJECT_NAME}:${helm_tag}"
+version_tag="$(cat ${projectdir}/_output/version)"
+# tag as master so that config/stack/install.yaml can be used
+STACK_IMAGE="${DOCKER_REGISTRY}/${PROJECT_NAME}:master"
 K8S_CLUSTER="${K8S_CLUSTER:-${BUILD_REGISTRY}-INTTESTS}"
 
 CROSSPLANE_NAMESPACE="crossplane-system"
+STACK_NAME="stack-azure"
+STACK_NAMESPACE="azure"
 
 # cleanup on exit
 if [ "$skipcleanup" != true ]; then
@@ -62,9 +110,9 @@ echo_step "creating k8s cluster using kind"
 "${KIND}" create cluster --name="${K8S_CLUSTER}"
 export KUBECONFIG="$("${KIND}" get kubeconfig-path --name="${K8S_CLUSTER}")"
 
-# tag crossplane image and load it to kind cluster
-docker tag "${BUILD_IMAGE}" "${CROSSPLANE_IMAGE}"
-"${KIND}" load docker-image "${CROSSPLANE_IMAGE}" --name="${K8S_CLUSTER}"
+# tag stack image and load it to kind cluster
+docker tag "${BUILD_IMAGE}" "${STACK_IMAGE}"
+"${KIND}" load docker-image "${STACK_IMAGE}" --name="${K8S_CLUSTER}"
 
 echo_step "installing tiller"
 "${KUBECTL}" apply -f "${projectdir}/cluster/local/helm-rbac.yaml"
@@ -72,11 +120,15 @@ echo_step "installing tiller"
 # waiting for deployment "tiller-deploy" rollout to finish
 "${KUBECTL}" -n kube-system rollout status deploy/tiller-deploy --timeout=2m
 
-echo_step "installing helm package(s) into \"${CROSSPLANE_NAMESPACE}\" namespace"
-"${HELM}" install --name "${PROJECT_NAME}" --namespace "${CROSSPLANE_NAMESPACE}" "${projectdir}/cluster/charts/${PROJECT_NAME}" --set image.pullPolicy=Never,imagePullSecrets=''
+kindpods=("kube-apiserver-${BUILD_REGISTRY}-inttests-control-plane" "kube-controller-manager-${BUILD_REGISTRY}-inttests-control-plane" "kube-scheduler-${BUILD_REGISTRY}-inttests-control-plane")
+wait_for_pods_in_namespace 120 "kube-system" "${kindpods[@]}"
 
-echo_step "waiting for deployment ${PROJECT_NAME} rollout to finish"
-"${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" rollout status "deploy/${PROJECT_NAME}" --timeout=2m
+# install crossplane from alpha channel
+"${HELM}" repo add crossplane-alpha https://charts.crossplane.io/alpha
+"${HELM}" install --name crossplane --namespace crossplane-system crossplane-alpha/crossplane
+
+echo_step "waiting for deployment crossplane rollout to finish"
+"${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" rollout status "deploy/crossplane" --timeout=2m
 
 echo_step "wait until the pods are up and running"
 "${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" wait --for=condition=Ready pods --all --timeout=1m
@@ -113,7 +165,7 @@ for name in $MUST_HAVE_DEPLOYMENTS; do
     echo
 done
 
-echo_step "check for pods statuses"
+echo_step "check for crossplane pods statuses"
 echo
 echo "-------- pods"
 pods=$("${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" get pods)
@@ -121,6 +173,106 @@ echo "$pods"
 while read -r pod_stat; do 
     name=$(echo "$pod_stat" | awk '{print $1}')
     echo_sub_step "inspecting pod '${name}'"
+
+    echo_info "check if is ready"
+    IFS='/' read -ra ready_status_parts <<< "$(echo "$pod_stat" | awk '{print $2}')"
+    if (( ${ready_status_parts[0]} < ${ready_status_parts[1]} )); then
+        echo_error "is not ready"
+        exit -1
+    else
+        echo_step_completed
+    fi
+
+    echo_info "check if is running"
+    if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Running'); then
+        echo_error "is not running"
+        exit -1
+    else
+        echo_step_completed
+    fi 
+
+    echo_info "check if has restarts"
+    if (( $(echo "$pod_stat" | awk '{print $4}') > 0 )); then
+        echo_error "has restarts"
+        exit -1
+    else
+        echo_step_completed
+    fi
+    echo
+done <<< "$(echo "$pods" | awk 'FNR>1')"
+
+# let stack manager initialize controllers and workers
+sleep 30
+
+# install stack into stack namespace
+echo_step "installing ${PROJECT_NAME} into \"${STACK_NAMESPACE}\" namespace"
+
+INSTALL_YAML="$( cat <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "${STACK_NAMESPACE}"
+---
+apiVersion: stacks.crossplane.io/v1alpha1
+kind: ClusterStackInstall
+metadata:
+  name: "${STACK_NAME}"
+  namespace: "${STACK_NAMESPACE}"
+spec:
+  package: "${STACK_IMAGE}"
+EOF
+)"
+
+echo "${INSTALL_YAML}" | "${KUBECTL}" apply -f -
+
+wait_for_deployment_create 120 "${STACK_NAMESPACE}"
+
+"${KUBECTL}" -n "${STACK_NAMESPACE}" get deployments
+"${KUBECTL}" -n "${STACK_NAMESPACE}" get pods
+
+echo_step "waiting for deployment ${STACK_NAME} rollout to finish"
+"${KUBECTL}" -n "${STACK_NAMESPACE}" rollout status "deploy/${PROJECT_NAME}" --timeout=2m
+
+MUST_HAVE_DEPLOYMENTS="${STACK_NAME}"
+for name in $MUST_HAVE_DEPLOYMENTS; do
+    echo_sub_step "inspecting deployment '${name}'"
+    dep_stat=$("${KUBECTL}" -n "${STACK_NAMESPACE}" get deployments/"${name}")
+
+    echo_info "check if is deployed"
+    if $(echo "$dep_stat" | grep -iq 'No resources found'); then
+        echo "is not deployed"
+        exit -1
+    else
+        echo_step_completed
+    fi 
+
+    echo_info "check if is ready"
+    IFS='/' read -ra ready_status_parts <<< "$(echo "$dep_stat" | awk ' FNR > 1 {print $2}')"
+    if (( ${ready_status_parts[0]} < ${ready_status_parts[1]} )); then
+        echo "is not Ready"
+        exit -1
+    else
+        echo_step_completed
+    fi
+    echo
+done
+
+echo_step "check for stack pods statuses"
+echo
+echo "-------- pods"
+pods=$("${KUBECTL}" -n "${STACK_NAMESPACE}" get pods)
+echo "$pods"
+while read -r pod_stat; do 
+    name=$(echo "$pod_stat" | awk '{print $1}')
+    echo_sub_step "inspecting pod '${name}'"
+
+    if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Completed'); then
+        echo_info "is not completed, continuing with further checks"
+    else
+        echo_info "is completed, foregoing further checks"
+        echo_step_completed
+        continue
+    fi 
 
     echo_info "check if is ready"
     IFS='/' read -ra ready_status_parts <<< "$(echo "$pod_stat" | awk '{print $2}')"
