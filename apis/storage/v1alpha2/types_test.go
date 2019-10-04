@@ -19,84 +19,17 @@ package v1alpha2
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/google/go-cmp/cmp"
-	"github.com/onsi/gomega"
-	"golang.org/x/net/context"
-	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-
-	localtest "github.com/crossplaneio/stack-azure/pkg/test"
-)
-
-const (
-	namespace = "default"
-	name      = "test-instance"
-)
-
-var (
-	c client.Client
 )
 
 var (
 	_ resource.Managed = &Account{}
 	_ resource.Managed = &Container{}
 )
-
-func TestMain(m *testing.M) {
-	t := test.NewEnv(namespace, SchemeBuilder.SchemeBuilder, localtest.CRDs())
-	c = t.StartClient()
-	t.StopAndExit(m.Run())
-}
-
-func TestAzureStorageAccount(t *testing.T) {
-	key := types.NamespacedName{Name: name, Namespace: namespace}
-	created := &Account{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
-		Spec: AccountSpec{
-			AccountParameters: AccountParameters{
-				ResourceGroupName:  "test-group",
-				StorageAccountName: "test-name",
-				StorageAccountSpec: &StorageAccountSpec{
-					Sku: &Sku{
-						Name: storage.StandardLRS,
-					},
-					Kind: storage.Storage,
-				},
-			},
-			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &core.ObjectReference{},
-			},
-		},
-	}
-	g := gomega.NewGomegaWithT(t)
-
-	// Test Create
-	fetched := &Account{}
-	g.Expect(c.Create(context.TODO(), created)).NotTo(gomega.HaveOccurred())
-
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(created))
-
-	// Test Updating the Labels
-	updated := fetched.DeepCopy()
-	updated.Labels = map[string]string{"hello": "world"}
-	g.Expect(c.Update(context.TODO(), updated)).NotTo(gomega.HaveOccurred())
-
-	g.Expect(c.Get(context.TODO(), key, fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(fetched).To(gomega.Equal(updated))
-
-	// Test Delete
-	g.Expect(c.Delete(context.TODO(), fetched)).NotTo(gomega.HaveOccurred())
-	g.Expect(c.Get(context.TODO(), key, fetched)).To(gomega.HaveOccurred())
-}
 
 func TestContainer_GetContainerName(t *testing.T) {
 	om := metav1.ObjectMeta{
