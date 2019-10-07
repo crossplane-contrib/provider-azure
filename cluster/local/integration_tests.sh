@@ -36,8 +36,19 @@ echo_error(){
 wait_for_deployment_create(){
     local timeout=$1
     local counter=0
-    echo -n "waiting for deployment in $2..." >&2
+    echo -n "waiting for deployment create in $2..." >&2
     while "${KUBECTL}" -n $2 get deployments -o yaml | grep -q  'items: \[\]'; do
+        if [ "$counter" -ge "$timeout" ]; then echo "TIMEOUT"; exit -1; else (( counter+=5 )); fi
+        echo -n "." >&2
+        sleep 5
+    done
+}
+
+wait_for_deployment_delete(){
+    local timeout=$1
+    local counter=0
+    echo -n "waiting for deployment delete in $2..." >&2
+    while ! "${KUBECTL}" -n $2 get deployments -o yaml | grep -q  'items: \[\]'; do
         if [ "$counter" -ge "$timeout" ]; then echo "TIMEOUT"; exit -1; else (( counter+=5 )); fi
         echo -n "." >&2
         sleep 5
@@ -61,6 +72,74 @@ wait_for_pods_in_namespace(){
             done
             echo "FOUND POD!" >&2
         done
+}
+
+check_deployments(){
+    for name in $1; do
+        echo_sub_step "inspecting deployment '${name}'"
+        local dep_stat=$("${KUBECTL}" -n "$2" get deployments/"${name}")
+
+        echo_info "check if is deployed"
+        if $(echo "$dep_stat" | grep -iq 'No resources found'); then
+            echo "is not deployed"
+            exit -1
+        else
+            echo_step_completed
+        fi 
+
+        echo_info "check if is ready"
+        IFS='/' read -ra ready_status_parts <<< "$(echo "$dep_stat" | awk ' FNR > 1 {print $2}')"
+        if (("${ready_status_parts[0]}" < "${ready_status_parts[1]}")); then
+            echo "is not Ready"
+            exit -1
+        else
+            echo_step_completed
+        fi
+        echo
+    done
+}
+
+check_pods(){
+    pods=$("${KUBECTL}" -n "$1" get pods)
+    echo "$pods"
+    while read -r pod_stat; do 
+        name=$(echo "$pod_stat" | awk '{print $1}')
+        echo_sub_step "inspecting pod '${name}'"
+
+        if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Completed'); then
+            echo_info "is not completed, continuing with further checks"
+        else
+            echo_info "is completed, foregoing further checks"
+            echo_step_completed
+            continue
+        fi 
+
+        echo_info "check if is ready"
+        IFS='/' read -ra ready_status_parts <<< "$(echo "$pod_stat" | awk '{print $2}')"
+        if (("${ready_status_parts[0]}" < "${ready_status_parts[1]}")); then
+            echo_error "is not ready"
+            exit -1
+        else
+            echo_step_completed
+        fi
+
+        echo_info "check if is running"
+        if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Running'); then
+            echo_error "is not running"
+            exit -1
+        else
+            echo_step_completed
+        fi 
+
+        echo_info "check if has restarts"
+        if (( $(echo "$pod_stat" | awk '{print $4}') > 0 )); then
+            echo_error "has restarts"
+            exit -1
+        else
+            echo_step_completed
+        fi
+        echo
+    done <<< "$(echo "$pods" | awk 'FNR>1')"
 }
 
 # ------------------------------
@@ -120,10 +199,13 @@ echo_step "installing tiller"
 # waiting for deployment "tiller-deploy" rollout to finish
 "${KUBECTL}" -n kube-system rollout status deploy/tiller-deploy --timeout=2m
 
+# wait for kind pods
+echo_step "wait for kind pods"
 kindpods=("kube-apiserver-${BUILD_REGISTRY}-inttests-control-plane" "kube-controller-manager-${BUILD_REGISTRY}-inttests-control-plane" "kube-scheduler-${BUILD_REGISTRY}-inttests-control-plane")
 wait_for_pods_in_namespace 120 "kube-system" "${kindpods[@]}"
 
 # install crossplane from alpha channel
+echo_step "installing crossplane from alpha channel"
 "${HELM}" repo add crossplane-alpha https://charts.crossplane.io/alpha
 "${HELM}" install --name crossplane --namespace crossplane-system crossplane-alpha/crossplane
 
@@ -141,65 +223,12 @@ echo
 echo -------- deployments
 "${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" get deployments
 
-MUST_HAVE_DEPLOYMENTS="crossplane crossplane-stack-manager"
-for name in $MUST_HAVE_DEPLOYMENTS; do
-    echo_sub_step "inspecting deployment '${name}'"
-    dep_stat=$("${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" get deployments/"${name}")
-
-    echo_info "check if is deployed"
-    if $(echo "$dep_stat" | grep -iq 'No resources found'); then
-        echo "is not deployed"
-        exit -1
-    else
-        echo_step_completed
-    fi 
-
-    echo_info "check if is ready"
-    IFS='/' read -ra ready_status_parts <<< "$(echo "$dep_stat" | awk ' FNR > 1 {print $2}')"
-    if (( ${ready_status_parts[0]} < ${ready_status_parts[1]} )); then
-        echo "is not Ready"
-        exit -1
-    else
-        echo_step_completed
-    fi
-    echo
-done
+check_deployments "crossplane crossplane-stack-manager" "${CROSSPLANE_NAMESPACE}"
 
 echo_step "check for crossplane pods statuses"
 echo
 echo "-------- pods"
-pods=$("${KUBECTL}" -n "${CROSSPLANE_NAMESPACE}" get pods)
-echo "$pods"
-while read -r pod_stat; do 
-    name=$(echo "$pod_stat" | awk '{print $1}')
-    echo_sub_step "inspecting pod '${name}'"
-
-    echo_info "check if is ready"
-    IFS='/' read -ra ready_status_parts <<< "$(echo "$pod_stat" | awk '{print $2}')"
-    if (( ${ready_status_parts[0]} < ${ready_status_parts[1]} )); then
-        echo_error "is not ready"
-        exit -1
-    else
-        echo_step_completed
-    fi
-
-    echo_info "check if is running"
-    if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Running'); then
-        echo_error "is not running"
-        exit -1
-    else
-        echo_step_completed
-    fi 
-
-    echo_info "check if has restarts"
-    if (( $(echo "$pod_stat" | awk '{print $4}') > 0 )); then
-        echo_error "has restarts"
-        exit -1
-    else
-        echo_step_completed
-    fi
-    echo
-done <<< "$(echo "$pods" | awk 'FNR>1')"
+check_pods "${CROSSPLANE_NAMESPACE}"
 
 # let stack manager initialize controllers and workers
 sleep 30
@@ -233,72 +262,17 @@ wait_for_deployment_create 120 "${STACK_NAMESPACE}"
 echo_step "waiting for deployment ${STACK_NAME} rollout to finish"
 "${KUBECTL}" -n "${STACK_NAMESPACE}" rollout status "deploy/${PROJECT_NAME}" --timeout=2m
 
-MUST_HAVE_DEPLOYMENTS="${STACK_NAME}"
-for name in $MUST_HAVE_DEPLOYMENTS; do
-    echo_sub_step "inspecting deployment '${name}'"
-    dep_stat=$("${KUBECTL}" -n "${STACK_NAMESPACE}" get deployments/"${name}")
-
-    echo_info "check if is deployed"
-    if $(echo "$dep_stat" | grep -iq 'No resources found'); then
-        echo "is not deployed"
-        exit -1
-    else
-        echo_step_completed
-    fi 
-
-    echo_info "check if is ready"
-    IFS='/' read -ra ready_status_parts <<< "$(echo "$dep_stat" | awk ' FNR > 1 {print $2}')"
-    if (( ${ready_status_parts[0]} < ${ready_status_parts[1]} )); then
-        echo "is not Ready"
-        exit -1
-    else
-        echo_step_completed
-    fi
-    echo
-done
+check_deployments "${STACK_NAME}" "${STACK_NAMESPACE}"
 
 echo_step "check for stack pods statuses"
 echo
 echo "-------- pods"
-pods=$("${KUBECTL}" -n "${STACK_NAMESPACE}" get pods)
-echo "$pods"
-while read -r pod_stat; do 
-    name=$(echo "$pod_stat" | awk '{print $1}')
-    echo_sub_step "inspecting pod '${name}'"
+check_pods "${STACK_NAMESPACE}"
 
-    if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Completed'); then
-        echo_info "is not completed, continuing with further checks"
-    else
-        echo_info "is completed, foregoing further checks"
-        echo_step_completed
-        continue
-    fi 
+echo_step "uninstalling ${PROJECT_NAME}"
 
-    echo_info "check if is ready"
-    IFS='/' read -ra ready_status_parts <<< "$(echo "$pod_stat" | awk '{print $2}')"
-    if (( ${ready_status_parts[0]} < ${ready_status_parts[1]} )); then
-        echo_error "is not ready"
-        exit -1
-    else
-        echo_step_completed
-    fi
+echo "${INSTALL_YAML}" | "${KUBECTL}" delete -f -
 
-    echo_info "check if is running"
-    if $(echo "$pod_stat" | awk '{print $3}' | grep -ivq 'Running'); then
-        echo_error "is not running"
-        exit -1
-    else
-        echo_step_completed
-    fi 
-
-    echo_info "check if has restarts"
-    if (( $(echo "$pod_stat" | awk '{print $4}') > 0 )); then
-        echo_error "has restarts"
-        exit -1
-    else
-        echo_step_completed
-    fi
-    echo
-done <<< "$(echo "$pods" | awk 'FNR>1')"
+wait_for_deployment_delete 120 "${STACK_NAMESPACE}"
 
 echo_success "Integration tests succeeded!"
