@@ -25,10 +25,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -56,7 +54,7 @@ const (
 
 var (
 	log           = logging.Logger.WithName("controller." + controllerName)
-	ctx           = context.Background()
+	ctx           = context.TODO()
 	result        = reconcile.Result{}
 	resultRequeue = reconcile.Result{Requeue: true}
 )
@@ -64,9 +62,9 @@ var (
 // Reconciler reconciles a AKSCluster object
 type Reconciler struct {
 	client.Client
-	clientset          kubernetes.Interface
+	newClientFn        func(creds []byte) (*azureclients.Client, error)
 	aksSetupAPIFactory compute.AKSSetupAPIFactory
-	scheme             *runtime.Scheme
+	publisher          resource.ManagedConnectionPublisher
 }
 
 // AKSClusterController is responsible for adding the AKSCluster
@@ -85,14 +83,12 @@ func (c *AKSClusterController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // NewAKSClusterReconciler returns a new reconcile.Reconciler
-func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory compute.AKSSetupAPIFactory,
-	clientset kubernetes.Interface) *Reconciler {
-
+func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory compute.AKSSetupAPIFactory) *Reconciler {
 	return &Reconciler{
 		Client:             mgr.GetClient(),
-		clientset:          clientset,
+		newClientFn:        azureclients.NewClient,
 		aksSetupAPIFactory: aksSetupAPIFactory,
-		scheme:             mgr.GetScheme(),
+		publisher:          resource.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
 	}
 }
 
@@ -147,14 +143,23 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 func (r *Reconciler) connect(instance *computev1alpha2.AKSCluster) (*compute.AKSSetupClient, error) {
-	// Fetch Provider
 	p := &azurev1alpha2.Provider{}
-	err := r.Get(ctx, meta.NamespacedNameOf(instance.Spec.ProviderReference), p)
-	if err != nil {
+	if err := r.Get(ctx, meta.NamespacedNameOf(instance.Spec.ProviderReference), p); err != nil {
 		return nil, errors.Wrap(err, "failed to get provider")
 	}
 
-	return r.aksSetupAPIFactory.CreateSetupClient(p, r.clientset)
+	s := &v1.Secret{}
+	n := types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
+	if err := r.Get(ctx, n, s); err != nil {
+		return nil, errors.Wrap(err, "failed to get provider secret")
+	}
+
+	c, err := r.newClientFn(s.Data[p.Spec.Secret.Key])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create Azure client")
+	}
+
+	return r.aksSetupAPIFactory.CreateSetupClient(c)
 }
 
 // TODO(negz): This method's cyclomatic complexity is a little high. Consider
@@ -289,12 +294,12 @@ func (r *Reconciler) sync(instance *computev1alpha2.AKSCluster, aksClient *compu
 		return r.fail(instance, err)
 	}
 
-	secret, err := r.connectionSecret(instance, aksClient)
+	cd, err := r.connectionDetails(instance, aksClient)
 	if err != nil {
 		return r.fail(instance, err)
 	}
 
-	if _, err := util.ApplySecret(r.clientset, secret); err != nil {
+	if err := r.publisher.PublishConnection(ctx, instance, cd); err != nil {
 		return r.fail(instance, err)
 	}
 
@@ -366,38 +371,48 @@ func (r *Reconciler) fail(instance *computev1alpha2.AKSCluster, err error) (reco
 }
 
 func (r *Reconciler) servicePrincipalSecret(instance *computev1alpha2.AKSCluster) (string, error) {
-	// check to see if the secret already exists
-	selector := v1.SecretKeySelector{LocalObjectReference: instance.Spec.WriteServicePrincipalSecretTo, Key: spSecretKey}
-	spSecretValue, err := util.SecretData(r.clientset, instance.Namespace, selector)
+	s := &v1.Secret{}
+	n := types.NamespacedName{
+		Namespace: instance.Spec.WriteServicePrincipalSecretTo.Namespace,
+		Name:      instance.Spec.WriteServicePrincipalSecretTo.Name,
+	}
+	err := r.Get(ctx, n, s)
+	if resource.IgnoreNotFound(err) != nil {
+		return "", errors.Wrap(err, "cannot get service principal secret")
+	}
+
+	// We successfully read the existing service principal secret, so return its
+	// contents.
 	if err == nil {
-		return string(spSecretValue), nil
+		// TODO(negz): Ensure we're the owner of this secret before trusting it.
+		return string(s.Data[spSecretKey]), nil
 	}
 
 	// service principal secret must not exist yet, generate a new one
 	newSPSecretValue, err := uuid.NewRandom()
 	if err != nil {
-		return "", errors.Errorf("failed to generate client secret: %+v", err)
+		return "", errors.Wrap(err, "failed to generate client secret")
 	}
 
 	// save the service principal secret
 	ref := meta.AsController(meta.ReferenceTo(instance, computev1alpha2.AKSClusterGroupVersionKind))
 	spSecret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            selector.Name,
-			Namespace:       instance.GetNamespace(),
+			Namespace:       instance.Spec.WriteServicePrincipalSecretTo.Namespace,
+			Name:            instance.Spec.WriteServicePrincipalSecretTo.Name,
 			OwnerReferences: []metav1.OwnerReference{ref},
 		},
 		Data: map[string][]byte{spSecretKey: []byte(newSPSecretValue.String())},
 	}
 
-	if _, err := r.clientset.CoreV1().Secrets(instance.GetNamespace()).Create(spSecret); err != nil {
-		return "", errors.Errorf("failed to create service principal secret: %+v", err)
+	if err := r.Create(ctx, spSecret); err != nil {
+		return "", errors.Wrap(err, "failed to create service principal secret")
 	}
 
 	return newSPSecretValue.String(), nil
 }
 
-func (r *Reconciler) connectionSecret(instance *computev1alpha2.AKSCluster, client *compute.AKSSetupClient) (*v1.Secret, error) {
+func (r *Reconciler) connectionDetails(instance *computev1alpha2.AKSCluster, client *compute.AKSSetupClient) (resource.ConnectionDetails, error) {
 	creds, err := client.ListClusterAdminCredentials(ctx, *instance)
 	if err != nil {
 		return nil, err
@@ -429,12 +444,10 @@ func (r *Reconciler) connectionSecret(instance *computev1alpha2.AKSCluster, clie
 		return nil, errors.Errorf("auth-info configuration is not found: %s", kctx.AuthInfo)
 	}
 
-	secret := resource.ConnectionSecretFor(instance, computev1alpha2.AKSClusterGroupVersionKind)
-	secret.Data = map[string][]byte{
+	return resource.ConnectionDetails{
 		runtimev1alpha1.ResourceCredentialsSecretEndpointKey:   []byte(cluster.Server),
 		runtimev1alpha1.ResourceCredentialsSecretCAKey:         cluster.CertificateAuthorityData,
 		runtimev1alpha1.ResourceCredentialsSecretClientCertKey: auth.ClientCertificateData,
 		runtimev1alpha1.ResourceCredentialsSecretClientKeyKey:  auth.ClientKeyData,
-	}
-	return secret, nil
+	}, nil
 }

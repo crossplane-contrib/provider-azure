@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -48,10 +47,7 @@ func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) e
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind,
-			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigurePostgresqlServer),
@@ -59,12 +55,10 @@ func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) e
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    databasev1alpha1.PostgreSQLInstanceClassGroupVersionKind,
-			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -77,7 +71,7 @@ func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) e
 // ConfigurePostgresqlServer configures the supplied resource (presumed to be a
 // PostgresqlServer) using the supplied resource claim (presumed to be a
 // PostgreSQLInstance) and resource class.
-func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	pg, cmok := cm.(*databasev1alpha1.PostgreSQLInstance)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.PostgreSQLInstanceGroupVersionKind)
@@ -104,7 +98,10 @@ func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource
 		spec.Version = pg.Spec.EngineVersion
 	}
 
-	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}
+	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      string(cm.GetUID()),
+	}
 	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 
@@ -126,10 +123,7 @@ func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error 
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    databasev1alpha1.MySQLInstanceClassGroupVersionKind,
-			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureMysqlServer),
@@ -137,12 +131,10 @@ func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error 
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    databasev1alpha1.MySQLInstanceClassGroupVersionKind,
-			NonPortable: v1alpha2.SQLServerClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -155,7 +147,7 @@ func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error 
 // ConfigureMysqlServer configures the supplied resource (presumed to be
 // a MysqlServer) using the supplied resource claim (presumed to be a
 // MySQLInstance) and resource class.
-func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	my, cmok := cm.(*databasev1alpha1.MySQLInstance)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.MySQLInstanceGroupVersionKind)
@@ -182,7 +174,10 @@ func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.NonP
 		spec.Version = my.Spec.EngineVersion
 	}
 
-	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}
+	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      string(cm.GetUID()),
+	}
 	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 

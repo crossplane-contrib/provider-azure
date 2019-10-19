@@ -19,7 +19,6 @@ package database
 import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	apitypes "k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -50,16 +49,13 @@ func (c *PostgresqlServerController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // NewPostgreSQLServerReconciler returns a new reconcile.Reconciler
-func NewPostgreSQLServerReconciler(mgr manager.Manager, sqlServerAPIFactory azureclients.SQLServerAPIFactory,
-	clientset kubernetes.Interface) *PostgreSQLReconciler {
+func NewPostgreSQLServerReconciler(mgr manager.Manager, sqlServerAPIFactory azureclients.SQLServerAPIFactory) *PostgreSQLReconciler {
 
 	r := &PostgreSQLReconciler{}
 	r.SQLReconciler = &SQLReconciler{
 		Client:              mgr.GetClient(),
-		clientset:           clientset,
 		sqlServerAPIFactory: sqlServerAPIFactory,
 		findInstance:        r.findPostgreSQLInstance,
-		scheme:              mgr.GetScheme(),
 		finalizer:           postgresqlFinalizer,
 	}
 

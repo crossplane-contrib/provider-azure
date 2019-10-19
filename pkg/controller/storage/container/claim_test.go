@@ -40,7 +40,7 @@ func TestConfigureContainer(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
-		cs  resource.NonPortableClass
+		cs  resource.Class
 		mg  resource.Managed
 	}
 
@@ -69,7 +69,7 @@ func TestConfigureContainer(t *testing.T) {
 				},
 				cs: &v1alpha2.ContainerClass{
 					SpecTemplate: v1alpha2.ContainerClassSpecTemplate{
-						NonPortableClassSpecTemplate: runtimev1alpha1.NonPortableClassSpecTemplate{
+						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},

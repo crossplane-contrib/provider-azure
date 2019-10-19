@@ -39,7 +39,7 @@ func TestConfigureAccount(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
-		cs  resource.NonPortableClass
+		cs  resource.Class
 		mg  resource.Managed
 	}
 
@@ -71,7 +71,7 @@ func TestConfigureAccount(t *testing.T) {
 				cs: &v1alpha2.AccountClass{
 					ObjectMeta: metav1.ObjectMeta{Namespace: classNamespace},
 					SpecTemplate: v1alpha2.AccountClassSpecTemplate{
-						NonPortableClassSpecTemplate: runtimev1alpha1.NonPortableClassSpecTemplate{
+						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
@@ -94,7 +94,7 @@ func TestConfigureAccount(t *testing.T) {
 					Spec: v1alpha2.AccountSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
-							WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: string(claimUID)},
+							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
 						AccountParameters: v1alpha2.AccountParameters{

@@ -48,10 +48,7 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
-			NonPortable: v1alpha2.ContainerClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.ContainerClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.ContainerGroupVersionKind),
 		resource.WithManagedBinder(resource.NewAPIManagedStatusBinder(mgr.GetClient())),
 		resource.WithManagedFinalizer(resource.NewAPIManagedStatusUnbinder(mgr.GetClient())),
@@ -61,12 +58,10 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.ContainerClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.ContainerGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.ContainerGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
-			NonPortable: v1alpha2.ContainerClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -78,7 +73,7 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 // ConfigureContainer configures the supplied resource (presumed to be an Container)
 // using the supplied resource claim (presumed to be a Bucket) and resource class.
-func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	if _, cmok := cm.(*storagev1alpha1.Bucket); !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), storagev1alpha1.BucketGroupVersionKind)
 	}

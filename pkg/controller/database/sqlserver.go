@@ -22,16 +22,14 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
-
-	"k8s.io/apimachinery/pkg/runtime"
+	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	util "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/pkg/errors"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
@@ -60,10 +58,8 @@ var (
 // SQLReconciler reconciles SQL resource specs with Azure.
 type SQLReconciler struct {
 	client.Client
-	clientset           kubernetes.Interface
 	sqlServerAPIFactory azureclients.SQLServerAPIFactory
 	findInstance        func(instance azuredbv1alpha2.SQLServer) (azuredbv1alpha2.SQLServer, error)
-	scheme              *runtime.Scheme
 	finalizer           string
 }
 
@@ -79,8 +75,19 @@ func (r *SQLReconciler) handleReconcile(instance azuredbv1alpha2.SQLServer) (rec
 		return r.fail(instance, errors.Wrapf(err, "failed to get provider %s", n))
 	}
 
+	s := &v1.Secret{}
+	n = types.NamespacedName{Namespace: provider.Spec.Secret.Namespace, Name: provider.Spec.Secret.Name}
+	if err := r.Get(ctx, n, s); err != nil {
+		return r.fail(instance, errors.Wrapf(err, "failed to get provider secret %s", n))
+	}
+
+	c, err := azureclients.NewClient(s.Data[provider.Spec.Secret.Key])
+	if err != nil {
+		return r.fail(instance, errors.Wrap(err, "failed to create Azure client"))
+	}
+
 	// create a SQL Server client to perform management operations in Azure with
-	sqlServersClient, err := r.sqlServerAPIFactory.CreateAPIInstance(provider, r.clientset)
+	sqlServersClient, err := r.sqlServerAPIFactory.CreateAPIInstance(c)
 	if err != nil {
 		return r.fail(instance, errors.Wrapf(err, "failed to create SQL Server client for instance %s", instance.GetName()))
 	}

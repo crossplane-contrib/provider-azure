@@ -33,9 +33,9 @@ func (mg *MysqlServer) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetNonPortableClassReference of this MysqlServer.
-func (mg *MysqlServer) GetNonPortableClassReference() *corev1.ObjectReference {
-	return mg.Spec.NonPortableClassReference
+// GetClassReference of this MysqlServer.
+func (mg *MysqlServer) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
 }
 
 // GetReclaimPolicy of this MysqlServer.
@@ -44,7 +44,7 @@ func (mg *MysqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 }
 
 // GetWriteConnectionSecretToReference of this MysqlServer.
-func (mg *MysqlServer) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (mg *MysqlServer) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
@@ -58,14 +58,14 @@ func (mg *MysqlServer) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
+// SetClassReference of this MysqlServer.
+func (mg *MysqlServer) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
 // SetConditions of this MysqlServer.
 func (mg *MysqlServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
-}
-
-// SetNonPortableClassReference of this MysqlServer.
-func (mg *MysqlServer) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	mg.Spec.NonPortableClassReference = r
 }
 
 // SetReclaimPolicy of this MysqlServer.
@@ -74,7 +74,7 @@ func (mg *MysqlServer) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 }
 
 // SetWriteConnectionSecretToReference of this MysqlServer.
-func (mg *MysqlServer) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (mg *MysqlServer) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
@@ -88,9 +88,9 @@ func (mg *MysqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectRefer
 	return mg.Spec.ClaimReference
 }
 
-// GetNonPortableClassReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetNonPortableClassReference() *corev1.ObjectReference {
-	return mg.Spec.NonPortableClassReference
+// GetClassReference of this MysqlServerVirtualNetworkRule.
+func (mg *MysqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
 }
 
 // GetReclaimPolicy of this MysqlServerVirtualNetworkRule.
@@ -99,7 +99,7 @@ func (mg *MysqlServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.Recl
 }
 
 // GetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (mg *MysqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
@@ -113,14 +113,14 @@ func (mg *MysqlServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectRefer
 	mg.Spec.ClaimReference = r
 }
 
+// SetClassReference of this MysqlServerVirtualNetworkRule.
+func (mg *MysqlServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
 // SetConditions of this MysqlServerVirtualNetworkRule.
 func (mg *MysqlServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
-}
-
-// SetNonPortableClassReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	mg.Spec.NonPortableClassReference = r
 }
 
 // SetReclaimPolicy of this MysqlServerVirtualNetworkRule.
@@ -129,7 +129,7 @@ func (mg *MysqlServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1.Recl
 }
 
 // SetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (mg *MysqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
@@ -143,9 +143,9 @@ func (mg *PostgresqlServer) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetNonPortableClassReference of this PostgresqlServer.
-func (mg *PostgresqlServer) GetNonPortableClassReference() *corev1.ObjectReference {
-	return mg.Spec.NonPortableClassReference
+// GetClassReference of this PostgresqlServer.
+func (mg *PostgresqlServer) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
 }
 
 // GetReclaimPolicy of this PostgresqlServer.
@@ -154,7 +154,7 @@ func (mg *PostgresqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 }
 
 // GetWriteConnectionSecretToReference of this PostgresqlServer.
-func (mg *PostgresqlServer) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (mg *PostgresqlServer) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
@@ -168,14 +168,14 @@ func (mg *PostgresqlServer) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
+// SetClassReference of this PostgresqlServer.
+func (mg *PostgresqlServer) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
 // SetConditions of this PostgresqlServer.
 func (mg *PostgresqlServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
-}
-
-// SetNonPortableClassReference of this PostgresqlServer.
-func (mg *PostgresqlServer) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	mg.Spec.NonPortableClassReference = r
 }
 
 // SetReclaimPolicy of this PostgresqlServer.
@@ -184,7 +184,7 @@ func (mg *PostgresqlServer) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 }
 
 // SetWriteConnectionSecretToReference of this PostgresqlServer.
-func (mg *PostgresqlServer) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (mg *PostgresqlServer) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
@@ -198,9 +198,9 @@ func (mg *PostgresqlServerVirtualNetworkRule) GetClaimReference() *corev1.Object
 	return mg.Spec.ClaimReference
 }
 
-// GetNonPortableClassReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetNonPortableClassReference() *corev1.ObjectReference {
-	return mg.Spec.NonPortableClassReference
+// GetClassReference of this PostgresqlServerVirtualNetworkRule.
+func (mg *PostgresqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
 }
 
 // GetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
@@ -209,7 +209,7 @@ func (mg *PostgresqlServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1
 }
 
 // GetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (mg *PostgresqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
@@ -223,14 +223,14 @@ func (mg *PostgresqlServerVirtualNetworkRule) SetClaimReference(r *corev1.Object
 	mg.Spec.ClaimReference = r
 }
 
+// SetClassReference of this PostgresqlServerVirtualNetworkRule.
+func (mg *PostgresqlServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
 // SetConditions of this PostgresqlServerVirtualNetworkRule.
 func (mg *PostgresqlServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
-}
-
-// SetNonPortableClassReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	mg.Spec.NonPortableClassReference = r
 }
 
 // SetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
@@ -239,6 +239,6 @@ func (mg *PostgresqlServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1
 }
 
 // SetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (mg *PostgresqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }

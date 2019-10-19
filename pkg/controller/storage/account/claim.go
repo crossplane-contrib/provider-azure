@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -48,22 +47,17 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
-			NonPortable: v1alpha2.AccountClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.AccountClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.AccountGroupVersionKind),
 		resource.WithManagedBinder(resource.NewAPIManagedStatusBinder(mgr.GetClient())),
 		resource.WithManagedFinalizer(resource.NewAPIManagedStatusUnbinder(mgr.GetClient())),
 		resource.WithManagedConfigurators(resource.ManagedConfiguratorFn(ConfigureAccount)))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.AccountClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.AccountGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.AccountGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    storagev1alpha1.BucketClassGroupVersionKind,
-			NonPortable: v1alpha2.AccountClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -75,7 +69,7 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 // ConfigureAccount configures the supplied resource (presumed to be an Account)
 // using the supplied resource claim (presumed to be a Bucket) and resource class.
-func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	b, cmok := cm.(*storagev1alpha1.Bucket)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), storagev1alpha1.BucketGroupVersionKind)
@@ -109,7 +103,10 @@ func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.NonPorta
 
 	spec.StorageAccountName = b.Spec.Name
 
-	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}
+	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      string(cm.GetUID()),
+	}
 	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 

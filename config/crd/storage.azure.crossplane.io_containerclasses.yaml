@@ -22,7 +22,7 @@ spec:
     listKind: ContainerClassList
     plural: containerclasses
     singular: containerclass
-  scope: ""
+  scope: Cluster
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -114,10 +114,16 @@ spec:
                 other uses of the ReclaimPolicy concept within the Kubernetes ecosystem
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
+            writeConnectionSecretsToNamespace:
+              description: WriteConnectionSecretsToNamespace specifies the namespace
+                in which the connection secrets of managed resources dynamically provisioned
+                using this claim will be created.
+              type: string
           required:
           - accountReference
           - nameFormat
           - providerRef
+          - writeConnectionSecretsToNamespace
           type: object
       required:
       - specTemplate

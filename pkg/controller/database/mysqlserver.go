@@ -19,7 +19,6 @@ package database
 import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	apitypes "k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -50,16 +49,13 @@ func (c *MysqlServerController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // NewMysqlServerReconciler returns a new reconcile.Reconciler
-func NewMysqlServerReconciler(mgr manager.Manager, sqlServerAPIFactory azureclients.SQLServerAPIFactory,
-	clientset kubernetes.Interface) *MySQLReconciler {
+func NewMysqlServerReconciler(mgr manager.Manager, sqlServerAPIFactory azureclients.SQLServerAPIFactory) *MySQLReconciler {
 
 	r := &MySQLReconciler{}
 	r.SQLReconciler = &SQLReconciler{
 		Client:              mgr.GetClient(),
-		clientset:           clientset,
 		sqlServerAPIFactory: sqlServerAPIFactory,
 		findInstance:        r.findMySQLInstance,
-		scheme:              mgr.GetScheme(),
 		finalizer:           mysqlFinalizer,
 	}
 

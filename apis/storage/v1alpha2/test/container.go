@@ -35,13 +35,10 @@ type MockContainer struct {
 }
 
 // NewMockContainer new container builcer
-func NewMockContainer(ns, name string) *MockContainer {
+func NewMockContainer(name string) *MockContainer {
 	return &MockContainer{
 		Container: &storagev1alpha2.Container{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: ns,
-				Name:      name,
-			},
+			ObjectMeta: metav1.ObjectMeta{Name: name},
 		},
 	}
 }
@@ -84,7 +81,7 @@ func (tc *MockContainer) WithFinalizers(f []string) *MockContainer {
 
 // WithSpecClassRef set class reference
 func (tc *MockContainer) WithSpecClassRef(ref *corev1.ObjectReference) *MockContainer {
-	tc.Spec.NonPortableClassReference = ref
+	tc.Spec.ClassReference = ref
 	return tc
 }
 

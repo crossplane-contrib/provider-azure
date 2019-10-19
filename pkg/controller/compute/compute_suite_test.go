@@ -19,6 +19,8 @@ package compute
 import (
 	"encoding/base64"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 
@@ -45,12 +47,16 @@ import (
 )
 
 const (
-	timeout       = 5 * time.Second
-	namespace     = "test-compute-namespace"
-	instanceName  = "test-compute-instance"
-	secretName    = "test-secret"
-	secretDataKey = "credentials"
-	providerName  = "test-provider"
+	timeout      = 5 * time.Second
+	namespace    = "test-compute-namespace"
+	instanceName = "test-compute-instance"
+
+	providerName          = "test-provider"
+	providerSecretName    = "test-provider-secret"
+	providerSecretDataKey = "credentials"
+
+	connectionSecretName = "test-connection-secret"
+	principalSecretName  = "test-principal-secret"
 
 	clientEndpoint = "https://example.org"
 	clientCAdata   = "DEFINITELYPEMENCODED"
@@ -83,7 +89,7 @@ preferences: {}
 
 var (
 	cfg             *rest.Config
-	expectedRequest = reconcile.Request{NamespacedName: types.NamespacedName{Name: instanceName, Namespace: namespace}}
+	expectedRequest = reconcile.Request{NamespacedName: types.NamespacedName{Name: instanceName}}
 
 	kubecfg = []byte(fmt.Sprintf(kubeconfigTemplate,
 		instanceName,
@@ -121,28 +127,30 @@ func StartTestManager(mgr manager.Manager, g *gomega.GomegaWithT) chan struct{} 
 	return stop
 }
 
-func testSecret(data []byte) *corev1.Secret {
+func testProviderSecret(data []byte) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
+			Name:      providerSecretName,
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			secretDataKey: data,
+			providerSecretDataKey: data,
 		},
 	}
 }
 
-func testProvider(s *corev1.Secret) *azurev1alpha2.Provider {
+func testProvider() *azurev1alpha2.Provider {
 	return &azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      providerName,
-			Namespace: s.Namespace,
+			Name: providerName,
 		},
 		Spec: azurev1alpha2.ProviderSpec{
-			Secret: corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
-				Key:                  secretDataKey,
+			Secret: runtimev1alpha1.SecretKeySelector{
+				SecretReference: runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+					Name:      providerSecretName,
+				},
+				Key: providerSecretDataKey,
 			},
 		},
 	}
@@ -150,22 +158,33 @@ func testProvider(s *corev1.Secret) *azurev1alpha2.Provider {
 
 func testInstance(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
 	return &computev1alpha1.AKSCluster{
-		ObjectMeta: metav1.ObjectMeta{Name: instanceName, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: instanceName},
 		Spec: computev1alpha1.AKSClusterSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
-				ProviderReference:                meta.ReferenceTo(p, azurev1alpha2.ProviderGroupVersionKind),
-				WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: "coolSecret"},
+				ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
+				ProviderReference: meta.ReferenceTo(p, azurev1alpha2.ProviderGroupVersionKind),
+				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+
+					// NOTE(negz): There appears to be a race in these tests
+					// in which garbage collection has not collected the first
+					// collection secret before the next test runs. This
+					// prevents two clusters using the same secret.
+					Name: connectionSecretName + strconv.Itoa(rand.Int()),
+				},
 			},
 			AKSClusterParameters: v1alpha2.AKSClusterParameters{
-				WriteServicePrincipalSecretTo: corev1.LocalObjectReference{Name: "coolPrincipal"},
-				ResourceGroupName:             "rg1",
-				Location:                      "loc1",
-				Version:                       "1.12.5",
-				NodeCount:                     to.IntPtr(3),
-				NodeVMSize:                    "Standard_F2s_v2",
-				DNSNamePrefix:                 "crossplane-aks",
-				DisableRBAC:                   false,
+				WriteServicePrincipalSecretTo: runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+					Name:      principalSecretName,
+				},
+				ResourceGroupName: "rg1",
+				Location:          "loc1",
+				Version:           "1.12.5",
+				NodeCount:         to.IntPtr(3),
+				NodeVMSize:        "Standard_F2s_v2",
+				DNSNamePrefix:     "crossplane-aks",
+				DisableRBAC:       false,
 			},
 		},
 	}

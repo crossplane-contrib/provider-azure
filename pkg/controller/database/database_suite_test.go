@@ -33,16 +33,15 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	localtest "github.com/crossplaneio/stack-azure/pkg/test"
-
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	localtest "github.com/crossplaneio/stack-azure/pkg/test"
 )
 
 const (
 	timeout       = 5 * time.Second
-	namespace     = "test-db-namespace"
+	namespace     = "test-namespace"
 	instanceName  = "test-db-instance"
 	secretName    = "test-secret"
 	secretDataKey = "credentials"
@@ -51,7 +50,7 @@ const (
 
 var (
 	cfg             *rest.Config
-	expectedRequest = reconcile.Request{NamespacedName: types.NamespacedName{Name: instanceName, Namespace: namespace}}
+	expectedRequest = reconcile.Request{NamespacedName: types.NamespacedName{Name: instanceName}}
 )
 
 func TestMain(m *testing.M) {
@@ -95,14 +94,14 @@ func testSecret(data []byte) *corev1.Secret {
 
 func testProvider(s *corev1.Secret) *azurev1alpha2.Provider {
 	return &azurev1alpha2.Provider{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      providerName,
-			Namespace: s.Namespace,
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha2.ProviderSpec{
-			Secret: corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{Name: secretName},
-				Key:                  secretDataKey,
+			Secret: runtimev1alpha1.SecretKeySelector{
+				SecretReference: runtimev1alpha1.SecretReference{
+					Namespace: s.GetNamespace(),
+					Name:      s.GetName(),
+				},
+				Key: secretDataKey,
 			},
 		},
 	}
@@ -110,14 +109,14 @@ func testProvider(s *corev1.Secret) *azurev1alpha2.Provider {
 
 func testInstance(p *azurev1alpha2.Provider) *azuredbv1alpha2.MysqlServer {
 	return &azuredbv1alpha2.MysqlServer{
-		ObjectMeta: metav1.ObjectMeta{Name: instanceName, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: instanceName},
 		Spec: azuredbv1alpha2.SQLServerSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{
-					Namespace: p.GetNamespace(),
-					Name:      p.GetName(),
+				ProviderReference: &corev1.ObjectReference{Name: p.GetName()},
+				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+					Name:      "coolsecret",
 				},
-				WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: "coolsecret"},
 			},
 			SQLServerParameters: v1alpha2.SQLServerParameters{
 				AdminLoginName: "myadmin",

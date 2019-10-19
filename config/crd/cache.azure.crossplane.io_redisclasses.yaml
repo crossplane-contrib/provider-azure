@@ -22,7 +22,7 @@ spec:
     listKind: RedisClassList
     plural: redisclasses
     singular: redisclass
-  scope: ""
+  scope: Cluster
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -149,11 +149,17 @@ spec:
               description: 'SubnetID specifies the full resource ID of a subnet in
                 a virtual network to deploy the Redis cache in. Example format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1'
               type: string
+            writeConnectionSecretsToNamespace:
+              description: WriteConnectionSecretsToNamespace specifies the namespace
+                in which the connection secrets of managed resources dynamically provisioned
+                using this claim will be created.
+              type: string
           required:
           - location
           - providerRef
           - resourceGroupName
           - sku
+          - writeConnectionSecretsToNamespace
           type: object
       required:
       - specTemplate

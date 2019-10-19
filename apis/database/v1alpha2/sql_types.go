@@ -54,6 +54,7 @@ type SQLServer interface {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type MysqlServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -95,6 +96,7 @@ type MysqlServerList struct {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type PostgresqlServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -130,8 +132,8 @@ type PostgresqlServerList struct {
 // A SQLServerClassSpecTemplate is a template for the spec of a dynamically
 // provisioned MysqlServer or PostgresqlServer.
 type SQLServerClassSpecTemplate struct {
-	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
-	SQLServerParameters                          `json:",inline"`
+	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
+	SQLServerParameters               `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -142,6 +144,7 @@ type SQLServerClassSpecTemplate struct {
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type SQLServerClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -33,13 +33,9 @@ type MockAccount struct {
 }
 
 // NewMockAccount creates new account wrapper
-func NewMockAccount(ns, name string) *MockAccount {
+func NewMockAccount(name string) *MockAccount {
 	return &MockAccount{Account: &storagev1alpha2.Account{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ns,
-			Name:      name,
-			//Finalizers: []string{},
-		},
+		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}}
 }
 
@@ -81,7 +77,7 @@ func (ta *MockAccount) WithFinalizers(f []string) *MockAccount {
 
 // WithSpecClassRef set class reference
 func (ta *MockAccount) WithSpecClassRef(ref *corev1.ObjectReference) *MockAccount {
-	ta.Spec.NonPortableClassReference = ref
+	ta.Spec.ClassReference = ref
 	return ta
 }
 
@@ -133,8 +129,11 @@ func (ta *MockAccount) WithSpecStatusFromProperties(props *storage.AccountProper
 
 // WithSpecWriteConnectionSecretToReference sets where the storage account will write its
 // connection secret.
-func (ta *MockAccount) WithSpecWriteConnectionSecretToReference(name string) *MockAccount {
-	ta.Spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: name}
+func (ta *MockAccount) WithSpecWriteConnectionSecretToReference(ns, name string) *MockAccount {
+	ta.Spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: ns,
+		Name:      name,
+	}
 	return ta
 }
 

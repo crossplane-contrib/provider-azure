@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha2
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
@@ -28,7 +27,7 @@ type ProviderSpec struct {
 	// Azure service principal credentials json secret key reference
 	// A Secret containing JSON encoded credentials for an Azure Service
 	// Principal that will be used to authenticate to this Azure Provider.
-	Secret corev1.SecretKeySelector `json:"credentialsSecretRef"`
+	Secret runtimev1alpha1.SecretKeySelector `json:"credentialsSecretRef"`
 }
 
 // +kubebuilder:object:root=true
@@ -36,6 +35,7 @@ type ProviderSpec struct {
 // A Provider configures an Azure 'provider', i.e. a connection to a particular
 // Azure account using a particular Azure Service Principal.
 // +kubebuilder:printcolumn:name="SECRET-NAME",type="string",JSONPath=".spec.credentialsSecretRef.name",priority=1
+// +kubebuilder:resource:scope=Cluster
 type Provider struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -75,6 +75,7 @@ type ResourceGroupStatus struct {
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Cluster
 
 // A ResourceGroup is a managed resource that represents an Azure Resource
 // Group.

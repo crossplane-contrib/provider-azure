@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -46,10 +45,7 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    cachev1alpha1.RedisClusterClassGroupVersionKind,
-			NonPortable: v1alpha2.RedisClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.RedisGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureRedis),
@@ -57,12 +53,10 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.RedisClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    cachev1alpha1.RedisClusterClassGroupVersionKind,
-			NonPortable: v1alpha2.RedisClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -75,7 +69,7 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 // ConfigureRedis configures the supplied resource (presumed
 // to be a Redis) using the supplied resource claim (presumed
 // to be a RedisCluster) and resource class.
-func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	rc, cmok := cm.(*cachev1alpha1.RedisCluster)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), cachev1alpha1.RedisClusterGroupVersionKind)
@@ -106,7 +100,10 @@ func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.NonPortabl
 		spec.RedisConfiguration = map[string]string{}
 	}
 
-	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}
+	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      string(cm.GetUID()),
+	}
 	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 

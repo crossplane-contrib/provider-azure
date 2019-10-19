@@ -31,8 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -43,7 +41,6 @@ import (
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
 
 	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 )
 
 type mockSQLServerClient struct {
@@ -109,7 +106,7 @@ type mockSQLServerClientFactory struct {
 	mockClient *mockSQLServerClient
 }
 
-func (m *mockSQLServerClientFactory) CreateAPIInstance(*v1alpha2.Provider, kubernetes.Interface) (azureclients.SQLServerAPI, error) {
+func (m *mockSQLServerClientFactory) CreateAPIInstance(_ *azureclients.Client) (azureclients.SQLServerAPI, error) {
 	return m.mockClient, nil
 }
 
@@ -119,7 +116,6 @@ func (m *mockSQLServerClientFactory) CreateAPIInstance(*v1alpha2.Provider, kuber
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
-	clientset := fake.NewSimpleClientset()
 	sqlServerClient := &mockSQLServerClient{}
 	sqlServerClientFactory := &mockSQLServerClientFactory{mockClient: sqlServerClient}
 
@@ -161,7 +157,7 @@ func TestReconcile(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c := mgr.GetClient()
 
-	r := NewMysqlServerReconciler(mgr, sqlServerClientFactory, clientset)
+	r := NewMysqlServerReconciler(mgr, sqlServerClientFactory)
 	recFn, requests := SetupTestReconcile(r)
 	controller := &MysqlServerController{
 		Reconciler: recFn,

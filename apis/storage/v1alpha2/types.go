@@ -61,6 +61,7 @@ type AccountStatus struct {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM_POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type Account struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -80,8 +81,8 @@ type AccountList struct {
 // An AccountClassSpecTemplate is a template for the spec of a dynamically
 // provisioned Account.
 type AccountClassSpecTemplate struct {
-	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
-	AccountParameters                            `json:",inline"`
+	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
+	AccountParameters                 `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -91,6 +92,7 @@ type AccountClassSpecTemplate struct {
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type AccountClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -147,7 +149,7 @@ type ContainerSpec struct {
 	// frequently include the endpoint, username, and password required to
 	// connect to the managed resource.
 	// +optional
-	WriteConnectionSecretToReference corev1.LocalObjectReference `json:"writeConnectionSecretToRef,omitempty"`
+	WriteConnectionSecretToReference *runtimev1alpha1.SecretReference `json:"writeConnectionSecretToRef,omitempty"`
 
 	// ClaimReference specifies the resource claim to which this managed
 	// resource will be bound. ClaimReference is set automatically during
@@ -156,12 +158,12 @@ type ContainerSpec struct {
 	// +optional
 	ClaimReference *corev1.ObjectReference `json:"claimRef,omitempty"`
 
-	// NonPortableClassReference specifies the non-portable resource class that
-	// was used to dynamically provision this managed resource, if any.
-	// Crossplane does not currently support setting this field manually, per
+	// ClassReference specifies the non-portable resource class that was used to
+	// dynamically provision this managed resource, if any. Crossplane does not
+	// currently support setting this field manually, per
 	// https://github.com/crossplaneio/crossplane-runtime/issues/20
 	// +optional
-	NonPortableClassReference *corev1.ObjectReference `json:"classRef,omitempty"`
+	ClassReference *corev1.ObjectReference `json:"classRef,omitempty"`
 
 	// ReclaimPolicy specifies what will happen to the external resource this
 	// managed resource manages when the managed resource is deleted. "Delete"
@@ -191,6 +193,7 @@ type ContainerStatus struct {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM_POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type Container struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -223,23 +226,23 @@ func (c *Container) GetClaimReference() *corev1.ObjectReference {
 	return c.Spec.ClaimReference
 }
 
-// SetNonPortableClassReference of this Container.
-func (c *Container) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	c.Spec.NonPortableClassReference = r
+// SetClassReference of this Container.
+func (c *Container) SetClassReference(r *corev1.ObjectReference) {
+	c.Spec.ClassReference = r
 }
 
-// GetNonPortableClassReference of this Container.
-func (c *Container) GetNonPortableClassReference() *corev1.ObjectReference {
-	return c.Spec.NonPortableClassReference
+// GetClassReference of this Container.
+func (c *Container) GetClassReference() *corev1.ObjectReference {
+	return c.Spec.ClassReference
 }
 
 // SetWriteConnectionSecretToReference of this Container.
-func (c *Container) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (c *Container) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	c.Spec.WriteConnectionSecretToReference = r
 }
 
 // GetWriteConnectionSecretToReference of this Container.
-func (c *Container) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (c *Container) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return c.Spec.WriteConnectionSecretToReference
 }
 
@@ -283,8 +286,8 @@ type ContainerList struct {
 // A ContainerClassSpecTemplate is a template for the spec of a dynamically
 // provisioned Container.
 type ContainerClassSpecTemplate struct {
-	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
-	ContainerParameters                          `json:",inline"`
+	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
+	ContainerParameters               `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -295,6 +298,7 @@ type ContainerClassSpecTemplate struct {
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type ContainerClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

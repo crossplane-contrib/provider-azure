@@ -131,7 +131,7 @@ func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha
 	}
 
 	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.GetNamespace(), Name: p.Spec.Secret.Name}
+	n = types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
 	if err := m.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider's secret %s", n)
 	}

@@ -22,7 +22,7 @@ spec:
     listKind: AKSClusterClassList
     plural: aksclusterclasses
     singular: aksclusterclass
-  scope: ""
+  scope: Cluster
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -128,21 +128,32 @@ spec:
               description: VnetSubnetID is the subnet to which the cluster will be
                 deployed.
               type: string
+            writeConnectionSecretsToNamespace:
+              description: WriteConnectionSecretsToNamespace specifies the namespace
+                in which the connection secrets of managed resources dynamically provisioned
+                using this claim will be created.
+              type: string
             writeServicePrincipalTo:
               description: WriteServicePrincipalSecretTo the specified Secret. The
                 service principal is automatically generated and used by the AKS cluster
                 to interact with other Azure resources.
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the secret.
                   type: string
+                namespace:
+                  description: Namespace of the secret.
+                  type: string
+              required:
+              - name
+              - namespace
               type: object
           required:
           - location
           - providerRef
           - resourceGroupName
           - version
+          - writeConnectionSecretsToNamespace
           - writeServicePrincipalTo
           type: object
       required:

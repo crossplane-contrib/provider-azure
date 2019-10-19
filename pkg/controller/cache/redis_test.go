@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
@@ -78,11 +78,14 @@ var (
 	redisConfiguration = map[string]string{"cool": "socool"}
 
 	provider = azurev1alpha2.Provider{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
+		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha2.ProviderSpec{
-			Secret: corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{Name: providerSecretName},
-				Key:                  providerSecretKey,
+			Secret: runtimev1alpha1.SecretKeySelector{
+				SecretReference: runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+					Name:      providerSecretName,
+				},
+				Key: providerSecretKey,
 			},
 		},
 	}
@@ -142,15 +145,17 @@ func withDeletionTimestamp(t time.Time) redisResourceModifier {
 func redisResource(rm ...redisResourceModifier) *v1alpha2.Redis {
 	r := &v1alpha2.Redis{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:  namespace,
 			Name:       redisResourceName,
 			UID:        uid,
 			Finalizers: []string{},
 		},
 		Spec: v1alpha2.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference:                &corev1.ObjectReference{Namespace: namespace, Name: providerName},
-				WriteConnectionSecretToReference: corev1.LocalObjectReference{Name: connectionSecretName},
+				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+					Name:      connectionSecretName,
+				},
 			},
 			RedisParameters: v1alpha2.RedisParameters{
 				ResourceGroupName:  redisResourceGroupName,
@@ -737,17 +742,13 @@ func TestReconcile(t *testing.T) {
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
-						case client.ObjectKey{Namespace: namespace, Name: connectionSecretName}:
-							return kerrors.NewNotFound(schema.GroupResource{}, connectionSecretName)
-						}
+						*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
 				},
+				publisher: resource.PublisherChain{}, // A no-op publisher.
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
 			want:    reconcile.Result{Requeue: false},
@@ -807,27 +808,24 @@ func TestReconcile(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "FailedToGetConnectionSecret",
+			name: "FailedToPublish",
 			rec: &Reconciler{
 				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha2.Redis) string { return "" }}, nil
+					return &mockCSDK{
+						MockSync: func(_ context.Context, _ *v1alpha2.Redis) bool { return false },
+						MockKey:  func(_ context.Context, _ *v1alpha2.Redis) string { return "" },
+					}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case types.NamespacedName{Namespace: namespace, Name: connectionSecretName}:
-							return errorBoom
-						case types.NamespacedName{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName)))
-						}
+						*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
 						return nil
 					},
+					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
 					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
 						want := redisResource(
 							withResourceName(redisResourceName),
-							withConditions(
-								runtimev1alpha1.ReconcileError(errors.Wrapf(errorBoom, "cannot get secret %s/%s", namespace, connectionSecretName)),
-							),
+							withConditions(runtimev1alpha1.ReconcileError(errorBoom)),
 						)
 						got := obj.(*v1alpha2.Redis)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
@@ -836,79 +834,9 @@ func TestReconcile(t *testing.T) {
 						return nil
 					},
 				},
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: true},
-			wantErr: nil,
-		},
-		{
-			name: "FailedToCreateConnectionSecret",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha2.Redis) string { return "" }}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case types.NamespacedName{Namespace: namespace, Name: connectionSecretName}:
-							return kerrors.NewNotFound(schema.GroupResource{}, connectionSecretName)
-						case types.NamespacedName{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName)))
-						}
-						return nil
-					},
-					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
-						want := redisResource(
-							withResourceName(redisResourceName),
-							withConditions(
-								runtimev1alpha1.ReconcileError(errors.Wrapf(errorBoom, "cannot create secret %s/%s", namespace, connectionSecretName)),
-							),
-						)
-						got := obj.(*v1alpha2.Redis)
-						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
-							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
-						}
-						return nil
-					},
-					MockCreate: func(_ context.Context, obj runtime.Object, _ ...client.CreateOption) error { return errorBoom },
-				},
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: true},
-			wantErr: nil,
-		},
-		{
-			name: "FailedToUpdateConnectionSecret",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockKey: func(_ context.Context, _ *v1alpha2.Redis) string { return "" }}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case types.NamespacedName{Namespace: namespace, Name: connectionSecretName}:
-							return nil
-						case types.NamespacedName{Namespace: namespace, Name: redisResourceName}:
-							*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName)))
-						}
-						return nil
-					},
-					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
-						switch got := obj.(type) {
-						case *corev1.Secret:
-							return errorBoom
-						case *v1alpha2.Redis:
-							want := redisResource(
-								withResourceName(redisResourceName),
-								withConditions(
-									runtimev1alpha1.ReconcileError(errors.Wrapf(errorBoom, "cannot update secret %s/%s", namespace, connectionSecretName)),
-								),
-							)
-							if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
-								t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
-							}
-						}
-						return nil
+				publisher: resource.ManagedConnectionPublisherFns{
+					PublishConnectionFn: func(_ context.Context, _ resource.Managed, _ resource.ConnectionDetails) error {
+						return errorBoom
 					},
 				},
 			},
@@ -928,41 +856,6 @@ func TestReconcile(t *testing.T) {
 
 			if diff := cmp.Diff(tc.want, gotResult); diff != "" {
 				t.Errorf("tc.rec.Reconcile(...): -want, +got:\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestConnectionSecret(t *testing.T) {
-	cases := []struct {
-		name     string
-		r        *v1alpha2.Redis
-		password string
-		want     *corev1.Secret
-	}{
-		{
-			name:     "Successful",
-			r:        redisResource(withEndpoint(host)),
-			password: primaryAccessKey,
-			want: &corev1.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:            connectionSecretName,
-					Namespace:       namespace,
-					OwnerReferences: []metav1.OwnerReference{meta.AsController(meta.ReferenceTo(redisResource(), v1alpha2.RedisGroupVersionKind))},
-				},
-				Data: map[string][]byte{
-					runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(host),
-					runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(primaryAccessKey),
-				},
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := connectionSecret(tc.r, tc.password)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("connectionSecret(...): -want, +got:\n%s", diff)
 			}
 		})
 	}

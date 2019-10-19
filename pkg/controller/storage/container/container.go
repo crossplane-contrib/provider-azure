@@ -122,8 +122,7 @@ type containerSyncdeleterMaker struct {
 func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha2.Container) (syncdeleter, error) {
 	// Retrieve storage account reference object
 	acct := &v1alpha2.Account{}
-	n := types.NamespacedName{Namespace: c.GetNamespace(), Name: c.Spec.AccountReference.Name}
-	if err := m.Get(ctx, n, acct); err != nil {
+	if err := m.Get(ctx, types.NamespacedName{Name: c.Spec.AccountReference.Name}, acct); err != nil {
 		// For storage account not found errors - check if we are on deletion path
 		// if so - remove finalizer from this container object
 		if kerrors.IsNotFound(err) && c.DeletionTimestamp != nil {
@@ -132,12 +131,15 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 				return nil, errors.Wrapf(err, "failed to update after removing finalizer")
 			}
 		}
-		return nil, errors.Wrapf(err, "failed to retrieve storage account reference: %s", n)
+		return nil, errors.Wrapf(err, "failed to retrieve storage account reference: %s", c.Spec.AccountReference.Name)
 	}
 
 	// Retrieve storage account secret
 	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: acct.GetNamespace(), Name: acct.Spec.WriteConnectionSecretToReference.Name}
+	n := types.NamespacedName{
+		Namespace: acct.Spec.WriteConnectionSecretToReference.Namespace,
+		Name:      acct.Spec.WriteConnectionSecretToReference.Name,
+	}
 	if err := m.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "failed to retrieve storage account secret: %s", n)
 	}

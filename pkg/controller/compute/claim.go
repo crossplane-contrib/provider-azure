@@ -22,9 +22,7 @@ import (
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -48,10 +46,7 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    computev1alpha1.KubernetesClusterClassGroupVersionKind,
-			NonPortable: v1alpha2.AKSClusterClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
@@ -59,12 +54,10 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    computev1alpha1.KubernetesClusterClassGroupVersionKind,
-			NonPortable: v1alpha2.AKSClusterClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -77,7 +70,7 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 // ConfigureAKSCluster configures the supplied resource (presumed to be a
 // AKSCluster) using the supplied resource claim (presumed to be a
 // KubernetesCluster) and resource class.
-func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	if _, cmok := cm.(*computev1alpha1.KubernetesCluster); !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), computev1alpha1.KubernetesClusterGroupVersionKind)
 	}
@@ -103,8 +96,15 @@ func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.NonPo
 	if spec.NodeCount == nil {
 		spec.NodeCount = to.IntPtr(v1alpha2.DefaultNodeCount)
 	}
-	spec.WriteServicePrincipalSecretTo = corev1.LocalObjectReference{Name: fmt.Sprintf("principal-%s", cm.GetUID())}
-	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}
+
+	spec.WriteServicePrincipalSecretTo = runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      fmt.Sprintf("principal-%s", cm.GetUID()),
+	}
+	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      string(cm.GetUID()),
+	}
 	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 

@@ -17,8 +17,6 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
@@ -56,13 +54,8 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 		return err
 	}
 
-	clientset, err := kubernetes.NewForConfig(mgr.GetConfig())
-	if err != nil {
-		return errors.Errorf("failed to create clientset: %+v", err)
-	}
-
 	if err := (&compute.AKSClusterController{
-		Reconciler: compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{}, clientset),
+		Reconciler: compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{}),
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}
@@ -72,7 +65,7 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 	}
 
 	if err := (&database.MysqlServerController{
-		Reconciler: database.NewMysqlServerReconciler(mgr, &azureclients.MySQLServerClientFactory{}, clientset),
+		Reconciler: database.NewMysqlServerReconciler(mgr, &azureclients.MySQLServerClientFactory{}),
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}
@@ -86,7 +79,7 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 	}
 
 	if err := (&database.PostgresqlServerController{
-		Reconciler: database.NewPostgreSQLServerReconciler(mgr, &azureclients.PostgreSQLServerClientFactory{}, clientset),
+		Reconciler: database.NewPostgreSQLServerReconciler(mgr, &azureclients.PostgreSQLServerClientFactory{}),
 	}).SetupWithManager(mgr); err != nil {
 		return err
 	}

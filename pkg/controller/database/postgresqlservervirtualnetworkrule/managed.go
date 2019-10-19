@@ -85,7 +85,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 	}
 
 	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.GetNamespace(), Name: p.Spec.Secret.Name}
+	n = types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
 	if err := c.client.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
 	}
