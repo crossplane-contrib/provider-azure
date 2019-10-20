@@ -19,18 +19,13 @@ package azure
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
-	"k8s.io/client-go/kubernetes"
-
-	"github.com/crossplaneio/crossplane-runtime/pkg/util"
-
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -75,20 +70,12 @@ type Credentials struct {
 	ActiveDirectoryGraphResourceID string `json:"activeDirectoryGraphResourceId"`
 }
 
-// NewClient will look up the Azure credential information from the given provider and return a client
-// that can be used to connect to Azure services.
-func NewClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*Client, error) {
-	// first get the secret data that should contain all the auth/creds information
-	azureSecretData, err := util.SecretData(clientset, provider.Namespace, provider.Spec.Secret)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get azure client secret: %+v", err)
-	}
-
-	// load Credentials from json data
+// NewClient returns a client that can be used to connect to Azure services
+// using the supplied JSON credentials.
+func NewClient(credentials []byte) (*Client, error) {
 	creds := Credentials{}
-	err = json.Unmarshal(azureSecretData, &creds)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal azure client secret data: %+v", err)
+	if err := json.Unmarshal(credentials, &creds); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal azure client secret data")
 	}
 
 	// create a config object from the loaded credentials data
@@ -98,7 +85,7 @@ func NewClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*Cl
 
 	authorizer, err := config.Authorizer()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get authorizer from config: %+v", err)
+		return nil, errors.Wrap(err, "failed to get authorizer from config")
 	}
 
 	return &Client{

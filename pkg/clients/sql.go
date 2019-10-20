@@ -31,12 +31,10 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
 	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 )
 
 const (
@@ -79,18 +77,13 @@ type MySQLServerClient struct {
 }
 
 // NewMySQLServerClient creates and initializes a MySQLServerClient instance.
-func NewMySQLServerClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*MySQLServerClient, error) {
-	client, err := NewClient(provider, clientset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
-	}
-
-	mysqlServersClient := mysql.NewServersClient(client.SubscriptionID)
-	mysqlServersClient.Authorizer = client.Authorizer
+func NewMySQLServerClient(c *Client) (*MySQLServerClient, error) {
+	mysqlServersClient := mysql.NewServersClient(c.SubscriptionID)
+	mysqlServersClient.Authorizer = c.Authorizer
 	mysqlServersClient.AddToUserAgent(UserAgent)
 
-	firewallRulesClient := mysql.NewFirewallRulesClient(client.SubscriptionID)
-	firewallRulesClient.Authorizer = client.Authorizer
+	firewallRulesClient := mysql.NewFirewallRulesClient(c.SubscriptionID)
+	firewallRulesClient.Authorizer = c.Authorizer
 	firewallRulesClient.AddToUserAgent(UserAgent)
 
 	return &MySQLServerClient{
@@ -336,18 +329,13 @@ type PostgreSQLServerClient struct {
 }
 
 // NewPostgreSQLServerClient creates and initializes a PostgreSQLServerClient instance.
-func NewPostgreSQLServerClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*PostgreSQLServerClient, error) {
-	client, err := NewClient(provider, clientset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
-	}
-
-	postgreSQLServerClient := postgresql.NewServersClient(client.SubscriptionID)
-	postgreSQLServerClient.Authorizer = client.Authorizer
+func NewPostgreSQLServerClient(c *Client) (*PostgreSQLServerClient, error) {
+	postgreSQLServerClient := postgresql.NewServersClient(c.SubscriptionID)
+	postgreSQLServerClient.Authorizer = c.Authorizer
 	postgreSQLServerClient.AddToUserAgent(UserAgent)
 
-	firewallRulesClient := postgresql.NewFirewallRulesClient(client.SubscriptionID)
-	firewallRulesClient.Authorizer = client.Authorizer
+	firewallRulesClient := postgresql.NewFirewallRulesClient(c.SubscriptionID)
+	firewallRulesClient.Authorizer = c.Authorizer
 	firewallRulesClient.AddToUserAgent(UserAgent)
 
 	return &PostgreSQLServerClient{
@@ -583,7 +571,7 @@ func PostgreSQLVirtualNetworkRuleStatusFromAzure(az postgresql.VirtualNetworkRul
 
 // SQLServerAPIFactory is an interface that can create instances of the SQLServerAPI interface
 type SQLServerAPIFactory interface {
-	CreateAPIInstance(*v1alpha2.Provider, kubernetes.Interface) (SQLServerAPI, error)
+	CreateAPIInstance(*Client) (SQLServerAPI, error)
 }
 
 // MySQLServerClientFactory implements the SQLServerAPIFactory by returning the concrete MySQLServerClient implementation
@@ -591,8 +579,8 @@ type MySQLServerClientFactory struct {
 }
 
 // CreateAPIInstance returns a concrete MySQLServerClient implementation
-func (f *MySQLServerClientFactory) CreateAPIInstance(provider *v1alpha2.Provider, clientset kubernetes.Interface) (SQLServerAPI, error) {
-	return NewMySQLServerClient(provider, clientset)
+func (f *MySQLServerClientFactory) CreateAPIInstance(c *Client) (SQLServerAPI, error) {
+	return NewMySQLServerClient(c)
 }
 
 // PostgreSQLServerClientFactory implements the SQLServerAPIFactory by returning the concrete PostgreSQLServerClient implementation
@@ -600,8 +588,8 @@ type PostgreSQLServerClientFactory struct {
 }
 
 // CreateAPIInstance returns a concrete PostgreSQLServerClient implementation
-func (f *PostgreSQLServerClientFactory) CreateAPIInstance(provider *v1alpha2.Provider, clientset kubernetes.Interface) (SQLServerAPI, error) {
-	return NewPostgreSQLServerClient(provider, clientset)
+func (f *PostgreSQLServerClientFactory) CreateAPIInstance(c *Client) (SQLServerAPI, error) {
+	return NewPostgreSQLServerClient(c)
 }
 
 // Helper functions

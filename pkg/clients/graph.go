@@ -27,11 +27,9 @@ import (
 	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
-	"k8s.io/client-go/kubernetes"
+	"github.com/pkg/errors"
 
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
-
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 )
 
 const (
@@ -64,18 +62,13 @@ type ApplicationParameters struct {
 }
 
 // NewApplicationClient creates and initializes a ApplicationClient instance.
-func NewApplicationClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*ApplicationClient, error) {
-	client, err := NewClient(provider, clientset)
+func NewApplicationClient(c *Client) (*ApplicationClient, error) {
+	graphAuthorizer, err := getGraphAuthorizer(c)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
+		return nil, errors.Wrap(err, "failed to get graph authorizer")
 	}
 
-	graphAuthorizer, err := getGraphAuthorizer(client)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get graph authorizer: %+v", err)
-	}
-
-	appClient := graphrbac.NewApplicationsClient(client.tenantID)
+	appClient := graphrbac.NewApplicationsClient(c.tenantID)
 	appClient.Authorizer = graphAuthorizer
 	appClient.AddToUserAgent(UserAgent)
 
@@ -148,18 +141,13 @@ type ServicePrincipalClient struct {
 }
 
 // NewServicePrincipalClient creates and initializes a ServicePrincipalClient instance.
-func NewServicePrincipalClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*ServicePrincipalClient, error) {
-	client, err := NewClient(provider, clientset)
+func NewServicePrincipalClient(c *Client) (*ServicePrincipalClient, error) {
+	graphAuthorizer, err := getGraphAuthorizer(c)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
+		return nil, errors.Wrap(err, "failed to get graph authorizer")
 	}
 
-	graphAuthorizer, err := getGraphAuthorizer(client)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get graph authorizer: %+v", err)
-	}
-
-	spClient := graphrbac.NewServicePrincipalsClient(client.tenantID)
+	spClient := graphrbac.NewServicePrincipalsClient(c.tenantID)
 	spClient.Authorizer = graphAuthorizer
 	spClient.AddToUserAgent(UserAgent)
 

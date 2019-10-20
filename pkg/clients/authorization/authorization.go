@@ -22,10 +22,7 @@ import (
 
 	authorizationmgmt "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization/authorizationapi"
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -46,20 +43,13 @@ type RoleAssignmentsClient struct {
 }
 
 // NewRoleAssignmentsClient returns a new Azure Role Assignments client.
-func NewRoleAssignmentsClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*RoleAssignmentsClient, error) {
-	client, err := azure.NewClient(provider, clientset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
-	}
-
-	roleAssignmentsClient := authorizationmgmt.NewRoleAssignmentsClient(client.SubscriptionID)
-	roleAssignmentsClient.Authorizer = client.Authorizer
-	if err := roleAssignmentsClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
+func NewRoleAssignmentsClient(c *azure.Client) (*RoleAssignmentsClient, error) {
+	roleAssignmentsClient := authorizationmgmt.NewRoleAssignmentsClient(c.SubscriptionID)
+	roleAssignmentsClient.Authorizer = c.Authorizer
+	roleAssignmentsClient.AddToUserAgent(azure.UserAgent)
 
 	return &RoleAssignmentsClient{
-		subscriptionID: client.SubscriptionID,
+		subscriptionID: c.SubscriptionID,
 		client:         roleAssignmentsClient,
 	}, nil
 }
