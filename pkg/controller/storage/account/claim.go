@@ -34,11 +34,65 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/storage/v1alpha2"
 )
 
-// ClaimController is responsible for adding the Account claim controller and its
-// corresponding reconciler to the manager with any runtime configuration.
+// A ClaimSchedulingController reconciles Bucket claims that include a class
+// selector but omit their class and resource references by picking a random
+// matching Azure Account class, if any.
+type ClaimSchedulingController struct{}
+
+// SetupWithManager sets up the ClaimSchedulingController using the supplied
+// manager.
+func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
+		storagev1alpha1.BucketKind,
+		v1alpha2.AccountKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&storagev1alpha1.Bucket{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimSchedulingReconciler(mgr,
+			resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
+			resource.ClassKind(v1alpha2.AccountClassGroupVersionKind),
+		))
+}
+
+// A ClaimDefaultingController reconciles Bucket claims that omit their resource
+// ref, class ref, and class selector by choosing a default Azure Account
+// resource class if one exists.
+type ClaimDefaultingController struct{}
+
+// SetupWithManager sets up the ClaimDefaultingController using the supplied
+// manager.
+func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
+		storagev1alpha1.BucketKind,
+		v1alpha2.AccountKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&storagev1alpha1.Bucket{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasNoClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimDefaultingReconciler(mgr,
+			resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
+			resource.ClassKind(v1alpha2.AccountClassGroupVersionKind),
+		))
+}
+
+// A ClaimController reconciles Bucket claims with Azure Account resources,
+// dynamically provisioning them if needed.
 type ClaimController struct{}
 
-// SetupWithManager adds a controller that reconciles Bucket resource claims.
+// SetupWithManager sets up the ClaimController using the supplied manager.
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		storagev1alpha1.BucketKind,

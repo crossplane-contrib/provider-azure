@@ -32,12 +32,66 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 )
 
-// MySQLInstanceClaimController is responsible for adding the MySQLInstance
-// claim controller and its corresponding reconciler to the manager with any runtime configuration.
-type MySQLInstanceClaimController struct{}
+// A ClaimSchedulingController reconciles MySQLInstance claims that include a
+// class selector but omit their class and resource references by picking a
+// random matching Azure SQLServer class, if any.
+type ClaimSchedulingController struct{}
 
-// SetupWithManager adds a controller that reconciles MySQLInstance instance claims.
-func (c *MySQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
+// SetupWithManager sets up the ClaimSchedulingController using the supplied
+// manager.
+func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
+		databasev1alpha1.MySQLInstanceKind,
+		v1alpha2.MysqlServerKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&databasev1alpha1.MySQLInstance{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimSchedulingReconciler(mgr,
+			resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
+			resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		))
+}
+
+// A ClaimDefaultingController reconciles MySQLInstance claims that omit their
+// resource ref, class ref, and class selector by choosing a default Azure
+// SQLServer resource class if one exists.
+type ClaimDefaultingController struct{}
+
+// SetupWithManager sets up the ClaimDefaultingController using the supplied
+// manager.
+func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
+		databasev1alpha1.MySQLInstanceKind,
+		v1alpha2.MysqlServerKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&databasev1alpha1.MySQLInstance{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasNoClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimDefaultingReconciler(mgr,
+			resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
+			resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		))
+}
+
+// A ClaimController reconciles MySQLInstance claims with Azure MysqlServer
+// resources, dynamically provisioning them if needed.
+type ClaimController struct{}
+
+// SetupWithManager sets up the ClaimController using the supplied manager.
+func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
 		v1alpha2.MysqlServerKind,

@@ -32,11 +32,65 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
 )
 
-// RedisClaimController is responsible for adding the Redis
-// claim controller and its corresponding reconciler to the manager with any runtime configuration.
+// A RedisClaimSchedulingController reconciles RedisCluster claims that include
+// a class selector but omit their class and resource references by picking a
+// random matching Azure Redis class, if any.
+type RedisClaimSchedulingController struct{}
+
+// SetupWithManager sets up the RedisClaimSchedulingController using the
+// supplied manager.
+func (c *RedisClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
+		cachev1alpha1.RedisClusterKind,
+		v1alpha2.RedisKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&cachev1alpha1.RedisCluster{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimSchedulingReconciler(mgr,
+			resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
+			resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
+		))
+}
+
+// A RedisClaimDefaultingController reconciles RedisCluster claims that omit
+// their resource ref, class ref, and class selector by choosing a default Azure
+// Redis resource class if one exists.
+type RedisClaimDefaultingController struct{}
+
+// SetupWithManager sets up the RedisClaimDefaultingController using the
+// supplied manager.
+func (c *RedisClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
+		cachev1alpha1.RedisClusterKind,
+		v1alpha2.RedisKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&cachev1alpha1.RedisCluster{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasNoClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimDefaultingReconciler(mgr,
+			resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
+			resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
+		))
+}
+
+// A RedisClaimController reconciles RedisCluster claims with Azure Redis
+// resources, dynamically provisioning them if needed.
 type RedisClaimController struct{}
 
-// SetupWithManager adds a controller that reconciles RedisCluster resource claims.
+// SetupWithManager sets up the RedisClaimController using the supplied manager.
 func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		cachev1alpha1.RedisClusterKind,
@@ -66,9 +120,9 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// ConfigureRedis configures the supplied resource (presumed
-// to be a Redis) using the supplied resource claim (presumed
-// to be a RedisCluster) and resource class.
+// ConfigureRedis configures the supplied resource (presumed to be a Redis)
+// using the supplied resource claim (presumed to be a RedisCluster) and
+// resource class.
 func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	rc, cmok := cm.(*cachev1alpha1.RedisCluster)
 	if !cmok {

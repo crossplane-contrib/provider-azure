@@ -42,11 +42,27 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 	// very simple function that is registering controllers in a straight-forward manner.  It does
 	// not really branch or behave in a complicated way, so we are ignoring gocyclo here.
 
+	if err := (&cache.RedisClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&cache.RedisClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
 	if err := (&cache.RedisClaimController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
 	if err := (&cache.RedisController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&compute.AKSClusterClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&compute.AKSClusterClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
@@ -60,7 +76,15 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 		return err
 	}
 
-	if err := (&mysqlserver.MySQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
+	if err := (&mysqlserver.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&mysqlserver.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&mysqlserver.ClaimController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
@@ -72,7 +96,15 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 		return err
 	}
 
-	if err := (&postgresqlserver.PostgreSQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
+	if err := (&postgresqlserver.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&postgresqlserver.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&postgresqlserver.ClaimController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
@@ -96,11 +128,27 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 		return err
 	}
 
+	if err := (&account.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&account.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
 	if err := (&account.ClaimController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
 	if err := (&account.Controller{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&container.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
+		return err
+	}
+
+	if err := (&container.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
@@ -111,5 +159,6 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 	if err := (&container.Controller{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
+
 	return nil
 }

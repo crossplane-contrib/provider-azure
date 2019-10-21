@@ -32,14 +32,66 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 )
 
-// NOTE(hasheddan): consider combining into single controller
+// A ClaimSchedulingController reconciles PostgreSQLInstance claims that include
+// a class selector but omit their class and resource references by picking a
+// random matching Azure SQLServer class, if any.
+type ClaimSchedulingController struct{}
 
-// PostgreSQLInstanceClaimController is responsible for adding the PostgreSQLInstance
-// claim controller and its corresponding reconciler to the manager with any runtime configuration.
-type PostgreSQLInstanceClaimController struct{}
+// SetupWithManager sets up the ClaimSchedulingController using the supplied
+// manager.
+func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
+		databasev1alpha1.PostgreSQLInstanceKind,
+		v1alpha2.PostgresqlServerKind,
+		v1alpha2.Group))
 
-// SetupWithManager adds a controller that reconciles PostgreSQLInstance instance claims.
-func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&databasev1alpha1.PostgreSQLInstance{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimSchedulingReconciler(mgr,
+			resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
+			resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		))
+}
+
+// A ClaimDefaultingController reconciles PostgreSQLInstance claims that omit
+// their resource ref, class ref, and class selector by choosing a default Azure
+// SQLServer resource class if one exists.
+type ClaimDefaultingController struct{}
+
+// SetupWithManager sets up the ClaimDefaultingController using the supplied
+// manager.
+func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
+		databasev1alpha1.PostgreSQLInstanceKind,
+		v1alpha2.PostgresqlServerKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&databasev1alpha1.PostgreSQLInstance{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasNoClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimDefaultingReconciler(mgr,
+			resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
+			resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+		))
+}
+
+// A ClaimController reconciles PostgreSQLInstance claims with Azure
+// PostgresqlServer resources, dynamically provisioning them if needed.
+type ClaimController struct{}
+
+// SetupWithManager sets up the ClaimController using the supplied manager.
+func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
 		v1alpha2.PostgresqlServerKind,

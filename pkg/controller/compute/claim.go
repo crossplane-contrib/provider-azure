@@ -33,11 +33,66 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
 )
 
-// AKSClusterClaimController is responsible for adding the AKSCluster
-// claim controller and its corresponding reconciler to the manager with any runtime configuration.
+// A AKSClusterClaimSchedulingController reconciles KubernetesCluster claims
+// that include a class selector but omit their class and resource references by
+// picking a random matching Azure AKSCluster class, if any.
+type AKSClusterClaimSchedulingController struct{}
+
+// SetupWithManager sets up the AKSClusterClaimSchedulingController using the
+// supplied manager.
+func (c *AKSClusterClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
+		computev1alpha1.KubernetesClusterKind,
+		v1alpha2.AKSClusterKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&computev1alpha1.KubernetesCluster{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimSchedulingReconciler(mgr,
+			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
+			resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
+		))
+}
+
+// A AKSClusterClaimDefaultingController reconciles KubernetesCluster claims
+// that omit their resource ref, class ref, and class selector by choosing a
+// default Azure AKSCluster resource class if one exists.
+type AKSClusterClaimDefaultingController struct{}
+
+// SetupWithManager sets up the AKSClusterClaimDefaultingController using the
+// supplied manager.
+func (c *AKSClusterClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
+		computev1alpha1.KubernetesClusterKind,
+		v1alpha2.AKSClusterKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&computev1alpha1.KubernetesCluster{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasNoClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimDefaultingReconciler(mgr,
+			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
+			resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
+		))
+}
+
+// An AKSClusterClaimController reconciles KubernetesCluster claims with
+// AKSCluster resources, provisioning them if necessary.
 type AKSClusterClaimController struct{}
 
-// SetupWithManager adds a controller that reconciles KubernetesCluster resource claims.
+// SetupWithManager sets up the AKSClusterClaimController using the supplied
+// manager.
 func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		computev1alpha1.KubernetesClusterKind,
