@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package database
+package mysqlserver
 
 import (
 	"context"
@@ -33,81 +33,9 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 )
 
-var (
-	_ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigurePostgresqlServer)
-	_ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureMysqlServer)
-)
+var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureMysqlServer)
 
-func TestConfigurePostgresqlServer(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		cm  resource.Claim
-		cs  resource.Class
-		mg  resource.Managed
-	}
-
-	type want struct {
-		mg  resource.Managed
-		err error
-	}
-
-	claimUID := types.UID("definitely-a-uuid")
-	providerName := "coolprovider"
-
-	cases := map[string]struct {
-		args args
-		want want
-	}{
-		"Successful": {
-			args: args{
-				cm: &databasev1alpha1.PostgreSQLInstance{
-					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
-					Spec:       databasev1alpha1.PostgreSQLInstanceSpec{EngineVersion: "9.6"},
-				},
-				cs: &v1alpha2.SQLServerClass{
-					SpecTemplate: v1alpha2.SQLServerClassSpecTemplate{
-						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
-							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
-						},
-					},
-				},
-				mg: &v1alpha2.PostgresqlServer{},
-			},
-			want: want{
-				mg: &v1alpha2.PostgresqlServer{
-					Spec: v1alpha2.SQLServerSpec{
-						ResourceSpec: runtimev1alpha1.ResourceSpec{
-							ReclaimPolicy: runtimev1alpha1.ReclaimDelete,
-							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
-								Name: string(claimUID),
-							},
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
-						},
-						SQLServerParameters: v1alpha2.SQLServerParameters{
-							Version: "9.6",
-						},
-					},
-				},
-				err: nil,
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			err := ConfigurePostgresqlServer(tc.args.ctx, tc.args.cm, tc.args.cs, tc.args.mg)
-			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("ConfigurePostgresqlServer(...): -want error, +got error:\n%s", diff)
-			}
-			if diff := cmp.Diff(tc.want.mg, tc.args.mg, test.EquateConditions()); diff != "" {
-				t.Errorf("ConfigurePostgresqlServer(...) Managed: -want, +got:\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigureMyPostgresqlServer(t *testing.T) {
+func TestConfigureMysqlServer(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim

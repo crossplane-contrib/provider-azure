@@ -58,25 +58,6 @@ var (
 	ctx = context.Background()
 )
 
-func TestSQLServerStatusMessage(t *testing.T) {
-	g := gomega.NewGomegaWithT(t)
-
-	cases := []struct {
-		state           mysql.ServerState
-		expectedMessage string
-	}{
-		{mysql.ServerStateDisabled, "SQL Server instance foo is disabled"},
-		{mysql.ServerStateDropping, "SQL Server instance foo is dropping"},
-		{mysql.ServerStateReady, "SQL Server instance foo is ready"},
-		{mysql.ServerState("FooState"), "SQL Server instance foo is in an unknown state FooState"},
-	}
-
-	for _, tt := range cases {
-		message := SQLServerStatusMessage("foo", string(tt.state))
-		g.Expect(message).To(gomega.Equal(tt.expectedMessage))
-	}
-}
-
 func TestSQLServerSkuName(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 

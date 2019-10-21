@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package database
+package mysqlserver
 
 import (
 	"context"
@@ -31,84 +31,6 @@ import (
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 )
-
-// NOTE(hasheddan): consider combining into single controller
-
-// PostgreSQLInstanceClaimController is responsible for adding the PostgreSQLInstance
-// claim controller and its corresponding reconciler to the manager with any runtime configuration.
-type PostgreSQLInstanceClaimController struct{}
-
-// SetupWithManager adds a controller that reconciles PostgreSQLInstance instance claims.
-func (c *PostgreSQLInstanceClaimController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
-		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha2.PostgresqlServerKind,
-		v1alpha2.Group))
-
-	r := resource.NewClaimReconciler(mgr,
-		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
-		resource.WithManagedConfigurators(
-			resource.ManagedConfiguratorFn(ConfigurePostgresqlServer),
-			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
-		))
-
-	p := resource.NewPredicates(resource.AnyOf(
-		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
-		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind)),
-		resource.IsManagedKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind), mgr.GetScheme()),
-	))
-
-	return ctrl.NewControllerManagedBy(mgr).
-		Named(name).
-		Watches(&source.Kind{Type: &v1alpha2.PostgresqlServer{}}, &resource.EnqueueRequestForClaim{}).
-		For(&databasev1alpha1.PostgreSQLInstance{}).
-		WithEventFilter(p).
-		Complete(r)
-}
-
-// ConfigurePostgresqlServer configures the supplied resource (presumed to be a
-// PostgresqlServer) using the supplied resource claim (presumed to be a
-// PostgreSQLInstance) and resource class.
-func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
-	pg, cmok := cm.(*databasev1alpha1.PostgreSQLInstance)
-	if !cmok {
-		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.PostgreSQLInstanceGroupVersionKind)
-	}
-
-	rs, csok := cs.(*v1alpha2.SQLServerClass)
-	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.SQLServerClassGroupVersionKind)
-	}
-
-	s, mgok := mg.(*v1alpha2.PostgresqlServer)
-	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.PostgresqlServerGroupVersionKind)
-	}
-
-	spec := &v1alpha2.SQLServerSpec{
-		ResourceSpec: runtimev1alpha1.ResourceSpec{
-			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
-		},
-		SQLServerParameters: rs.SpecTemplate.SQLServerParameters,
-	}
-
-	if pg.Spec.EngineVersion != "" {
-		spec.Version = pg.Spec.EngineVersion
-	}
-
-	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
-		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
-		Name:      string(cm.GetUID()),
-	}
-	spec.ProviderReference = rs.SpecTemplate.ProviderReference
-	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
-
-	s.Spec = *spec
-
-	return nil
-}
 
 // MySQLInstanceClaimController is responsible for adding the MySQLInstance
 // claim controller and its corresponding reconciler to the manager with any runtime configuration.

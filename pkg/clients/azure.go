@@ -184,3 +184,9 @@ func ToString(s *string) string {
 func ToInt(i *int32) int {
 	return int(to.Int32(i))
 }
+
+// ToBool converts the supplied pointer to bool to a bool, returning the
+// false if the pointer is nil.
+func ToBool(b *bool) bool {
+	return to.Bool(b)
+}

@@ -22,7 +22,7 @@ spec:
     listKind: PostgresqlServerVirtualNetworkRuleList
     plural: postgresqlservervirtualnetworkrules
     singular: postgresqlservervirtualnetworkrule
-  scope: ""
+  scope: Cluster
   subresources:
     status: {}
   validation:

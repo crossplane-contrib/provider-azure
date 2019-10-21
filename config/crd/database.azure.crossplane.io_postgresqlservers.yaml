@@ -29,7 +29,8 @@ spec:
     plural: postgresqlservers
     singular: postgresqlserver
   scope: Cluster
-  subresources: {}
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: A PostgresqlServer is a managed resource that represents an Azure
@@ -311,14 +312,6 @@ spec:
             providerID:
               description: ProviderID is the external ID to identify this resource
                 in the cloud provider.
-              type: string
-            runningOperation:
-              description: RunningOperation stores any current long running operation
-                for this instance across reconciliation attempts.
-              type: string
-            runningOperationType:
-              description: RunningOperationType is the type of the currently running
-                operation.
               type: string
             state:
               description: State of this SQLServer.

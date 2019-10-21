@@ -22,7 +22,7 @@ spec:
     listKind: MysqlServerVirtualNetworkRuleList
     plural: mysqlservervirtualnetworkrules
     singular: mysqlservervirtualnetworkrule
-  scope: ""
+  scope: Cluster
   subresources:
     status: {}
   validation:

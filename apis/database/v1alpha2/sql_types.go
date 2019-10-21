@@ -20,8 +20,6 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 )
 
 const (
@@ -34,17 +32,6 @@ const (
 	OperationCreateFirewallRules = "createFirewallRules"
 )
 
-// +kubebuilder:object:generate=false
-
-// SQLServer represents a generic Azure SQL server.
-type SQLServer interface {
-	resource.Managed
-
-	GetSpec() *SQLServerSpec
-	GetStatus() *SQLServerStatus
-	SetStatus(*SQLServerStatus)
-}
-
 // +kubebuilder:object:root=true
 
 // A MysqlServer is a managed resource that represents an Azure MySQL Database
@@ -54,6 +41,7 @@ type SQLServer interface {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 type MysqlServer struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -61,21 +49,6 @@ type MysqlServer struct {
 
 	Spec   SQLServerSpec   `json:"spec,omitempty"`
 	Status SQLServerStatus `json:"status,omitempty"`
-}
-
-// GetSpec returns the MySQL server's spec.
-func (s *MysqlServer) GetSpec() *SQLServerSpec {
-	return &s.Spec
-}
-
-// GetStatus returns the MySQL server's status.
-func (s *MysqlServer) GetStatus() *SQLServerStatus {
-	return &s.Status
-}
-
-// SetStatus sets the MySQL server's status.
-func (s *MysqlServer) SetStatus(status *SQLServerStatus) {
-	s.Status = *status
 }
 
 // +kubebuilder:object:root=true
@@ -96,6 +69,7 @@ type MysqlServerList struct {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 type PostgresqlServer struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -103,21 +77,6 @@ type PostgresqlServer struct {
 
 	Spec   SQLServerSpec   `json:"spec,omitempty"`
 	Status SQLServerStatus `json:"status,omitempty"`
-}
-
-// GetSpec gets the PostgreSQL server's spec.
-func (s *PostgresqlServer) GetSpec() *SQLServerSpec {
-	return &s.Spec
-}
-
-// GetStatus gets the PostgreSQL server's status.
-func (s *PostgresqlServer) GetStatus() *SQLServerStatus {
-	return &s.Status
-}
-
-// SetStatus sets the PostgreSQL server's status.
-func (s *PostgresqlServer) SetStatus(status *SQLServerStatus) {
-	s.Status = *status
 }
 
 // +kubebuilder:object:root=true
@@ -215,13 +174,6 @@ type SQLServerStatus struct {
 
 	// Endpoint of the MySQL Server instance used in connection strings.
 	Endpoint string `json:"endpoint,omitempty"`
-
-	// RunningOperation stores any current long running operation for this
-	// instance across reconciliation attempts.
-	RunningOperation string `json:"runningOperation,omitempty"`
-
-	// RunningOperationType is the type of the currently running operation.
-	RunningOperationType string `json:"runningOperationType,omitempty"`
 }
 
 // PricingTierSpec represents the performance and cost oriented properties of a
@@ -316,6 +268,7 @@ type VirtualNetworkRuleStatus struct {
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 type PostgresqlServerVirtualNetworkRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -341,6 +294,7 @@ type PostgresqlServerVirtualNetworkRuleList struct {
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 type MysqlServerVirtualNetworkRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

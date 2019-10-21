@@ -19,12 +19,12 @@ package controller
 import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
 	computeclients "github.com/crossplaneio/stack-azure/pkg/clients/compute"
 	"github.com/crossplaneio/stack-azure/pkg/controller/cache"
 	"github.com/crossplaneio/stack-azure/pkg/controller/compute"
-	"github.com/crossplaneio/stack-azure/pkg/controller/database"
+	"github.com/crossplaneio/stack-azure/pkg/controller/database/mysqlserver"
 	"github.com/crossplaneio/stack-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
+	"github.com/crossplaneio/stack-azure/pkg/controller/database/postgresqlserver"
 	"github.com/crossplaneio/stack-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
 	"github.com/crossplaneio/stack-azure/pkg/controller/network/subnet"
 	"github.com/crossplaneio/stack-azure/pkg/controller/network/virtualnetwork"
@@ -60,13 +60,11 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 		return err
 	}
 
-	if err := (&database.MySQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
+	if err := (&mysqlserver.MySQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
-	if err := (&database.MysqlServerController{
-		Reconciler: database.NewMysqlServerReconciler(mgr, &azureclients.MySQLServerClientFactory{}),
-	}).SetupWithManager(mgr); err != nil {
+	if err := (&mysqlserver.Controller{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
@@ -74,13 +72,11 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyc
 		return err
 	}
 
-	if err := (&database.PostgreSQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
+	if err := (&postgresqlserver.PostgreSQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
-	if err := (&database.PostgresqlServerController{
-		Reconciler: database.NewPostgreSQLServerReconciler(mgr, &azureclients.PostgreSQLServerClientFactory{}),
-	}).SetupWithManager(mgr); err != nil {
+	if err := (&postgresqlserver.Controller{}).SetupWithManager(mgr); err != nil {
 		return err
 	}
 
