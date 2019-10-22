@@ -37,128 +37,46 @@ import (
 type Controllers struct{}
 
 // SetupWithManager adds all Azure controllers to the manager.
-func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyclo
-	// This function has a cyclomatic complexity greater than the threshold, but it is actually a
-	// very simple function that is registering controllers in a straight-forward manner.  It does
-	// not really branch or behave in a complicated way, so we are ignoring gocyclo here.
+func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error {
+	aksReconciler := compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{})
 
-	if err := (&cache.RedisClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
-		return err
+	controllers := []interface {
+		SetupWithManager(ctrl.Manager) error
+	}{
+		&cache.RedisClaimSchedulingController{},
+		&cache.RedisClaimDefaultingController{},
+		&cache.RedisClaimController{},
+		&cache.RedisController{},
+		&compute.AKSClusterClaimSchedulingController{},
+		&compute.AKSClusterClaimDefaultingController{},
+		&compute.AKSClusterClaimController{},
+		&compute.AKSClusterController{Reconciler: aksReconciler},
+		&mysqlserver.ClaimSchedulingController{},
+		&mysqlserver.ClaimDefaultingController{},
+		&mysqlserver.ClaimController{},
+		&mysqlserver.Controller{},
+		&mysqlservervirtualnetworkrule.Controller{},
+		&postgresqlserver.ClaimSchedulingController{},
+		&postgresqlserver.ClaimDefaultingController{},
+		&postgresqlserver.ClaimController{},
+		&postgresqlserver.Controller{},
+		&postgresqlservervirtualnetworkrule.Controller{},
+		&virtualnetwork.Controller{},
+		&subnet.Controller{},
+		&resourcegroup.Controller{},
+		&account.ClaimSchedulingController{},
+		&account.ClaimDefaultingController{},
+		&account.ClaimController{},
+		&account.Controller{},
+		&container.ClaimDefaultingController{},
+		&container.ClaimSchedulingController{},
+		&container.ClaimController{},
+		&container.Controller{},
 	}
-
-	if err := (&cache.RedisClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
-		return err
+	for _, c := range controllers {
+		if err := c.SetupWithManager(mgr); err != nil {
+			return err
+		}
 	}
-
-	if err := (&cache.RedisClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&cache.RedisController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&compute.AKSClusterClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&compute.AKSClusterClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&compute.AKSClusterClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&compute.AKSClusterController{
-		Reconciler: compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{}),
-	}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&mysqlserver.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&mysqlserver.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&mysqlserver.ClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&mysqlserver.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&mysqlservervirtualnetworkrule.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&postgresqlserver.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&postgresqlserver.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&postgresqlserver.ClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&postgresqlserver.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&postgresqlservervirtualnetworkrule.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&virtualnetwork.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&subnet.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&resourcegroup.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&account.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&account.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&account.ClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&account.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&container.ClaimDefaultingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&container.ClaimSchedulingController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&container.ClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&container.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
 	return nil
 }
