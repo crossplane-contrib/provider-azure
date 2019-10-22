@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
@@ -108,7 +109,7 @@ func withDeletionTimestamp(t time.Time) resourceModifier {
 // 	return func(r *azurev1alpha2.ResourceGroup) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
 // }
 
-func resource(rm ...resourceModifier) *azurev1alpha2.ResourceGroup {
+func resourceGrp(rm ...resourceModifier) *azurev1alpha2.ResourceGroup {
 	r := &azurev1alpha2.ResourceGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
@@ -150,8 +151,8 @@ func TestCreate(t *testing.T) {
 					return resources.Group{}, nil
 				},
 			}},
-			r: resource(),
-			want: resource(
+			r: resourceGrp(),
+			want: resourceGrp(
 				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess()),
 				withFinalizers(finalizer),
 				withName(name),
@@ -165,8 +166,8 @@ func TestCreate(t *testing.T) {
 					return resources.Group{}, errorBoom
 				},
 			}},
-			r: resource(),
-			want: resource(
+			r: resourceGrp(),
+			want: resourceGrp(
 				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileError(errorBoom)),
 			),
 			wantRequeue: true,
@@ -178,10 +179,10 @@ func TestCreate(t *testing.T) {
 					return resources.Group{}, errorBoom
 				},
 			}},
-			r: resource(
+			r: resourceGrp(
 				withSpecName("foo."),
 			),
-			want: resource(
+			want: resourceGrp(
 				withSpecName("foo."),
 				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileError(errorBoom)),
 			),
@@ -219,11 +220,11 @@ func TestSync(t *testing.T) {
 					return autorest.Response{Response: &http.Response{StatusCode: 204}}, nil
 				},
 			}},
-			r: resource(
+			r: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 			),
-			want: resource(
+			want: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 				withConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()),
@@ -237,11 +238,11 @@ func TestSync(t *testing.T) {
 					return autorest.Response{Response: &http.Response{StatusCode: 404}}, nil
 				},
 			}},
-			r: resource(
+			r: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 			),
-			want: resource(
+			want: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 				withConditions(runtimev1alpha1.ReconcileError(errDeleted)),
@@ -255,11 +256,11 @@ func TestSync(t *testing.T) {
 					return autorest.Response{Response: &http.Response{StatusCode: 400}}, nil
 				},
 			}},
-			r: resource(
+			r: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 			),
-			want: resource(
+			want: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 				withConditions(runtimev1alpha1.ReconcileSuccess()),
@@ -273,11 +274,11 @@ func TestSync(t *testing.T) {
 					return autorest.Response{}, errorBoom
 				},
 			}},
-			r: resource(
+			r: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 			),
-			want: resource(
+			want: resourceGrp(
 				withFinalizers(finalizer),
 				withName(name),
 				withConditions(runtimev1alpha1.ReconcileError(errorBoom)),
@@ -316,8 +317,8 @@ func TestDelete(t *testing.T) {
 					return resources.GroupsDeleteFuture{}, nil
 				},
 			}},
-			r: resource(withFinalizers(finalizer), withReclaimPolicy(runtimev1alpha1.ReclaimRetain)),
-			want: resource(
+			r: resourceGrp(withFinalizers(finalizer), withReclaimPolicy(runtimev1alpha1.ReclaimRetain)),
+			want: resourceGrp(
 				withReclaimPolicy(runtimev1alpha1.ReclaimRetain),
 				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess()),
 			),
@@ -330,8 +331,8 @@ func TestDelete(t *testing.T) {
 					return resources.GroupsDeleteFuture{}, nil
 				},
 			}},
-			r: resource(withFinalizers(finalizer), withReclaimPolicy(runtimev1alpha1.ReclaimDelete)),
-			want: resource(
+			r: resourceGrp(withFinalizers(finalizer), withReclaimPolicy(runtimev1alpha1.ReclaimDelete)),
+			want: resourceGrp(
 				withReclaimPolicy(runtimev1alpha1.ReclaimDelete),
 				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess()),
 			),
@@ -344,8 +345,8 @@ func TestDelete(t *testing.T) {
 					return resources.GroupsDeleteFuture{}, errorBoom
 				},
 			}},
-			r: resource(withFinalizers(finalizer), withReclaimPolicy(runtimev1alpha1.ReclaimDelete)),
-			want: resource(
+			r: resourceGrp(withFinalizers(finalizer), withReclaimPolicy(runtimev1alpha1.ReclaimDelete)),
+			want: resourceGrp(
 				withFinalizers(finalizer),
 				withReclaimPolicy(runtimev1alpha1.ReclaimDelete),
 				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileError(errorBoom)),
@@ -393,7 +394,7 @@ func TestConnect(t *testing.T) {
 					return &fakerg.MockClient{}, nil
 				},
 			},
-			i:    resource(),
+			i:    resourceGrp(),
 			want: &azureResourceGroup{client: &fakerg.MockClient{}},
 		},
 		{
@@ -406,7 +407,7 @@ func TestConnect(t *testing.T) {
 					return &fakerg.MockClient{}, nil
 				},
 			},
-			i:       resource(),
+			i:       resourceGrp(),
 			wantErr: errors.WithStack(errors.Errorf("cannot get provider /%s:  \"%s\" not found", providerName, providerName)),
 		},
 		{
@@ -425,7 +426,7 @@ func TestConnect(t *testing.T) {
 					return &fakerg.MockClient{}, nil
 				},
 			},
-			i:       resource(),
+			i:       resourceGrp(),
 			wantErr: errors.WithStack(errors.Errorf("cannot get provider secret %s/%s:  \"%s\" not found", namespace, providerSecretName, providerSecretName)),
 		},
 		{
@@ -442,7 +443,7 @@ func TestConnect(t *testing.T) {
 				}},
 				newClient: func(_ []byte) (resourcegroup.GroupsClient, error) { return nil, errorBoom },
 			},
-			i:       resource(),
+			i:       resourceGrp(),
 			want:    &azureResourceGroup{},
 			wantErr: errors.Wrap(errorBoom, "cannot create new Azure Resource Group client"),
 		},
@@ -505,11 +506,12 @@ func TestReconcile(t *testing.T) {
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resource(withName(name), withDeletionTimestamp(time.Now())))
+						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp(withName(name), withDeletionTimestamp(time.Now())))
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 				},
+				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: false},
@@ -523,11 +525,12 @@ func TestReconcile(t *testing.T) {
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resource())
+						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp())
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 				},
+				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: true},
@@ -543,12 +546,13 @@ func TestReconcile(t *testing.T) {
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resource(withName(name)))
+						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp(withName(name)))
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
 				},
+				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: false},
@@ -590,11 +594,11 @@ func TestReconcile(t *testing.T) {
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resource())
+						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp())
 						return nil
 					},
 					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
-						want := resource(withConditions(runtimev1alpha1.ReconcileError(errorBoom)))
+						want := resourceGrp(withConditions(runtimev1alpha1.ReconcileError(errorBoom)))
 						got := obj.(*azurev1alpha2.ResourceGroup)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
 							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
@@ -602,6 +606,7 @@ func TestReconcile(t *testing.T) {
 						return nil
 					},
 				},
+				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: true},

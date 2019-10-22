@@ -52,6 +52,16 @@ const (
 	requeueAfterOnWait    = 30 * time.Second
 )
 
+// Amounts of time we wait before requeuing a reconcile.
+const (
+	aLongWait = 60 * time.Second
+)
+
+// Error strings
+const (
+	errUpdateManagedStatus = "cannot update managed resource status"
+)
+
 var (
 	resultRequeue    = reconcile.Result{Requeue: true}
 	requeueOnSuccess = reconcile.Result{RequeueAfter: requeueAfterOnSuccess}
@@ -64,6 +74,7 @@ var (
 type Reconciler struct {
 	client.Client
 	syncdeleterMaker
+	resource.ManagedReferenceResolver
 }
 
 // Controller is responsible for adding the Account controller and its
@@ -74,8 +85,9 @@ type Controller struct{}
 // The Manager will set fields on the Controller and Start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
-		Client:           mgr.GetClient(),
-		syncdeleterMaker: &accountSyncdeleterMaker{mgr.GetClient()},
+		Client:                   mgr.GetClient(),
+		syncdeleterMaker:         &accountSyncdeleterMaker{mgr.GetClient()},
+		ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -99,6 +111,21 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 			return reconcile.Result{}, nil
 		}
 		return reconcile.Result{}, err
+	}
+
+	if !resource.IsConditionTrue(b.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
+		if err := r.ResolveReferences(ctx, b); err != nil {
+			condition := runtimev1alpha1.ReconcileError(err)
+			if resource.IsReferencesAccessError(err) {
+				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
+			}
+
+			b.Status.SetConditions(condition)
+			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.Update(ctx, b), errUpdateManagedStatus)
+		}
+
+		// Add ReferenceResolutionSuccess to the conditions
+		b.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
 	}
 
 	bh, err := r.newSyncdeleter(ctx, b)

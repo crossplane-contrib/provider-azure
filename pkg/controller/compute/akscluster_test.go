@@ -232,7 +232,7 @@ func TestReconcile(t *testing.T) {
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
 		ServicePrincipalID:  "da804153-3faa-4c73-9fcb-0961387a31f9",
 	}
-	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
+	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess(), runtimev1alpha1.ReferenceResolutionSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// the service principal secret (note this is not the connection secret) should have been created
@@ -255,7 +255,7 @@ func TestReconcile(t *testing.T) {
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
 		ServicePrincipalID:  "da804153-3faa-4c73-9fcb-0961387a31f9",
 	}
-	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
+	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess(), runtimev1alpha1.ReferenceResolutionSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// third reconcile should find the AKS cluster instance from Azure and update the full status of the CRD
@@ -271,7 +271,7 @@ func TestReconcile(t *testing.T) {
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
 		ServicePrincipalID:  "da804153-3faa-4c73-9fcb-0961387a31f9",
 	}
-	expectedStatus.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
+	expectedStatus.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess(), runtimev1alpha1.ReferenceResolutionSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// verify that a finalizer was added to the CRD
@@ -366,7 +366,7 @@ func TestReconcileInSubnet(t *testing.T) {
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
 		ServicePrincipalID:  "da804153-3faa-4c73-9fcb-0961387a31f9",
 	}
-	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
+	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess(), runtimev1alpha1.ReferenceResolutionSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// the service principal secret (note this is not the connection secret) should have been created
@@ -389,7 +389,7 @@ func TestReconcileInSubnet(t *testing.T) {
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
 		ServicePrincipalID:  "da804153-3faa-4c73-9fcb-0961387a31f9",
 	}
-	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
+	expectedStatus.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess(), runtimev1alpha1.ReferenceResolutionSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// third reconcile should find the AKS cluster instance from Azure and update the full status of the CRD
@@ -405,7 +405,7 @@ func TestReconcileInSubnet(t *testing.T) {
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
 		ServicePrincipalID:  "da804153-3faa-4c73-9fcb-0961387a31f9",
 	}
-	expectedStatus.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
+	expectedStatus.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess(), runtimev1alpha1.ReferenceResolutionSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// verify that a finalizer was added to the CRD

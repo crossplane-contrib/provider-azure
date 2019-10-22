@@ -708,6 +708,7 @@ func TestReconcile(t *testing.T) {
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 				},
+				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
 			want:    reconcile.Result{Requeue: false},
@@ -726,6 +727,7 @@ func TestReconcile(t *testing.T) {
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 				},
+				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
 			want:    reconcile.Result{Requeue: true},
@@ -749,6 +751,7 @@ func TestReconcile(t *testing.T) {
 					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
 				},
 				publisher: resource.PublisherChain{}, // A no-op publisher.
+				resolver:  resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
 			want:    reconcile.Result{Requeue: false},
@@ -835,13 +838,45 @@ func TestReconcile(t *testing.T) {
 					},
 				},
 				publisher: resource.ManagedConnectionPublisherFns{
-					PublishConnectionFn: func(_ context.Context, _ resource.Managed, _ resource.ConnectionDetails) error {
-						return errorBoom
-					},
+					PublishConnectionFn: func(_ context.Context, _ resource.Managed, _ resource.ConnectionDetails) error { return errorBoom },
 				},
+				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
 			want:    reconcile.Result{Requeue: true},
+			wantErr: nil,
+		},
+		{
+			name: "FailedToReference",
+			rec: &Reconciler{
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha2.Redis) (createsyncdeletekeyer, error) {
+					return &mockCSDK{
+						MockSync: func(_ context.Context, _ *v1alpha2.Redis) bool { return false },
+						MockKey:  func(_ context.Context, _ *v1alpha2.Redis) string { return "" },
+					}, nil
+				}},
+				kube: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						*obj.(*v1alpha2.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
+						return nil
+					},
+					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
+					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+						want := redisResource(
+							withResourceName(redisResourceName),
+							withConditions(runtimev1alpha1.ReconcileError(errorBoom)),
+						)
+						got := obj.(*v1alpha2.Redis)
+						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
+							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
+						}
+						return nil
+					},
+				},
+				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return errorBoom }),
+			},
+			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
+			want:    reconcile.Result{RequeueAfter: aLongWait},
 			wantErr: nil,
 		},
 	}

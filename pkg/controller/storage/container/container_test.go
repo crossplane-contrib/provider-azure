@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	"github.com/crossplaneio/stack-azure/apis/storage/v1alpha2"
@@ -249,8 +250,9 @@ func TestReconciler_Reconcile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				Client:           tt.fields.Client,
-				syncdeleterMaker: tt.fields.syncdeleterMaker,
+				Client:                   tt.fields.Client,
+				syncdeleterMaker:         tt.fields.syncdeleterMaker,
+				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
 			}
 			got, err := r.Reconcile(req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
