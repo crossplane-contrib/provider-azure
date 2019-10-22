@@ -139,10 +139,9 @@ func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance com
 			DNSPrefix:         &spec.DNSNamePrefix,
 			AgentPoolProfiles: &[]containerservice.ManagedClusterAgentPoolProfile{
 				{
-					Name:         to.StringPtr(AgentPoolProfileName),
-					Count:        &nodeCount,
-					VMSize:       containerservice.VMSizeTypes(spec.NodeVMSize),
-					VnetSubnetID: to.StringPtr(spec.VnetSubnetID),
+					Name:   to.StringPtr(AgentPoolProfileName),
+					Count:  &nodeCount,
+					VMSize: containerservice.VMSizeTypes(spec.NodeVMSize),
 				},
 			},
 			ServicePrincipalProfile: &containerservice.ManagedClusterServicePrincipalProfile{
@@ -156,6 +155,15 @@ func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance com
 	if spec.VnetSubnetID != "" {
 		createParams.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfile{
 			NetworkPlugin: containerservice.Azure,
+		}
+
+		createParams.ManagedClusterProperties.AgentPoolProfiles = &[]containerservice.ManagedClusterAgentPoolProfile{
+			{
+				Name:         to.StringPtr(AgentPoolProfileName),
+				Count:        &nodeCount,
+				VMSize:       containerservice.VMSizeTypes(spec.NodeVMSize),
+				VnetSubnetID: to.StringPtr(spec.VnetSubnetID),
+			},
 		}
 	}
 
