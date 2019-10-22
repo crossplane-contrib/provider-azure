@@ -47,11 +47,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/crossplaneio/crossplane v0.3.0 h1:NMmpWcsEtNFCVrVP0GO6nE2NyAlf3r8fIjtPi28OW1U=
-github.com/crossplaneio/crossplane v0.3.0/go.mod h1:xVb0QYtSLx3C19b4M04aJ4n0W34UhS/3HdOdwrWV7W8=
 github.com/crossplaneio/crossplane v0.3.1-0.20191023221351-518648b051cd h1:jd68c2O2AN//+yqI09pjSgpn72R4yknS7tqh0ZjYRiE=
 github.com/crossplaneio/crossplane v0.3.1-0.20191023221351-518648b051cd/go.mod h1:r/iuuYYKmZ2cTE5DbIfMDQ9GF6xN2PrNXjnxGJUXTMI=
-github.com/crossplaneio/crossplane-runtime v0.0.0-20191022001740-a56c70ba6270/go.mod h1:FMlJ6k7pUZdxQrjh0B33D2b79iBac+xcMEHTWiruXao=
 github.com/crossplaneio/crossplane-runtime v0.0.0-20191023215652-0f37bea5496e h1:tV86Qa72VNiz9HwNpCg3L4FBzPgRz1RwP1GelQn5Vxs=
 github.com/crossplaneio/crossplane-runtime v0.0.0-20191023215652-0f37bea5496e/go.mod h1:FMlJ6k7pUZdxQrjh0B33D2b79iBac+xcMEHTWiruXao=
 github.com/crossplaneio/crossplane-runtime v0.0.0-20191025043010-78072ef19dc5 h1:D1IRKqprfu59B41KQcYtEGDeRnaqIcfIjn0EOedOgOw=
@@ -97,6 +94,8 @@ github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs
 github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/google/go-cmp v0.3.0 h1:crn/baboCvb5fXaQ0IJ1SGTsTVrWpDsCWC8EGETZijY=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
+github.com/google/go-cmp v0.3.1 h1:Xye71clBPdm5HgqGwUkwhbynsUJZhDbS20FvLhQ2izg=
+github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/gofuzz v0.0.0-20161122191042-44d81051d367/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
 github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
 github.com/google/gofuzz v1.0.0 h1:A8PeW59pxE9IoFRqBp37U+mSNaQoZ46F1f0f863XSXw=
@@ -150,10 +149,6 @@ github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d/go.mod h1:+n7T8m
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/negz/crossplane v0.1.0 h1:evM67VmEfQ02vXe/1vUggoLrIyvQArY9yMm9q/o9yEY=
 github.com/negz/crossplane v0.1.0/go.mod h1:fgA3cEQ762E02WVPtLeZFhtZT7qztd2XgZKfcBGVyKM=
-github.com/negz/crossplane v0.1.1-0.20191023212835-e11bfe35f696 h1:36ZyVcJ0ohouXLF1e7VlP+DPq7xj28dutnQokMlywjA=
-github.com/negz/crossplane v0.1.1-0.20191023212835-e11bfe35f696/go.mod h1:DRfBsG/6NTALN7SzX88Q6kfvssOHe1MaUyjXDD56X+A=
-github.com/negz/crossplane-runtime v0.0.0-20191023001321-a81fb19350e0 h1:UJf+F6AiU+i8RHpF2bkfGnonEdyW0QxJq5ID3b22phQ=
-github.com/negz/crossplane-runtime v0.0.0-20191023001321-a81fb19350e0/go.mod h1:FMlJ6k7pUZdxQrjh0B33D2b79iBac+xcMEHTWiruXao=
 github.com/onsi/ginkgo v0.0.0-20170829012221-11459a886d9c/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
