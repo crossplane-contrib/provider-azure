@@ -209,14 +209,28 @@ spec:
               description: ResourceGroupName is the name of the resource group that
                 the cluster will be created in
               type: string
+            resourceGroupNameRef:
+              description: ResourceGroupNameRef - A reference to a ResourceGroup object
+                to retrieve its name
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             version:
               description: Version is the Kubernetes version that will be deployed
                 to the cluster
               type: string
             vnetSubnetID:
-              description: VnetSubnetID is the subnet to which the cluster will be
-                deployed.
-              type: string
+              description: ResourceGroupNameRef - A reference to a VnetSubnet object
+                to retrieve its ID
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the namespace
                 and name of a Secret to which any connection details for this managed
@@ -252,7 +266,6 @@ spec:
           required:
           - location
           - providerRef
-          - resourceGroupName
           - version
           - writeServicePrincipalTo
           type: object

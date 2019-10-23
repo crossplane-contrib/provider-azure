@@ -123,6 +123,15 @@ spec:
               description: ResourceGroupName specifies the name of the resource group
                 that should contain this SQLServer.
               type: string
+            resourceGroupNameRef:
+              description: ResourceGroupNameRef - A reference to a ResourceGroup object
+                to retrieve its name
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             sslEnforced:
               description: SSLEnforced specifies whether SSL is required to connect
                 to this SQLServer.
@@ -157,7 +166,6 @@ spec:
           - location
           - pricingTier
           - providerRef
-          - resourceGroupName
           - storageProfile
           - version
           - writeConnectionSecretsToNamespace

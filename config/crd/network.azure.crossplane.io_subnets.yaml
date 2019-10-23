@@ -208,9 +208,27 @@ spec:
             resourceGroupName:
               description: ResourceGroupName - Name of the Subnet's resource group.
               type: string
+            resourceGroupNameRef:
+              description: ResourceGroupNameRef - A reference to the the Subnets's
+                resource group.
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             virtualNetworkName:
               description: VirtualNetworkName - Name of the Subnet's virtual network.
               type: string
+            virtualNetworkNameRef:
+              description: VirtualNetworkNameRef references to a VirtualNetwork to
+                retrieve its name
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the namespace
                 and name of a Secret to which any connection details for this managed
@@ -232,8 +250,6 @@ spec:
           - name
           - properties
           - providerRef
-          - resourceGroupName
-          - virtualNetworkName
           type: object
         status:
           description: A SubnetStatus represents the observed state of a Subnet.
