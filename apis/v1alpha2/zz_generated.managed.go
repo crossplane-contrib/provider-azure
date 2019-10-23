@@ -33,9 +33,14 @@ func (mg *ResourceGroup) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetNonPortableClassReference of this ResourceGroup.
-func (mg *ResourceGroup) GetNonPortableClassReference() *corev1.ObjectReference {
-	return mg.Spec.NonPortableClassReference
+// GetClassReference of this ResourceGroup.
+func (mg *ResourceGroup) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
+}
+
+// GetCondition of this ResourceGroup.
+func (mg *ResourceGroup) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
 }
 
 // GetReclaimPolicy of this ResourceGroup.
@@ -44,7 +49,7 @@ func (mg *ResourceGroup) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 }
 
 // GetWriteConnectionSecretToReference of this ResourceGroup.
-func (mg *ResourceGroup) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (mg *ResourceGroup) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
@@ -58,14 +63,14 @@ func (mg *ResourceGroup) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
+// SetClassReference of this ResourceGroup.
+func (mg *ResourceGroup) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
 // SetConditions of this ResourceGroup.
 func (mg *ResourceGroup) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
-}
-
-// SetNonPortableClassReference of this ResourceGroup.
-func (mg *ResourceGroup) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	mg.Spec.NonPortableClassReference = r
 }
 
 // SetReclaimPolicy of this ResourceGroup.
@@ -74,6 +79,6 @@ func (mg *ResourceGroup) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 }
 
 // SetWriteConnectionSecretToReference of this ResourceGroup.
-func (mg *ResourceGroup) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (mg *ResourceGroup) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }

@@ -33,9 +33,14 @@ func (mg *Account) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetNonPortableClassReference of this Account.
-func (mg *Account) GetNonPortableClassReference() *corev1.ObjectReference {
-	return mg.Spec.NonPortableClassReference
+// GetClassReference of this Account.
+func (mg *Account) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
+}
+
+// GetCondition of this Account.
+func (mg *Account) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
 }
 
 // GetReclaimPolicy of this Account.
@@ -44,7 +49,7 @@ func (mg *Account) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 }
 
 // GetWriteConnectionSecretToReference of this Account.
-func (mg *Account) GetWriteConnectionSecretToReference() corev1.LocalObjectReference {
+func (mg *Account) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
@@ -58,14 +63,14 @@ func (mg *Account) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
+// SetClassReference of this Account.
+func (mg *Account) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
 // SetConditions of this Account.
 func (mg *Account) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
-}
-
-// SetNonPortableClassReference of this Account.
-func (mg *Account) SetNonPortableClassReference(r *corev1.ObjectReference) {
-	mg.Spec.NonPortableClassReference = r
 }
 
 // SetReclaimPolicy of this Account.
@@ -74,6 +79,6 @@ func (mg *Account) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 }
 
 // SetWriteConnectionSecretToReference of this Account.
-func (mg *Account) SetWriteConnectionSecretToReference(r corev1.LocalObjectReference) {
+func (mg *Account) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }

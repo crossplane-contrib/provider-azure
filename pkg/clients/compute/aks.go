@@ -18,16 +18,12 @@ package compute
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
 	"github.com/Azure/go-autorest/autorest/to"
-	"k8s.io/client-go/kubernetes"
 
 	computev1alpha2 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
-
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/authorization"
 )
@@ -50,7 +46,7 @@ type AKSSetupClient struct {
 
 // AKSSetupAPIFactory is an interface that can create instances of the AKSSetupClient
 type AKSSetupAPIFactory interface {
-	CreateSetupClient(*v1alpha2.Provider, kubernetes.Interface) (*AKSSetupClient, error)
+	CreateSetupClient(c *azure.Client) (*AKSSetupClient, error)
 }
 
 // AKSSetupClientFactory implements the AKSSetupAPIFactory interface by returning real clients that talk to Azure APIs
@@ -58,23 +54,23 @@ type AKSSetupClientFactory struct {
 }
 
 // CreateSetupClient creates and returns an AKS setup client that is ready to talk to Azure APIs
-func (f *AKSSetupClientFactory) CreateSetupClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*AKSSetupClient, error) {
-	aksClusterClient, err := NewAKSClusterClient(provider, clientset)
+func (f *AKSSetupClientFactory) CreateSetupClient(c *azure.Client) (*AKSSetupClient, error) {
+	aksClusterClient, err := NewAKSClusterClient(c)
 	if err != nil {
 		return nil, err
 	}
 
-	appClient, err := azure.NewApplicationClient(provider, clientset)
+	appClient, err := azure.NewApplicationClient(c)
 	if err != nil {
 		return nil, err
 	}
 
-	spClient, err := azure.NewServicePrincipalClient(provider, clientset)
+	spClient, err := azure.NewServicePrincipalClient(c)
 	if err != nil {
 		return nil, err
 	}
 
-	raClient, err := authorization.NewRoleAssignmentsClient(provider, clientset)
+	raClient, err := authorization.NewRoleAssignmentsClient(c)
 	if err != nil {
 		return nil, err
 	}
@@ -102,14 +98,9 @@ type AKSClusterClient struct {
 }
 
 // NewAKSClusterClient creates and initializes a AKSClusterClient instance.
-func NewAKSClusterClient(provider *v1alpha2.Provider, clientset kubernetes.Interface) (*AKSClusterClient, error) {
-	client, err := azure.NewClient(provider, clientset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Azure client: %+v", err)
-	}
-
-	aksClustersClient := containerservice.NewManagedClustersClient(client.SubscriptionID)
-	aksClustersClient.Authorizer = client.Authorizer
+func NewAKSClusterClient(c *azure.Client) (*AKSClusterClient, error) {
+	aksClustersClient := containerservice.NewManagedClustersClient(c.SubscriptionID)
+	aksClustersClient.Authorizer = c.Authorizer
 	aksClustersClient.AddToUserAgent(azure.UserAgent)
 
 	return &AKSClusterClient{aksClustersClient}, nil

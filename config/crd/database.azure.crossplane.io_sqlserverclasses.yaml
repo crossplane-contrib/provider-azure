@@ -22,7 +22,7 @@ spec:
     listKind: SQLServerClassList
     plural: sqlserverclasses
     singular: sqlserverclass
-  scope: ""
+  scope: Cluster
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -147,6 +147,11 @@ spec:
               description: Version specifies the version of this server, for example
                 "5.6", or "9.6".
               type: string
+            writeConnectionSecretsToNamespace:
+              description: WriteConnectionSecretsToNamespace specifies the namespace
+                in which the connection secrets of managed resources dynamically provisioned
+                using this claim will be created.
+              type: string
           required:
           - adminLoginName
           - location
@@ -155,6 +160,7 @@ spec:
           - resourceGroupName
           - storageProfile
           - version
+          - writeConnectionSecretsToNamespace
           type: object
       required:
       - specTemplate

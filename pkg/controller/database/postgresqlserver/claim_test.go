@@ -14,13 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package container
+package postgresqlserver
 
 import (
 	"context"
 	"testing"
 
-	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,14 +28,14 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
-	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
+	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/storage/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 )
 
-var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureContainer)
+var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigurePostgresqlServer)
 
-func TestConfigureContainer(t *testing.T) {
+func TestConfigurePostgresqlServer(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
@@ -51,8 +50,6 @@ func TestConfigureContainer(t *testing.T) {
 
 	claimUID := types.UID("definitely-a-uuid")
 	providerName := "coolprovider"
-	bucketName := "coolbucket"
-	bucketPrivate := storagev1alpha1.ACLPrivate
 
 	cases := map[string]struct {
 		args args
@@ -60,31 +57,33 @@ func TestConfigureContainer(t *testing.T) {
 	}{
 		"Successful": {
 			args: args{
-				cm: &storagev1alpha1.Bucket{
+				cm: &databasev1alpha1.PostgreSQLInstance{
 					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
-					Spec: storagev1alpha1.BucketSpec{
-						Name:          bucketName,
-						PredefinedACL: &bucketPrivate,
-					},
+					Spec:       databasev1alpha1.PostgreSQLInstanceSpec{EngineVersion: "9.6"},
 				},
-				cs: &v1alpha2.ContainerClass{
-					SpecTemplate: v1alpha2.ContainerClassSpecTemplate{
+				cs: &v1alpha2.SQLServerClass{
+					SpecTemplate: v1alpha2.SQLServerClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha2.Container{},
+				mg: &v1alpha2.PostgresqlServer{},
 			},
 			want: want{
-				mg: &v1alpha2.Container{
-					Spec: v1alpha2.ContainerSpec{
-						ContainerParameters: v1alpha2.ContainerParameters{
-							AccountReference: corev1.LocalObjectReference{Name: providerName},
-							Metadata:         azblob.Metadata{},
+				mg: &v1alpha2.PostgresqlServer{
+					Spec: v1alpha2.SQLServerSpec{
+						ResourceSpec: runtimev1alpha1.ResourceSpec{
+							ReclaimPolicy: runtimev1alpha1.ReclaimDelete,
+							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
+								Name: string(claimUID),
+							},
+							ProviderReference: &corev1.ObjectReference{Name: providerName},
 						},
-						ReclaimPolicy: runtimev1alpha1.ReclaimDelete,
+						SQLServerParameters: v1alpha2.SQLServerParameters{
+							Version: "9.6",
+						},
 					},
 				},
 				err: nil,
@@ -94,12 +93,12 @@ func TestConfigureContainer(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			err := ConfigureContainer(tc.args.ctx, tc.args.cm, tc.args.cs, tc.args.mg)
+			err := ConfigurePostgresqlServer(tc.args.ctx, tc.args.cm, tc.args.cs, tc.args.mg)
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("ConfigureContainer(...): -want error, +got error:\n%s", diff)
+				t.Errorf("ConfigurePostgresqlServer(...): -want error, +got error:\n%s", diff)
 			}
 			if diff := cmp.Diff(tc.want.mg, tc.args.mg, test.EquateConditions()); diff != "" {
-				t.Errorf("ConfigureContainer(...) Managed: -want, +got:\n%s", diff)
+				t.Errorf("ConfigurePostgresqlServer(...) Managed: -want, +got:\n%s", diff)
 			}
 		})
 	}

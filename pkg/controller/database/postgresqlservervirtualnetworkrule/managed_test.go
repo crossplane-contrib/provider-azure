@@ -64,9 +64,12 @@ var (
 	provider = azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
 		Spec: azurev1alpha2.ProviderSpec{
-			Secret: corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{Name: providerSecretName},
-				Key:                  providerSecretKey,
+			Secret: runtimev1alpha1.SecretKeySelector{
+				SecretReference: runtimev1alpha1.SecretReference{
+					Namespace: namespace,
+					Name:      providerSecretName,
+				},
+				Key: providerSecretKey,
 			},
 		},
 	}

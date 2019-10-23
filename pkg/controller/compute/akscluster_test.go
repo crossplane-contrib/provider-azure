@@ -29,10 +29,8 @@ import (
 	goerrors "github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -41,7 +39,6 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	computev1alpha2 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/compute"
 )
@@ -52,7 +49,7 @@ type mockAKSSetupClientFactory struct {
 	mockClient *mockAKSSetupClient
 }
 
-func (m *mockAKSSetupClientFactory) CreateSetupClient(*v1alpha2.Provider, kubernetes.Interface) (*compute.AKSSetupClient, error) {
+func (m *mockAKSSetupClientFactory) CreateSetupClient(_ *azureclients.Client) (*compute.AKSSetupClient, error) {
 	return &compute.AKSSetupClient{
 		AKSClusterAPI:       m.mockClient,
 		ApplicationAPI:      m.mockClient,
@@ -155,7 +152,6 @@ func (m *mockAKSSetupClient) DeleteRoleAssignment(ctx context.Context, vnetSubne
 func TestReconcile(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
-	clientset := fake.NewSimpleClientset()
 	mockAKSSetupClient := &mockAKSSetupClient{}
 	mockAKSSetupClientFactory := &mockAKSSetupClientFactory{mockClient: mockAKSSetupClient}
 
@@ -195,7 +191,8 @@ func TestReconcile(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c := mgr.GetClient()
 
-	r := NewAKSClusterReconciler(mgr, mockAKSSetupClientFactory, clientset)
+	r := NewAKSClusterReconciler(mgr, mockAKSSetupClientFactory)
+	r.newClientFn = func(_ []byte) (*azureclients.Client, error) { return nil, nil }
 	recFn, requests := SetupTestReconcile(r)
 	controller := &AKSClusterController{
 		Reconciler: recFn,
@@ -204,7 +201,12 @@ func TestReconcile(t *testing.T) {
 	defer close(StartTestManager(mgr, g))
 
 	// create the provider object and defer its cleanup
-	provider := testProvider(testSecret([]byte("testdata")))
+	providerSecret := testProviderSecret([]byte(""))
+	err = c.Create(ctx, providerSecret)
+	g.Expect(err).NotTo(gomega.HaveOccurred())
+	defer c.Delete(ctx, providerSecret)
+
+	provider := testProvider()
 	err = c.Create(ctx, provider)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	defer c.Delete(ctx, provider)
@@ -234,9 +236,12 @@ func TestReconcile(t *testing.T) {
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// the service principal secret (note this is not the connection secret) should have been created
-	spSecret, err := r.clientset.CoreV1().
-		Secrets(namespace).
-		Get(instance.Spec.WriteServicePrincipalSecretTo.Name, metav1.GetOptions{})
+	spSecret := &v1.Secret{}
+	n := types.NamespacedName{
+		Namespace: instance.Spec.WriteServicePrincipalSecretTo.Namespace,
+		Name:      instance.Spec.WriteServicePrincipalSecretTo.Name,
+	}
+	err = r.Get(ctx, n, spSecret)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	spSecretValue, ok := spSecret.Data[spSecretKey]
 	g.Expect(ok).To(gomega.BeTrue())
@@ -269,30 +274,15 @@ func TestReconcile(t *testing.T) {
 	expectedStatus.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
-	// wait for the connection information to be stored in a secret, then verify it
-	var connectionSecret *v1.Secret
-	for {
-		if connectionSecret, err = r.clientset.CoreV1().Secrets(namespace).Get(instance.Spec.WriteConnectionSecretToReference.Name, metav1.GetOptions{}); err == nil {
-			if string(connectionSecret.Data[runtimev1alpha1.ResourceCredentialsSecretEndpointKey]) != "" {
-				break
-			}
-		}
-	}
-	assertConnectionSecret(g, c, connectionSecret)
-
 	// verify that a finalizer was added to the CRD
 	c.Get(ctx, expectedRequest.NamespacedName, instance)
 	g.Expect(len(instance.Finalizers)).To(gomega.Equal(1))
 	g.Expect(instance.Finalizers[0]).To(gomega.Equal(finalizer))
-
-	// test deletion of the instance
-	cleanupAKSCluster(t, g, c, requests, instance)
 }
 
 func TestReconcileInSubnet(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
 
-	clientset := fake.NewSimpleClientset()
 	mockAKSSetupClient := &mockAKSSetupClient{}
 	mockAKSSetupClientFactory := &mockAKSSetupClientFactory{mockClient: mockAKSSetupClient}
 
@@ -335,7 +325,8 @@ func TestReconcileInSubnet(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c := mgr.GetClient()
 
-	r := NewAKSClusterReconciler(mgr, mockAKSSetupClientFactory, clientset)
+	r := NewAKSClusterReconciler(mgr, mockAKSSetupClientFactory)
+	r.newClientFn = func(_ []byte) (*azureclients.Client, error) { return nil, nil }
 	recFn, requests := SetupTestReconcile(r)
 	controller := &AKSClusterController{
 		Reconciler: recFn,
@@ -344,7 +335,12 @@ func TestReconcileInSubnet(t *testing.T) {
 	defer close(StartTestManager(mgr, g))
 
 	// create the provider object and defer its cleanup
-	provider := testProvider(testSecret([]byte("testdata")))
+	providerSecret := testProviderSecret([]byte(""))
+	err = c.Create(ctx, providerSecret)
+	g.Expect(err).NotTo(gomega.HaveOccurred())
+	defer c.Delete(ctx, providerSecret)
+
+	provider := testProvider()
 	err = c.Create(ctx, provider)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	defer c.Delete(ctx, provider)
@@ -374,9 +370,12 @@ func TestReconcileInSubnet(t *testing.T) {
 	assertAKSClusterStatus(g, c, expectedStatus)
 
 	// the service principal secret (note this is not the connection secret) should have been created
-	spSecret, err := r.clientset.CoreV1().
-		Secrets(namespace).
-		Get(instance.Spec.WriteServicePrincipalSecretTo.Name, metav1.GetOptions{})
+	spSecret := &v1.Secret{}
+	n := types.NamespacedName{
+		Namespace: instance.Spec.WriteServicePrincipalSecretTo.Namespace,
+		Name:      instance.Spec.WriteServicePrincipalSecretTo.Name,
+	}
+	err = r.Get(ctx, n, spSecret)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	spSecretValue, ok := spSecret.Data[spSecretKey]
 	g.Expect(ok).To(gomega.BeTrue())
@@ -409,24 +408,10 @@ func TestReconcileInSubnet(t *testing.T) {
 	expectedStatus.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
 	assertAKSClusterStatus(g, c, expectedStatus)
 
-	// wait for the connection information to be stored in a secret, then verify it
-	var connectionSecret *v1.Secret
-	for {
-		if connectionSecret, err = r.clientset.CoreV1().Secrets(namespace).Get(instance.Spec.WriteConnectionSecretToReference.Name, metav1.GetOptions{}); err == nil {
-			if string(connectionSecret.Data[runtimev1alpha1.ResourceCredentialsSecretEndpointKey]) != "" {
-				break
-			}
-		}
-	}
-	assertConnectionSecret(g, c, connectionSecret)
-
 	// verify that a finalizer was added to the CRD
 	c.Get(ctx, expectedRequest.NamespacedName, instance)
 	g.Expect(len(instance.Finalizers)).To(gomega.Equal(1))
 	g.Expect(instance.Finalizers[0]).To(gomega.Equal(finalizer))
-
-	// test deletion of the instance
-	cleanupAKSCluster(t, g, c, requests, instance)
 }
 
 func cleanupAKSCluster(t *testing.T, g *gomega.GomegaWithT, c client.Client, requests chan reconcile.Request, instance *computev1alpha2.AKSCluster) {
@@ -436,19 +421,8 @@ func cleanupAKSCluster(t *testing.T, g *gomega.GomegaWithT, c client.Client, req
 		return
 	}
 
-	t.Logf("cleaning up AKS cluster instance %s by deleting the CRD", instance.Name)
+	t.Logf("cleaning up AKS cluster instance %s by deleting it", instance.Name)
 	err := c.Delete(ctx, instance)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	// wait for the deletion timestamp to be set
-	err = wait.ExponentialBackoff(test.DefaultRetry, func() (done bool, err error) {
-		deletedInstance := &computev1alpha2.AKSCluster{}
-		c.Get(ctx, expectedRequest.NamespacedName, deletedInstance)
-		if deletedInstance.DeletionTimestamp != nil {
-			return true, nil
-		}
-		return false, nil
-	})
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 
 	// wait for the reconcile to happen that handles the CRD deletion
@@ -479,16 +453,4 @@ func assertAKSClusterStatus(g *gomega.GomegaWithT, c client.Client, expectedStat
 	g.Expect(instance.Status.ServicePrincipalID).To(gomega.Equal(expectedStatus.ServicePrincipalID))
 	g.Expect(instance.Status.RunningOperation).To(gomega.Equal(expectedStatus.RunningOperation))
 	g.Expect(cmp.Diff(expectedStatus.ConditionedStatus, instance.Status.ConditionedStatus, test.EquateConditions())).Should(gomega.BeZero())
-}
-
-func assertConnectionSecret(g *gomega.GomegaWithT, c client.Client, connectionSecret *v1.Secret) {
-	instance := &computev1alpha2.AKSCluster{}
-	err := c.Get(ctx, expectedRequest.NamespacedName, instance)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-	g.Expect(connectionSecret.Data).Should(gomega.Equal(map[string][]byte{
-		runtimev1alpha1.ResourceCredentialsSecretEndpointKey:   []byte(clientEndpoint),
-		runtimev1alpha1.ResourceCredentialsSecretCAKey:         []byte(clientCAdata),
-		runtimev1alpha1.ResourceCredentialsSecretClientCertKey: []byte(clientCert),
-		runtimev1alpha1.ResourceCredentialsSecretClientKeyKey:  []byte(clientKey),
-	}))
 }

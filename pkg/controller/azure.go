@@ -17,16 +17,14 @@ limitations under the License.
 package controller
 
 import (
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
 	computeclients "github.com/crossplaneio/stack-azure/pkg/clients/compute"
 	"github.com/crossplaneio/stack-azure/pkg/controller/cache"
 	"github.com/crossplaneio/stack-azure/pkg/controller/compute"
-	"github.com/crossplaneio/stack-azure/pkg/controller/database"
+	"github.com/crossplaneio/stack-azure/pkg/controller/database/mysqlserver"
 	"github.com/crossplaneio/stack-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
+	"github.com/crossplaneio/stack-azure/pkg/controller/database/postgresqlserver"
 	"github.com/crossplaneio/stack-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
 	"github.com/crossplaneio/stack-azure/pkg/controller/network/subnet"
 	"github.com/crossplaneio/stack-azure/pkg/controller/network/virtualnetwork"
@@ -39,88 +37,46 @@ import (
 type Controllers struct{}
 
 // SetupWithManager adds all Azure controllers to the manager.
-func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error { // nolint:gocyclo
-	// This function has a cyclomatic complexity greater than the threshold, but it is actually a
-	// very simple function that is registering controllers in a straight-forward manner.  It does
-	// not really branch or behave in a complicated way, so we are ignoring gocyclo here.
+func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error {
+	aksReconciler := compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{})
 
-	if err := (&cache.RedisClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
+	controllers := []interface {
+		SetupWithManager(ctrl.Manager) error
+	}{
+		&cache.RedisClaimSchedulingController{},
+		&cache.RedisClaimDefaultingController{},
+		&cache.RedisClaimController{},
+		&cache.RedisController{},
+		&compute.AKSClusterClaimSchedulingController{},
+		&compute.AKSClusterClaimDefaultingController{},
+		&compute.AKSClusterClaimController{},
+		&compute.AKSClusterController{Reconciler: aksReconciler},
+		&mysqlserver.ClaimSchedulingController{},
+		&mysqlserver.ClaimDefaultingController{},
+		&mysqlserver.ClaimController{},
+		&mysqlserver.Controller{},
+		&mysqlservervirtualnetworkrule.Controller{},
+		&postgresqlserver.ClaimSchedulingController{},
+		&postgresqlserver.ClaimDefaultingController{},
+		&postgresqlserver.ClaimController{},
+		&postgresqlserver.Controller{},
+		&postgresqlservervirtualnetworkrule.Controller{},
+		&virtualnetwork.Controller{},
+		&subnet.Controller{},
+		&resourcegroup.Controller{},
+		&account.ClaimSchedulingController{},
+		&account.ClaimDefaultingController{},
+		&account.ClaimController{},
+		&account.Controller{},
+		&container.ClaimDefaultingController{},
+		&container.ClaimSchedulingController{},
+		&container.ClaimController{},
+		&container.Controller{},
 	}
-
-	if err := (&cache.RedisController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&compute.AKSClusterClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	clientset, err := kubernetes.NewForConfig(mgr.GetConfig())
-	if err != nil {
-		return errors.Errorf("failed to create clientset: %+v", err)
-	}
-
-	if err := (&compute.AKSClusterController{
-		Reconciler: compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{}, clientset),
-	}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&database.MySQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&database.MysqlServerController{
-		Reconciler: database.NewMysqlServerReconciler(mgr, &azureclients.MySQLServerClientFactory{}, clientset),
-	}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&mysqlservervirtualnetworkrule.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&database.PostgreSQLInstanceClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&database.PostgresqlServerController{
-		Reconciler: database.NewPostgreSQLServerReconciler(mgr, &azureclients.PostgreSQLServerClientFactory{}, clientset),
-	}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&postgresqlservervirtualnetworkrule.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&virtualnetwork.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&subnet.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&resourcegroup.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&account.ClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&account.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&container.ClaimController{}).SetupWithManager(mgr); err != nil {
-		return err
-	}
-
-	if err := (&container.Controller{}).SetupWithManager(mgr); err != nil {
-		return err
+	for _, c := range controllers {
+		if err := c.SetupWithManager(mgr); err != nil {
+			return err
+		}
 	}
 	return nil
 }

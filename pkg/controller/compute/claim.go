@@ -22,9 +22,7 @@ import (
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -35,11 +33,66 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
 )
 
-// AKSClusterClaimController is responsible for adding the AKSCluster
-// claim controller and its corresponding reconciler to the manager with any runtime configuration.
+// A AKSClusterClaimSchedulingController reconciles KubernetesCluster claims
+// that include a class selector but omit their class and resource references by
+// picking a random matching Azure AKSCluster class, if any.
+type AKSClusterClaimSchedulingController struct{}
+
+// SetupWithManager sets up the AKSClusterClaimSchedulingController using the
+// supplied manager.
+func (c *AKSClusterClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
+		computev1alpha1.KubernetesClusterKind,
+		v1alpha2.AKSClusterKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&computev1alpha1.KubernetesCluster{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimSchedulingReconciler(mgr,
+			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
+			resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
+		))
+}
+
+// A AKSClusterClaimDefaultingController reconciles KubernetesCluster claims
+// that omit their resource ref, class ref, and class selector by choosing a
+// default Azure AKSCluster resource class if one exists.
+type AKSClusterClaimDefaultingController struct{}
+
+// SetupWithManager sets up the AKSClusterClaimDefaultingController using the
+// supplied manager.
+func (c *AKSClusterClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
+	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
+		computev1alpha1.KubernetesClusterKind,
+		v1alpha2.AKSClusterKind,
+		v1alpha2.Group))
+
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&computev1alpha1.KubernetesCluster{}).
+		WithEventFilter(resource.NewPredicates(resource.AllOf(
+			resource.HasNoClassSelector(),
+			resource.HasNoClassReference(),
+			resource.HasNoManagedResourceReference(),
+		))).
+		Complete(resource.NewClaimDefaultingReconciler(mgr,
+			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
+			resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
+		))
+}
+
+// An AKSClusterClaimController reconciles KubernetesCluster claims with
+// AKSCluster resources, provisioning them if necessary.
 type AKSClusterClaimController struct{}
 
-// SetupWithManager adds a controller that reconciles KubernetesCluster resource claims.
+// SetupWithManager sets up the AKSClusterClaimController using the supplied
+// manager.
 func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		computev1alpha1.KubernetesClusterKind,
@@ -48,10 +101,7 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
-		resource.ClassKinds{
-			Portable:    computev1alpha1.KubernetesClusterClassGroupVersionKind,
-			NonPortable: v1alpha2.AKSClusterClassGroupVersionKind,
-		},
+		resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind),
 		resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
@@ -59,12 +109,10 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.AKSClusterClassGroupVersionKind)),
 		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind)),
 		resource.IsManagedKind(resource.ManagedKind(v1alpha2.AKSClusterGroupVersionKind), mgr.GetScheme()),
-		resource.HasIndirectClassReferenceKind(mgr.GetClient(), mgr.GetScheme(), resource.ClassKinds{
-			Portable:    computev1alpha1.KubernetesClusterClassGroupVersionKind,
-			NonPortable: v1alpha2.AKSClusterClassGroupVersionKind,
-		})))
+	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -77,7 +125,7 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 // ConfigureAKSCluster configures the supplied resource (presumed to be a
 // AKSCluster) using the supplied resource claim (presumed to be a
 // KubernetesCluster) and resource class.
-func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.NonPortableClass, mg resource.Managed) error {
+func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	if _, cmok := cm.(*computev1alpha1.KubernetesCluster); !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), computev1alpha1.KubernetesClusterGroupVersionKind)
 	}
@@ -103,8 +151,15 @@ func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.NonPo
 	if spec.NodeCount == nil {
 		spec.NodeCount = to.IntPtr(v1alpha2.DefaultNodeCount)
 	}
-	spec.WriteServicePrincipalSecretTo = corev1.LocalObjectReference{Name: fmt.Sprintf("principal-%s", cm.GetUID())}
-	spec.WriteConnectionSecretToReference = corev1.LocalObjectReference{Name: string(cm.GetUID())}
+
+	spec.WriteServicePrincipalSecretTo = runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      fmt.Sprintf("principal-%s", cm.GetUID()),
+	}
+	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
+		Name:      string(cm.GetUID()),
+	}
 	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 

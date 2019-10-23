@@ -28,7 +28,7 @@ spec:
     listKind: ContainerList
     plural: containers
     singular: container
-  scope: ""
+  scope: Cluster
   subresources:
     status: {}
   validation:
@@ -100,9 +100,9 @@ spec:
                   type: string
               type: object
             classRef:
-              description: NonPortableClassReference specifies the non-portable resource
-                class that was used to dynamically provision this managed resource,
-                if any. Crossplane does not currently support setting this field manually,
+              description: ClassReference specifies the non-portable resource class
+                that was used to dynamically provision this managed resource, if any.
+                Crossplane does not currently support setting this field manually,
                 per https://github.com/crossplaneio/crossplane-runtime/issues/20
               properties:
                 apiVersion:
@@ -167,9 +167,14 @@ spec:
                 password required to connect to the managed resource.
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the secret.
                   type: string
+                namespace:
+                  description: Namespace of the secret.
+                  type: string
+              required:
+              - name
+              - namespace
               type: object
           required:
           - accountReference

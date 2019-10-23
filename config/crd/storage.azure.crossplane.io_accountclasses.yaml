@@ -22,7 +22,7 @@ spec:
     listKind: AccountClassList
     plural: accountclasses
     singular: accountclass
-  scope: ""
+  scope: Cluster
   subresources: {}
   validation:
     openAPIV3Schema:
@@ -348,11 +348,17 @@ spec:
               - location
               - sku
               type: object
+            writeConnectionSecretsToNamespace:
+              description: WriteConnectionSecretsToNamespace specifies the namespace
+                in which the connection secrets of managed resources dynamically provisioned
+                using this claim will be created.
+              type: string
           required:
           - providerRef
           - resourceGroupName
           - storageAccountName
           - storageAccountSpec
+          - writeConnectionSecretsToNamespace
           type: object
       required:
       - specTemplate

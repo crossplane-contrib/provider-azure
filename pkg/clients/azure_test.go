@@ -22,11 +22,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/onsi/gomega"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/fake"
-
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 )
 
 const (
@@ -46,41 +41,7 @@ const (
 
 func TestNewClient(t *testing.T) {
 	g := gomega.NewGomegaWithT(t)
-	clientset := fake.NewSimpleClientset()
-
-	namespace := "foo-ns"
-	provider := &v1alpha2.Provider{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "azure-provider",
-			Namespace: namespace,
-		},
-		Spec: v1alpha2.ProviderSpec{
-			Secret: v1.SecretKeySelector{
-				LocalObjectReference: v1.LocalObjectReference{Name: "azure-provider-creds"},
-				Key:                  "creds",
-			},
-		},
-	}
-
-	// get client when secret doesn't exist, this should fail
-	client, err := NewClient(provider, clientset)
-	g.Expect(err).To(gomega.HaveOccurred())
-	g.Expect(client).To(gomega.BeNil())
-
-	// create the auth secret now
-	authSecret := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      provider.Spec.Secret.Name,
-			Namespace: namespace,
-		},
-		Data: map[string][]byte{
-			provider.Spec.Secret.Key: []byte(authData),
-		},
-	}
-	clientset.CoreV1().Secrets(namespace).Create(authSecret)
-
-	// now that the secret exists, getting a client should succeed
-	client, err = NewClient(provider, clientset)
+	client, err := NewClient([]byte(authData))
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	g.Expect(client).NotTo(gomega.BeNil())
 	g.Expect(client.SubscriptionID).To(gomega.Equal("bf1b0e59-93da-42e0-82c6-5a1d94227911"))

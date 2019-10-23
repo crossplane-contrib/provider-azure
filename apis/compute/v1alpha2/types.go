@@ -19,7 +19,6 @@ package v1alpha2
 import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -78,7 +77,7 @@ type AKSClusterParameters struct {
 	// WriteServicePrincipalSecretTo the specified Secret. The service principal
 	// is automatically generated and used by the AKS cluster to interact with
 	// other Azure resources.
-	WriteServicePrincipalSecretTo corev1.LocalObjectReference `json:"writeServicePrincipalTo"`
+	WriteServicePrincipalSecretTo runtimev1alpha1.SecretReference `json:"writeServicePrincipalTo"`
 }
 
 // An AKSClusterSpec defines the desired state of a AKSCluster.
@@ -130,6 +129,7 @@ type AKSClusterStatus struct {
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type AKSCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -150,8 +150,8 @@ type AKSClusterList struct {
 // An AKSClusterClassSpecTemplate is a template for the spec of a dynamically
 // provisioned AKSCluster.
 type AKSClusterClassSpecTemplate struct {
-	runtimev1alpha1.NonPortableClassSpecTemplate `json:",inline"`
-	AKSClusterParameters                         `json:",inline"`
+	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
+	AKSClusterParameters              `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -162,6 +162,7 @@ type AKSClusterClassSpecTemplate struct {
 // +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:resource:scope=Cluster
 type AKSClusterClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

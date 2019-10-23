@@ -33,10 +33,9 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
 	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/redis"
 )
 
@@ -204,7 +203,7 @@ func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha2.Redis) (cre
 	}
 
 	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Namespace, Name: p.Spec.Secret.Name}
+	n = types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
 	if err := c.kube.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
 	}
@@ -217,7 +216,8 @@ func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha2.Redis) (cre
 // with an external store, typically the Azure API.
 type Reconciler struct {
 	connecter
-	kube client.Client
+	kube      client.Client
+	publisher resource.ManagedConnectionPublisher
 }
 
 // RedisController is responsible for adding the Redis
@@ -231,6 +231,7 @@ func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
 		connecter: &providerConnecter{kube: mgr.GetClient(), newClient: redis.NewClient},
 		kube:      mgr.GetClient(),
+		publisher: resource.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -270,34 +271,17 @@ func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 		return reconcile.Result{Requeue: client.Create(ctx, rd)}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
 	}
 
-	if err := r.upsertSecret(ctx, connectionSecret(rd, client.Key(ctx, rd))); err != nil {
+	// TODO(negz): Include the ports here too?
+	// TODO(negz): Include both access keys? Azure has two because reasons.
+	cd := resource.ConnectionDetails{
+		runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(rd.Status.Endpoint),
+		runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(client.Key(ctx, rd)),
+	}
+	if err := r.publisher.PublishConnection(ctx, rd, cd); err != nil {
 		rd.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 		return reconcile.Result{Requeue: true}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
 	}
 
 	// The resource exists in the API server and Azure. Sync it.
 	return reconcile.Result{Requeue: client.Sync(ctx, rd)}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
-}
-
-func (r *Reconciler) upsertSecret(ctx context.Context, s *corev1.Secret) error {
-	n := types.NamespacedName{Namespace: s.GetNamespace(), Name: s.GetName()}
-	if err := r.kube.Get(ctx, n, &corev1.Secret{}); err != nil {
-		if kerrors.IsNotFound(err) {
-			return errors.Wrapf(r.kube.Create(ctx, s), "cannot create secret %s", n)
-		}
-		return errors.Wrapf(err, "cannot get secret %s", n)
-	}
-	return errors.Wrapf(r.kube.Update(ctx, s), "cannot update secret %s", n)
-}
-
-func connectionSecret(r *v1alpha2.Redis, accessKey string) *corev1.Secret {
-	s := resource.ConnectionSecretFor(r, v1alpha2.RedisGroupVersionKind)
-
-	// TODO(negz): Include the ports here too?
-	// TODO(negz): Include both access keys? Azure has two because reasons.
-	s.Data = map[string][]byte{
-		runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(r.Status.Endpoint),
-		runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(accessKey),
-	}
-	return s
 }
