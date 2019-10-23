@@ -71,7 +71,7 @@ type ResourceGroupStatus struct {
 	// TODO(negz): Do we really need the name in both spec and status?
 
 	// Name of the resource group.
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true
