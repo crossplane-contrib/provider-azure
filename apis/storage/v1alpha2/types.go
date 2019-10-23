@@ -216,6 +216,11 @@ func (c *Container) SetConditions(cd ...runtimev1alpha1.Condition) {
 	c.Status.SetConditions(cd...)
 }
 
+// GetCondition of this Container.
+func (c *Container) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return c.Status.GetCondition(ct)
+}
+
 // SetClaimReference of this Container.
 func (c *Container) SetClaimReference(r *corev1.ObjectReference) {
 	c.Spec.ClaimReference = r

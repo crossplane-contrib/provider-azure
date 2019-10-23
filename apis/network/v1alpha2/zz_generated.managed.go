@@ -38,6 +38,11 @@ func (mg *Subnet) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
+// GetCondition of this Subnet.
+func (mg *Subnet) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
 // GetReclaimPolicy of this Subnet.
 func (mg *Subnet) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -91,6 +96,11 @@ func (mg *VirtualNetwork) GetClaimReference() *corev1.ObjectReference {
 // GetClassReference of this VirtualNetwork.
 func (mg *VirtualNetwork) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
+}
+
+// GetCondition of this VirtualNetwork.
+func (mg *VirtualNetwork) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
 }
 
 // GetReclaimPolicy of this VirtualNetwork.

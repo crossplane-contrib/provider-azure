@@ -38,6 +38,11 @@ func (mg *MysqlServer) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
+// GetCondition of this MysqlServer.
+func (mg *MysqlServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
 // GetReclaimPolicy of this MysqlServer.
 func (mg *MysqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -91,6 +96,11 @@ func (mg *MysqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectRefer
 // GetClassReference of this MysqlServerVirtualNetworkRule.
 func (mg *MysqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
+}
+
+// GetCondition of this MysqlServerVirtualNetworkRule.
+func (mg *MysqlServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
 }
 
 // GetReclaimPolicy of this MysqlServerVirtualNetworkRule.
@@ -148,6 +158,11 @@ func (mg *PostgresqlServer) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
+// GetCondition of this PostgresqlServer.
+func (mg *PostgresqlServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
 // GetReclaimPolicy of this PostgresqlServer.
 func (mg *PostgresqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -201,6 +216,11 @@ func (mg *PostgresqlServerVirtualNetworkRule) GetClaimReference() *corev1.Object
 // GetClassReference of this PostgresqlServerVirtualNetworkRule.
 func (mg *PostgresqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
+}
+
+// GetCondition of this PostgresqlServerVirtualNetworkRule.
+func (mg *PostgresqlServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
 }
 
 // GetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
