@@ -17,9 +17,13 @@ limitations under the License.
 package v1alpha2
 
 import (
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+	"github.com/pkg/errors"
+
+	apisv1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
 )
 
 const (
@@ -31,6 +35,27 @@ const (
 	// firewall rule.
 	OperationCreateFirewallRules = "createFirewallRules"
 )
+
+// Error strings
+const (
+	errResourceIsNotMysqlServer = "The managed resource is not a MysqlServer"
+)
+
+// ResourceGroupNameReferencerForMysqlServer is an attribute referencer that resolves name from a referenced ResourceGroup
+type ResourceGroupNameReferencerForMysqlServer struct {
+	apisv1alpha2.ResourceGroupNameReferencer `json:",inline"`
+}
+
+// Assign assigns the retrieved group name to the managed resource
+func (v *ResourceGroupNameReferencerForMysqlServer) Assign(res resource.CanReference, value string) error {
+	sql, ok := res.(*MysqlServer)
+	if !ok {
+		return errors.Errorf(errResourceIsNotMysqlServer)
+	}
+
+	sql.Spec.ResourceGroupName = value
+	return nil
+}
 
 // +kubebuilder:object:root=true
 
@@ -128,7 +153,11 @@ type SQLServerParameters struct {
 
 	// ResourceGroupName specifies the name of the resource group that should
 	// contain this SQLServer.
-	ResourceGroupName string `json:"resourceGroupName"`
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
+	// its name
+	ResourceGroupNameRef *ResourceGroupNameReferencerForMysqlServer `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
 
 	// Location specifies the location of this SQLServer.
 	Location string `json:"location"`
