@@ -88,8 +88,8 @@ func (ta *MockAccount) WithSpecClaimRef(ref *corev1.ObjectReference) *MockAccoun
 }
 
 // WithSpecProvider set a provider
-func (ta *MockAccount) WithSpecProvider(ns, name string) *MockAccount {
-	ta.Spec.ProviderReference = &corev1.ObjectReference{Namespace: ns, Name: name}
+func (ta *MockAccount) WithSpecProvider(name string) *MockAccount {
+	ta.Spec.ProviderReference = &corev1.ObjectReference{Name: name}
 	return ta
 }
 

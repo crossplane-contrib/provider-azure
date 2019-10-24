@@ -185,11 +185,10 @@ type provider struct {
 	*azurev1alpha2.Provider
 }
 
-func newProvider(ns, name string) *provider {
+func newProvider(name string) *provider {
 	return &provider{Provider: &azurev1alpha2.Provider{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: ns,
-			Name:      name,
+			Name: name,
 		},
 	}}
 }
@@ -357,35 +356,35 @@ func Test_accountHandleMaker_newHandler(t *testing.T) {
 		{
 			name: "ErrProviderIsNotFound",
 			kube: fake.NewFakeClient(),
-			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(ns, providerName).Account,
+			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
 			wantErr: errors.Wrapf(
 				kerrors.NewNotFound(schema.GroupResource{Group: azurev1alpha2.Group, Resource: "providers"}, providerName),
-				"cannot get provider %s/%s", ns, providerName,
+				"cannot get provider /%s", providerName,
 			),
 		},
 		{
 			name: "ProviderSecretIsNotFound",
-			kube: fake.NewFakeClient(newProvider(ns, providerName).
+			kube: fake.NewFakeClient(newProvider(providerName).
 				withSecret(ns, secretName, secretKey).Provider),
-			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(ns, providerName).Account,
+			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
 			wantErr: errors.WithStack(
 				errors.Errorf("cannot get provider's secret %s/%s: secrets \"%s\" not found", ns, secretName, secretName)),
 		},
 		{
 			name: "InvalidCredentials",
-			kube: fake.NewFakeClient(newProvider(ns, providerName).
+			kube: fake.NewFakeClient(newProvider(providerName).
 				withSecret(ns, secretName, secretKey).Provider,
 				newSecret(ns, secretName).Secret),
-			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(ns, providerName).Account,
+			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
 			wantErr: errors.WithStack(
 				errors.Errorf("cannot create storageClient from json: cannot unmarshal Azure client secret data: unexpected end of JSON input")),
 		},
 		{
 			name: "KubeCreated",
-			kube: fake.NewFakeClient(newProvider(ns, providerName).
+			kube: fake.NewFakeClient(newProvider(providerName).
 				withSecret(ns, secretName, secretKey).Provider,
 				newSecret(ns, secretName).withKeyData(secretKey, secretData).Secret),
-			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(ns, providerName).Account,
+			acct: v1alpha2test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
 			want: newAccountSyncDeleter(&azurestorage.AccountHandle{}, nil, nil),
 		},
 	}

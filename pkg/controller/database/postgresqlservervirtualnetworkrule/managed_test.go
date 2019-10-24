@@ -62,7 +62,7 @@ var (
 	errorBoom = errors.New("boom")
 
 	provider = azurev1alpha2.Provider{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
+		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha2.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
@@ -109,14 +109,13 @@ func withState(s string) virtualNetworkRuleModifier {
 func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.PostgresqlServerVirtualNetworkRule {
 	r := &v1alpha2.PostgresqlServerVirtualNetworkRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:  namespace,
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
 		Spec: v1alpha2.VirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				ProviderReference: &corev1.ObjectReference{Name: providerName},
 			},
 			Name:              name,
 			ServerName:        serverName,
@@ -443,7 +442,7 @@ func TestConnect(t *testing.T) {
 				client: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
-						case client.ObjectKey{Namespace: namespace, Name: providerName}:
+						case client.ObjectKey{Name: providerName}:
 							*obj.(*azurev1alpha2.Provider) = provider
 						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 							*obj.(*corev1.Secret) = providerSecret
