@@ -60,7 +60,7 @@ var (
 	errorBoom = errors.New("boom")
 
 	provider = azurev1alpha2.Provider{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
+		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha2.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
@@ -111,7 +111,6 @@ func withDeletionTimestamp(t time.Time) resourceModifier {
 func resource(rm ...resourceModifier) *azurev1alpha2.ResourceGroup {
 	r := &azurev1alpha2.ResourceGroup{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:  namespace,
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
@@ -120,7 +119,7 @@ func resource(rm ...resourceModifier) *azurev1alpha2.ResourceGroup {
 			Name:     name,
 			Location: location,
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				ProviderReference: &corev1.ObjectReference{Name: providerName},
 			},
 		},
 		Status: azurev1alpha2.ResourceGroupStatus{},
@@ -383,7 +382,7 @@ func TestConnect(t *testing.T) {
 			conn: &providerConnecter{
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
-					case client.ObjectKey{Namespace: namespace, Name: providerName}:
+					case client.ObjectKey{Name: providerName}:
 						*obj.(*azurev1alpha2.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						*obj.(*corev1.Secret) = providerSecret
@@ -408,14 +407,14 @@ func TestConnect(t *testing.T) {
 				},
 			},
 			i:       resource(),
-			wantErr: errors.WithStack(errors.Errorf("cannot get provider %s/%s:  \"%s\" not found", namespace, providerName, providerName)),
+			wantErr: errors.WithStack(errors.Errorf("cannot get provider /%s:  \"%s\" not found", providerName, providerName)),
 		},
 		{
 			name: "FailedToGetProviderSecret",
 			conn: &providerConnecter{
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
-					case client.ObjectKey{Namespace: namespace, Name: providerName}:
+					case client.ObjectKey{Name: providerName}:
 						*obj.(*azurev1alpha2.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
@@ -434,7 +433,7 @@ func TestConnect(t *testing.T) {
 			conn: &providerConnecter{
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
-					case client.ObjectKey{Namespace: namespace, Name: providerName}:
+					case client.ObjectKey{Name: providerName}:
 						*obj.(*azurev1alpha2.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						*obj.(*corev1.Secret) = providerSecret

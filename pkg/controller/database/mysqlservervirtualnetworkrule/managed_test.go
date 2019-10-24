@@ -109,7 +109,6 @@ func withState(s string) virtualNetworkRuleModifier {
 func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.MysqlServerVirtualNetworkRule {
 	r := &v1alpha2.MysqlServerVirtualNetworkRule{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:  namespace,
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
@@ -443,7 +442,7 @@ func TestConnect(t *testing.T) {
 				client: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
-						case client.ObjectKey{Namespace: namespace, Name: providerName}:
+						case client.ObjectKey{Name: providerName}:
 							*obj.(*azurev1alpha2.Provider) = provider
 						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 							*obj.(*corev1.Secret) = providerSecret
