@@ -63,7 +63,7 @@ var (
 	tags      = map[string]string{"one": "test", "two": "test"}
 
 	provider = azurev1alpha2.Provider{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerName},
+		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha2.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
@@ -102,7 +102,6 @@ func withState(s string) virtualNetworkModifier {
 func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha2.VirtualNetwork {
 	r := &v1alpha2.VirtualNetwork{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:  namespace,
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
@@ -465,7 +464,7 @@ func TestConnect(t *testing.T) {
 				client: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
-						case client.ObjectKey{Namespace: namespace, Name: providerName}:
+						case client.ObjectKey{Name: providerName}:
 							*obj.(*azurev1alpha2.Provider) = provider
 						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 							*obj.(*corev1.Secret) = providerSecret
