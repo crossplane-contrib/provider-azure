@@ -26,12 +26,12 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 )
 
-var _ resource.AttributeReferencer = (*ResourceGroupNameReferencerForMysqlServer)(nil)
+var _ resource.AttributeReferencer = (*ResourceGroupNameReferencerForSQLServer)(nil)
 
-func TestResourceGroupNameReferencerForMysqlServer_AssignInvalidType_ReturnsErr(t *testing.T) {
+func TestResourceGroupNameReferencerForSQLServer_AssignInvalidType_ReturnsErr(t *testing.T) {
 
-	r := &ResourceGroupNameReferencerForMysqlServer{}
-	expectedErr := errors.New(errResourceIsNotMysqlServer)
+	r := &ResourceGroupNameReferencerForSQLServer{}
+	expectedErr := errors.New(errResourceIsNotSQLServer)
 
 	err := r.Assign(&struct{ resource.CanReference }{}, "mockValue")
 	if diff := cmp.Diff(expectedErr, err, test.EquateErrors()); diff != "" {
@@ -39,9 +39,9 @@ func TestResourceGroupNameReferencerForMysqlServer_AssignInvalidType_ReturnsErr(
 	}
 }
 
-func TestResourceGroupNameReferencerForMysqlServer_AssignValidType_ReturnsExpected(t *testing.T) {
+func TestResourceGroupNameReferencerForSQLServer_AssignValidType_ReturnsExpected(t *testing.T) {
 
-	r := &ResourceGroupNameReferencerForMysqlServer{}
+	r := &ResourceGroupNameReferencerForSQLServer{}
 	res := &MysqlServer{}
 	var expectedErr error
 

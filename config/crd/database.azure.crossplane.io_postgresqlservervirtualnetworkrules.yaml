@@ -43,7 +43,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: A VirtualNetworkRuleSpec defines the desired state of a VirtualNetworkRule.
+          description: A PostgresqlVirtualNetworkRuleSpec defines the desired state
+            of a PostgresqlVirtualNetworkRule.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -189,8 +190,17 @@ spec:
                 resource group.
               type: string
             serverName:
-              description: ServerName - Name of the Virtual Network Rule's server.
+              description: ServerName - Name of the Virtual Network Rule's PostgresqlServer.
               type: string
+            serverNameRef:
+              description: ServerNameRef - A reference to the Virtual Network Rule's
+                PostgresqlServer.
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the namespace
                 and name of a Secret to which any connection details for this managed
@@ -213,7 +223,6 @@ spec:
           - properties
           - providerRef
           - resourceGroupName
-          - serverName
           type: object
         status:
           description: A VirtualNetworkRuleStatus represents the observed state of
