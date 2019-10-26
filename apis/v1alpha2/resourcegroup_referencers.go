@@ -36,9 +36,9 @@ type ResourceGroupNameReferencer struct {
 }
 
 // GetStatus implements GetStatus method of AttributeReferencer interface
-func (v *ResourceGroupNameReferencer) GetStatus(ctx context.Context, res resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
+func (v *ResourceGroupNameReferencer) GetStatus(ctx context.Context, _ resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
 	rg := ResourceGroup{}
-	nn := types.NamespacedName{Name: v.Name, Namespace: res.GetNamespace()}
+	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &rg); err != nil {
 		if kerrors.IsNotFound(err) {
 			return []resource.ReferenceStatus{{Name: v.Name, Status: resource.ReferenceNotFound}}, nil
@@ -55,9 +55,9 @@ func (v *ResourceGroupNameReferencer) GetStatus(ctx context.Context, res resourc
 }
 
 // Build retrieves and builds the name
-func (v *ResourceGroupNameReferencer) Build(ctx context.Context, res resource.CanReference, reader client.Reader) (string, error) {
+func (v *ResourceGroupNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
 	rg := ResourceGroup{}
-	nn := types.NamespacedName{Name: v.Name, Namespace: res.GetNamespace()}
+	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &rg); err != nil {
 		return "", err
 	}

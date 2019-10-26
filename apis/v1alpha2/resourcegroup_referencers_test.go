@@ -35,22 +35,12 @@ import (
 
 const (
 	mockName              = "mockName"
-	mockNamespace         = "mockNamespace"
 	mockResourceGroupName = "mockResourceGroupName"
 )
 
 var (
 	errBoom = errors.New("boom")
 )
-
-type mockCanReference struct {
-	resource.CanReference
-	ns string
-}
-
-func (c *mockCanReference) GetNamespace() string {
-	return c.ns
-}
 
 type mockReader struct {
 	client.Reader
@@ -130,15 +120,14 @@ func TestResourceGroupNameReferencerGetStatus(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			r := ResourceGroupNameReferencer{LocalObjectReference: corev1.LocalObjectReference{Name: mockName}}
 
-			canReference := &mockCanReference{ns: mockNamespace}
 			reader := &mockReader{readFn: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
-				if diff := cmp.Diff(key, client.ObjectKey{Name: mockName, Namespace: mockNamespace}); diff != "" {
+				if diff := cmp.Diff(key, client.ObjectKey{Name: mockName}); diff != "" {
 					t.Errorf("reader.Get(...): -expected key, +got key:\n%s", diff)
 				}
 				return tc.input.readerFn(ctx, key, obj)
 			}}
 
-			statuses, err := r.GetStatus(context.Background(), canReference, reader)
+			statuses, err := r.GetStatus(context.Background(), nil, reader)
 			if diff := cmp.Diff(tc.expected.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("GetStatus(...): -want error, +got error:\n%s", diff)
 			}
@@ -188,15 +177,14 @@ func TestResourceGroupNameReferencerBuild(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			r := ResourceGroupNameReferencer{LocalObjectReference: corev1.LocalObjectReference{Name: mockName}}
 
-			canReference := &mockCanReference{ns: mockNamespace}
 			reader := &mockReader{readFn: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
-				if diff := cmp.Diff(key, client.ObjectKey{Name: mockName, Namespace: mockNamespace}); diff != "" {
+				if diff := cmp.Diff(key, client.ObjectKey{Name: mockName}); diff != "" {
 					t.Errorf("reader.Get(...): -expected key, +got key:\n%s", diff)
 				}
 				return tc.input.readerFn(ctx, key, obj)
 			}}
 
-			value, err := r.Build(context.Background(), canReference, reader)
+			value, err := r.Build(context.Background(), nil, reader)
 			if diff := cmp.Diff(tc.expected.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("Build(...): -want error, +got error:\n%s", diff)
 			}

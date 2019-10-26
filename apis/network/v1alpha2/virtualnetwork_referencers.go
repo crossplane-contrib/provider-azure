@@ -36,9 +36,9 @@ type VirtualNetworkNameReferencer struct {
 }
 
 // GetStatus implements GetStatus method of AttributeReferencer interface
-func (v *VirtualNetworkNameReferencer) GetStatus(ctx context.Context, res resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
+func (v *VirtualNetworkNameReferencer) GetStatus(ctx context.Context, _ resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
 	network := VirtualNetwork{}
-	nn := types.NamespacedName{Name: v.Name, Namespace: res.GetNamespace()}
+	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &network); err != nil {
 		if kerrors.IsNotFound(err) {
 			return []resource.ReferenceStatus{{Name: v.Name, Status: resource.ReferenceNotFound}}, nil
@@ -55,9 +55,9 @@ func (v *VirtualNetworkNameReferencer) GetStatus(ctx context.Context, res resour
 }
 
 // Build retrieves and builds the NetworkName
-func (v *VirtualNetworkNameReferencer) Build(ctx context.Context, res resource.CanReference, reader client.Reader) (string, error) {
+func (v *VirtualNetworkNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
 	network := VirtualNetwork{}
-	nn := types.NamespacedName{Name: v.Name, Namespace: res.GetNamespace()}
+	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &network); err != nil {
 		return "", err
 	}
