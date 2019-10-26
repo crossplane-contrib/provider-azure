@@ -198,13 +198,12 @@ func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.MysqlServerV
 	return false
 }
 
-// MySQLVirtualNetworkRuleStatusFromAzure converts an Azure subnet to a SubnetStatus
-func MySQLVirtualNetworkRuleStatusFromAzure(az mysql.VirtualNetworkRule) azuredbv1alpha2.VirtualNetworkRuleStatus {
-	return azuredbv1alpha2.VirtualNetworkRuleStatus{
-		State: string(az.VirtualNetworkRuleProperties.State),
-		ID:    ToString(az.ID),
-		Type:  ToString(az.Type),
-	}
+// UpdateMySQLVirtualNetworkRuleStatusFromAzure updates the status related to the external
+// Azure MySQLVirtualNetworkRule in the VirtualNetworkStatus
+func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha2.MysqlServerVirtualNetworkRule, az mysql.VirtualNetworkRule) {
+	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
+	v.Status.ID = ToString(az.ID)
+	v.Status.Type = ToString(az.Type)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -359,13 +358,12 @@ func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.Postgre
 	return false
 }
 
-// PostgreSQLVirtualNetworkRuleStatusFromAzure converts an Azure subnet to a SubnetStatus
-func PostgreSQLVirtualNetworkRuleStatusFromAzure(az postgresql.VirtualNetworkRule) azuredbv1alpha2.VirtualNetworkRuleStatus {
-	return azuredbv1alpha2.VirtualNetworkRuleStatus{
-		State: string(az.State),
-		ID:    ToString(az.ID),
-		Type:  ToString(az.Type),
-	}
+// UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure updates the status related to the external
+// Azure PostgreSQLVirtualNetworkRule in the VirtualNetworkStatus
+func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha2.PostgresqlServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) {
+	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
+	v.Status.ID = ToString(az.ID)
+	v.Status.Type = ToString(az.Type)
 }
 
 // Helper functions
