@@ -828,7 +828,7 @@ func TestReconcile(t *testing.T) {
 					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
 						want := redisResource(
 							withResourceName(redisResourceName),
-							withConditions(runtimev1alpha1.ReconcileError(errorBoom)),
+							withConditions(runtimev1alpha1.ReferenceResolutionSuccess(), runtimev1alpha1.ReconcileError(errorBoom)),
 						)
 						got := obj.(*v1alpha2.Redis)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
