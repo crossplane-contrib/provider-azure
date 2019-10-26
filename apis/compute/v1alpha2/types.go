@@ -100,7 +100,7 @@ type AKSClusterParameters struct {
 
 	// ResourceGroupNameRef - A reference to a VnetSubnet object to retrieve
 	// its ID
-	VnetSubnetIDRef *SubnetIDReferencerForAKSCluster `json:"vnetSubnetID,omitempty" resource:"attributereferencer"`
+	VnetSubnetIDRef *SubnetIDReferencerForAKSCluster `json:"vnetSubnetIDRef,omitempty" resource:"attributereferencer"`
 
 	// NodeCount is the number of nodes that the cluster will initially be
 	// created with.  This can be scaled over time and defaults to 1.

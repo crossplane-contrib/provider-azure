@@ -223,6 +223,10 @@ spec:
                 to the cluster
               type: string
             vnetSubnetID:
+              description: VnetSubnetID is the subnet to which the cluster will be
+                deployed.
+              type: string
+            vnetSubnetIDRef:
               description: ResourceGroupNameRef - A reference to a VnetSubnet object
                 to retrieve its ID
               properties:
