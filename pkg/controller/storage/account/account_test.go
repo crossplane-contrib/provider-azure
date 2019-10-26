@@ -280,7 +280,10 @@ func TestReconciler_Reconcile(t *testing.T) {
 			want: want{
 				res: resultRequeue,
 				acct: v1alpha2test.NewMockAccount(name).
-					WithStatusConditions(runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(
+						runtimev1alpha1.ReferenceResolutionSuccess(),
+						runtimev1alpha1.ReconcileError(errBoom),
+					).
 					WithFinalizer("foo.bar").Account,
 			},
 		},

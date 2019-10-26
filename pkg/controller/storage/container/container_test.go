@@ -205,7 +205,10 @@ func TestReconciler_Reconcile(t *testing.T) {
 				res: resultRequeue,
 				con: v1alpha2test.NewMockContainer(testContainerName).
 					WithFinalizer("foo.bar").
-					WithStatusConditions(runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(
+						runtimev1alpha1.ReferenceResolutionSuccess(),
+						runtimev1alpha1.ReconcileError(errBoom),
+					).
 					Container,
 			},
 		},
