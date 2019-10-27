@@ -8,4 +8,4 @@ overview: |
 readme: |
  Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides MySQL and PostgreSQL databases, which are satisfied by [Azure Database for MySQL](https://azure.microsoft.com/en-us/services/mysql/) and [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/services/postgresql/).
 
- Full documentation can be found in the Crossplane [API Reference docs](https://crossplane.io/docs/master/api/crossplaneio/stack-azure/compute-azure-crossplane-io-v1alpha2.html#SQLServerClass).
+ Full documentation can be found in the Crossplane [API Reference docs](https://crossplane.io/docs/master/api/crossplaneio/stack-azure/compute-azure-crossplane-io-v1alpha3.html#SQLServerClass).

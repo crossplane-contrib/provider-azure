@@ -29,7 +29,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 )
 
 // A ClaimSchedulingController reconciles MySQLInstance claims that include a
@@ -42,8 +42,8 @@ type ClaimSchedulingController struct{}
 func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
-		v1alpha2.MySQLServerKind,
-		v1alpha2.Group))
+		v1alpha3.MySQLServerKind,
+		v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -55,7 +55,7 @@ func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 		))).
 		Complete(resource.NewClaimSchedulingReconciler(mgr,
 			resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-			resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+			resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind),
 		))
 }
 
@@ -69,8 +69,8 @@ type ClaimDefaultingController struct{}
 func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
-		v1alpha2.MySQLServerKind,
-		v1alpha2.Group))
+		v1alpha3.MySQLServerKind,
+		v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -82,7 +82,7 @@ func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 		))).
 		Complete(resource.NewClaimDefaultingReconciler(mgr,
 			resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-			resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
+			resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind),
 		))
 }
 
@@ -94,27 +94,27 @@ type ClaimController struct{}
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
-		v1alpha2.MySQLServerKind,
-		v1alpha2.Group))
+		v1alpha3.MySQLServerKind,
+		v1alpha3.Group))
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind),
+		resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind),
+		resource.ManagedKind(v1alpha3.MySQLServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureMySQLServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
-		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
-		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind)),
-		resource.IsManagedKind(resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind), mgr.GetScheme()),
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind)),
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha3.MySQLServerGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha3.MySQLServerGroupVersionKind), mgr.GetScheme()),
 	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha2.MySQLServer{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha3.MySQLServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.MySQLInstance{}).
 		WithEventFilter(p).
 		Complete(r)
@@ -129,17 +129,17 @@ func ConfigureMySQLServer(_ context.Context, cm resource.Claim, cs resource.Clas
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.MySQLInstanceGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha2.SQLServerClass)
+	rs, csok := cs.(*v1alpha3.SQLServerClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.SQLServerClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha3.SQLServerClassGroupVersionKind)
 	}
 
-	s, mgok := mg.(*v1alpha2.MySQLServer)
+	s, mgok := mg.(*v1alpha3.MySQLServer)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.MySQLServerGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha3.MySQLServerGroupVersionKind)
 	}
 
-	spec := &v1alpha2.SQLServerSpec{
+	spec := &v1alpha3.SQLServerSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},

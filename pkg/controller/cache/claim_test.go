@@ -31,7 +31,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	cachev1alpha1 "github.com/crossplaneio/crossplane/apis/cache/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
 )
 
 const (
@@ -67,25 +67,25 @@ func TestConfigureRedis(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
 					Spec:       cachev1alpha1.RedisClusterSpec{EngineVersion: "3.2"},
 				},
-				cs: &v1alpha2.RedisClass{
-					SpecTemplate: v1alpha2.RedisClassSpecTemplate{
+				cs: &v1alpha3.RedisClass{
+					SpecTemplate: v1alpha3.RedisClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha2.Redis{},
+				mg: &v1alpha3.Redis{},
 			},
 			want: want{
-				mg: &v1alpha2.Redis{
-					Spec: v1alpha2.RedisSpec{
+				mg: &v1alpha3.Redis{
+					Spec: v1alpha3.RedisSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						RedisParameters: v1alpha2.RedisParameters{
+						RedisParameters: v1alpha3.RedisParameters{
 							RedisConfiguration: map[string]string{},
 						},
 					},
@@ -125,7 +125,7 @@ func TestResolveAzureClassValues(t *testing.T) {
 		{
 			name:  "EngineVersionInvalid",
 			claim: &cachev1alpha1.RedisCluster{Spec: cachev1alpha1.RedisClusterSpec{EngineVersion: claimVersion40}},
-			want:  errors.Errorf("Azure supports only Redis version %s", v1alpha2.SupportedRedisVersion),
+			want:  errors.Errorf("Azure supports only Redis version %s", v1alpha3.SupportedRedisVersion),
 		},
 	}
 

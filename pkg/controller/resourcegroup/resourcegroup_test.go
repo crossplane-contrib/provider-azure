@@ -39,7 +39,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	"github.com/crossplaneio/stack-azure/pkg/clients/resourcegroup"
 	fakerg "github.com/crossplaneio/stack-azure/pkg/clients/resourcegroup/fake"
 )
@@ -60,9 +60,9 @@ var (
 	ctx       = context.Background()
 	errorBoom = errors.New("boom")
 
-	provider = azurev1alpha2.Provider{
+	provider = azurev1alpha3.Provider{
 		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha2.ProviderSpec{
+		Spec: azurev1alpha3.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
 					Namespace: namespace,
@@ -79,51 +79,51 @@ var (
 	}
 )
 
-type resourceModifier func(*azurev1alpha2.ResourceGroup)
+type resourceModifier func(*azurev1alpha3.ResourceGroup)
 
 func withConditions(c ...runtimev1alpha1.Condition) resourceModifier {
-	return func(r *azurev1alpha2.ResourceGroup) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *azurev1alpha3.ResourceGroup) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withFinalizers(f ...string) resourceModifier {
-	return func(r *azurev1alpha2.ResourceGroup) { r.ObjectMeta.Finalizers = f }
+	return func(r *azurev1alpha3.ResourceGroup) { r.ObjectMeta.Finalizers = f }
 }
 
 func withReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) resourceModifier {
-	return func(r *azurev1alpha2.ResourceGroup) { r.Spec.ReclaimPolicy = p }
+	return func(r *azurev1alpha3.ResourceGroup) { r.Spec.ReclaimPolicy = p }
 }
 
 func withName(n string) resourceModifier {
-	return func(r *azurev1alpha2.ResourceGroup) { r.Status.Name = n }
+	return func(r *azurev1alpha3.ResourceGroup) { r.Status.Name = n }
 }
 
 func withSpecName(n string) resourceModifier {
-	return func(r *azurev1alpha2.ResourceGroup) { r.Spec.Name = n }
+	return func(r *azurev1alpha3.ResourceGroup) { r.Spec.Name = n }
 }
 
 func withDeletionTimestamp(t time.Time) resourceModifier {
-	return func(r *azurev1alpha2.ResourceGroup) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
+	return func(r *azurev1alpha3.ResourceGroup) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
 }
 
 // func withDeletionTimestamp(t time.Time) resourceModifier {
-// 	return func(r *azurev1alpha2.ResourceGroup) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
+// 	return func(r *azurev1alpha3.ResourceGroup) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
 // }
 
-func resourceGrp(rm ...resourceModifier) *azurev1alpha2.ResourceGroup {
-	r := &azurev1alpha2.ResourceGroup{
+func resourceGrp(rm ...resourceModifier) *azurev1alpha3.ResourceGroup {
+	r := &azurev1alpha3.ResourceGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: azurev1alpha2.ResourceGroupSpec{
+		Spec: azurev1alpha3.ResourceGroupSpec{
 			Name:     name,
 			Location: location,
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Name: providerName},
 			},
 		},
-		Status: azurev1alpha2.ResourceGroupStatus{},
+		Status: azurev1alpha3.ResourceGroupStatus{},
 	}
 
 	for _, m := range rm {
@@ -140,8 +140,8 @@ func TestCreate(t *testing.T) {
 	cases := []struct {
 		name        string
 		csd         createsyncdeleter
-		r           *azurev1alpha2.ResourceGroup
-		want        *azurev1alpha2.ResourceGroup
+		r           *azurev1alpha3.ResourceGroup
+		want        *azurev1alpha3.ResourceGroup
 		wantRequeue bool
 	}{
 		{
@@ -209,8 +209,8 @@ func TestSync(t *testing.T) {
 	cases := []struct {
 		name        string
 		csd         createsyncdeleter
-		r           *azurev1alpha2.ResourceGroup
-		want        *azurev1alpha2.ResourceGroup
+		r           *azurev1alpha3.ResourceGroup
+		want        *azurev1alpha3.ResourceGroup
 		wantRequeue bool
 	}{
 		{
@@ -306,8 +306,8 @@ func TestDelete(t *testing.T) {
 	cases := []struct {
 		name        string
 		csd         createsyncdeleter
-		r           *azurev1alpha2.ResourceGroup
-		want        *azurev1alpha2.ResourceGroup
+		r           *azurev1alpha3.ResourceGroup
+		want        *azurev1alpha3.ResourceGroup
 		wantRequeue bool
 	}{
 		{
@@ -374,7 +374,7 @@ func TestConnect(t *testing.T) {
 	cases := []struct {
 		name    string
 		conn    connecter
-		i       *azurev1alpha2.ResourceGroup
+		i       *azurev1alpha3.ResourceGroup
 		want    createsyncdeleter
 		wantErr error
 	}{
@@ -384,7 +384,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
 					case client.ObjectKey{Name: providerName}:
-						*obj.(*azurev1alpha2.Provider) = provider
+						*obj.(*azurev1alpha3.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						*obj.(*corev1.Secret) = providerSecret
 					}
@@ -416,7 +416,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
 					case client.ObjectKey{Name: providerName}:
-						*obj.(*azurev1alpha2.Provider) = provider
+						*obj.(*azurev1alpha3.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
 					}
@@ -435,7 +435,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {
 					case client.ObjectKey{Name: providerName}:
-						*obj.(*azurev1alpha2.Provider) = provider
+						*obj.(*azurev1alpha3.Provider) = provider
 					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 						*obj.(*corev1.Secret) = providerSecret
 					}
@@ -465,28 +465,28 @@ func TestConnect(t *testing.T) {
 }
 
 type mockConnector struct {
-	MockConnect func(ctx context.Context, i *azurev1alpha2.ResourceGroup) (createsyncdeleter, error)
+	MockConnect func(ctx context.Context, i *azurev1alpha3.ResourceGroup) (createsyncdeleter, error)
 }
 
-func (c *mockConnector) Connect(ctx context.Context, i *azurev1alpha2.ResourceGroup) (createsyncdeleter, error) {
+func (c *mockConnector) Connect(ctx context.Context, i *azurev1alpha3.ResourceGroup) (createsyncdeleter, error) {
 	return c.MockConnect(ctx, i)
 }
 
 type mockCSD struct {
-	MockCreate func(ctx context.Context, i *azurev1alpha2.ResourceGroup) bool
-	MockSync   func(ctx context.Context, i *azurev1alpha2.ResourceGroup) bool
-	MockDelete func(ctx context.Context, i *azurev1alpha2.ResourceGroup) bool
+	MockCreate func(ctx context.Context, i *azurev1alpha3.ResourceGroup) bool
+	MockSync   func(ctx context.Context, i *azurev1alpha3.ResourceGroup) bool
+	MockDelete func(ctx context.Context, i *azurev1alpha3.ResourceGroup) bool
 }
 
-func (csd *mockCSD) Create(ctx context.Context, i *azurev1alpha2.ResourceGroup) bool {
+func (csd *mockCSD) Create(ctx context.Context, i *azurev1alpha3.ResourceGroup) bool {
 	return csd.MockCreate(ctx, i)
 }
 
-func (csd *mockCSD) Sync(ctx context.Context, i *azurev1alpha2.ResourceGroup) bool {
+func (csd *mockCSD) Sync(ctx context.Context, i *azurev1alpha3.ResourceGroup) bool {
 	return csd.MockSync(ctx, i)
 }
 
-func (csd *mockCSD) Delete(ctx context.Context, i *azurev1alpha2.ResourceGroup) bool {
+func (csd *mockCSD) Delete(ctx context.Context, i *azurev1alpha3.ResourceGroup) bool {
 	return csd.MockDelete(ctx, i)
 }
 
@@ -501,12 +501,12 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "SuccessfulDelete",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) (createsyncdeleter, error) {
-					return &mockCSD{MockDelete: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) bool { return false }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) (createsyncdeleter, error) {
+					return &mockCSD{MockDelete: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) bool { return false }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp(withName(name), withDeletionTimestamp(time.Now())))
+						*obj.(*azurev1alpha3.ResourceGroup) = *(resourceGrp(withName(name), withDeletionTimestamp(time.Now())))
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -520,12 +520,12 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "SuccessfulCreate",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) (createsyncdeleter, error) {
-					return &mockCSD{MockCreate: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) bool { return true }}, nil
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) (createsyncdeleter, error) {
+					return &mockCSD{MockCreate: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) bool { return true }}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp())
+						*obj.(*azurev1alpha3.ResourceGroup) = *(resourceGrp())
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -539,14 +539,14 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "SuccessfulSync",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) (createsyncdeleter, error) {
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) (createsyncdeleter, error) {
 					return &mockCSD{
-						MockSync: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) bool { return false },
+						MockSync: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) bool { return false },
 					}, nil
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp(withName(name)))
+						*obj.(*azurev1alpha3.ResourceGroup) = *(resourceGrp(withName(name)))
 						return nil
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -589,17 +589,17 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "FailedToConnect",
 			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha2.ResourceGroup) (createsyncdeleter, error) {
+				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *azurev1alpha3.ResourceGroup) (createsyncdeleter, error) {
 					return nil, errorBoom
 				}},
 				kube: &test.MockClient{
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*azurev1alpha2.ResourceGroup) = *(resourceGrp())
+						*obj.(*azurev1alpha3.ResourceGroup) = *(resourceGrp())
 						return nil
 					},
 					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
 						want := resourceGrp(withConditions(runtimev1alpha1.ReconcileError(errorBoom)))
-						got := obj.(*azurev1alpha2.ResourceGroup)
+						got := obj.(*azurev1alpha3.ResourceGroup)
 						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
 							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
 						}

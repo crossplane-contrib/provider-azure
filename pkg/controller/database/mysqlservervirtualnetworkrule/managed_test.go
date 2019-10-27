@@ -31,8 +31,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/fake"
 
@@ -61,9 +61,9 @@ var (
 	ctx       = context.Background()
 	errorBoom = errors.New("boom")
 
-	provider = azurev1alpha2.Provider{
+	provider = azurev1alpha3.Provider{
 		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha2.ProviderSpec{
+		Spec: azurev1alpha3.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
 					Namespace: namespace,
@@ -88,44 +88,44 @@ type testCase struct {
 	wantErr error
 }
 
-type virtualNetworkRuleModifier func(*v1alpha2.MySQLServerVirtualNetworkRule)
+type virtualNetworkRuleModifier func(*v1alpha3.MySQLServerVirtualNetworkRule)
 
 func withConditions(c ...runtimev1alpha1.Condition) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withType(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.Type = s }
+	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Status.Type = s }
 }
 
 func withID(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.ID = s }
+	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Status.ID = s }
 }
 
 func withState(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.State = s }
+	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Status.State = s }
 }
 
-func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.MySQLServerVirtualNetworkRule {
-	r := &v1alpha2.MySQLServerVirtualNetworkRule{
+func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.MySQLServerVirtualNetworkRule {
+	r := &v1alpha3.MySQLServerVirtualNetworkRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha2.MySQLVirtualNetworkRuleSpec{
+		Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
 			Name:              name,
 			ServerName:        serverName,
 			ResourceGroupName: resourceGroupName,
-			VirtualNetworkRuleProperties: v1alpha2.VirtualNetworkRuleProperties{
+			VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 				VirtualNetworkSubnetID:           vnetSubnetID,
 				IgnoreMissingVnetServiceEndpoint: true,
 			},
 		},
-		Status: v1alpha2.VirtualNetworkRuleStatus{},
+		Status: v1alpha3.VirtualNetworkRuleStatus{},
 	}
 
 	for _, m := range sm {
@@ -144,8 +144,8 @@ func TestCreate(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			r:       &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
 			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
@@ -195,8 +195,8 @@ func TestObserve(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			r:       &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
 			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
@@ -267,8 +267,8 @@ func TestUpdate(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			r:       &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
 			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
@@ -361,8 +361,8 @@ func TestDelete(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			r:       &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
 			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
@@ -432,7 +432,7 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			conn:    &connecter{client: &test.MockClient{}},
-			i:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			i:       &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
 			want:    nil,
 			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
@@ -443,7 +443,7 @@ func TestConnect(t *testing.T) {
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
 						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha2.Provider) = provider
+							*obj.(*azurev1alpha3.Provider) = provider
 						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 							*obj.(*corev1.Secret) = providerSecret
 						}

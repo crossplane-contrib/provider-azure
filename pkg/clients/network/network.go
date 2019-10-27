@@ -26,7 +26,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/stack-azure/apis/network/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -63,7 +63,7 @@ func NewVirtualNetworksClient(ctx context.Context, credentials []byte) (VirtualN
 }
 
 // NewVirtualNetworkParameters returns an Azure VirtualNetwork object from a virtual network spec
-func NewVirtualNetworkParameters(v *v1alpha2.VirtualNetwork) networkmgmt.VirtualNetwork {
+func NewVirtualNetworkParameters(v *v1alpha3.VirtualNetwork) networkmgmt.VirtualNetwork {
 	return networkmgmt.VirtualNetwork{
 		Location: azure.ToStringPtr(v.Spec.Location),
 		Tags:     azure.ToStringPtrMap(v.Spec.Tags),
@@ -78,7 +78,7 @@ func NewVirtualNetworkParameters(v *v1alpha2.VirtualNetwork) networkmgmt.Virtual
 }
 
 // VirtualNetworkNeedsUpdate determines if a virtual network need to be updated
-func VirtualNetworkNeedsUpdate(kube *v1alpha2.VirtualNetwork, az networkmgmt.VirtualNetwork) bool {
+func VirtualNetworkNeedsUpdate(kube *v1alpha3.VirtualNetwork, az networkmgmt.VirtualNetwork) bool {
 	up := NewVirtualNetworkParameters(kube)
 
 	switch {
@@ -97,7 +97,7 @@ func VirtualNetworkNeedsUpdate(kube *v1alpha2.VirtualNetwork, az networkmgmt.Vir
 
 // UpdateVirtualNetworkStatusFromAzure updates the status related to the external
 // Azure virtual network in the VirtualNetworkStatus
-func UpdateVirtualNetworkStatusFromAzure(v *v1alpha2.VirtualNetwork, az networkmgmt.VirtualNetwork) {
+func UpdateVirtualNetworkStatusFromAzure(v *v1alpha3.VirtualNetwork, az networkmgmt.VirtualNetwork) {
 	v.Status.State = azure.ToString(az.ProvisioningState)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Etag = azure.ToString(az.Etag)
@@ -138,7 +138,7 @@ func NewSubnetsClient(ctx context.Context, credentials []byte) (SubnetsClient, e
 }
 
 // NewSubnetParameters returns an Azure Subnet object from a subnet spec
-func NewSubnetParameters(s *v1alpha2.Subnet) networkmgmt.Subnet {
+func NewSubnetParameters(s *v1alpha3.Subnet) networkmgmt.Subnet {
 	return networkmgmt.Subnet{
 		SubnetPropertiesFormat: &networkmgmt.SubnetPropertiesFormat{
 			AddressPrefix:    azure.ToStringPtr(s.Spec.SubnetPropertiesFormat.AddressPrefix),
@@ -148,7 +148,7 @@ func NewSubnetParameters(s *v1alpha2.Subnet) networkmgmt.Subnet {
 }
 
 // NewServiceEndpoints converts to Azure ServiceEndpointPropertiesFormat
-func NewServiceEndpoints(e []v1alpha2.ServiceEndpointPropertiesFormat) *[]networkmgmt.ServiceEndpointPropertiesFormat {
+func NewServiceEndpoints(e []v1alpha3.ServiceEndpointPropertiesFormat) *[]networkmgmt.ServiceEndpointPropertiesFormat {
 	endpoints := make([]networkmgmt.ServiceEndpointPropertiesFormat, len(e))
 
 	for i, end := range e {
@@ -161,7 +161,7 @@ func NewServiceEndpoints(e []v1alpha2.ServiceEndpointPropertiesFormat) *[]networ
 }
 
 // SubnetNeedsUpdate determines if a virtual network need to be updated
-func SubnetNeedsUpdate(kube *v1alpha2.Subnet, az networkmgmt.Subnet) bool {
+func SubnetNeedsUpdate(kube *v1alpha3.Subnet, az networkmgmt.Subnet) bool {
 	up := NewSubnetParameters(kube)
 
 	return !reflect.DeepEqual(up.SubnetPropertiesFormat.AddressPrefix, az.SubnetPropertiesFormat.AddressPrefix)
@@ -169,7 +169,7 @@ func SubnetNeedsUpdate(kube *v1alpha2.Subnet, az networkmgmt.Subnet) bool {
 
 // UpdateSubnetStatusFromAzure updates the status related to the external
 // Azure subnet in the SubnetStatus
-func UpdateSubnetStatusFromAzure(v *v1alpha2.Subnet, az networkmgmt.Subnet) {
+func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.State = azure.ToString(az.ProvisioningState)
 	v.Status.Etag = azure.ToString(az.Etag)
 	v.Status.ID = azure.ToString(az.ID)
