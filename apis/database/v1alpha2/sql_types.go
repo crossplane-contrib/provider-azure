@@ -23,6 +23,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/pkg/errors"
 
+	networkv1alpha2 "github.com/crossplaneio/stack-azure/apis/network/v1alpha2"
 	apisv1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
 )
 
@@ -38,10 +39,51 @@ const (
 
 // Error strings
 const (
-	errResourceIsNotSQLServer                          = "the managed resource is not a MysqlServer or PostgresqlServer"
-	errResourceIsNotPostgresqlServerVirtualNetworkRule = "the managed resource is not a PostgresqlServerVirtualNetworkRule"
-	errResourceIsNotMysqlServerVirtualNetworkRule      = "the managed resource is not a MysqlServerVirtualNetworkRule"
+	errResourceIsNotSQLServer                                  = "the managed resource is not a MysqlServer or PostgresqlServer"
+	errResourceIsNotPostgresqlServerVirtualNetworkRule         = "the managed resource is not a PostgresqlServerVirtualNetworkRule"
+	errResourceIsNotMysqlServerVirtualNetworkRule              = "the managed resource is not a MysqlServerVirtualNetworkRule"
+	errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule = "the managed resource is not MysqlServerVirtualNetworkRule or PostgresqlServerVirtualNetworkRule"
 )
+
+// SubnetIDReferencerForVirtualNetworkRule is an attribute
+// referencer that resolves id from a referenced Subnet and assigns it to a
+// PostgresqlServer or MySQL server object
+type SubnetIDReferencerForVirtualNetworkRule struct {
+	networkv1alpha2.SubnetIDReferencer `json:",inline"`
+}
+
+// Assign assigns the retrieved group name to the managed resource
+func (v *SubnetIDReferencerForVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
+	switch sql := res.(type) {
+	case *MysqlServerVirtualNetworkRule:
+		sql.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID = value
+	case *PostgresqlServerVirtualNetworkRule:
+		sql.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID = value
+	default:
+		return errors.New(errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule)
+	}
+
+	return nil
+}
+
+// ResourceGroupNameReferencerForVirtualNetworkRule is an attribute referencer
+// that resolves the name of a the ResourceGroup.
+type ResourceGroupNameReferencerForVirtualNetworkRule struct {
+	apisv1alpha2.ResourceGroupNameReferencer `json:",inline"`
+}
+
+// Assign assigns the retrieved group name to the managed resource
+func (v *ResourceGroupNameReferencerForVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
+	switch sql := res.(type) {
+	case *MysqlServerVirtualNetworkRule:
+		sql.Spec.ResourceGroupName = value
+	case *PostgresqlServerVirtualNetworkRule:
+		sql.Spec.ResourceGroupName = value
+	default:
+		return errors.New(errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule)
+	}
+	return nil
+}
 
 // ResourceGroupNameReferencerForSQLServer is an attribute referencer that
 // resolves the name of a the ResourceGroup.
@@ -285,7 +327,10 @@ func ValidPostgreSQLVersionValues() []string {
 type VirtualNetworkRuleProperties struct {
 	// VirtualNetworkSubnetID - The ARM resource id of the virtual network
 	// subnet.
-	VirtualNetworkSubnetID string `json:"virtualNetworkSubnetId"`
+	VirtualNetworkSubnetID string `json:"virtualNetworkSubnetId,omitempty"`
+
+	// VirtualNetworkSubnetIDRef - A reference to a Subnet to retrieve its ID
+	VirtualNetworkSubnetIDRef *SubnetIDReferencerForVirtualNetworkRule `json:"virtualNetworkSubnetIdRef,omitempty" resource:"attributereferencer"`
 
 	// IgnoreMissingVnetServiceEndpoint - Create firewall rule before the
 	// virtual network has vnet service endpoint enabled.
@@ -325,7 +370,11 @@ type PostgresqlVirtualNetworkRuleSpec struct {
 	ServerNameRef *PostgresqlServerNameReferencer `json:"serverNameRef,omitempty" resource:"attributereferencer"`
 
 	// ResourceGroupName - Name of the Virtual Network Rule's resource group.
-	ResourceGroupName string `json:"resourceGroupName"`
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
+	// its name
+	ResourceGroupNameRef *ResourceGroupNameReferencerForVirtualNetworkRule `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
 
 	// VirtualNetworkRuleProperties - Resource properties.
 	VirtualNetworkRuleProperties `json:"properties"`
@@ -371,7 +420,11 @@ type MysqlVirtualNetworkRuleSpec struct {
 	ServerNameRef *MysqlServerNameReferencer `json:"serverNameRef,omitempty" resource:"attributereferencer"`
 
 	// ResourceGroupName - Name of the Virtual Network Rule's resource group.
-	ResourceGroupName string `json:"resourceGroupName"`
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
+	// its name
+	ResourceGroupNameRef *ResourceGroupNameReferencerForVirtualNetworkRule `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
 
 	// VirtualNetworkRuleProperties - Resource properties.
 	VirtualNetworkRuleProperties `json:"properties"`

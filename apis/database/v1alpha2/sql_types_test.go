@@ -26,7 +26,63 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 )
 
+var _ resource.AttributeReferencer = (*SubnetIDReferencerForVirtualNetworkRule)(nil)
+var _ resource.AttributeReferencer = (*ResourceGroupNameReferencerForVirtualNetworkRule)(nil)
 var _ resource.AttributeReferencer = (*ResourceGroupNameReferencerForSQLServer)(nil)
+
+func TestSubnetIDReferencerForVirtualNetworkRule_AssignInvalidType_ReturnsErr(t *testing.T) {
+
+	r := &SubnetIDReferencerForVirtualNetworkRule{}
+	expectedErr := errors.New(errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule)
+
+	err := r.Assign(&struct{ resource.CanReference }{}, "mockValue")
+	if diff := cmp.Diff(expectedErr, err, test.EquateErrors()); diff != "" {
+		t.Errorf("Assign(...): -want error, +got error:\n%s", diff)
+	}
+}
+
+func TestSubnetIDReferencerForVirtualNetworkRule_AssignValidType_ReturnsExpected(t *testing.T) {
+
+	r := &SubnetIDReferencerForVirtualNetworkRule{}
+	res := &MysqlServerVirtualNetworkRule{}
+	var expectedErr error
+
+	err := r.Assign(res, "mockValue")
+	if diff := cmp.Diff(expectedErr, err, test.EquateErrors()); diff != "" {
+		t.Errorf("Assign(...): -want error, +got error:\n%s", diff)
+	}
+
+	if diff := cmp.Diff(res.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID, "mockValue"); diff != "" {
+		t.Errorf("Assign(...): -want value, +got value:\n%s", diff)
+	}
+}
+
+func TestResourceGroupNameReferencerForVirtualNetworkRule_AssignInvalidType_ReturnsErr(t *testing.T) {
+
+	r := &ResourceGroupNameReferencerForVirtualNetworkRule{}
+	expectedErr := errors.New(errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule)
+
+	err := r.Assign(&struct{ resource.CanReference }{}, "mockValue")
+	if diff := cmp.Diff(expectedErr, err, test.EquateErrors()); diff != "" {
+		t.Errorf("Assign(...): -want error, +got error:\n%s", diff)
+	}
+}
+
+func TestResourceGroupNameReferencerForVirtualNetworkRule_AssignValidType_ReturnsExpected(t *testing.T) {
+
+	r := &ResourceGroupNameReferencerForVirtualNetworkRule{}
+	res := &MysqlServerVirtualNetworkRule{}
+	var expectedErr error
+
+	err := r.Assign(res, "mockValue")
+	if diff := cmp.Diff(expectedErr, err, test.EquateErrors()); diff != "" {
+		t.Errorf("Assign(...): -want error, +got error:\n%s", diff)
+	}
+
+	if diff := cmp.Diff(res.Spec.ResourceGroupName, "mockValue"); diff != "" {
+		t.Errorf("Assign(...): -want value, +got value:\n%s", diff)
+	}
+}
 
 func TestResourceGroupNameReferencerForSQLServer_AssignInvalidType_ReturnsErr(t *testing.T) {
 
