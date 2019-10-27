@@ -39,15 +39,15 @@ const (
 
 // Error strings
 const (
-	errResourceIsNotSQLServer                                  = "the managed resource is not a MysqlServer or PostgresqlServer"
-	errResourceIsNotPostgresqlServerVirtualNetworkRule         = "the managed resource is not a PostgresqlServerVirtualNetworkRule"
-	errResourceIsNotMysqlServerVirtualNetworkRule              = "the managed resource is not a MysqlServerVirtualNetworkRule"
-	errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule = "the managed resource is not MysqlServerVirtualNetworkRule or PostgresqlServerVirtualNetworkRule"
+	errResourceIsNotSQLServer                                  = "the managed resource is not a MySQLServer or PostgreSQLServer"
+	errResourceIsNotPostgreSQLServerVirtualNetworkRule         = "the managed resource is not a PostgreSQLServerVirtualNetworkRule"
+	errResourceIsNotMySQLServerVirtualNetworkRule              = "the managed resource is not a MySQLServerVirtualNetworkRule"
+	errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule = "the managed resource is not MySQLServerVirtualNetworkRule or PostgreSQLServerVirtualNetworkRule"
 )
 
 // SubnetIDReferencerForVirtualNetworkRule is an attribute
 // referencer that resolves id from a referenced Subnet and assigns it to a
-// PostgresqlServer or MySQL server object
+// PostgreSQLServer or MySQL server object
 type SubnetIDReferencerForVirtualNetworkRule struct {
 	networkv1alpha2.SubnetIDReferencer `json:",inline"`
 }
@@ -55,9 +55,9 @@ type SubnetIDReferencerForVirtualNetworkRule struct {
 // Assign assigns the retrieved group name to the managed resource
 func (v *SubnetIDReferencerForVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
 	switch sql := res.(type) {
-	case *MysqlServerVirtualNetworkRule:
+	case *MySQLServerVirtualNetworkRule:
 		sql.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID = value
-	case *PostgresqlServerVirtualNetworkRule:
+	case *PostgreSQLServerVirtualNetworkRule:
 		sql.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID = value
 	default:
 		return errors.New(errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule)
@@ -75,9 +75,9 @@ type ResourceGroupNameReferencerForVirtualNetworkRule struct {
 // Assign assigns the retrieved group name to the managed resource
 func (v *ResourceGroupNameReferencerForVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
 	switch sql := res.(type) {
-	case *MysqlServerVirtualNetworkRule:
+	case *MySQLServerVirtualNetworkRule:
 		sql.Spec.ResourceGroupName = value
-	case *PostgresqlServerVirtualNetworkRule:
+	case *PostgreSQLServerVirtualNetworkRule:
 		sql.Spec.ResourceGroupName = value
 	default:
 		return errors.New(errResourceIsNotPostgreSQLNorMySQLServerVirtualNetworkRule)
@@ -94,9 +94,9 @@ type ResourceGroupNameReferencerForSQLServer struct {
 // Assign assigns the retrieved group name to the managed resource
 func (v *ResourceGroupNameReferencerForSQLServer) Assign(res resource.CanReference, value string) error {
 	switch sql := res.(type) {
-	case *MysqlServer:
+	case *MySQLServer:
 		sql.Spec.ResourceGroupName = value
-	case *PostgresqlServer:
+	case *PostgreSQLServer:
 		sql.Spec.ResourceGroupName = value
 	default:
 		return errors.New(errResourceIsNotSQLServer)
@@ -104,34 +104,34 @@ func (v *ResourceGroupNameReferencerForSQLServer) Assign(res resource.CanReferen
 	return nil
 }
 
-// ServerNameReferencerForPostgresqlServerVirtualNetworkRule is an attribute
-// referencer that resolves the name of a PostgresqlServer.
-type ServerNameReferencerForPostgresqlServerVirtualNetworkRule struct {
-	PostgresqlServerNameReferencer `json:",inline"`
+// ServerNameReferencerForPostgreSQLServerVirtualNetworkRule is an attribute
+// referencer that resolves the name of a PostgreSQLServer.
+type ServerNameReferencerForPostgreSQLServerVirtualNetworkRule struct {
+	PostgreSQLServerNameReferencer `json:",inline"`
 }
 
 // Assign assigns the retrieved group name to the managed resource
-func (v *ServerNameReferencerForPostgresqlServerVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
-	vnet, ok := res.(*PostgresqlServerVirtualNetworkRule)
+func (v *ServerNameReferencerForPostgreSQLServerVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
+	vnet, ok := res.(*PostgreSQLServerVirtualNetworkRule)
 	if !ok {
-		return errors.Errorf(errResourceIsNotPostgresqlServerVirtualNetworkRule)
+		return errors.Errorf(errResourceIsNotPostgreSQLServerVirtualNetworkRule)
 	}
 
 	vnet.Spec.ServerName = value
 	return nil
 }
 
-// ServerNameReferencerForMysqlServerVirtualNetworkRule is an attribute
-// referencer that resolves the name of a MysqlServer.
-type ServerNameReferencerForMysqlServerVirtualNetworkRule struct {
-	MysqlServerNameReferencer `json:",inline"`
+// ServerNameReferencerForMySQLServerVirtualNetworkRule is an attribute
+// referencer that resolves the name of a MySQLServer.
+type ServerNameReferencerForMySQLServerVirtualNetworkRule struct {
+	MySQLServerNameReferencer `json:",inline"`
 }
 
 // Assign assigns the retrieved group name to the managed resource
-func (v *ServerNameReferencerForMysqlServerVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
-	vnet, ok := res.(*MysqlServerVirtualNetworkRule)
+func (v *ServerNameReferencerForMySQLServerVirtualNetworkRule) Assign(res resource.CanReference, value string) error {
+	vnet, ok := res.(*MySQLServerVirtualNetworkRule)
 	if !ok {
-		return errors.Errorf(errResourceIsNotMysqlServerVirtualNetworkRule)
+		return errors.Errorf(errResourceIsNotMySQLServerVirtualNetworkRule)
 	}
 
 	vnet.Spec.ServerName = value
@@ -140,7 +140,7 @@ func (v *ServerNameReferencerForMysqlServerVirtualNetworkRule) Assign(res resour
 
 // +kubebuilder:object:root=true
 
-// A MysqlServer is a managed resource that represents an Azure MySQL Database
+// A MySQLServer is a managed resource that represents an Azure MySQL Database
 // Server.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
@@ -149,7 +149,7 @@ func (v *ServerNameReferencerForMysqlServerVirtualNetworkRule) Assign(res resour
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-type MysqlServer struct {
+type MySQLServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -159,16 +159,16 @@ type MysqlServer struct {
 
 // +kubebuilder:object:root=true
 
-// MysqlServerList contains a list of MysqlServer.
-type MysqlServerList struct {
+// MySQLServerList contains a list of MySQLServer.
+type MySQLServerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MysqlServer `json:"items"`
+	Items           []MySQLServer `json:"items"`
 }
 
 // +kubebuilder:object:root=true
 
-// A PostgresqlServer is a managed resource that represents an Azure PostgreSQL
+// A PostgreSQLServer is a managed resource that represents an Azure PostgreSQL
 // Database Server.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
@@ -177,7 +177,7 @@ type MysqlServerList struct {
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-type PostgresqlServer struct {
+type PostgreSQLServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -187,15 +187,15 @@ type PostgresqlServer struct {
 
 // +kubebuilder:object:root=true
 
-// PostgresqlServerList contains a list of PostgresqlServer.
-type PostgresqlServerList struct {
+// PostgreSQLServerList contains a list of PostgreSQLServer.
+type PostgreSQLServerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []PostgresqlServer `json:"items"`
+	Items           []PostgreSQLServer `json:"items"`
 }
 
 // A SQLServerClassSpecTemplate is a template for the spec of a dynamically
-// provisioned MysqlServer or PostgresqlServer.
+// provisioned MySQLServer or PostgreSQLServer.
 type SQLServerClassSpecTemplate struct {
 	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
 	SQLServerParameters               `json:",inline"`
@@ -356,18 +356,18 @@ type VirtualNetworkRuleStatus struct {
 	Type string `json:"type,omitempty"`
 }
 
-// A PostgresqlVirtualNetworkRuleSpec defines the desired state of a PostgresqlVirtualNetworkRule.
-type PostgresqlVirtualNetworkRuleSpec struct {
+// A PostgreSQLVirtualNetworkRuleSpec defines the desired state of a PostgreSQLVirtualNetworkRule.
+type PostgreSQLVirtualNetworkRuleSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
 	// Name - Name of the Virtual Network Rule.
 	Name string `json:"name"`
 
-	// ServerName - Name of the Virtual Network Rule's PostgresqlServer.
+	// ServerName - Name of the Virtual Network Rule's PostgreSQLServer.
 	ServerName string `json:"serverName,omitempty"`
 
-	// ServerNameRef - A reference to the Virtual Network Rule's PostgresqlServer.
-	ServerNameRef *PostgresqlServerNameReferencer `json:"serverNameRef,omitempty" resource:"attributereferencer"`
+	// ServerNameRef - A reference to the Virtual Network Rule's PostgreSQLServer.
+	ServerNameRef *PostgreSQLServerNameReferencer `json:"serverNameRef,omitempty" resource:"attributereferencer"`
 
 	// ResourceGroupName - Name of the Virtual Network Rule's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
@@ -382,32 +382,32 @@ type PostgresqlVirtualNetworkRuleSpec struct {
 
 // +kubebuilder:object:root=true
 
-// A PostgresqlServerVirtualNetworkRule is a managed resource that represents
+// A PostgreSQLServerVirtualNetworkRule is a managed resource that represents
 // an Azure PostgreSQL Database virtual network rule.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-type PostgresqlServerVirtualNetworkRule struct {
+type PostgreSQLServerVirtualNetworkRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   PostgresqlVirtualNetworkRuleSpec `json:"spec,omitempty"`
+	Spec   PostgreSQLVirtualNetworkRuleSpec `json:"spec,omitempty"`
 	Status VirtualNetworkRuleStatus         `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// PostgresqlServerVirtualNetworkRuleList contains a list of PostgresqlServerVirtualNetworkRule.
-type PostgresqlServerVirtualNetworkRuleList struct {
+// PostgreSQLServerVirtualNetworkRuleList contains a list of PostgreSQLServerVirtualNetworkRule.
+type PostgreSQLServerVirtualNetworkRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []PostgresqlServerVirtualNetworkRule `json:"items"`
+	Items           []PostgreSQLServerVirtualNetworkRule `json:"items"`
 }
 
-// A MysqlVirtualNetworkRuleSpec defines the desired state of a MysqlVirtualNetworkRule.
-type MysqlVirtualNetworkRuleSpec struct {
+// A MySQLVirtualNetworkRuleSpec defines the desired state of a MySQLVirtualNetworkRule.
+type MySQLVirtualNetworkRuleSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
 	// Name - Name of the Virtual Network Rule.
@@ -416,8 +416,8 @@ type MysqlVirtualNetworkRuleSpec struct {
 	// ServerName - Name of the Virtual Network Rule's server.
 	ServerName string `json:"serverName,omitempty"`
 
-	// ServerNameRef - A reference to the Virtual Network Rule's MysqlServer.
-	ServerNameRef *MysqlServerNameReferencer `json:"serverNameRef,omitempty" resource:"attributereferencer"`
+	// ServerNameRef - A reference to the Virtual Network Rule's MySQLServer.
+	ServerNameRef *MySQLServerNameReferencer `json:"serverNameRef,omitempty" resource:"attributereferencer"`
 
 	// ResourceGroupName - Name of the Virtual Network Rule's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
@@ -432,27 +432,27 @@ type MysqlVirtualNetworkRuleSpec struct {
 
 // +kubebuilder:object:root=true
 
-// A MysqlServerVirtualNetworkRule is a managed resource that represents an
+// A MySQLServerVirtualNetworkRule is a managed resource that represents an
 // Azure MySQL Database virtual network rule.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
-type MysqlServerVirtualNetworkRule struct {
+type MySQLServerVirtualNetworkRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MysqlVirtualNetworkRuleSpec `json:"spec,omitempty"`
+	Spec   MySQLVirtualNetworkRuleSpec `json:"spec,omitempty"`
 	Status VirtualNetworkRuleStatus    `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// MysqlServerVirtualNetworkRuleList contains a list of
-// MysqlServerVirtualNetworkRule.
-type MysqlServerVirtualNetworkRuleList struct {
+// MySQLServerVirtualNetworkRuleList contains a list of
+// MySQLServerVirtualNetworkRule.
+type MySQLServerVirtualNetworkRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MysqlServerVirtualNetworkRule `json:"items"`
+	Items           []MySQLServerVirtualNetworkRule `json:"items"`
 }

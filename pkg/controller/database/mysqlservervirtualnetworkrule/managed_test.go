@@ -88,32 +88,32 @@ type testCase struct {
 	wantErr error
 }
 
-type virtualNetworkRuleModifier func(*v1alpha2.MysqlServerVirtualNetworkRule)
+type virtualNetworkRuleModifier func(*v1alpha2.MySQLServerVirtualNetworkRule)
 
 func withConditions(c ...runtimev1alpha1.Condition) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MysqlServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withType(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MysqlServerVirtualNetworkRule) { r.Status.Type = s }
+	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.Type = s }
 }
 
 func withID(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MysqlServerVirtualNetworkRule) { r.Status.ID = s }
+	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.ID = s }
 }
 
 func withState(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.MysqlServerVirtualNetworkRule) { r.Status.State = s }
+	return func(r *v1alpha2.MySQLServerVirtualNetworkRule) { r.Status.State = s }
 }
 
-func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.MysqlServerVirtualNetworkRule {
-	r := &v1alpha2.MysqlServerVirtualNetworkRule{
+func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.MySQLServerVirtualNetworkRule {
+	r := &v1alpha2.MySQLServerVirtualNetworkRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha2.MysqlVirtualNetworkRuleSpec{
+		Spec: v1alpha2.MySQLVirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
@@ -144,9 +144,9 @@ func TestCreate(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotMysqlServerVirtualNetworkRule),
+			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulCreate",
@@ -171,7 +171,7 @@ func TestCreate(t *testing.T) {
 			want: virtualNetworkRule(
 				withConditions(runtimev1alpha1.Creating()),
 			),
-			wantErr: errors.Wrap(errorBoom, errCreateMysqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errCreateMySQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -195,9 +195,9 @@ func TestObserve(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotMysqlServerVirtualNetworkRule),
+			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulObserveNotExist",
@@ -243,7 +243,7 @@ func TestObserve(t *testing.T) {
 			}},
 			r:       virtualNetworkRule(),
 			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errGetMysqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errGetMySQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -267,9 +267,9 @@ func TestUpdate(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotMysqlServerVirtualNetworkRule),
+			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulDoesNotNeedUpdate",
@@ -318,7 +318,7 @@ func TestUpdate(t *testing.T) {
 			}},
 			r:       virtualNetworkRule(),
 			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errGetMysqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errGetMySQLServerVirtualNetworkRule),
 		},
 		{
 			name: "UnsuccessfulUpdate",
@@ -337,7 +337,7 @@ func TestUpdate(t *testing.T) {
 			}},
 			r:       virtualNetworkRule(),
 			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errUpdateMysqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errUpdateMySQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -361,9 +361,9 @@ func TestDelete(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.PostgresqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotMysqlServerVirtualNetworkRule),
+			r:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
 			name: "Successful",
@@ -402,7 +402,7 @@ func TestDelete(t *testing.T) {
 			want: virtualNetworkRule(
 				withConditions(runtimev1alpha1.Deleting()),
 			),
-			wantErr: errors.Wrap(errorBoom, errDeleteMysqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errDeleteMySQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -432,9 +432,9 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "NotMysqServerlVirtualNetworkRule",
 			conn:    &connecter{client: &test.MockClient{}},
-			i:       &v1alpha2.PostgresqlServerVirtualNetworkRule{},
+			i:       &v1alpha2.PostgreSQLServerVirtualNetworkRule{},
 			want:    nil,
-			wantErr: errors.New(errNotMysqlServerVirtualNetworkRule),
+			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulConnect",

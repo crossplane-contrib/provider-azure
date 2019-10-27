@@ -23,242 +23,242 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// GetBindingPhase of this MysqlServer.
-func (mg *MysqlServer) GetBindingPhase() runtimev1alpha1.BindingPhase {
+// GetBindingPhase of this MySQLServer.
+func (mg *MySQLServer) GetBindingPhase() runtimev1alpha1.BindingPhase {
 	return mg.Status.GetBindingPhase()
 }
 
-// GetClaimReference of this MysqlServer.
-func (mg *MysqlServer) GetClaimReference() *corev1.ObjectReference {
+// GetClaimReference of this MySQLServer.
+func (mg *MySQLServer) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetClassReference of this MysqlServer.
-func (mg *MysqlServer) GetClassReference() *corev1.ObjectReference {
+// GetClassReference of this MySQLServer.
+func (mg *MySQLServer) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
-// GetCondition of this MysqlServer.
-func (mg *MysqlServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+// GetCondition of this MySQLServer.
+func (mg *MySQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
 	return mg.Status.GetCondition(ct)
 }
 
-// GetReclaimPolicy of this MysqlServer.
-func (mg *MysqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+// GetReclaimPolicy of this MySQLServer.
+func (mg *MySQLServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
 }
 
-// GetWriteConnectionSecretToReference of this MysqlServer.
-func (mg *MysqlServer) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+// GetWriteConnectionSecretToReference of this MySQLServer.
+func (mg *MySQLServer) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
-// SetBindingPhase of this MysqlServer.
-func (mg *MysqlServer) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+// SetBindingPhase of this MySQLServer.
+func (mg *MySQLServer) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
 	mg.Status.SetBindingPhase(p)
 }
 
-// SetClaimReference of this MysqlServer.
-func (mg *MysqlServer) SetClaimReference(r *corev1.ObjectReference) {
+// SetClaimReference of this MySQLServer.
+func (mg *MySQLServer) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
-// SetClassReference of this MysqlServer.
-func (mg *MysqlServer) SetClassReference(r *corev1.ObjectReference) {
+// SetClassReference of this MySQLServer.
+func (mg *MySQLServer) SetClassReference(r *corev1.ObjectReference) {
 	mg.Spec.ClassReference = r
 }
 
-// SetConditions of this MysqlServer.
-func (mg *MysqlServer) SetConditions(c ...runtimev1alpha1.Condition) {
+// SetConditions of this MySQLServer.
+func (mg *MySQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetReclaimPolicy of this MysqlServer.
-func (mg *MysqlServer) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+// SetReclaimPolicy of this MySQLServer.
+func (mg *MySQLServer) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 	mg.Spec.ReclaimPolicy = r
 }
 
-// SetWriteConnectionSecretToReference of this MysqlServer.
-func (mg *MysqlServer) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+// SetWriteConnectionSecretToReference of this MySQLServer.
+func (mg *MySQLServer) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
-// GetBindingPhase of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
+// GetBindingPhase of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
 	return mg.Status.GetBindingPhase()
 }
 
-// GetClaimReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectReference {
+// GetClaimReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetClassReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
+// GetClassReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
-// GetCondition of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+// GetCondition of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
 	return mg.Status.GetCondition(ct)
 }
 
-// GetReclaimPolicy of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+// GetReclaimPolicy of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
 }
 
-// GetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+// GetWriteConnectionSecretToReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
-// SetBindingPhase of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+// SetBindingPhase of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
 	mg.Status.SetBindingPhase(p)
 }
 
-// SetClaimReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectReference) {
+// SetClaimReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
-// SetClassReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
+// SetClassReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
 	mg.Spec.ClassReference = r
 }
 
-// SetConditions of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
+// SetConditions of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetReclaimPolicy of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+// SetReclaimPolicy of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 	mg.Spec.ReclaimPolicy = r
 }
 
-// SetWriteConnectionSecretToReference of this MysqlServerVirtualNetworkRule.
-func (mg *MysqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+// SetWriteConnectionSecretToReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
-// GetBindingPhase of this PostgresqlServer.
-func (mg *PostgresqlServer) GetBindingPhase() runtimev1alpha1.BindingPhase {
+// GetBindingPhase of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetBindingPhase() runtimev1alpha1.BindingPhase {
 	return mg.Status.GetBindingPhase()
 }
 
-// GetClaimReference of this PostgresqlServer.
-func (mg *PostgresqlServer) GetClaimReference() *corev1.ObjectReference {
+// GetClaimReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetClassReference of this PostgresqlServer.
-func (mg *PostgresqlServer) GetClassReference() *corev1.ObjectReference {
+// GetClassReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
-// GetCondition of this PostgresqlServer.
-func (mg *PostgresqlServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+// GetCondition of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
 	return mg.Status.GetCondition(ct)
 }
 
-// GetReclaimPolicy of this PostgresqlServer.
-func (mg *PostgresqlServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+// GetReclaimPolicy of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
 }
 
-// GetWriteConnectionSecretToReference of this PostgresqlServer.
-func (mg *PostgresqlServer) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+// GetWriteConnectionSecretToReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
-// SetBindingPhase of this PostgresqlServer.
-func (mg *PostgresqlServer) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+// SetBindingPhase of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
 	mg.Status.SetBindingPhase(p)
 }
 
-// SetClaimReference of this PostgresqlServer.
-func (mg *PostgresqlServer) SetClaimReference(r *corev1.ObjectReference) {
+// SetClaimReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
-// SetClassReference of this PostgresqlServer.
-func (mg *PostgresqlServer) SetClassReference(r *corev1.ObjectReference) {
+// SetClassReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetClassReference(r *corev1.ObjectReference) {
 	mg.Spec.ClassReference = r
 }
 
-// SetConditions of this PostgresqlServer.
-func (mg *PostgresqlServer) SetConditions(c ...runtimev1alpha1.Condition) {
+// SetConditions of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetReclaimPolicy of this PostgresqlServer.
-func (mg *PostgresqlServer) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+// SetReclaimPolicy of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 	mg.Spec.ReclaimPolicy = r
 }
 
-// SetWriteConnectionSecretToReference of this PostgresqlServer.
-func (mg *PostgresqlServer) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+// SetWriteConnectionSecretToReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
-// GetBindingPhase of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
+// GetBindingPhase of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
 	return mg.Status.GetBindingPhase()
 }
 
-// GetClaimReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectReference {
+// GetClaimReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetClaimReference() *corev1.ObjectReference {
 	return mg.Spec.ClaimReference
 }
 
-// GetClassReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
+// GetClassReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetClassReference() *corev1.ObjectReference {
 	return mg.Spec.ClassReference
 }
 
-// GetCondition of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+// GetCondition of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
 	return mg.Status.GetCondition(ct)
 }
 
-// GetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+// GetReclaimPolicy of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
 }
 
-// GetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+// GetWriteConnectionSecretToReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
-// SetBindingPhase of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+// SetBindingPhase of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
 	mg.Status.SetBindingPhase(p)
 }
 
-// SetClaimReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectReference) {
+// SetClaimReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetClaimReference(r *corev1.ObjectReference) {
 	mg.Spec.ClaimReference = r
 }
 
-// SetClassReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
+// SetClassReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectReference) {
 	mg.Spec.ClassReference = r
 }
 
-// SetConditions of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
+// SetConditions of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetReclaimPolicy of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+// SetReclaimPolicy of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 	mg.Spec.ReclaimPolicy = r
 }
 
-// SetWriteConnectionSecretToReference of this PostgresqlServerVirtualNetworkRule.
-func (mg *PostgresqlServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+// SetWriteConnectionSecretToReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }

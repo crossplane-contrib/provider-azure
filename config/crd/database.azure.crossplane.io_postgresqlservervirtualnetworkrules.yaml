@@ -18,8 +18,8 @@ spec:
     type: date
   group: database.azure.crossplane.io
   names:
-    kind: PostgresqlServerVirtualNetworkRule
-    listKind: PostgresqlServerVirtualNetworkRuleList
+    kind: PostgreSQLServerVirtualNetworkRule
+    listKind: PostgreSQLServerVirtualNetworkRuleList
     plural: postgresqlservervirtualnetworkrules
     singular: postgresqlservervirtualnetworkrule
   scope: Cluster
@@ -27,7 +27,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: A PostgresqlServerVirtualNetworkRule is a managed resource that
+      description: A PostgreSQLServerVirtualNetworkRule is a managed resource that
         represents an Azure PostgreSQL Database virtual network rule.
       properties:
         apiVersion:
@@ -43,8 +43,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: A PostgresqlVirtualNetworkRuleSpec defines the desired state
-            of a PostgresqlVirtualNetworkRule.
+          description: A PostgreSQLVirtualNetworkRuleSpec defines the desired state
+            of a PostgreSQLVirtualNetworkRule.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -206,11 +206,11 @@ spec:
                   type: string
               type: object
             serverName:
-              description: ServerName - Name of the Virtual Network Rule's PostgresqlServer.
+              description: ServerName - Name of the Virtual Network Rule's PostgreSQLServer.
               type: string
             serverNameRef:
               description: ServerNameRef - A reference to the Virtual Network Rule's
-                PostgresqlServer.
+                PostgreSQLServer.
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

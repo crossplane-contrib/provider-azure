@@ -42,34 +42,34 @@ const passwordDataLen = 20
 
 // Error strings.
 const (
-	errNewClient                 = "cannot create new PostgresqlServer client"
+	errNewClient                 = "cannot create new PostgreSQLServer client"
 	errGetProvider               = "cannot get Azure provider"
 	errGetProviderSecret         = "cannot get Azure provider Secret"
 	errGenPassword               = "cannot generate admin password"
-	errNotPostgresqlServer       = "managed resource is not a PostgresqlServer"
-	errCreatePostgresqlServer    = "cannot create PostgresqlServer"
-	errGetPostgresqlServer       = "cannot get PostgresqlServer"
-	errDeletePostgresqlServer    = "cannot delete PostgresqlServer"
-	errCheckPostgresqlServerName = "cannot check PostgresqlServer name availability"
+	errNotPostgreSQLServer       = "managed resource is not a PostgreSQLServer"
+	errCreatePostgreSQLServer    = "cannot create PostgreSQLServer"
+	errGetPostgreSQLServer       = "cannot get PostgreSQLServer"
+	errDeletePostgreSQLServer    = "cannot delete PostgreSQLServer"
+	errCheckPostgreSQLServerName = "cannot check PostgreSQLServer name availability"
 )
 
-// Controller is responsible for adding the PostgresqlServer controller and its
+// Controller is responsible for adding the PostgreSQLServer controller and its
 // corresponding reconciler to the manager with any runtime configuration.
 type Controller struct{}
 
-// SetupWithManager creates a new PostgresqlServer Controller and adds it to the
+// SetupWithManager creates a new PostgreSQLServer Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
+		resource.ManagedKind(v1alpha2.PostgreSQLServerGroupVersionKind),
 		resource.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.PostgresqlServerKind, v1alpha2.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.PostgreSQLServerKind, v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha2.PostgresqlServer{}).
+		For(&v1alpha2.PostgreSQLServer{}).
 		Complete(r)
 }
 
@@ -88,9 +88,9 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	v, ok := mg.(*v1alpha2.PostgresqlServer)
+	v, ok := mg.(*v1alpha2.PostgreSQLServer)
 	if !ok {
-		return nil, errors.New(errNotPostgresqlServer)
+		return nil, errors.New(errNotPostgreSQLServer)
 	}
 
 	p := &azurev1alpha2.Provider{}
@@ -113,9 +113,9 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	s, ok := mg.(*v1alpha2.PostgresqlServer)
+	s, ok := mg.(*v1alpha2.PostgreSQLServer)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotPostgresqlServer)
+		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
 	}
 
 	external, err := e.client.GetServer(ctx, s)
@@ -129,7 +129,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		// create operation is accepted.
 		creating, err := e.client.ServerNameTaken(ctx, s)
 		if err != nil {
-			return resource.ExternalObservation{}, errors.Wrap(err, errCheckPostgresqlServerName)
+			return resource.ExternalObservation{}, errors.Wrap(err, errCheckPostgreSQLServerName)
 		}
 		if creating {
 			return resource.ExternalObservation{
@@ -141,7 +141,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{ResourceExists: false}, nil
 	}
 	if err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgresqlServer)
+		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
 	}
 
 	s.Status.State = string(external.UserVisibleState)
@@ -171,9 +171,9 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	s, ok := mg.(*v1alpha2.PostgresqlServer)
+	s, ok := mg.(*v1alpha2.PostgreSQLServer)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotPostgresqlServer)
+		return resource.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
 	}
 
 	s.SetConditions(runtimev1alpha1.Creating())
@@ -184,7 +184,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 	}
 
 	if err := e.client.CreateServer(ctx, s, pw); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgresqlServer)
+		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
 	}
 
 	ec := resource.ExternalCreation{
@@ -202,11 +202,11 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	s, ok := mg.(*v1alpha2.PostgresqlServer)
+	s, ok := mg.(*v1alpha2.PostgreSQLServer)
 	if !ok {
-		return errors.New(errNotPostgresqlServer)
+		return errors.New(errNotPostgreSQLServer)
 	}
 
 	s.SetConditions(runtimev1alpha1.Deleting())
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeletePostgresqlServer)
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeletePostgreSQLServer)
 }

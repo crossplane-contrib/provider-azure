@@ -38,32 +38,32 @@ import (
 
 // Error strings.
 const (
-	errNewClient                           = "cannot create new MysqlServerVirtualNetworkRule"
-	errNotMysqlServerVirtualNetworkRule    = "managed resource is not an MysqlServerVirtualNetworkRule"
-	errCreateMysqlServerVirtualNetworkRule = "cannot create MysqlServerVirtualNetworkRule"
-	errUpdateMysqlServerVirtualNetworkRule = "cannot update MysqlServerVirtualNetworkRule"
-	errGetMysqlServerVirtualNetworkRule    = "cannot get MysqlServerVirtualNetworkRule"
-	errDeleteMysqlServerVirtualNetworkRule = "cannot delete MysqlServerVirtualNetworkRule"
+	errNewClient                           = "cannot create new MySQLServerVirtualNetworkRule"
+	errNotMySQLServerVirtualNetworkRule    = "managed resource is not an MySQLServerVirtualNetworkRule"
+	errCreateMySQLServerVirtualNetworkRule = "cannot create MySQLServerVirtualNetworkRule"
+	errUpdateMySQLServerVirtualNetworkRule = "cannot update MySQLServerVirtualNetworkRule"
+	errGetMySQLServerVirtualNetworkRule    = "cannot get MySQLServerVirtualNetworkRule"
+	errDeleteMySQLServerVirtualNetworkRule = "cannot delete MySQLServerVirtualNetworkRule"
 )
 
-// Controller is responsible for adding the MysqlServerVirtualNetworkRule
+// Controller is responsible for adding the MySQLServerVirtualNetworkRule
 // Controller and its corresponding reconciler to the manager with any runtime configuration.
 type Controller struct{}
 
-// SetupWithManager creates a new MysqlServerVirtualNetworkRule Controller and adds it to the
+// SetupWithManager creates a new MySQLServerVirtualNetworkRule Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha2.MysqlServerVirtualNetworkRuleGroupVersionKind),
+		resource.ManagedKind(v1alpha2.MySQLServerVirtualNetworkRuleGroupVersionKind),
 		resource.WithManagedConnectionPublishers(),
 		resource.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.MysqlServerVirtualNetworkRuleKind, v1alpha2.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.MySQLServerVirtualNetworkRuleKind, v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha2.MysqlServerVirtualNetworkRule{}).
+		For(&v1alpha2.MySQLServerVirtualNetworkRule{}).
 		Complete(r)
 }
 
@@ -73,9 +73,9 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	v, ok := mg.(*v1alpha2.MysqlServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
 	if !ok {
-		return nil, errors.New(errNotMysqlServerVirtualNetworkRule)
+		return nil, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
 
 	p := &azurev1alpha2.Provider{}
@@ -102,9 +102,9 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	v, ok := mg.(*v1alpha2.MysqlServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotMysqlServerVirtualNetworkRule)
+		return resource.ExternalObservation{}, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
 
 	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
@@ -112,7 +112,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{ResourceExists: false}, nil
 	}
 	if err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errGetMysqlServerVirtualNetworkRule)
+		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServerVirtualNetworkRule)
 	}
 
 	azure.UpdateMySQLVirtualNetworkRuleStatusFromAzure(v, az)
@@ -127,50 +127,50 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	v, ok := mg.(*v1alpha2.MysqlServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotMysqlServerVirtualNetworkRule)
+		return resource.ExternalCreation{}, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
 
 	v.SetConditions(runtimev1alpha1.Creating())
 
 	vnet := azure.NewMySQLVirtualNetworkRuleParameters(v)
 	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMysqlServerVirtualNetworkRule)
+		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMySQLServerVirtualNetworkRule)
 	}
 
 	return resource.ExternalCreation{}, nil
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
-	v, ok := mg.(*v1alpha2.MysqlServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
 	if !ok {
-		return resource.ExternalUpdate{}, errors.New(errNotMysqlServerVirtualNetworkRule)
+		return resource.ExternalUpdate{}, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
 
 	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
 	if err != nil {
-		return resource.ExternalUpdate{}, errors.Wrap(err, errGetMysqlServerVirtualNetworkRule)
+		return resource.ExternalUpdate{}, errors.Wrap(err, errGetMySQLServerVirtualNetworkRule)
 	}
 
 	if azure.MySQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
 		vnet := azure.NewMySQLVirtualNetworkRuleParameters(v)
 		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
-			return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMysqlServerVirtualNetworkRule)
+			return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMySQLServerVirtualNetworkRule)
 		}
 	}
 	return resource.ExternalUpdate{}, nil
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	v, ok := mg.(*v1alpha2.MysqlServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
 	if !ok {
-		return errors.New(errNotMysqlServerVirtualNetworkRule)
+		return errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
 
 	v.SetConditions(runtimev1alpha1.Deleting())
 
 	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
 
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, err), errDeleteMysqlServerVirtualNetworkRule)
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, err), errDeleteMySQLServerVirtualNetworkRule)
 }

@@ -42,7 +42,7 @@ type ClaimSchedulingController struct{}
 func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha2.PostgresqlServerKind,
+		v1alpha2.PostgreSQLServerKind,
 		v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -69,7 +69,7 @@ type ClaimDefaultingController struct{}
 func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha2.PostgresqlServerKind,
+		v1alpha2.PostgreSQLServerKind,
 		v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -87,43 +87,43 @@ func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 // A ClaimController reconciles PostgreSQLInstance claims with Azure
-// PostgresqlServer resources, dynamically provisioning them if needed.
+// PostgreSQLServer resources, dynamically provisioning them if needed.
 type ClaimController struct{}
 
 // SetupWithManager sets up the ClaimController using the supplied manager.
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha2.PostgresqlServerKind,
+		v1alpha2.PostgreSQLServerKind,
 		v1alpha2.Group))
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
 		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind),
+		resource.ManagedKind(v1alpha2.PostgreSQLServerGroupVersionKind),
 		resource.WithManagedConfigurators(
-			resource.ManagedConfiguratorFn(ConfigurePostgresqlServer),
+			resource.ManagedConfiguratorFn(ConfigurePostgreSQLServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
-		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind)),
-		resource.IsManagedKind(resource.ManagedKind(v1alpha2.PostgresqlServerGroupVersionKind), mgr.GetScheme()),
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.PostgreSQLServerGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha2.PostgreSQLServerGroupVersionKind), mgr.GetScheme()),
 	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha2.PostgresqlServer{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha2.PostgreSQLServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.PostgreSQLInstance{}).
 		WithEventFilter(p).
 		Complete(r)
 }
 
-// ConfigurePostgresqlServer configures the supplied resource (presumed to be a
-// PostgresqlServer) using the supplied resource claim (presumed to be a
+// ConfigurePostgreSQLServer configures the supplied resource (presumed to be a
+// PostgreSQLServer) using the supplied resource claim (presumed to be a
 // PostgreSQLInstance) and resource class.
-func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigurePostgreSQLServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	pg, cmok := cm.(*databasev1alpha1.PostgreSQLInstance)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.PostgreSQLInstanceGroupVersionKind)
@@ -134,9 +134,9 @@ func ConfigurePostgresqlServer(_ context.Context, cm resource.Claim, cs resource
 		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.SQLServerClassGroupVersionKind)
 	}
 
-	s, mgok := mg.(*v1alpha2.PostgresqlServer)
+	s, mgok := mg.(*v1alpha2.PostgreSQLServer)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.PostgresqlServerGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.PostgreSQLServerGroupVersionKind)
 	}
 
 	spec := &v1alpha2.SQLServerSpec{
