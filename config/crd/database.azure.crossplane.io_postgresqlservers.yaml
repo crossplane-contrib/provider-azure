@@ -24,8 +24,8 @@ spec:
     type: date
   group: database.azure.crossplane.io
   names:
-    kind: PostgresqlServer
-    listKind: PostgresqlServerList
+    kind: PostgreSQLServer
+    listKind: PostgreSQLServerList
     plural: postgresqlservers
     singular: postgresqlserver
   scope: Cluster
@@ -33,7 +33,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: A PostgresqlServer is a managed resource that represents an Azure
+      description: A PostgreSQLServer is a managed resource that represents an Azure
         PostgreSQL Database Server.
       properties:
         apiVersion:

@@ -42,7 +42,7 @@ type ClaimSchedulingController struct{}
 func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
-		v1alpha2.MysqlServerKind,
+		v1alpha2.MySQLServerKind,
 		v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -69,7 +69,7 @@ type ClaimDefaultingController struct{}
 func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
-		v1alpha2.MysqlServerKind,
+		v1alpha2.MySQLServerKind,
 		v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -86,7 +86,7 @@ func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 		))
 }
 
-// A ClaimController reconciles MySQLInstance claims with Azure MysqlServer
+// A ClaimController reconciles MySQLInstance claims with Azure MySQLServer
 // resources, dynamically provisioning them if needed.
 type ClaimController struct{}
 
@@ -94,36 +94,36 @@ type ClaimController struct{}
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		databasev1alpha1.MySQLInstanceKind,
-		v1alpha2.MysqlServerKind,
+		v1alpha2.MySQLServerKind,
 		v1alpha2.Group))
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),
 		resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind),
+		resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind),
 		resource.WithManagedConfigurators(
-			resource.ManagedConfiguratorFn(ConfigureMysqlServer),
+			resource.ManagedConfiguratorFn(ConfigureMySQLServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.SQLServerClassGroupVersionKind)),
-		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind)),
-		resource.IsManagedKind(resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind), mgr.GetScheme()),
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind), mgr.GetScheme()),
 	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha2.MysqlServer{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha2.MySQLServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.MySQLInstance{}).
 		WithEventFilter(p).
 		Complete(r)
 }
 
-// ConfigureMysqlServer configures the supplied resource (presumed to be
-// a MysqlServer) using the supplied resource claim (presumed to be a
+// ConfigureMySQLServer configures the supplied resource (presumed to be
+// a MySQLServer) using the supplied resource claim (presumed to be a
 // MySQLInstance) and resource class.
-func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
+func ConfigureMySQLServer(_ context.Context, cm resource.Claim, cs resource.Class, mg resource.Managed) error {
 	my, cmok := cm.(*databasev1alpha1.MySQLInstance)
 	if !cmok {
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.MySQLInstanceGroupVersionKind)
@@ -134,9 +134,9 @@ func ConfigureMysqlServer(_ context.Context, cm resource.Claim, cs resource.Clas
 		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.SQLServerClassGroupVersionKind)
 	}
 
-	s, mgok := mg.(*v1alpha2.MysqlServer)
+	s, mgok := mg.(*v1alpha2.MySQLServer)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.MysqlServerGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.MySQLServerGroupVersionKind)
 	}
 
 	spec := &v1alpha2.SQLServerSpec{

@@ -44,50 +44,50 @@ var (
 )
 
 type MockMySQLServerAPI struct {
-	MockServerNameTaken func(ctx context.Context, s *v1alpha2.MysqlServer) (bool, error)
-	MockGetServer       func(ctx context.Context, s *v1alpha2.MysqlServer) (mysql.Server, error)
-	MockCreateServer    func(ctx context.Context, s *v1alpha2.MysqlServer, adminPassword string) error
-	MockDeleteServer    func(ctx context.Context, s *v1alpha2.MysqlServer) error
+	MockServerNameTaken func(ctx context.Context, s *v1alpha2.MySQLServer) (bool, error)
+	MockGetServer       func(ctx context.Context, s *v1alpha2.MySQLServer) (mysql.Server, error)
+	MockCreateServer    func(ctx context.Context, s *v1alpha2.MySQLServer, adminPassword string) error
+	MockDeleteServer    func(ctx context.Context, s *v1alpha2.MySQLServer) error
 }
 
-func (m *MockMySQLServerAPI) ServerNameTaken(ctx context.Context, s *v1alpha2.MysqlServer) (bool, error) {
+func (m *MockMySQLServerAPI) ServerNameTaken(ctx context.Context, s *v1alpha2.MySQLServer) (bool, error) {
 	return m.MockServerNameTaken(ctx, s)
 }
 
-func (m *MockMySQLServerAPI) GetServer(ctx context.Context, s *v1alpha2.MysqlServer) (mysql.Server, error) {
+func (m *MockMySQLServerAPI) GetServer(ctx context.Context, s *v1alpha2.MySQLServer) (mysql.Server, error) {
 	return m.MockGetServer(ctx, s)
 }
 
-func (m *MockMySQLServerAPI) CreateServer(ctx context.Context, s *v1alpha2.MysqlServer, adminPassword string) error {
+func (m *MockMySQLServerAPI) CreateServer(ctx context.Context, s *v1alpha2.MySQLServer, adminPassword string) error {
 	return m.MockCreateServer(ctx, s, adminPassword)
 }
 
-func (m *MockMySQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha2.MysqlServer) error {
+func (m *MockMySQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha2.MySQLServer) error {
 	return m.MockDeleteServer(ctx, s)
 }
 
-type modifier func(*v1alpha2.MysqlServer)
+type modifier func(*v1alpha2.MySQLServer)
 
 func withName(name string) modifier {
-	return func(p *v1alpha2.MysqlServer) {
+	return func(p *v1alpha2.MySQLServer) {
 		p.SetName(name)
 	}
 }
 
 func withProviderRef(r *corev1.ObjectReference) modifier {
-	return func(p *v1alpha2.MysqlServer) {
+	return func(p *v1alpha2.MySQLServer) {
 		p.Spec.ProviderReference = r
 	}
 }
 
 func withAdminName(name string) modifier {
-	return func(p *v1alpha2.MysqlServer) {
+	return func(p *v1alpha2.MySQLServer) {
 		p.Spec.AdminLoginName = name
 	}
 }
 
-func mysqlserver(m ...modifier) *v1alpha2.MysqlServer {
-	p := &v1alpha2.MysqlServer{}
+func mysqlserver(m ...modifier) *v1alpha2.MySQLServer {
+	p := &v1alpha2.MySQLServer{}
 
 	for _, mod := range m {
 		mod(p)
@@ -108,12 +108,12 @@ func TestConnect(t *testing.T) {
 		args args
 		want error
 	}{
-		"ErrNotAMysqlServer": {
+		"ErrNotAMySQLServer": {
 			ec: &connecter{},
 			args: args{
 				ctx: context.Background(),
 			},
-			want: errors.New(errNotMysqlServer),
+			want: errors.New(errNotMySQLServer),
 		},
 		"ErrGetProvider": {
 			ec: &connecter{
@@ -196,19 +196,19 @@ func TestObserve(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAMysqlServer": {
+		"ErrNotAMySQLServer": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotMysqlServer),
+				err: errors.New(errNotMySQLServer),
 			},
 		},
 		"ErrGetServer": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha2.MysqlServer) (mysql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1alpha2.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{}, errBoom
 					},
 				},
@@ -218,16 +218,16 @@ func TestObserve(t *testing.T) {
 				mg:  mysqlserver(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errGetMysqlServer),
+				err: errors.Wrap(errBoom, errGetMySQLServer),
 			},
 		},
 		"ErrCheckServerName": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha2.MysqlServer) (mysql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1alpha2.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1alpha2.MysqlServer) (bool, error) {
+					MockServerNameTaken: func(_ context.Context, _ *v1alpha2.MySQLServer) (bool, error) {
 						return false, errBoom
 					},
 				},
@@ -237,16 +237,16 @@ func TestObserve(t *testing.T) {
 				mg:  mysqlserver(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errCheckMysqlServerName),
+				err: errors.Wrap(errBoom, errCheckMySQLServerName),
 			},
 		},
 		"ServerCreating": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha2.MysqlServer) (mysql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1alpha2.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1alpha2.MysqlServer) (bool, error) {
+					MockServerNameTaken: func(_ context.Context, _ *v1alpha2.MySQLServer) (bool, error) {
 						return true, nil
 					},
 				},
@@ -265,10 +265,10 @@ func TestObserve(t *testing.T) {
 		"ServerNotFound": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha2.MysqlServer) (mysql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1alpha2.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1alpha2.MysqlServer) (bool, error) {
+					MockServerNameTaken: func(_ context.Context, _ *v1alpha2.MySQLServer) (bool, error) {
 						return false, nil
 					},
 				},
@@ -286,7 +286,7 @@ func TestObserve(t *testing.T) {
 		"ServerAvailable": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha2.MysqlServer) (mysql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1alpha2.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{ServerProperties: &mysql.ServerProperties{
 							UserVisibleState:         mysql.ServerStateReady,
 							FullyQualifiedDomainName: &endpoint,
@@ -346,13 +346,13 @@ func TestCreate(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAMysqlServer": {
+		"ErrNotAMySQLServer": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotMysqlServer),
+				err: errors.New(errNotMySQLServer),
 			},
 		},
 		"ErrGeneratePassword": {
@@ -370,7 +370,7 @@ func TestCreate(t *testing.T) {
 		"ErrCreateServer": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockCreateServer: func(_ context.Context, _ *v1alpha2.MysqlServer, _ string) error { return errBoom },
+					MockCreateServer: func(_ context.Context, _ *v1alpha2.MySQLServer, _ string) error { return errBoom },
 				},
 				newPasswordFn: func(int) (string, error) { return password, nil },
 			},
@@ -379,13 +379,13 @@ func TestCreate(t *testing.T) {
 				mg:  mysqlserver(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errCreateMysqlServer),
+				err: errors.Wrap(errBoom, errCreateMySQLServer),
 			},
 		},
 		"Successful": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockCreateServer: func(_ context.Context, _ *v1alpha2.MysqlServer, _ string) error { return nil },
+					MockCreateServer: func(_ context.Context, _ *v1alpha2.MySQLServer, _ string) error { return nil },
 				},
 				newPasswordFn: func(int) (string, error) { return password, nil },
 			},
@@ -428,29 +428,29 @@ func TestDelete(t *testing.T) {
 		args args
 		want error
 	}{
-		"ErrNotAMysqlServer": {
+		"ErrNotAMySQLServer": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
-			want: errors.New(errNotMysqlServer),
+			want: errors.New(errNotMySQLServer),
 		},
 		"ErrDeleteServer": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockDeleteServer: func(_ context.Context, _ *v1alpha2.MysqlServer) error { return errBoom },
+					MockDeleteServer: func(_ context.Context, _ *v1alpha2.MySQLServer) error { return errBoom },
 				},
 			},
 			args: args{
 				ctx: context.Background(),
 				mg:  mysqlserver(),
 			},
-			want: errors.Wrap(errBoom, errDeleteMysqlServer),
+			want: errors.Wrap(errBoom, errDeleteMySQLServer),
 		},
 		"Successful": {
 			e: &external{
 				client: &MockMySQLServerAPI{
-					MockDeleteServer: func(_ context.Context, _ *v1alpha2.MysqlServer) error { return nil },
+					MockDeleteServer: func(_ context.Context, _ *v1alpha2.MySQLServer) error { return nil },
 				},
 			},
 			args: args{

@@ -18,8 +18,8 @@ spec:
     type: date
   group: database.azure.crossplane.io
   names:
-    kind: MysqlServerVirtualNetworkRule
-    listKind: MysqlServerVirtualNetworkRuleList
+    kind: MySQLServerVirtualNetworkRule
+    listKind: MySQLServerVirtualNetworkRuleList
     plural: mysqlservervirtualnetworkrules
     singular: mysqlservervirtualnetworkrule
   scope: Cluster
@@ -27,7 +27,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: A MysqlServerVirtualNetworkRule is a managed resource that represents
+      description: A MySQLServerVirtualNetworkRule is a managed resource that represents
         an Azure MySQL Database virtual network rule.
       properties:
         apiVersion:
@@ -43,8 +43,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: A MysqlVirtualNetworkRuleSpec defines the desired state of
-            a MysqlVirtualNetworkRule.
+          description: A MySQLVirtualNetworkRuleSpec defines the desired state of
+            a MySQLVirtualNetworkRule.
           properties:
             claimRef:
               description: ClaimReference specifies the resource claim to which this
@@ -210,7 +210,7 @@ spec:
               type: string
             serverNameRef:
               description: ServerNameRef - A reference to the Virtual Network Rule's
-                MysqlServer.
+                MySQLServer.
               properties:
                 name:
                   description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names

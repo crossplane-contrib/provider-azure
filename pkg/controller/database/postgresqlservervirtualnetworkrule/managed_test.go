@@ -88,32 +88,32 @@ type testCase struct {
 	wantErr error
 }
 
-type virtualNetworkRuleModifier func(*v1alpha2.PostgresqlServerVirtualNetworkRule)
+type virtualNetworkRuleModifier func(*v1alpha2.PostgreSQLServerVirtualNetworkRule)
 
 func withConditions(c ...runtimev1alpha1.Condition) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.PostgresqlServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1alpha2.PostgreSQLServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withType(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.PostgresqlServerVirtualNetworkRule) { r.Status.Type = s }
+	return func(r *v1alpha2.PostgreSQLServerVirtualNetworkRule) { r.Status.Type = s }
 }
 
 func withID(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.PostgresqlServerVirtualNetworkRule) { r.Status.ID = s }
+	return func(r *v1alpha2.PostgreSQLServerVirtualNetworkRule) { r.Status.ID = s }
 }
 
 func withState(s string) virtualNetworkRuleModifier {
-	return func(r *v1alpha2.PostgresqlServerVirtualNetworkRule) { r.Status.State = s }
+	return func(r *v1alpha2.PostgreSQLServerVirtualNetworkRule) { r.Status.State = s }
 }
 
-func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.PostgresqlServerVirtualNetworkRule {
-	r := &v1alpha2.PostgresqlServerVirtualNetworkRule{
+func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.PostgreSQLServerVirtualNetworkRule {
+	r := &v1alpha2.PostgreSQLServerVirtualNetworkRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha2.PostgresqlVirtualNetworkRuleSpec{
+		Spec: v1alpha2.PostgreSQLVirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Name: providerName},
 			},
@@ -142,11 +142,11 @@ var _ resource.ExternalConnecter = &connecter{}
 func TestCreate(t *testing.T) {
 	cases := []testCase{
 		{
-			name:    "NotPostgresqlServerlVirtualNetworkRule",
+			name:    "NotPostgreSQLServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.MysqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.MysqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotPostgresqlServerVirtualNetworkRule),
+			r:       &v1alpha2.MySQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.MySQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotPostgreSQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulCreate",
@@ -171,7 +171,7 @@ func TestCreate(t *testing.T) {
 			want: virtualNetworkRule(
 				withConditions(runtimev1alpha1.Creating()),
 			),
-			wantErr: errors.Wrap(errorBoom, errCreatePostgresqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errCreatePostgreSQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -193,11 +193,11 @@ func TestCreate(t *testing.T) {
 func TestObserve(t *testing.T) {
 	cases := []testCase{
 		{
-			name:    "NotPostgresqlServerlVirtualNetworkRule",
+			name:    "NotPostgreSQLServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.MysqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.MysqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotPostgresqlServerVirtualNetworkRule),
+			r:       &v1alpha2.MySQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.MySQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotPostgreSQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulObserveNotExist",
@@ -243,7 +243,7 @@ func TestObserve(t *testing.T) {
 			}},
 			r:       virtualNetworkRule(),
 			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errGetPostgresqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errGetPostgreSQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -265,11 +265,11 @@ func TestObserve(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	cases := []testCase{
 		{
-			name:    "NotPostgresqlServerlVirtualNetworkRule",
+			name:    "NotPostgreSQLServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.MysqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.MysqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotPostgresqlServerVirtualNetworkRule),
+			r:       &v1alpha2.MySQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.MySQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotPostgreSQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulDoesNotNeedUpdate",
@@ -318,7 +318,7 @@ func TestUpdate(t *testing.T) {
 			}},
 			r:       virtualNetworkRule(),
 			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errGetPostgresqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errGetPostgreSQLServerVirtualNetworkRule),
 		},
 		{
 			name: "UnsuccessfulUpdate",
@@ -337,7 +337,7 @@ func TestUpdate(t *testing.T) {
 			}},
 			r:       virtualNetworkRule(),
 			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errUpdatePostgresqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errUpdatePostgreSQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -359,11 +359,11 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	cases := []testCase{
 		{
-			name:    "NotPostgresqlServerlVirtualNetworkRule",
+			name:    "NotPostgreSQLServerlVirtualNetworkRule",
 			e:       &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{}},
-			r:       &v1alpha2.MysqlServerVirtualNetworkRule{},
-			want:    &v1alpha2.MysqlServerVirtualNetworkRule{},
-			wantErr: errors.New(errNotPostgresqlServerVirtualNetworkRule),
+			r:       &v1alpha2.MySQLServerVirtualNetworkRule{},
+			want:    &v1alpha2.MySQLServerVirtualNetworkRule{},
+			wantErr: errors.New(errNotPostgreSQLServerVirtualNetworkRule),
 		},
 		{
 			name: "Successful",
@@ -402,7 +402,7 @@ func TestDelete(t *testing.T) {
 			want: virtualNetworkRule(
 				withConditions(runtimev1alpha1.Deleting()),
 			),
-			wantErr: errors.Wrap(errorBoom, errDeletePostgresqlServerVirtualNetworkRule),
+			wantErr: errors.Wrap(errorBoom, errDeletePostgreSQLServerVirtualNetworkRule),
 		},
 	}
 
@@ -432,9 +432,9 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "NotPostgresqServerlVirtualNetworkRule",
 			conn:    &connecter{client: &test.MockClient{}},
-			i:       &v1alpha2.MysqlServerVirtualNetworkRule{},
+			i:       &v1alpha2.MySQLServerVirtualNetworkRule{},
 			want:    nil,
-			wantErr: errors.New(errNotPostgresqlServerVirtualNetworkRule),
+			wantErr: errors.New(errNotPostgreSQLServerVirtualNetworkRule),
 		},
 		{
 			name: "SuccessfulConnect",

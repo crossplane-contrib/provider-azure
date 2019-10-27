@@ -42,34 +42,34 @@ const passwordDataLen = 20
 
 // Error strings.
 const (
-	errNewClient            = "cannot create new MysqlServer client"
+	errNewClient            = "cannot create new MySQLServer client"
 	errGetProvider          = "cannot get Azure provider"
 	errGetProviderSecret    = "cannot get Azure provider Secret"
 	errGenPassword          = "cannot generate admin password"
-	errNotMysqlServer       = "managed resource is not a MysqlServer"
-	errCreateMysqlServer    = "cannot create MysqlServer"
-	errGetMysqlServer       = "cannot get MysqlServer"
-	errDeleteMysqlServer    = "cannot delete MysqlServer"
-	errCheckMysqlServerName = "cannot check MysqlServer name availability"
+	errNotMySQLServer       = "managed resource is not a MySQLServer"
+	errCreateMySQLServer    = "cannot create MySQLServer"
+	errGetMySQLServer       = "cannot get MySQLServer"
+	errDeleteMySQLServer    = "cannot delete MySQLServer"
+	errCheckMySQLServerName = "cannot check MySQLServer name availability"
 )
 
-// Controller is responsible for adding the MysqlServer controller and its
+// Controller is responsible for adding the MySQLServer controller and its
 // corresponding reconciler to the manager with any runtime configuration.
 type Controller struct{}
 
-// SetupWithManager creates a new MysqlServer Controller and adds it to the
+// SetupWithManager creates a new MySQLServer Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha2.MysqlServerGroupVersionKind),
+		resource.ManagedKind(v1alpha2.MySQLServerGroupVersionKind),
 		resource.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.MysqlServerKind, v1alpha2.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.MySQLServerKind, v1alpha2.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha2.MysqlServer{}).
+		For(&v1alpha2.MySQLServer{}).
 		Complete(r)
 }
 
@@ -88,9 +88,9 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	v, ok := mg.(*v1alpha2.MysqlServer)
+	v, ok := mg.(*v1alpha2.MySQLServer)
 	if !ok {
-		return nil, errors.New(errNotMysqlServer)
+		return nil, errors.New(errNotMySQLServer)
 	}
 
 	p := &azurev1alpha2.Provider{}
@@ -113,9 +113,9 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	s, ok := mg.(*v1alpha2.MysqlServer)
+	s, ok := mg.(*v1alpha2.MySQLServer)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotMysqlServer)
+		return resource.ExternalObservation{}, errors.New(errNotMySQLServer)
 	}
 
 	external, err := e.client.GetServer(ctx, s)
@@ -129,7 +129,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		// create operation is accepted.
 		creating, err := e.client.ServerNameTaken(ctx, s)
 		if err != nil {
-			return resource.ExternalObservation{}, errors.Wrap(err, errCheckMysqlServerName)
+			return resource.ExternalObservation{}, errors.Wrap(err, errCheckMySQLServerName)
 		}
 		if creating {
 			return resource.ExternalObservation{
@@ -140,7 +140,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{ResourceExists: false}, nil
 	}
 	if err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errGetMysqlServer)
+		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServer)
 	}
 
 	s.Status.State = string(external.UserVisibleState)
@@ -170,9 +170,9 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	s, ok := mg.(*v1alpha2.MysqlServer)
+	s, ok := mg.(*v1alpha2.MySQLServer)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotMysqlServer)
+		return resource.ExternalCreation{}, errors.New(errNotMySQLServer)
 	}
 
 	s.SetConditions(runtimev1alpha1.Creating())
@@ -183,7 +183,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 	}
 
 	if err := e.client.CreateServer(ctx, s, pw); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMysqlServer)
+		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMySQLServer)
 	}
 
 	ec := resource.ExternalCreation{
@@ -202,11 +202,11 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	s, ok := mg.(*v1alpha2.MysqlServer)
+	s, ok := mg.(*v1alpha2.MySQLServer)
 	if !ok {
-		return errors.New(errNotMysqlServer)
+		return errors.New(errNotMySQLServer)
 	}
 
 	s.SetConditions(runtimev1alpha1.Deleting())
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeleteMysqlServer)
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeleteMySQLServer)
 }

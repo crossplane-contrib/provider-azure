@@ -44,7 +44,7 @@ func TestSubnetIDReferencerForVirtualNetworkRule_AssignInvalidType_ReturnsErr(t 
 func TestSubnetIDReferencerForVirtualNetworkRule_AssignValidType_ReturnsExpected(t *testing.T) {
 
 	r := &SubnetIDReferencerForVirtualNetworkRule{}
-	res := &MysqlServerVirtualNetworkRule{}
+	res := &MySQLServerVirtualNetworkRule{}
 	var expectedErr error
 
 	err := r.Assign(res, "mockValue")
@@ -71,7 +71,7 @@ func TestResourceGroupNameReferencerForVirtualNetworkRule_AssignInvalidType_Retu
 func TestResourceGroupNameReferencerForVirtualNetworkRule_AssignValidType_ReturnsExpected(t *testing.T) {
 
 	r := &ResourceGroupNameReferencerForVirtualNetworkRule{}
-	res := &MysqlServerVirtualNetworkRule{}
+	res := &MySQLServerVirtualNetworkRule{}
 	var expectedErr error
 
 	err := r.Assign(res, "mockValue")
@@ -98,7 +98,7 @@ func TestResourceGroupNameReferencerForSQLServer_AssignInvalidType_ReturnsErr(t 
 func TestResourceGroupNameReferencerForSQLServer_AssignValidType_ReturnsExpected(t *testing.T) {
 
 	r := &ResourceGroupNameReferencerForSQLServer{}
-	res := &MysqlServer{}
+	res := &MySQLServer{}
 	var expectedErr error
 
 	err := r.Assign(res, "mockValue")

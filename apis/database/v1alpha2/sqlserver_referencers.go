@@ -28,15 +28,15 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 )
 
-// A MysqlServerNameReferencer returns the server name of a referenced
-// MysqlServer.
-type MysqlServerNameReferencer struct {
+// A MySQLServerNameReferencer returns the server name of a referenced
+// MySQLServer.
+type MySQLServerNameReferencer struct {
 	corev1.LocalObjectReference `json:",inline"`
 }
 
-// GetStatus of the referenced MysqlServer.
-func (v *MysqlServerNameReferencer) GetStatus(ctx context.Context, _ resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
-	refObj := MysqlServer{}
+// GetStatus of the referenced MySQLServer.
+func (v *MySQLServerNameReferencer) GetStatus(ctx context.Context, _ resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
+	refObj := MySQLServer{}
 	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &refObj); err != nil {
 		if kerrors.IsNotFound(err) {
@@ -53,9 +53,9 @@ func (v *MysqlServerNameReferencer) GetStatus(ctx context.Context, _ resource.Ca
 	return []resource.ReferenceStatus{{Name: v.Name, Status: resource.ReferenceReady}}, nil
 }
 
-// Build returns the server name of the referenced MysqlServer.
-func (v *MysqlServerNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
-	refObj := MysqlServer{}
+// Build returns the server name of the referenced MySQLServer.
+func (v *MySQLServerNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
+	refObj := MySQLServer{}
 	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &refObj); err != nil {
 		return "", err
@@ -64,15 +64,15 @@ func (v *MysqlServerNameReferencer) Build(ctx context.Context, _ resource.CanRef
 	return refObj.GetName(), nil
 }
 
-// A PostgresqlServerNameReferencer returns the server name of a referenced
-// PostgresqlServer.
-type PostgresqlServerNameReferencer struct {
+// A PostgreSQLServerNameReferencer returns the server name of a referenced
+// PostgreSQLServer.
+type PostgreSQLServerNameReferencer struct {
 	corev1.LocalObjectReference `json:",inline"`
 }
 
 // GetStatus implements GetStatus method of AttributeReferencer interface
-func (v *PostgresqlServerNameReferencer) GetStatus(ctx context.Context, _ resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
-	refObj := PostgresqlServer{}
+func (v *PostgreSQLServerNameReferencer) GetStatus(ctx context.Context, _ resource.CanReference, reader client.Reader) ([]resource.ReferenceStatus, error) {
+	refObj := PostgreSQLServer{}
 	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &refObj); err != nil {
 		if kerrors.IsNotFound(err) {
@@ -89,9 +89,9 @@ func (v *PostgresqlServerNameReferencer) GetStatus(ctx context.Context, _ resour
 	return []resource.ReferenceStatus{{Name: v.Name, Status: resource.ReferenceReady}}, nil
 }
 
-// Build returns the server name of the referenced PostgresqlServer.
-func (v *PostgresqlServerNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
-	refObj := PostgresqlServer{}
+// Build returns the server name of the referenced PostgreSQLServer.
+func (v *PostgreSQLServerNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
+	refObj := PostgreSQLServer{}
 	nn := types.NamespacedName{Name: v.Name}
 	if err := reader.Get(ctx, nn, &refObj); err != nil {
 		return "", err

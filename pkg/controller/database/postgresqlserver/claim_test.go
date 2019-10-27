@@ -33,9 +33,9 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
 )
 
-var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigurePostgresqlServer)
+var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigurePostgreSQLServer)
 
-func TestConfigurePostgresqlServer(t *testing.T) {
+func TestConfigurePostgreSQLServer(t *testing.T) {
 	type args struct {
 		ctx context.Context
 		cm  resource.Claim
@@ -69,10 +69,10 @@ func TestConfigurePostgresqlServer(t *testing.T) {
 						},
 					},
 				},
-				mg: &v1alpha2.PostgresqlServer{},
+				mg: &v1alpha2.PostgreSQLServer{},
 			},
 			want: want{
-				mg: &v1alpha2.PostgresqlServer{
+				mg: &v1alpha2.PostgreSQLServer{
 					Spec: v1alpha2.SQLServerSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy: runtimev1alpha1.ReclaimDelete,
@@ -93,12 +93,12 @@ func TestConfigurePostgresqlServer(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			err := ConfigurePostgresqlServer(tc.args.ctx, tc.args.cm, tc.args.cs, tc.args.mg)
+			err := ConfigurePostgreSQLServer(tc.args.ctx, tc.args.cm, tc.args.cs, tc.args.mg)
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("ConfigurePostgresqlServer(...): -want error, +got error:\n%s", diff)
+				t.Errorf("ConfigurePostgreSQLServer(...): -want error, +got error:\n%s", diff)
 			}
 			if diff := cmp.Diff(tc.want.mg, tc.args.mg, test.EquateConditions()); diff != "" {
-				t.Errorf("ConfigurePostgresqlServer(...) Managed: -want, +got:\n%s", diff)
+				t.Errorf("ConfigurePostgreSQLServer(...) Managed: -want, +got:\n%s", diff)
 			}
 		})
 	}

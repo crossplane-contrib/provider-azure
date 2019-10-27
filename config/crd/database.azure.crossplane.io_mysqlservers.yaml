@@ -24,8 +24,8 @@ spec:
     type: date
   group: database.azure.crossplane.io
   names:
-    kind: MysqlServer
-    listKind: MysqlServerList
+    kind: MySQLServer
+    listKind: MySQLServerList
     plural: mysqlservers
     singular: mysqlserver
   scope: Cluster
@@ -33,7 +33,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: A MysqlServer is a managed resource that represents an Azure MySQL
+      description: A MySQLServer is a managed resource that represents an Azure MySQL
         Database Server.
       properties:
         apiVersion:
