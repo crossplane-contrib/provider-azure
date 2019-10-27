@@ -41,9 +41,9 @@ import (
 
 	localtest "github.com/crossplaneio/stack-azure/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
-	computev1alpha1 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
+	computev1alpha1 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
 const (
@@ -139,12 +139,12 @@ func testProviderSecret(data []byte) *corev1.Secret {
 	}
 }
 
-func testProvider() *azurev1alpha2.Provider {
-	return &azurev1alpha2.Provider{
+func testProvider() *azurev1alpha3.Provider {
+	return &azurev1alpha3.Provider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: providerName,
 		},
-		Spec: azurev1alpha2.ProviderSpec{
+		Spec: azurev1alpha3.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
 					Namespace: namespace,
@@ -156,13 +156,13 @@ func testProvider() *azurev1alpha2.Provider {
 	}
 }
 
-func testInstance(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
+func testInstance(p *azurev1alpha3.Provider) *computev1alpha1.AKSCluster {
 	return &computev1alpha1.AKSCluster{
 		ObjectMeta: metav1.ObjectMeta{Name: instanceName},
 		Spec: computev1alpha1.AKSClusterSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
-				ProviderReference: meta.ReferenceTo(p, azurev1alpha2.ProviderGroupVersionKind),
+				ProviderReference: meta.ReferenceTo(p, azurev1alpha3.ProviderGroupVersionKind),
 				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
 					Namespace: namespace,
 
@@ -173,7 +173,7 @@ func testInstance(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
 					Name: connectionSecretName + strconv.Itoa(rand.Int()),
 				},
 			},
-			AKSClusterParameters: v1alpha2.AKSClusterParameters{
+			AKSClusterParameters: v1alpha3.AKSClusterParameters{
 				WriteServicePrincipalSecretTo: runtimev1alpha1.SecretReference{
 					Namespace: namespace,
 					Name:      principalSecretName,
@@ -190,7 +190,7 @@ func testInstance(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
 	}
 }
 
-func testInstanceInSubnet(p *azurev1alpha2.Provider) *computev1alpha1.AKSCluster {
+func testInstanceInSubnet(p *azurev1alpha3.Provider) *computev1alpha1.AKSCluster {
 	instance := testInstance(p)
 	instance.Spec.AKSClusterParameters.VnetSubnetID = "/path/to/cool/subnet"
 	return instance

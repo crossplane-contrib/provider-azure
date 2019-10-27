@@ -31,7 +31,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	computev1alpha1 "github.com/crossplaneio/crossplane/apis/compute/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 )
 
 var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureAKSCluster)
@@ -60,25 +60,25 @@ func TestConfigureAKSCluster(t *testing.T) {
 		"Successful": {
 			args: args{
 				cm: &computev1alpha1.KubernetesCluster{ObjectMeta: metav1.ObjectMeta{UID: claimUID}},
-				cs: &v1alpha2.AKSClusterClass{
-					SpecTemplate: v1alpha2.AKSClusterClassSpecTemplate{
+				cs: &v1alpha3.AKSClusterClass{
+					SpecTemplate: v1alpha3.AKSClusterClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha2.AKSCluster{},
+				mg: &v1alpha3.AKSCluster{},
 			},
 			want: want{
-				mg: &v1alpha2.AKSCluster{
-					Spec: v1alpha2.AKSClusterSpec{
+				mg: &v1alpha3.AKSCluster{
+					Spec: v1alpha3.AKSClusterSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						AKSClusterParameters: v1alpha2.AKSClusterParameters{
+						AKSClusterParameters: v1alpha3.AKSClusterParameters{
 							NodeCount:                     &nodeCount,
 							WriteServicePrincipalSecretTo: runtimev1alpha1.SecretReference{Name: fmt.Sprintf("principal-%s", claimUID)},
 						},

@@ -33,8 +33,8 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/redis"
 )
@@ -61,27 +61,27 @@ var log = logging.Logger.WithName("controller." + controllerName)
 type creator interface {
 	// Create the supplied resource in the external store. Returns true if the
 	// resource requires further reconciliation.
-	Create(ctx context.Context, r *v1alpha2.Redis) (requeue bool)
+	Create(ctx context.Context, r *v1alpha3.Redis) (requeue bool)
 }
 
 // A syncer can sync resources with an external store - e.g. the Azure API.
 type syncer interface {
 	// Sync the supplied resource with the external store. Returns true if the
 	// resource requires further reconciliation.
-	Sync(ctx context.Context, r *v1alpha2.Redis) (requeue bool)
+	Sync(ctx context.Context, r *v1alpha3.Redis) (requeue bool)
 }
 
 // A deleter can delete resources from an external store - e.g. the Azure API.
 type deleter interface {
 	// Delete the supplied resource from the external store. Returns true if the
 	// resource requires further reconciliation.
-	Delete(ctx context.Context, r *v1alpha2.Redis) (requeue bool)
+	Delete(ctx context.Context, r *v1alpha3.Redis) (requeue bool)
 }
 
 // A keyer can read the primary access key for the supplied resource.
 type keyer interface {
 	// Key returns the primary access key for the supplied resource.
-	Key(ctx context.Context, r *v1alpha2.Redis) (key string)
+	Key(ctx context.Context, r *v1alpha3.Redis) (key string)
 }
 
 // A createsyncdeletekeyer an create, sync, and delete resources in an external
@@ -99,7 +99,7 @@ type azureRedisCache struct {
 	client redis.Client
 }
 
-func (a *azureRedisCache) Create(ctx context.Context, r *v1alpha2.Redis) bool {
+func (a *azureRedisCache) Create(ctx context.Context, r *v1alpha3.Redis) bool {
 	r.Status.SetConditions(runtimev1alpha1.Creating())
 	n := redis.NewResourceName(r)
 	if _, err := a.client.Create(ctx, r.Spec.ResourceGroupName, n, redis.NewCreateParameters(r)); err != nil {
@@ -113,7 +113,7 @@ func (a *azureRedisCache) Create(ctx context.Context, r *v1alpha2.Redis) bool {
 	return true
 }
 
-func (a *azureRedisCache) Sync(ctx context.Context, r *v1alpha2.Redis) bool {
+func (a *azureRedisCache) Sync(ctx context.Context, r *v1alpha3.Redis) bool {
 	n := redis.NewResourceName(r)
 	cacheResource, err := a.client.Get(ctx, r.Spec.ResourceGroupName, n)
 	if err != nil {
@@ -124,7 +124,7 @@ func (a *azureRedisCache) Sync(ctx context.Context, r *v1alpha2.Redis) bool {
 	r.Status.State = string(cacheResource.ProvisioningState)
 
 	switch r.Status.State {
-	case v1alpha2.ProvisioningStateSucceeded:
+	case v1alpha3.ProvisioningStateSucceeded:
 		// TODO(negz): Set r.Status.State to something like 'Ready'? The Azure
 		// portal shows an instance as 'Ready', but the API shows only that the
 		// provisioning state is 'Succeeded'. It's a little weird to see a Redis
@@ -133,10 +133,10 @@ func (a *azureRedisCache) Sync(ctx context.Context, r *v1alpha2.Redis) bool {
 		if r.Status.Endpoint != "" {
 			resource.SetBindable(r)
 		}
-	case v1alpha2.ProvisioningStateCreating:
+	case v1alpha3.ProvisioningStateCreating:
 		r.Status.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
 		return true
-	case v1alpha2.ProvisioningStateDeleting:
+	case v1alpha3.ProvisioningStateDeleting:
 		r.Status.SetConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess())
 		return false
 	default:
@@ -166,7 +166,7 @@ func (a *azureRedisCache) Sync(ctx context.Context, r *v1alpha2.Redis) bool {
 	return false
 }
 
-func (a *azureRedisCache) Delete(ctx context.Context, r *v1alpha2.Redis) bool {
+func (a *azureRedisCache) Delete(ctx context.Context, r *v1alpha3.Redis) bool {
 	r.Status.SetConditions(runtimev1alpha1.Deleting())
 	if r.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
 		if _, err := a.client.Delete(ctx, r.Spec.ResourceGroupName, redis.NewResourceName(r)); err != nil {
@@ -179,7 +179,7 @@ func (a *azureRedisCache) Delete(ctx context.Context, r *v1alpha2.Redis) bool {
 	return false
 }
 
-func (a *azureRedisCache) Key(ctx context.Context, r *v1alpha2.Redis) string {
+func (a *azureRedisCache) Key(ctx context.Context, r *v1alpha3.Redis) string {
 	n := redis.NewResourceName(r)
 	k, err := a.client.ListKeys(ctx, r.Spec.ResourceGroupName, n)
 	if err != nil {
@@ -192,7 +192,7 @@ func (a *azureRedisCache) Key(ctx context.Context, r *v1alpha2.Redis) string {
 // A connecter returns a createsyncdeletekeyer that can create, sync, and delete
 // Azure Cache resources with an external store - for example the Azure API.
 type connecter interface {
-	Connect(context.Context, *v1alpha2.Redis) (createsyncdeletekeyer, error)
+	Connect(context.Context, *v1alpha3.Redis) (createsyncdeletekeyer, error)
 }
 
 // providerConnecter is a connecter that returns a createsyncdeletekeyer
@@ -205,8 +205,8 @@ type providerConnecter struct {
 // Connect returns a createsyncdeletekeyer backed by the Azure API. Azure
 // credentials are read from the Crossplane Provider referenced by the supplied
 // Redis.
-func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha2.Redis) (createsyncdeletekeyer, error) {
-	p := &azurev1alpha2.Provider{}
+func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.Redis) (createsyncdeletekeyer, error) {
+	p := &azurev1alpha3.Provider{}
 	n := meta.NamespacedNameOf(r.Spec.ProviderReference)
 	if err := c.kube.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
@@ -248,18 +248,18 @@ func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(controllerName).
-		For(&v1alpha2.Redis{}).
+		For(&v1alpha3.Redis{}).
 		Complete(r)
 }
 
 // Reconcile Azure Cache resources with the Azure API.
 func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha2.RedisKindAPIVersion, "request", req)
+	log.V(logging.Debug).Info("reconciling", "kind", v1alpha3.RedisKindAPIVersion, "request", req)
 
 	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
 	defer cancel()
 
-	rd := &v1alpha2.Redis{}
+	rd := &v1alpha3.Redis{}
 	if err := r.kube.Get(ctx, req.NamespacedName, rd); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{Requeue: false}, nil

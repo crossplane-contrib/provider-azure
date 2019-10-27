@@ -34,7 +34,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	"github.com/crossplaneio/stack-azure/pkg/clients/resourcegroup"
 )
 
@@ -63,21 +63,21 @@ var errDeleted = errors.New("resource has been deleted on Azure")
 type creator interface {
 	// Create the supplied resource in the external store. Returns true if the
 	// resource requires further reconciliation.
-	Create(ctx context.Context, r *v1alpha2.ResourceGroup) (requeue bool)
+	Create(ctx context.Context, r *v1alpha3.ResourceGroup) (requeue bool)
 }
 
 // A syncer can sync resources with an external store - e.g. the Azure API.
 type syncer interface {
 	// Sync the supplied resource with the external store. Returns true if the
 	// resource requires further reconciliation.
-	Sync(ctx context.Context, r *v1alpha2.ResourceGroup) (requeue bool)
+	Sync(ctx context.Context, r *v1alpha3.ResourceGroup) (requeue bool)
 }
 
 // A deleter can delete resources from an external store - e.g. the Azure API.
 type deleter interface {
 	// Delete the supplied resource from the external store. Returns true if the
 	// resource requires further reconciliation.
-	Delete(ctx context.Context, r *v1alpha2.ResourceGroup) (requeue bool)
+	Delete(ctx context.Context, r *v1alpha3.ResourceGroup) (requeue bool)
 }
 
 // A createsyncdeleter can create, sync, and delete resources in an external
@@ -93,7 +93,7 @@ type azureResourceGroup struct {
 	client resourcegroup.GroupsClient
 }
 
-func (a *azureResourceGroup) Create(ctx context.Context, r *v1alpha2.ResourceGroup) bool {
+func (a *azureResourceGroup) Create(ctx context.Context, r *v1alpha3.ResourceGroup) bool {
 	r.Status.SetConditions(runtimev1alpha1.Creating())
 	if _, err := a.client.CreateOrUpdate(ctx, r.Spec.Name, resourcegroup.NewParameters(r)); err != nil {
 		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
@@ -107,7 +107,7 @@ func (a *azureResourceGroup) Create(ctx context.Context, r *v1alpha2.ResourceGro
 	return true
 }
 
-func (a *azureResourceGroup) Sync(ctx context.Context, r *v1alpha2.ResourceGroup) bool {
+func (a *azureResourceGroup) Sync(ctx context.Context, r *v1alpha3.ResourceGroup) bool {
 	res, err := a.client.CheckExistence(ctx, r.Spec.Name)
 	if err != nil {
 		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
@@ -128,7 +128,7 @@ func (a *azureResourceGroup) Sync(ctx context.Context, r *v1alpha2.ResourceGroup
 	return true
 }
 
-func (a *azureResourceGroup) Delete(ctx context.Context, r *v1alpha2.ResourceGroup) bool {
+func (a *azureResourceGroup) Delete(ctx context.Context, r *v1alpha3.ResourceGroup) bool {
 	r.Status.SetConditions(runtimev1alpha1.Deleting())
 	if r.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
 		if _, err := a.client.Delete(ctx, r.Spec.Name); err != nil {
@@ -145,7 +145,7 @@ func (a *azureResourceGroup) Delete(ctx context.Context, r *v1alpha2.ResourceGro
 // A connecter returns a createsyncdeleter that can create, sync, and delete
 // Azure Resource Group resources with an external store - for example the Azure API.
 type connecter interface {
-	Connect(context.Context, *v1alpha2.ResourceGroup) (createsyncdeleter, error)
+	Connect(context.Context, *v1alpha3.ResourceGroup) (createsyncdeleter, error)
 }
 
 // providerConnecter is a connecter that returns a createsyncdeleter
@@ -158,8 +158,8 @@ type providerConnecter struct {
 // Connect returns a createsyncdeleter backed by the Azure API. Azure
 // credentials are read from the Crossplane Provider referenced by the supplied
 // Resource Group.
-func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha2.ResourceGroup) (createsyncdeleter, error) {
-	p := &v1alpha2.Provider{}
+func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.ResourceGroup) (createsyncdeleter, error) {
+	p := &v1alpha3.Provider{}
 	n := meta.NamespacedNameOf(r.Spec.ProviderReference)
 	if err := c.kube.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
@@ -198,18 +198,18 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(controllerName).
-		For(&v1alpha2.ResourceGroup{}).
+		For(&v1alpha3.ResourceGroup{}).
 		Complete(r)
 }
 
 // Reconcile Azure Resource Group resources with the Azure API.
 func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha2.ResourceGroupKindAPIVersion, "request", req)
+	log.V(logging.Debug).Info("reconciling", "kind", v1alpha3.ResourceGroupKindAPIVersion, "request", req)
 
 	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
 	defer cancel()
 
-	rg := &v1alpha2.ResourceGroup{}
+	rg := &v1alpha3.ResourceGroup{}
 	if err := r.kube.Get(ctx, req.NamespacedName, rg); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{Requeue: false}, nil

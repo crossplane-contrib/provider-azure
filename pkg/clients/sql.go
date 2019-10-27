@@ -30,7 +30,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	azuredbv1alpha2 "github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
+	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 )
 
 const (
@@ -47,10 +47,10 @@ var (
 
 // MySQLServerAPI represents the API interface for a MySQL Server client
 type MySQLServerAPI interface {
-	ServerNameTaken(ctx context.Context, s *azuredbv1alpha2.MySQLServer) (bool, error)
-	GetServer(ctx context.Context, s *azuredbv1alpha2.MySQLServer) (mysql.Server, error)
-	CreateServer(ctx context.Context, s *azuredbv1alpha2.MySQLServer, adminPassword string) error
-	DeleteServer(ctx context.Context, s *azuredbv1alpha2.MySQLServer) error
+	ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (bool, error)
+	GetServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (mysql.Server, error)
+	CreateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer, adminPassword string) error
+	DeleteServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ func NewMySQLServerClient(c *Client) (*MySQLServerClient, error) {
 }
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha2.MySQLServer) (bool, error) {
+func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (bool, error) {
 	r, err := c.Execute(ctx, mysql.NameAvailabilityRequest{Name: ToStringPtr(s.GetName())})
 	if err != nil {
 		return false, err
@@ -89,12 +89,12 @@ func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alp
 }
 
 // GetServer retrieves the requested MySQL Server
-func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha2.MySQLServer) (mysql.Server, error) {
+func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (mysql.Server, error) {
 	return c.ServersClient.Get(ctx, s.Spec.ResourceGroupName, s.GetName())
 }
 
 // CreateServer creates a MySQL Server.
-func (c *MySQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha2.MySQLServer, adminPassword string) error {
+func (c *MySQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer, adminPassword string) error {
 	// initialize all the parameters that specify how to configure the server during creation
 	skuName, err := SQLServerSkuName(s.Spec.PricingTier)
 	if err != nil {
@@ -133,7 +133,7 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha2
 }
 
 // DeleteServer deletes the given MySQLServer resource.
-func (c *MySQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha2.MySQLServer) error {
+func (c *MySQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error {
 	_, err := c.ServersClient.Delete(ctx, s.Spec.ResourceGroupName, s.GetName())
 	return err
 }
@@ -174,7 +174,7 @@ func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) 
 }
 
 // NewMySQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
-func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha2.MySQLServerVirtualNetworkRule) mysql.VirtualNetworkRule {
+func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule) mysql.VirtualNetworkRule {
 	return mysql.VirtualNetworkRule{
 		Name: ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
@@ -185,7 +185,7 @@ func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha2.MySQLServerVirtualN
 }
 
 // MySQLServerVirtualNetworkRuleNeedsUpdate determines if a virtual network rule needs to be updated
-func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.MySQLServerVirtualNetworkRule, az mysql.VirtualNetworkRule) bool {
+func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha3.MySQLServerVirtualNetworkRule, az mysql.VirtualNetworkRule) bool {
 	up := NewMySQLVirtualNetworkRuleParameters(kube)
 
 	switch {
@@ -200,7 +200,7 @@ func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.MySQLServerV
 
 // UpdateMySQLVirtualNetworkRuleStatusFromAzure updates the status related to the external
 // Azure MySQLVirtualNetworkRule in the VirtualNetworkStatus
-func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha2.MySQLServerVirtualNetworkRule, az mysql.VirtualNetworkRule) {
+func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule, az mysql.VirtualNetworkRule) {
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = ToString(az.ID)
 	v.Status.Type = ToString(az.Type)
@@ -211,10 +211,10 @@ func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha2.MySQLServer
 
 // PostgreSQLServerAPI represents the API interface for a MySQL Server client
 type PostgreSQLServerAPI interface {
-	ServerNameTaken(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer) (bool, error)
-	GetServer(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer) (postgresql.Server, error)
-	CreateServer(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer, adminPassword string) error
-	DeleteServer(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer) error
+	ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (bool, error)
+	GetServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (postgresql.Server, error)
+	CreateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error
+	DeleteServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error
 }
 
 // PostgreSQLServerClient is the concreate implementation of the SQLServerAPI interface for PostgreSQL that calls Azure API.
@@ -240,7 +240,7 @@ func NewPostgreSQLServerClient(c *Client) (*PostgreSQLServerClient, error) {
 }
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer) (bool, error) {
+func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (bool, error) {
 	r, err := c.Execute(ctx, postgresql.NameAvailabilityRequest{Name: ToStringPtr(s.GetName())})
 	if err != nil {
 		return false, err
@@ -249,12 +249,12 @@ func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredb
 }
 
 // GetServer retrieves the requested PostgreSQL Server
-func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer) (postgresql.Server, error) {
+func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (postgresql.Server, error) {
 	return c.ServersClient.Get(ctx, s.Spec.ResourceGroupName, s.GetName())
 }
 
 // CreateServer creates a PostgreSQL Server
-func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer, adminPassword string) error {
+func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error {
 	// initialize all the parameters that s.Specify how to configure the server during creation
 	skuName, err := SQLServerSkuName(s.Spec.PricingTier)
 	if err != nil {
@@ -293,7 +293,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, s *azuredbv1a
 }
 
 // DeleteServer deletes the given PostgreSQL resource
-func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha2.PostgreSQLServer) error {
+func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error {
 	_, err := c.ServersClient.Delete(ctx, s.Spec.ResourceGroupName, s.GetName())
 	return err
 }
@@ -334,7 +334,7 @@ func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []b
 }
 
 // NewPostgreSQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
-func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha2.PostgreSQLServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
+func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
 	return postgresql.VirtualNetworkRule{
 		Name: ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
@@ -345,7 +345,7 @@ func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha2.PostgreSQLServ
 }
 
 // PostgreSQLServerVirtualNetworkRuleNeedsUpdate determines if a virtual network rule needs to be updated
-func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.PostgreSQLServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) bool {
+func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) bool {
 	up := NewPostgreSQLVirtualNetworkRuleParameters(kube)
 
 	switch {
@@ -360,7 +360,7 @@ func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha2.Postgre
 
 // UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure updates the status related to the external
 // Azure PostgreSQLVirtualNetworkRule in the VirtualNetworkStatus
-func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha2.PostgreSQLServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) {
+func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) {
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = ToString(az.ID)
 	v.Status.Type = ToString(az.Type)
@@ -373,7 +373,7 @@ func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha2.Postgr
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
 
 // SQLServerSkuName returns the name of the MySQL Server SKU, which is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
-func SQLServerSkuName(pricingTier azuredbv1alpha2.PricingTierSpec) (string, error) {
+func SQLServerSkuName(pricingTier azuredbv1alpha3.PricingTierSpec) (string, error) {
 	t, ok := skuShortTiers[mysql.SkuTier(pricingTier.Tier)]
 	if !ok {
 		return "", fmt.Errorf("tier '%s' is not one of the supported values: %+v", pricingTier.Tier, mysql.PossibleSkuTierValues())

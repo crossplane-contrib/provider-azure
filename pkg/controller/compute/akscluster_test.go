@@ -38,7 +38,7 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	computev1alpha2 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
+	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/compute"
 )
@@ -59,11 +59,11 @@ func (m *mockAKSSetupClientFactory) CreateSetupClient(_ *azureclients.Client) (*
 }
 
 type mockAKSSetupClient struct {
-	MockGet                         func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedCluster, error)
-	MockCreateOrUpdateBegin         func(ctx context.Context, instance computev1alpha2.AKSCluster, clusterName, appID, spSecret string) ([]byte, error)
+	MockGet                         func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error)
+	MockCreateOrUpdateBegin         func(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error)
 	MockCreateOrUpdateEnd           func(op []byte) (bool, error)
-	MockDelete                      func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error)
-	MockListClusterAdminCredentials func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.CredentialResults, error)
+	MockDelete                      func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error)
+	MockListClusterAdminCredentials func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error)
 	MockCreateApplication           func(ctx context.Context, appParams azureclients.ApplicationParameters) (*graphrbac.Application, error)
 	MockDeleteApplication           func(ctx context.Context, appObjectID string) error
 	MockCreateServicePrincipal      func(ctx context.Context, spID, appID string) (*graphrbac.ServicePrincipal, error)
@@ -72,14 +72,14 @@ type mockAKSSetupClient struct {
 	MockDeleteRoleAssignment        func(ctx context.Context, vnetSubnetID, name string) error
 }
 
-func (m *mockAKSSetupClient) Get(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedCluster, error) {
+func (m *mockAKSSetupClient) Get(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
 	if m.MockGet != nil {
 		return m.MockGet(ctx, instance)
 	}
 	return containerservice.ManagedCluster{}, nil
 }
 
-func (m *mockAKSSetupClient) CreateOrUpdateBegin(ctx context.Context, instance computev1alpha2.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
+func (m *mockAKSSetupClient) CreateOrUpdateBegin(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
 	if m.MockCreateOrUpdateBegin != nil {
 		return m.MockCreateOrUpdateBegin(ctx, instance, clusterName, appID, spSecret)
 	}
@@ -93,14 +93,14 @@ func (m *mockAKSSetupClient) CreateOrUpdateEnd(op []byte) (bool, error) {
 	return true, nil
 }
 
-func (m *mockAKSSetupClient) Delete(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error) {
+func (m *mockAKSSetupClient) Delete(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error) {
 	if m.MockDelete != nil {
 		return m.MockDelete(ctx, instance)
 	}
 	return containerservice.ManagedClustersDeleteFuture{}, nil
 }
 
-func (m *mockAKSSetupClient) ListClusterAdminCredentials(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.CredentialResults, error) {
+func (m *mockAKSSetupClient) ListClusterAdminCredentials(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error) {
 	if m.MockListClusterAdminCredentials != nil {
 		return m.MockListClusterAdminCredentials(ctx, instance)
 	}
@@ -167,10 +167,10 @@ func TestReconcile(t *testing.T) {
 			ObjectID: to.StringPtr("da804153-3faa-4c73-9fcb-0961387a31f9"),
 		}, nil
 	}
-	mockAKSSetupClient.MockCreateOrUpdateBegin = func(ctx context.Context, instance computev1alpha2.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
+	mockAKSSetupClient.MockCreateOrUpdateBegin = func(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
 		return []byte("mocked marshalled create future"), nil
 	}
-	mockAKSSetupClient.MockGet = func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedCluster, error) {
+	mockAKSSetupClient.MockGet = func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
 		return containerservice.ManagedCluster{
 			ID: to.StringPtr("fcb4e97a-c3ea-4466-9b02-e728d8e6764f"),
 			ManagedClusterProperties: &containerservice.ManagedClusterProperties{
@@ -179,7 +179,7 @@ func TestReconcile(t *testing.T) {
 			},
 		}, nil
 	}
-	mockAKSSetupClient.MockListClusterAdminCredentials = func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.CredentialResults, error) {
+	mockAKSSetupClient.MockListClusterAdminCredentials = func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error) {
 		return containerservice.CredentialResults{
 			Kubeconfigs: &[]containerservice.CredentialResult{{Value: &kubecfg}},
 		}, nil
@@ -226,7 +226,7 @@ func TestReconcile(t *testing.T) {
 	// 2) application object ID
 	// 3) service principal ID
 	// 4) "creating" condition
-	expectedStatus := computev1alpha2.AKSClusterStatus{
+	expectedStatus := computev1alpha3.AKSClusterStatus{
 		RunningOperation:    "mocked marshalled create future",
 		ClusterName:         instanceName,
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
@@ -249,7 +249,7 @@ func TestReconcile(t *testing.T) {
 
 	// second reconcile should finish the create operation and clear out the running operation field
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	expectedStatus = computev1alpha2.AKSClusterStatus{
+	expectedStatus = computev1alpha3.AKSClusterStatus{
 		RunningOperation:    "",
 		ClusterName:         instanceName,
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
@@ -263,7 +263,7 @@ func TestReconcile(t *testing.T) {
 
 	// verify that the CRD status was updated with details about the external AKS cluster and that the
 	// CRD conditions show the transition from creating to running
-	expectedStatus = computev1alpha2.AKSClusterStatus{
+	expectedStatus = computev1alpha3.AKSClusterStatus{
 		ClusterName:         instanceName,
 		State:               "Succeeded",
 		ProviderID:          "fcb4e97a-c3ea-4466-9b02-e728d8e6764f",
@@ -301,10 +301,10 @@ func TestReconcileInSubnet(t *testing.T) {
 	mockAKSSetupClient.MockCreateRoleAssignment = func(ctx context.Context, sp, vnetSubnetID, name string) (result *authorization.RoleAssignment, err error) {
 		return &authorization.RoleAssignment{}, nil
 	}
-	mockAKSSetupClient.MockCreateOrUpdateBegin = func(ctx context.Context, instance computev1alpha2.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
+	mockAKSSetupClient.MockCreateOrUpdateBegin = func(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
 		return []byte("mocked marshalled create future"), nil
 	}
-	mockAKSSetupClient.MockGet = func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedCluster, error) {
+	mockAKSSetupClient.MockGet = func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
 		return containerservice.ManagedCluster{
 			ID: to.StringPtr("fcb4e97a-c3ea-4466-9b02-e728d8e6764f"),
 			ManagedClusterProperties: &containerservice.ManagedClusterProperties{
@@ -313,7 +313,7 @@ func TestReconcileInSubnet(t *testing.T) {
 			},
 		}, nil
 	}
-	mockAKSSetupClient.MockListClusterAdminCredentials = func(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.CredentialResults, error) {
+	mockAKSSetupClient.MockListClusterAdminCredentials = func(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error) {
 		return containerservice.CredentialResults{
 			Kubeconfigs: &[]containerservice.CredentialResult{{Value: &kubecfg}},
 		}, nil
@@ -360,7 +360,7 @@ func TestReconcileInSubnet(t *testing.T) {
 	// 2) application object ID
 	// 3) service principal ID
 	// 4) "creating" condition
-	expectedStatus := computev1alpha2.AKSClusterStatus{
+	expectedStatus := computev1alpha3.AKSClusterStatus{
 		RunningOperation:    "mocked marshalled create future",
 		ClusterName:         instanceName,
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
@@ -383,7 +383,7 @@ func TestReconcileInSubnet(t *testing.T) {
 
 	// second reconcile should finish the create operation and clear out the running operation field
 	g.Eventually(requests, timeout).Should(gomega.Receive(gomega.Equal(expectedRequest)))
-	expectedStatus = computev1alpha2.AKSClusterStatus{
+	expectedStatus = computev1alpha3.AKSClusterStatus{
 		RunningOperation:    "",
 		ClusterName:         instanceName,
 		ApplicationObjectID: "182f8c4a-ad89-4b25-b947-d4026ab183a1",
@@ -397,7 +397,7 @@ func TestReconcileInSubnet(t *testing.T) {
 
 	// verify that the CRD status was updated with details about the external AKS cluster and that the
 	// CRD conditions show the transition from creating to running
-	expectedStatus = computev1alpha2.AKSClusterStatus{
+	expectedStatus = computev1alpha3.AKSClusterStatus{
 		ClusterName:         instanceName,
 		State:               "Succeeded",
 		ProviderID:          "fcb4e97a-c3ea-4466-9b02-e728d8e6764f",
@@ -414,8 +414,8 @@ func TestReconcileInSubnet(t *testing.T) {
 	g.Expect(instance.Finalizers[0]).To(gomega.Equal(finalizer))
 }
 
-func cleanupAKSCluster(t *testing.T, g *gomega.GomegaWithT, c client.Client, requests chan reconcile.Request, instance *computev1alpha2.AKSCluster) {
-	deletedInstance := &computev1alpha2.AKSCluster{}
+func cleanupAKSCluster(t *testing.T, g *gomega.GomegaWithT, c client.Client, requests chan reconcile.Request, instance *computev1alpha3.AKSCluster) {
+	deletedInstance := &computev1alpha3.AKSCluster{}
 	if err := c.Get(ctx, expectedRequest.NamespacedName, deletedInstance); errors.IsNotFound(err) {
 		// instance has already been deleted, bail out
 		return
@@ -430,7 +430,7 @@ func cleanupAKSCluster(t *testing.T, g *gomega.GomegaWithT, c client.Client, req
 
 	// wait for the finalizer to run and the instance to be deleted for good
 	err = wait.ExponentialBackoff(test.DefaultRetry, func() (done bool, err error) {
-		deletedInstance := &computev1alpha2.AKSCluster{}
+		deletedInstance := &computev1alpha3.AKSCluster{}
 		if err := c.Get(ctx, expectedRequest.NamespacedName, deletedInstance); errors.IsNotFound(err) {
 			return true, nil
 		}
@@ -439,8 +439,8 @@ func cleanupAKSCluster(t *testing.T, g *gomega.GomegaWithT, c client.Client, req
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 }
 
-func assertAKSClusterStatus(g *gomega.GomegaWithT, c client.Client, expectedStatus computev1alpha2.AKSClusterStatus) {
-	instance := &computev1alpha2.AKSCluster{}
+func assertAKSClusterStatus(g *gomega.GomegaWithT, c client.Client, expectedStatus computev1alpha3.AKSClusterStatus) {
+	instance := &computev1alpha3.AKSCluster{}
 	err := c.Get(ctx, expectedRequest.NamespacedName, instance)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 

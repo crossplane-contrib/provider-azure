@@ -27,8 +27,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
@@ -55,15 +55,15 @@ type Controller struct{}
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha2.MySQLServerVirtualNetworkRuleGroupVersionKind),
+		resource.ManagedKind(v1alpha3.MySQLServerVirtualNetworkRuleGroupVersionKind),
 		resource.WithManagedConnectionPublishers(),
 		resource.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.MySQLServerVirtualNetworkRuleKind, v1alpha2.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.MySQLServerVirtualNetworkRuleKind, v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha2.MySQLServerVirtualNetworkRule{}).
+		For(&v1alpha3.MySQLServerVirtualNetworkRule{}).
 		Complete(r)
 }
 
@@ -73,12 +73,12 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha3.MySQLServerVirtualNetworkRule)
 	if !ok {
 		return nil, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
 
-	p := &azurev1alpha2.Provider{}
+	p := &azurev1alpha3.Provider{}
 	n := meta.NamespacedNameOf(v.Spec.ProviderReference)
 	if err := c.client.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
@@ -102,7 +102,7 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha3.MySQLServerVirtualNetworkRule)
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
@@ -127,7 +127,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha3.MySQLServerVirtualNetworkRule)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
@@ -143,7 +143,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
-	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha3.MySQLServerVirtualNetworkRule)
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotMySQLServerVirtualNetworkRule)
 	}
@@ -163,7 +163,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	v, ok := mg.(*v1alpha2.MySQLServerVirtualNetworkRule)
+	v, ok := mg.(*v1alpha3.MySQLServerVirtualNetworkRule)
 	if !ok {
 		return errors.New(errNotMySQLServerVirtualNetworkRule)
 	}

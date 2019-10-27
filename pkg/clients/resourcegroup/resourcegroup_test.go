@@ -24,7 +24,7 @@ import (
 
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 
-	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
 const (
@@ -35,13 +35,13 @@ const (
 func TestNewParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *v1alpha2.ResourceGroup
+		r    *v1alpha3.ResourceGroup
 		want resources.Group
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha2.ResourceGroup{
-				Spec: v1alpha2.ResourceGroupSpec{
+			r: &v1alpha3.ResourceGroup{
+				Spec: v1alpha3.ResourceGroupSpec{
 					Name:     name,
 					Location: location,
 				},

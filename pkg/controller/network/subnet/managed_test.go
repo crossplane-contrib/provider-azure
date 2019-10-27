@@ -32,8 +32,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	"github.com/Azure/go-autorest/autorest"
 
-	"github.com/crossplaneio/stack-azure/apis/network/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	networkclient "github.com/crossplaneio/stack-azure/pkg/clients/network"
 	"github.com/crossplaneio/stack-azure/pkg/clients/network/fake"
@@ -61,9 +61,9 @@ var (
 	ctx       = context.Background()
 	errorBoom = errors.New("boom")
 
-	provider = azurev1alpha2.Provider{
+	provider = azurev1alpha3.Provider{
 		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha2.ProviderSpec{
+		Spec: azurev1alpha3.ProviderSpec{
 			Secret: runtimev1alpha1.SecretKeySelector{
 				SecretReference: runtimev1alpha1.SecretReference{
 					Namespace: namespace,
@@ -88,35 +88,35 @@ type testCase struct {
 	wantErr error
 }
 
-type subnetModifier func(*v1alpha2.Subnet)
+type subnetModifier func(*v1alpha3.Subnet)
 
 func withConditions(c ...runtimev1alpha1.Condition) subnetModifier {
-	return func(r *v1alpha2.Subnet) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1alpha3.Subnet) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withState(s string) subnetModifier {
-	return func(r *v1alpha2.Subnet) { r.Status.State = s }
+	return func(r *v1alpha3.Subnet) { r.Status.State = s }
 }
 
-func subnet(sm ...subnetModifier) *v1alpha2.Subnet {
-	r := &v1alpha2.Subnet{
+func subnet(sm ...subnetModifier) *v1alpha3.Subnet {
+	r := &v1alpha3.Subnet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha2.SubnetSpec{
+		Spec: v1alpha3.SubnetSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
 			Name:               name,
 			VirtualNetworkName: virtualNetworkName,
 			ResourceGroupName:  resourceGroupName,
-			SubnetPropertiesFormat: v1alpha2.SubnetPropertiesFormat{
+			SubnetPropertiesFormat: v1alpha3.SubnetPropertiesFormat{
 				AddressPrefix: addressPrefix,
 			},
 		},
-		Status: v1alpha2.SubnetStatus{},
+		Status: v1alpha3.SubnetStatus{},
 	}
 
 	for _, m := range sm {
@@ -135,8 +135,8 @@ func TestCreate(t *testing.T) {
 		{
 			name:    "NotSubnet",
 			e:       &external{client: &fake.MockSubnetsClient{}},
-			r:       &v1alpha2.VirtualNetwork{},
-			want:    &v1alpha2.VirtualNetwork{},
+			r:       &v1alpha3.VirtualNetwork{},
+			want:    &v1alpha3.VirtualNetwork{},
 			wantErr: errors.New(errNotSubnet),
 		},
 		{
@@ -186,8 +186,8 @@ func TestObserve(t *testing.T) {
 		{
 			name:    "NotSubnet",
 			e:       &external{client: &fake.MockSubnetsClient{}},
-			r:       &v1alpha2.VirtualNetwork{},
-			want:    &v1alpha2.VirtualNetwork{},
+			r:       &v1alpha3.VirtualNetwork{},
+			want:    &v1alpha3.VirtualNetwork{},
 			wantErr: errors.New(errNotSubnet),
 		},
 		{
@@ -257,8 +257,8 @@ func TestUpdate(t *testing.T) {
 		{
 			name:    "NotSubnet",
 			e:       &external{client: &fake.MockSubnetsClient{}},
-			r:       &v1alpha2.VirtualNetwork{},
-			want:    &v1alpha2.VirtualNetwork{},
+			r:       &v1alpha3.VirtualNetwork{},
+			want:    &v1alpha3.VirtualNetwork{},
 			wantErr: errors.New(errNotSubnet),
 		},
 		{
@@ -347,8 +347,8 @@ func TestDelete(t *testing.T) {
 		{
 			name:    "NotSubnet",
 			e:       &external{client: &fake.MockSubnetsClient{}},
-			r:       &v1alpha2.VirtualNetwork{},
-			want:    &v1alpha2.VirtualNetwork{},
+			r:       &v1alpha3.VirtualNetwork{},
+			want:    &v1alpha3.VirtualNetwork{},
 			wantErr: errors.New(errNotSubnet),
 		},
 		{
@@ -418,7 +418,7 @@ func TestConnect(t *testing.T) {
 		{
 			name:    "NotSubnet",
 			conn:    &connecter{client: &test.MockClient{}},
-			i:       &v1alpha2.VirtualNetwork{},
+			i:       &v1alpha3.VirtualNetwork{},
 			want:    nil,
 			wantErr: errors.New(errNotSubnet),
 		},
@@ -429,7 +429,7 @@ func TestConnect(t *testing.T) {
 					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 						switch key {
 						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha2.Provider) = provider
+							*obj.(*azurev1alpha3.Provider) = provider
 						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
 							*obj.(*corev1.Secret) = providerSecret
 						}

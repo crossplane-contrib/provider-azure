@@ -29,7 +29,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	cachev1alpha1 "github.com/crossplaneio/crossplane/apis/cache/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
 )
 
 // A RedisClaimSchedulingController reconciles RedisCluster claims that include
@@ -42,8 +42,8 @@ type RedisClaimSchedulingController struct{}
 func (c *RedisClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
 		cachev1alpha1.RedisClusterKind,
-		v1alpha2.RedisKind,
-		v1alpha2.Group))
+		v1alpha3.RedisKind,
+		v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -55,7 +55,7 @@ func (c *RedisClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) erro
 		))).
 		Complete(resource.NewClaimSchedulingReconciler(mgr,
 			resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
-			resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
+			resource.ClassKind(v1alpha3.RedisClassGroupVersionKind),
 		))
 }
 
@@ -69,8 +69,8 @@ type RedisClaimDefaultingController struct{}
 func (c *RedisClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
 		cachev1alpha1.RedisClusterKind,
-		v1alpha2.RedisKind,
-		v1alpha2.Group))
+		v1alpha3.RedisKind,
+		v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -82,7 +82,7 @@ func (c *RedisClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) erro
 		))).
 		Complete(resource.NewClaimDefaultingReconciler(mgr,
 			resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
-			resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
+			resource.ClassKind(v1alpha3.RedisClassGroupVersionKind),
 		))
 }
 
@@ -94,27 +94,27 @@ type RedisClaimController struct{}
 func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		cachev1alpha1.RedisClusterKind,
-		v1alpha2.RedisKind,
-		v1alpha2.Group))
+		v1alpha3.RedisKind,
+		v1alpha3.Group))
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
-		resource.ClassKind(v1alpha2.RedisClassGroupVersionKind),
-		resource.ManagedKind(v1alpha2.RedisGroupVersionKind),
+		resource.ClassKind(v1alpha3.RedisClassGroupVersionKind),
+		resource.ManagedKind(v1alpha3.RedisGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureRedis),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
-		resource.HasClassReferenceKind(resource.ClassKind(v1alpha2.RedisClassGroupVersionKind)),
-		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind)),
-		resource.IsManagedKind(resource.ManagedKind(v1alpha2.RedisGroupVersionKind), mgr.GetScheme()),
+		resource.HasClassReferenceKind(resource.ClassKind(v1alpha3.RedisClassGroupVersionKind)),
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha3.RedisGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1alpha3.RedisGroupVersionKind), mgr.GetScheme()),
 	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha2.Redis{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1alpha3.Redis{}}, &resource.EnqueueRequestForClaim{}).
 		For(&cachev1alpha1.RedisCluster{}).
 		WithEventFilter(p).
 		Complete(r)
@@ -129,17 +129,17 @@ func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.Class, mg 
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), cachev1alpha1.RedisClusterGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha2.RedisClass)
+	rs, csok := cs.(*v1alpha3.RedisClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha2.RedisClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha3.RedisClassGroupVersionKind)
 	}
 
-	i, mgok := mg.(*v1alpha2.Redis)
+	i, mgok := mg.(*v1alpha3.Redis)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha2.RedisGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha3.RedisGroupVersionKind)
 	}
 
-	spec := &v1alpha2.RedisSpec{
+	spec := &v1alpha3.RedisSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},
@@ -169,8 +169,8 @@ func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.Class, mg 
 func resolveAzureClassValues(rc *cachev1alpha1.RedisCluster) error {
 	// EngineVersion is currently the only option we expose at the claim level,
 	// and Azure only supports Redis 3.2.
-	if rc.Spec.EngineVersion != "" && rc.Spec.EngineVersion != v1alpha2.SupportedRedisVersion {
-		return errors.Errorf("Azure supports only Redis version %s", v1alpha2.SupportedRedisVersion)
+	if rc.Spec.EngineVersion != "" && rc.Spec.EngineVersion != v1alpha3.SupportedRedisVersion {
+		return errors.Errorf("Azure supports only Redis version %s", v1alpha3.SupportedRedisVersion)
 	}
 	return nil
 }

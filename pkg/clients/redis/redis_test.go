@@ -26,7 +26,7 @@ import (
 
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
 )
 
 const (
@@ -36,8 +36,8 @@ const (
 	subnetID         = "coolsubnet"
 	staticIP         = "172.16.0.1"
 	shardCount       = 3
-	skuName          = v1alpha2.SKUNameBasic
-	skuFamily        = v1alpha2.SKUFamilyC
+	skuName          = v1alpha3.SKUNameBasic
+	skuFamily        = v1alpha3.SKUFamilyC
 	skuCapacity      = 1
 )
 
@@ -51,7 +51,7 @@ func TestNewResourceName(t *testing.T) {
 	}{
 		{
 			name: "Successful",
-			o:    &v1alpha2.Redis{ObjectMeta: metav1.ObjectMeta{UID: uid}},
+			o:    &v1alpha3.Redis{ObjectMeta: metav1.ObjectMeta{UID: uid}},
 			want: resourceName,
 		},
 	}
@@ -69,16 +69,16 @@ func TestNewResourceName(t *testing.T) {
 func TestNewCreateParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *v1alpha2.Redis
+		r    *v1alpha3.Redis
 		want redismgmt.CreateParameters
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha2.Redis{
+			r: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -121,16 +121,16 @@ func TestNewCreateParameters(t *testing.T) {
 func TestNewUpdateParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *v1alpha2.Redis
+		r    *v1alpha3.Redis
 		want redismgmt.UpdateParameters
 	}{
 		{
 			name: "UpdatableFieldsOnly",
-			r: &v1alpha2.Redis{
+			r: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -156,11 +156,11 @@ func TestNewUpdateParameters(t *testing.T) {
 		},
 		{
 			name: "SuperfluousFields",
-			r: &v1alpha2.Redis{
+			r: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -203,17 +203,17 @@ func TestNewUpdateParameters(t *testing.T) {
 func TestNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *v1alpha2.Redis
+		kube *v1alpha3.Redis
 		az   redismgmt.ResourceType
 		want bool
 	}{
 		{
 			name: "NeedsLessCapacity",
-			kube: &v1alpha2.Redis{
+			kube: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -240,11 +240,11 @@ func TestNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsNewRedisConfiguration",
-			kube: &v1alpha2.Redis{
+			kube: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -271,11 +271,11 @@ func TestNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsSSLPortDisabled",
-			kube: &v1alpha2.Redis{
+			kube: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -302,11 +302,11 @@ func TestNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsFewerShards",
-			kube: &v1alpha2.Redis{
+			kube: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -333,11 +333,11 @@ func TestNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsNoUpdate",
-			kube: &v1alpha2.Redis{
+			kube: &v1alpha3.Redis{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha2.RedisSpec{
-					RedisParameters: v1alpha2.RedisParameters{
-						SKU: v1alpha2.SKUSpec{
+				Spec: v1alpha3.RedisSpec{
+					RedisParameters: v1alpha3.RedisParameters{
+						SKU: v1alpha3.SKUSpec{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,

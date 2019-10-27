@@ -23,7 +23,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
 	"github.com/Azure/go-autorest/autorest/to"
 
-	computev1alpha2 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
+	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/authorization"
 )
@@ -85,11 +85,11 @@ func (f *AKSSetupClientFactory) CreateSetupClient(c *azure.Client) (*AKSSetupCli
 
 // AKSClusterAPI represents the API interface for a AKS Cluster client
 type AKSClusterAPI interface {
-	Get(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedCluster, error)
-	CreateOrUpdateBegin(ctx context.Context, instance computev1alpha2.AKSCluster, clusterName, appID, spSecret string) ([]byte, error)
+	Get(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error)
+	CreateOrUpdateBegin(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error)
 	CreateOrUpdateEnd(op []byte) (bool, error)
-	Delete(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error)
-	ListClusterAdminCredentials(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.CredentialResults, error)
+	Delete(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error)
+	ListClusterAdminCredentials(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error)
 }
 
 // AKSClusterClient is the concreate implementation of the AKSClusterAPI interface that calls Azure API.
@@ -107,17 +107,17 @@ func NewAKSClusterClient(c *azure.Client) (*AKSClusterClient, error) {
 }
 
 // Get returns the AKS cluster details for the given instance
-func (c *AKSClusterClient) Get(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedCluster, error) {
+func (c *AKSClusterClient) Get(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
 	return c.ManagedClustersClient.Get(ctx, instance.Spec.ResourceGroupName, instance.Status.ClusterName)
 }
 
 // CreateOrUpdateBegin begins the create/update operation for a AKS Cluster with the given properties
-func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance computev1alpha2.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
+func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
 	spec := instance.Spec
 
 	enableRBAC := !spec.DisableRBAC
 
-	nodeCount := int32(computev1alpha2.DefaultNodeCount)
+	nodeCount := int32(computev1alpha3.DefaultNodeCount)
 	if spec.NodeCount != nil {
 		nodeCount = int32(*spec.NodeCount)
 	}
@@ -195,12 +195,12 @@ func (c *AKSClusterClient) CreateOrUpdateEnd(op []byte) (done bool, err error) {
 }
 
 // Delete begins the deletion operator for the given AKS cluster instance
-func (c *AKSClusterClient) Delete(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error) {
+func (c *AKSClusterClient) Delete(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error) {
 	return c.ManagedClustersClient.Delete(ctx, instance.Spec.ResourceGroupName, instance.Status.ClusterName)
 }
 
 // ListClusterAdminCredentials will return the admin credentials used to connect to the given AKS cluster
-func (c *AKSClusterClient) ListClusterAdminCredentials(ctx context.Context, instance computev1alpha2.AKSCluster) (containerservice.CredentialResults, error) {
+func (c *AKSClusterClient) ListClusterAdminCredentials(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error) {
 	return c.ManagedClustersClient.ListClusterAdminCredentials(ctx, instance.Spec.ResourceGroupName, instance.Status.ClusterName)
 }
 

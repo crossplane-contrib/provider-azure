@@ -26,23 +26,23 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	cachev1alpha2 "github.com/crossplaneio/stack-azure/apis/cache/v1alpha2"
-	computev1alpha2 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha2"
-	databasev1alpha2 "github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
-	networkv1alpha2 "github.com/crossplaneio/stack-azure/apis/network/v1alpha2"
-	storagev1alpha2 "github.com/crossplaneio/stack-azure/apis/storage/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	cachev1alpha3 "github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
+	databasev1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	networkv1alpha3 "github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
+	storagev1alpha3 "github.com/crossplaneio/stack-azure/apis/storage/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
-		azurev1alpha2.SchemeBuilder.AddToScheme,
-		cachev1alpha2.SchemeBuilder.AddToScheme,
-		computev1alpha2.SchemeBuilder.AddToScheme,
-		databasev1alpha2.SchemeBuilder.AddToScheme,
-		networkv1alpha2.SchemeBuilder.AddToScheme,
-		storagev1alpha2.SchemeBuilder.AddToScheme,
+		azurev1alpha3.SchemeBuilder.AddToScheme,
+		cachev1alpha3.SchemeBuilder.AddToScheme,
+		computev1alpha3.SchemeBuilder.AddToScheme,
+		databasev1alpha3.SchemeBuilder.AddToScheme,
+		networkv1alpha3.SchemeBuilder.AddToScheme,
+		storagev1alpha3.SchemeBuilder.AddToScheme,
 	)
 }
 

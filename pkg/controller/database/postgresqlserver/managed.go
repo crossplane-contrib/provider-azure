@@ -33,8 +33,8 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha2"
-	azurev1alpha2 "github.com/crossplaneio/stack-azure/apis/v1alpha2"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -62,14 +62,14 @@ type Controller struct{}
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha2.PostgreSQLServerGroupVersionKind),
+		resource.ManagedKind(v1alpha3.PostgreSQLServerGroupVersionKind),
 		resource.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha2.PostgreSQLServerKind, v1alpha2.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.PostgreSQLServerKind, v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha2.PostgreSQLServer{}).
+		For(&v1alpha3.PostgreSQLServer{}).
 		Complete(r)
 }
 
@@ -88,12 +88,12 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	v, ok := mg.(*v1alpha2.PostgreSQLServer)
+	v, ok := mg.(*v1alpha3.PostgreSQLServer)
 	if !ok {
 		return nil, errors.New(errNotPostgreSQLServer)
 	}
 
-	p := &azurev1alpha2.Provider{}
+	p := &azurev1alpha3.Provider{}
 	if err := c.client.Get(ctx, meta.NamespacedNameOf(v.Spec.ProviderReference), p); err != nil {
 		return nil, errors.Wrap(err, errGetProvider)
 	}
@@ -113,7 +113,7 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	s, ok := mg.(*v1alpha2.PostgreSQLServer)
+	s, ok := mg.(*v1alpha3.PostgreSQLServer)
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
 	}
@@ -171,7 +171,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	s, ok := mg.(*v1alpha2.PostgreSQLServer)
+	s, ok := mg.(*v1alpha3.PostgreSQLServer)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
 	}
@@ -202,7 +202,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	s, ok := mg.(*v1alpha2.PostgreSQLServer)
+	s, ok := mg.(*v1alpha3.PostgreSQLServer)
 	if !ok {
 		return errors.New(errNotPostgreSQLServer)
 	}
