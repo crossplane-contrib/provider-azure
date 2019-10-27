@@ -28,8 +28,8 @@ import (
 
 // Error strings
 const (
-	errResourceIsNotVirtualNetwork = "The managed resource is not a VirtualNetwork"
-	errResourceIsNotSubnet         = "The managed resource is not a Subnet"
+	errResourceIsNotVirtualNetwork = "the managed resource is not a VirtualNetwork"
+	errResourceIsNotSubnet         = "the managed resource is not a Subnet"
 )
 
 // ResourceGroupNameReferencerForVirtualNetwork is an attribute referencer that resolves name from a referenced ResourceGroup
@@ -262,6 +262,7 @@ type SubnetStatus struct {
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster
 type Subnet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

@@ -42,7 +42,7 @@ const (
 
 // Error strings
 const (
-	errResourceIsNotAKSCluster = "The managed resource is not a AKSCluster"
+	errResourceIsNotAKSCluster = "the managed resource is not an AKSCluster"
 )
 
 // ResourceGroupNameReferencerForAKSCluster is an attribute referencer that resolves name from a referenced ResourceGroup
