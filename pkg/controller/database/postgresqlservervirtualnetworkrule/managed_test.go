@@ -113,7 +113,7 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha2.PostgresqlSe
 			UID:        uid,
 			Finalizers: []string{},
 		},
-		Spec: v1alpha2.VirtualNetworkRuleSpec{
+		Spec: v1alpha2.PostgresqlVirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Name: providerName},
 			},

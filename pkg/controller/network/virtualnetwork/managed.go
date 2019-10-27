@@ -114,7 +114,8 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetVirtualNetwork)
 	}
 
-	v.Status = network.VirtualNetworkStatusFromAzure(az)
+	network.UpdateVirtualNetworkStatusFromAzure(v, az)
+
 	v.SetConditions(runtimev1alpha1.Available())
 
 	o := resource.ExternalObservation{

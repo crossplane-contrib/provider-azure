@@ -26,6 +26,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+
 	"github.com/crossplaneio/stack-azure/apis/network/v1alpha2"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
@@ -313,7 +315,14 @@ func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 	}
 }
 
-func TestVirtualNetworkStatusFromAzure(t *testing.T) {
+func TestUpdateVirtualNetworkStatusFromAzure(t *testing.T) {
+	mockCondition := runtimev1alpha1.Condition{Message: "mockMessage"}
+	resourceStatus := runtimev1alpha1.ResourceStatus{
+		ConditionedStatus: runtimev1alpha1.ConditionedStatus{
+			Conditions: []runtimev1alpha1.Condition{mockCondition},
+		},
+	}
+
 	cases := []struct {
 		name string
 		r    networkmgmt.VirtualNetwork
@@ -371,9 +380,24 @@ func TestVirtualNetworkStatusFromAzure(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := VirtualNetworkStatusFromAzure(tc.r)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("NewVirtualNetworkParameters(...): -want, +got\n%s", diff)
+
+			v := &v1alpha2.VirtualNetwork{
+				Status: v1alpha2.VirtualNetworkStatus{
+					ResourceStatus: resourceStatus,
+				},
+			}
+
+			UpdateVirtualNetworkStatusFromAzure(v, tc.r)
+
+			// make sure that internal resource status hasn't changed
+			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {
+				t.Errorf("UpdateVirtualNetworkStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+
+			// make sure that other resource parameters are updated
+			tc.want.ResourceStatus = resourceStatus
+			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
+				t.Errorf("UpdateVirtualNetworkStatusFromAzure(...): -want, +got\n%s", diff)
 			}
 		})
 	}
@@ -529,7 +553,14 @@ func TestSubnetNeedsUpdate(t *testing.T) {
 	}
 }
 
-func TestSubnetStatusFromAzure(t *testing.T) {
+func TestUpdateSubnetStatusFromAzure(t *testing.T) {
+	mockCondition := runtimev1alpha1.Condition{Message: "mockMessage"}
+	resourceStatus := runtimev1alpha1.ResourceStatus{
+		ConditionedStatus: runtimev1alpha1.ConditionedStatus{
+			Conditions: []runtimev1alpha1.Condition{mockCondition},
+		},
+	}
+
 	cases := []struct {
 		name string
 		r    networkmgmt.Subnet
@@ -569,9 +600,24 @@ func TestSubnetStatusFromAzure(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := SubnetStatusFromAzure(tc.r)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("NewVirtualNetworkParameters(...): -want, +got\n%s", diff)
+
+			v := &v1alpha2.Subnet{
+				Status: v1alpha2.SubnetStatus{
+					ResourceStatus: resourceStatus,
+				},
+			}
+
+			UpdateSubnetStatusFromAzure(v, tc.r)
+
+			// make sure that internal resource status hasn't changed
+			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {
+				t.Errorf("UpdateSubnetStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+
+			// make sure that other resource parameters are updated
+			tc.want.ResourceStatus = resourceStatus
+			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
+				t.Errorf("UpdateSubnetStatusFromAzure(...): -want, +got\n%s", diff)
 			}
 		})
 	}

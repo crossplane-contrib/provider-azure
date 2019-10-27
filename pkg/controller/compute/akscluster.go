@@ -19,6 +19,7 @@ package compute
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -52,6 +53,16 @@ const (
 	adAppNameFmt   = "%s-crossplane-aks-app"
 )
 
+// Amounts of time we wait before requeuing a reconcile.
+const (
+	aLongWait = 60 * time.Second
+)
+
+// Error strings
+const (
+	errUpdateManagedStatus = "cannot update managed resource status"
+)
+
 var (
 	log           = logging.Logger.WithName("controller." + controllerName)
 	ctx           = context.TODO()
@@ -65,6 +76,7 @@ type Reconciler struct {
 	newClientFn        func(creds []byte) (*azureclients.Client, error)
 	aksSetupAPIFactory compute.AKSSetupAPIFactory
 	publisher          resource.ManagedConnectionPublisher
+	resolver           resource.ManagedReferenceResolver
 }
 
 // AKSClusterController is responsible for adding the AKSCluster
@@ -89,12 +101,17 @@ func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory compute.AKS
 		newClientFn:        azureclients.NewClient,
 		aksSetupAPIFactory: aksSetupAPIFactory,
 		publisher:          resource.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
+		resolver:           resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
 	}
 }
 
 // Reconcile reads that state of the cluster for a AKSCluster object and makes changes based on the state read
 // and what is in its spec.
-func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) { // nolint:gocyclo
+	// NOTE(soorena776): This method is a little over our cyclomatic complexity
+	// goal, but keeping it as is for now, as we will eventually use the Managed
+	// Reconciler for all types
+
 	log.V(logging.Debug).Info("reconciling", "kind", computev1alpha2.AKSClusterKindAPIVersion, "request", request)
 	// Fetch the CRD instance
 	instance := &computev1alpha2.AKSCluster{}
@@ -113,6 +130,21 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	aksClient, err := r.connect(instance)
 	if err != nil {
 		return r.fail(instance, err)
+	}
+
+	if !resource.IsConditionTrue(instance.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
+		if err := r.resolver.ResolveReferences(ctx, instance); err != nil {
+			condition := runtimev1alpha1.ReconcileError(err)
+			if resource.IsReferencesAccessError(err) {
+				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
+			}
+
+			instance.Status.SetConditions(condition)
+			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.Update(ctx, instance), errUpdateManagedStatus)
+		}
+
+		// Add ReferenceResolutionSuccess to the conditions
+		instance.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
 	}
 
 	// Check for deletion

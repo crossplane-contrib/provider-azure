@@ -115,7 +115,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetMysqlServerVirtualNetworkRule)
 	}
 
-	v.Status = azure.MySQLVirtualNetworkRuleStatusFromAzure(az)
+	azure.UpdateMySQLVirtualNetworkRuleStatusFromAzure(v, az)
 	v.SetConditions(runtimev1alpha1.Available())
 
 	o := resource.ExternalObservation{

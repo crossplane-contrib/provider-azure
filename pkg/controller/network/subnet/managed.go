@@ -114,7 +114,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetSubnet)
 	}
 
-	s.Status = network.SubnetStatusFromAzure(az)
+	network.UpdateSubnetStatusFromAzure(s, az)
 	s.SetConditions(runtimev1alpha1.Available())
 
 	o := resource.ExternalObservation{

@@ -45,6 +45,16 @@ const (
 	reconcileTimeout = 1 * time.Minute
 )
 
+// Amounts of time we wait before requeuing a reconcile.
+const (
+	aLongWait = 60 * time.Second
+)
+
+// Error strings
+const (
+	errUpdateManagedStatus = "cannot update managed resource status"
+)
+
 var log = logging.Logger.WithName("controller." + controllerName)
 
 // A creator can create resources in an external store - e.g. the Azure API.
@@ -218,6 +228,7 @@ type Reconciler struct {
 	connecter
 	kube      client.Client
 	publisher resource.ManagedConnectionPublisher
+	resolver  resource.ManagedReferenceResolver
 }
 
 // RedisController is responsible for adding the Redis
@@ -232,6 +243,7 @@ func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
 		connecter: &providerConnecter{kube: mgr.GetClient(), newClient: redis.NewClient},
 		kube:      mgr.GetClient(),
 		publisher: resource.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
+		resolver:  resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -259,6 +271,21 @@ func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	if err != nil {
 		rd.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 		return reconcile.Result{Requeue: true}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
+	}
+
+	if !resource.IsConditionTrue(rd.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
+		if err := r.resolver.ResolveReferences(ctx, rd); err != nil {
+			condition := runtimev1alpha1.ReconcileError(err)
+			if resource.IsReferencesAccessError(err) {
+				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
+			}
+
+			rd.Status.SetConditions(condition)
+			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.kube.Update(ctx, rd), errUpdateManagedStatus)
+		}
+
+		// Add ReferenceResolutionSuccess to the conditions
+		rd.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
 	}
 
 	// The resource has been deleted from the API server. Delete from Azure.

@@ -115,7 +115,8 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgresqlServerVirtualNetworkRule)
 	}
 
-	v.Status = azure.PostgreSQLVirtualNetworkRuleStatusFromAzure(az)
+	azure.UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v, az)
+
 	v.SetConditions(runtimev1alpha1.Available())
 
 	o := resource.ExternalObservation{

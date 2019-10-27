@@ -210,6 +210,15 @@ spec:
               description: ResourceGroupName - Name of the Virtual Network's resource
                 group.
               type: string
+            resourceGroupNameRef:
+              description: ResourceGroupNameRef - A reference to the the Virtual Network's
+                resource group.
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             tags:
               additionalProperties:
                 type: string
@@ -237,7 +246,6 @@ spec:
           - name
           - properties
           - providerRef
-          - resourceGroupName
           type: object
         status:
           description: A VirtualNetworkStatus represents the observed state of a VirtualNetwork.

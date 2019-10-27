@@ -232,8 +232,6 @@ spec:
             name:
               description: Name of the resource group.
               type: string
-          required:
-          - name
           type: object
       type: object
   version: v1alpha2

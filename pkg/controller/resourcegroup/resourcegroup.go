@@ -32,6 +32,7 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/v1alpha2"
 	"github.com/crossplaneio/stack-azure/pkg/clients/resourcegroup"
@@ -42,6 +43,16 @@ const (
 	finalizer      = "finalizer." + controllerName
 
 	reconcileTimeout = 1 * time.Minute
+)
+
+// Amounts of time we wait before requeuing a reconcile.
+const (
+	aLongWait = 60 * time.Second
+)
+
+// Error strings
+const (
+	errUpdateManagedStatus = "cannot update managed resource status"
 )
 
 var log = logging.Logger.WithName("controller." + controllerName)
@@ -169,6 +180,8 @@ func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha2.ResourceGro
 type Reconciler struct {
 	connecter
 	kube client.Client
+
+	resource.ManagedReferenceResolver
 }
 
 // Controller is responsible for adding the ResourceGroup controller and its
@@ -178,8 +191,9 @@ type Controller struct{}
 // SetupWithManager creates a Controller that reconciles ResourceGroup resources.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
-		connecter: &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},
-		kube:      mgr.GetClient(),
+		connecter:                &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},
+		kube:                     mgr.GetClient(),
+		ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -207,6 +221,21 @@ func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	if err != nil {
 		rg.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 		return reconcile.Result{Requeue: true}, errors.Wrapf(r.kube.Update(ctx, rg), "cannot update resource %s", req.NamespacedName)
+	}
+
+	if !resource.IsConditionTrue(rg.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
+		if err := r.ResolveReferences(ctx, rg); err != nil {
+			condition := runtimev1alpha1.ReconcileError(err)
+			if resource.IsReferencesAccessError(err) {
+				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
+			}
+
+			rg.Status.SetConditions(condition)
+			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.kube.Update(ctx, rg), errUpdateManagedStatus)
+		}
+
+		// Add ReferenceResolutionSuccess to the conditions
+		rg.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
 	}
 
 	// The resource has been deleted from the API server. Delete from Azure.

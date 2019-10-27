@@ -95,16 +95,14 @@ func VirtualNetworkNeedsUpdate(kube *v1alpha2.VirtualNetwork, az networkmgmt.Vir
 	return false
 }
 
-// VirtualNetworkStatusFromAzure converts an Azure virtual network to
-// a VirtualNetworkStatus
-func VirtualNetworkStatusFromAzure(az networkmgmt.VirtualNetwork) v1alpha2.VirtualNetworkStatus {
-	return v1alpha2.VirtualNetworkStatus{
-		State:        azure.ToString(az.ProvisioningState),
-		ID:           azure.ToString(az.ID),
-		Etag:         azure.ToString(az.Etag),
-		ResourceGUID: azure.ToString(az.ResourceGUID),
-		Type:         azure.ToString(az.Type),
-	}
+// UpdateVirtualNetworkStatusFromAzure updates the status related to the external
+// Azure virtual network in the VirtualNetworkStatus
+func UpdateVirtualNetworkStatusFromAzure(v *v1alpha2.VirtualNetwork, az networkmgmt.VirtualNetwork) {
+	v.Status.State = azure.ToString(az.ProvisioningState)
+	v.Status.ID = azure.ToString(az.ID)
+	v.Status.Etag = azure.ToString(az.Etag)
+	v.Status.ResourceGUID = azure.ToString(az.ResourceGUID)
+	v.Status.Type = azure.ToString(az.Type)
 }
 
 // A SubnetsClient handles CRUD operations for Azure Virtual Networks.
@@ -169,12 +167,11 @@ func SubnetNeedsUpdate(kube *v1alpha2.Subnet, az networkmgmt.Subnet) bool {
 	return !reflect.DeepEqual(up.SubnetPropertiesFormat.AddressPrefix, az.SubnetPropertiesFormat.AddressPrefix)
 }
 
-// SubnetStatusFromAzure converts an Azure subnet to a SubnetStatus
-func SubnetStatusFromAzure(az networkmgmt.Subnet) v1alpha2.SubnetStatus {
-	return v1alpha2.SubnetStatus{
-		State:   azure.ToString(az.ProvisioningState),
-		Etag:    azure.ToString(az.Etag),
-		ID:      azure.ToString(az.ID),
-		Purpose: azure.ToString(az.Purpose),
-	}
+// UpdateSubnetStatusFromAzure updates the status related to the external
+// Azure subnet in the SubnetStatus
+func UpdateSubnetStatusFromAzure(v *v1alpha2.Subnet, az networkmgmt.Subnet) {
+	v.Status.State = azure.ToString(az.ProvisioningState)
+	v.Status.Etag = azure.ToString(az.Etag)
+	v.Status.ID = azure.ToString(az.ID)
+	v.Status.Purpose = azure.ToString(az.Purpose)
 }
