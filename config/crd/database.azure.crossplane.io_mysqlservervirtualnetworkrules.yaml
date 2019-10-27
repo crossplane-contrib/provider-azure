@@ -137,8 +137,15 @@ spec:
                   description: VirtualNetworkSubnetID - The ARM resource id of the
                     virtual network subnet.
                   type: string
-              required:
-              - virtualNetworkSubnetId
+                virtualNetworkSubnetIdRef:
+                  description: VirtualNetworkSubnetIDRef - A reference to a Subnet
+                    to retrieve its ID
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
               type: object
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -189,6 +196,15 @@ spec:
               description: ResourceGroupName - Name of the Virtual Network Rule's
                 resource group.
               type: string
+            resourceGroupNameRef:
+              description: ResourceGroupNameRef - A reference to a ResourceGroup object
+                to retrieve its name
+              properties:
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  type: string
+              type: object
             serverName:
               description: ServerName - Name of the Virtual Network Rule's server.
               type: string
@@ -222,7 +238,6 @@ spec:
           - name
           - properties
           - providerRef
-          - resourceGroupName
           type: object
         status:
           description: A VirtualNetworkRuleStatus represents the observed state of

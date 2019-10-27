@@ -1,4 +1,3 @@
-
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -7,28 +6,28 @@ metadata:
   name: subnets.network.azure.crossplane.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.bindingPhase
-    name: STATUS
-    type: string
-  - JSONPath: .status.state
-    name: STATE
-    type: string
-  - JSONPath: .spec.location
-    name: LOCATION
-    type: string
-  - JSONPath: .spec.reclaimPolicy
-    name: RECLAIM-POLICY
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: AGE
-    type: date
+    - JSONPath: .status.bindingPhase
+      name: STATUS
+      type: string
+    - JSONPath: .status.state
+      name: STATE
+      type: string
+    - JSONPath: .spec.location
+      name: LOCATION
+      type: string
+    - JSONPath: .spec.reclaimPolicy
+      name: RECLAIM-POLICY
+      type: string
+    - JSONPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
   group: network.azure.crossplane.io
   names:
     kind: Subnet
     listKind: SubnetList
     plural: subnets
     singular: subnet
-  scope: ""
+  scope: Cluster
   subresources:
     status: {}
   validation:
@@ -36,14 +35,16 @@ spec:
       description: A Subnet is a managed resource that represents an Azure Subnet.
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
+          description:
+            "APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources"
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
+          description:
+            "Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds"
           type: string
         metadata:
           type: object
@@ -51,7 +52,8 @@ spec:
           description: A SubnetSpec defines the desired state of a Subnet.
           properties:
             claimRef:
-              description: ClaimReference specifies the resource claim to which this
+              description:
+                ClaimReference specifies the resource claim to which this
                 managed resource will be bound. ClaimReference is set automatically
                 during dynamic provisioning. Crossplane does not currently support
                 setting this field manually, per https://github.com/crossplaneio/crossplane-runtime/issues/19
@@ -60,7 +62,8 @@ spec:
                   description: API version of the referent.
                   type: string
                 fieldPath:
-                  description: 'If referring to a piece of an object instead of an
+                  description:
+                    'If referring to a piece of an object instead of an
                     entire object, this string should contain a valid JSON/Go field
                     access statement, such as desiredState.manifest.containers[2].
                     For example, if the object reference is to a container within
@@ -73,24 +76,26 @@ spec:
                     in the future.'
                   type: string
                 kind:
-                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  description: "Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds"
                   type: string
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                  description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
                   type: string
                 namespace:
-                  description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                  description: "Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
                   type: string
                 resourceVersion:
-                  description: 'Specific resourceVersion to which this reference is
-                    made, if any. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency'
+                  description:
+                    "Specific resourceVersion to which this reference is
+                    made, if any. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency"
                   type: string
                 uid:
-                  description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                  description: "UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids"
                   type: string
               type: object
             classRef:
-              description: ClassReference specifies the resource class that was used
+              description:
+                ClassReference specifies the resource class that was used
                 to dynamically provision this managed resource, if any. Crossplane
                 does not currently support setting this field manually, per https://github.com/crossplaneio/crossplane-runtime/issues/20
               properties:
@@ -98,7 +103,8 @@ spec:
                   description: API version of the referent.
                   type: string
                 fieldPath:
-                  description: 'If referring to a piece of an object instead of an
+                  description:
+                    'If referring to a piece of an object instead of an
                     entire object, this string should contain a valid JSON/Go field
                     access statement, such as desiredState.manifest.containers[2].
                     For example, if the object reference is to a container within
@@ -111,24 +117,26 @@ spec:
                     in the future.'
                   type: string
                 kind:
-                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  description: "Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds"
                   type: string
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                  description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
                   type: string
                 namespace:
-                  description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                  description: "Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
                   type: string
                 resourceVersion:
-                  description: 'Specific resourceVersion to which this reference is
-                    made, if any. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency'
+                  description:
+                    "Specific resourceVersion to which this reference is
+                    made, if any. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency"
                   type: string
                 uid:
-                  description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                  description: "UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids"
                   type: string
               type: object
             name:
-              description: Name - The name of the resource that is unique within a
+              description:
+                Name - The name of the resource that is unique within a
                 resource group. This name can be used to access the resource.
               type: string
             properties:
@@ -140,7 +148,8 @@ spec:
                 serviceEndpoints:
                   description: ServiceEndpoints - An array of service endpoints.
                   items:
-                    description: ServiceEndpointPropertiesFormat defines properties
+                    description:
+                      ServiceEndpointPropertiesFormat defines properties
                       of a service endpoint.
                     properties:
                       locations:
@@ -149,7 +158,8 @@ spec:
                           type: string
                         type: array
                       provisioningState:
-                        description: ProvisioningState - The provisioning state of
+                        description:
+                          ProvisioningState - The provisioning state of
                           the resource.
                         type: string
                       service:
@@ -158,17 +168,19 @@ spec:
                     type: object
                   type: array
               required:
-              - addressPrefix
+                - addressPrefix
               type: object
             providerRef:
-              description: ProviderReference specifies the provider that will be used
+              description:
+                ProviderReference specifies the provider that will be used
                 to create, observe, update, and delete this managed resource.
               properties:
                 apiVersion:
                   description: API version of the referent.
                   type: string
                 fieldPath:
-                  description: 'If referring to a piece of an object instead of an
+                  description:
+                    'If referring to a piece of an object instead of an
                     entire object, this string should contain a valid JSON/Go field
                     access statement, such as desiredState.manifest.containers[2].
                     For example, if the object reference is to a container within
@@ -181,24 +193,26 @@ spec:
                     in the future.'
                   type: string
                 kind:
-                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  description: "Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds"
                   type: string
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                  description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
                   type: string
                 namespace:
-                  description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                  description: "Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
                   type: string
                 resourceVersion:
-                  description: 'Specific resourceVersion to which this reference is
-                    made, if any. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency'
+                  description:
+                    "Specific resourceVersion to which this reference is
+                    made, if any. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#concurrency-control-and-consistency"
                   type: string
                 uid:
-                  description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                  description: "UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids"
                   type: string
               type: object
             reclaimPolicy:
-              description: ReclaimPolicy specifies what will happen to the external
+              description:
+                ReclaimPolicy specifies what will happen to the external
                 resource this managed resource manages when the managed resource is
                 deleted. "Delete" deletes the external resource, while "Retain" (the
                 default) does not. Note this behaviour is subtly different from other
@@ -209,28 +223,33 @@ spec:
               description: ResourceGroupName - Name of the Subnet's resource group.
               type: string
             resourceGroupNameRef:
-              description: ResourceGroupNameRef - A reference to the the Subnets's
+              description:
+                ResourceGroupNameRef - A reference to the the Subnets's
                 resource group.
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description:
+                    "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?"
                   type: string
               type: object
             virtualNetworkName:
               description: VirtualNetworkName - Name of the Subnet's virtual network.
               type: string
             virtualNetworkNameRef:
-              description: VirtualNetworkNameRef references to a VirtualNetwork to
+              description:
+                VirtualNetworkNameRef references to a VirtualNetwork to
                 retrieve its name
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description:
+                    "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    TODO: Add other useful fields. apiVersion, kind, uid?"
                   type: string
               type: object
             writeConnectionSecretToRef:
-              description: WriteConnectionSecretToReference specifies the namespace
+              description:
+                WriteConnectionSecretToReference specifies the namespace
                 and name of a Secret to which any connection details for this managed
                 resource should be written. Connection details frequently include
                 the endpoint, username, and password required to connect to the managed
@@ -243,27 +262,28 @@ spec:
                   description: Namespace of the secret.
                   type: string
               required:
-              - name
-              - namespace
+                - name
+                - namespace
               type: object
           required:
-          - name
-          - properties
-          - providerRef
+            - name
+            - properties
+            - providerRef
           type: object
         status:
           description: A SubnetStatus represents the observed state of a Subnet.
           properties:
             bindingPhase:
-              description: Phase represents the binding phase of a managed resource
+              description:
+                Phase represents the binding phase of a managed resource
                 or claim. Unbindable resources cannot be bound, typically because
                 they are currently unavailable, or still being created. Unbound resource
                 are available for binding, and Bound resources have successfully bound
                 to another resource.
               enum:
-              - Unbindable
-              - Unbound
-              - Bound
+                - Unbindable
+                - Unbound
+                - Bound
               type: string
             conditions:
               description: Conditions of the resource.
@@ -271,46 +291,54 @@ spec:
                 description: A Condition that may apply to a managed resource.
                 properties:
                   lastTransitionTime:
-                    description: LastTransitionTime is the last time this condition
+                    description:
+                      LastTransitionTime is the last time this condition
                       transitioned from one status to another.
                     format: date-time
                     type: string
                   message:
-                    description: A Message containing details about this condition's
+                    description:
+                      A Message containing details about this condition's
                       last transition from one status to another, if any.
                     type: string
                   reason:
-                    description: A Reason for this condition's last transition from
+                    description:
+                      A Reason for this condition's last transition from
                       one status to another.
                     type: string
                   status:
-                    description: Status of this condition; is it currently True, False,
+                    description:
+                      Status of this condition; is it currently True, False,
                       or Unknown?
                     type: string
                   type:
-                    description: Type of this condition. At most one of each condition
+                    description:
+                      Type of this condition. At most one of each condition
                       type may apply to a resource at any point in time.
                     type: string
                 required:
-                - lastTransitionTime
-                - reason
-                - status
-                - type
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
                 type: object
               type: array
             etag:
-              description: Etag - A unique string that changes whenever the resource
+              description:
+                Etag - A unique string that changes whenever the resource
                 is updated.
               type: string
             id:
               description: ID of this Subnet.
               type: string
             message:
-              description: A Message providing detail about the state of this Subnet,
+              description:
+                A Message providing detail about the state of this Subnet,
                 if any.
               type: string
             purpose:
-              description: Purpose - A string identifying the intention of use for
+              description:
+                Purpose - A string identifying the intention of use for
                 this subnet based on delegations and other user-defined properties.
               type: string
             state:
@@ -320,9 +348,9 @@ spec:
       type: object
   version: v1alpha2
   versions:
-  - name: v1alpha2
-    served: true
-    storage: true
+    - name: v1alpha2
+      served: true
+      storage: true
 status:
   acceptedNames:
     kind: ""
