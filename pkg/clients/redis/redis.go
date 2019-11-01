@@ -36,13 +36,9 @@ import (
 // NamePrefix is the prefix for all created Azure Cache instances.
 const NamePrefix = "acr"
 
-// A Client handles CRUD operations for Azure Cache resources. This interface is
-// compatible with the upstream Azure redis client.
-type Client redisapi.ClientAPI
-
 // NewClient returns a new Azure Cache for Redis client. Credentials must be
 // passed as JSON encoded data.
-func NewClient(ctx context.Context, credentials []byte) (Client, error) {
+func NewClient(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error) {
 	c := azure.Credentials{}
 	if err := json.Unmarshal(credentials, &c); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")

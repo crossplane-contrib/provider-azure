@@ -22,6 +22,7 @@ import (
 	"time"
 
 	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
+	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -588,7 +589,7 @@ func TestConnect(t *testing.T) {
 					}
 					return nil
 				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return &fakeredis.MockClient{}, nil },
+				newClient: func(_ context.Context, _ []byte) (redisapi.ClientAPI, error) { return &fakeredis.MockClient{}, nil },
 			},
 			i:    redisResource(),
 			want: &azureRedisCache{client: &fakeredis.MockClient{}},
@@ -599,7 +600,7 @@ func TestConnect(t *testing.T) {
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					return kerrors.NewNotFound(schema.GroupResource{}, providerName)
 				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return &fakeredis.MockClient{}, nil },
+				newClient: func(_ context.Context, _ []byte) (redisapi.ClientAPI, error) { return &fakeredis.MockClient{}, nil },
 			},
 			i:       redisResource(),
 			wantErr: errors.WithStack(errors.Errorf("cannot get provider /%s:  \"%s\" not found", providerName, providerName)),
@@ -616,7 +617,7 @@ func TestConnect(t *testing.T) {
 					}
 					return nil
 				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return &fakeredis.MockClient{}, nil },
+				newClient: func(_ context.Context, _ []byte) (redisapi.ClientAPI, error) { return &fakeredis.MockClient{}, nil },
 			},
 			i:       redisResource(),
 			wantErr: errors.WithStack(errors.Errorf("cannot get provider secret %s/%s:  \"%s\" not found", namespace, providerSecretName, providerSecretName)),
@@ -633,7 +634,7 @@ func TestConnect(t *testing.T) {
 					}
 					return nil
 				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return nil, errorBoom },
+				newClient: func(_ context.Context, _ []byte) (redisapi.ClientAPI, error) { return nil, errorBoom },
 			},
 			i:       redisResource(),
 			want:    &azureRedisCache{},

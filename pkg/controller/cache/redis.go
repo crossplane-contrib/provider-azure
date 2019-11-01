@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -96,7 +97,7 @@ type createsyncdeletekeyer interface {
 
 // azureRedisCache is a createsyncdeletekeyer using the Azure Azure Cache API.
 type azureRedisCache struct {
-	client redis.Client
+	client redisapi.ClientAPI
 }
 
 func (a *azureRedisCache) Create(ctx context.Context, r *v1alpha3.Redis) bool {
@@ -199,7 +200,7 @@ type connecter interface {
 // authenticated using credentials read from a Crossplane Provider resource.
 type providerConnecter struct {
 	kube      client.Client
-	newClient func(ctx context.Context, creds []byte) (redis.Client, error)
+	newClient func(ctx context.Context, creds []byte) (redisapi.ClientAPI, error)
 }
 
 // Connect returns a createsyncdeletekeyer backed by the Azure API. Azure
