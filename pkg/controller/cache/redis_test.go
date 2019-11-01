@@ -120,7 +120,7 @@ func instance(rm ...redisResourceModifier) *v1alpha3.Redis {
 				RedisConfiguration: redisConfiguration,
 				EnableNonSSLPort:   enableNonSSLPort,
 				ShardCount:         shardCount,
-				SKU: v1alpha3.SKUSpec{
+				SKU: v1alpha3.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,

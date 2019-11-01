@@ -17,36 +17,9 @@ limitations under the License.
 package v1alpha3
 
 import (
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-
-	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
 
-// SKU options.
-const (
-	SKUNameBasic    = string(redis.Basic)
-	SKUNamePremium  = string(redis.Premium)
-	SKUNameStandard = string(redis.Standard)
-
-	SKUFamilyC = string(redis.C)
-	SKUFamilyP = string(redis.P)
-)
-
-// Resource states
-const (
-	ProvisioningStateCreating               = string(redis.Creating)
-	ProvisioningStateDeleting               = string(redis.Deleting)
-	ProvisioningStateDisabled               = string(redis.Disabled)
-	ProvisioningStateFailed                 = string(redis.Failed)
-	ProvisioningStateLinking                = string(redis.Linking)
-	ProvisioningStateProvisioning           = string(redis.Provisioning)
-	ProvisioningStateRecoveringScaleFailure = string(redis.RecoveringScaleFailure)
-	ProvisioningStateScaling                = string(redis.Scaling)
-	ProvisioningStateSucceeded              = string(redis.Succeeded)
-	ProvisioningStateUnlinking              = string(redis.Unlinking)
-	ProvisioningStateUnprovisioning         = string(redis.Unprovisioning)
-	ProvisioningStateUpdating               = string(redis.Updating)
+	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 )
 
 const (
@@ -56,52 +29,11 @@ const (
 	SupportedRedisVersion = "3.2"
 )
 
-// RedisParameters define the desired state of an Azure Redis cluster. Most
-// fields map directly to an Azure Redis resource:
-// https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
-type RedisParameters struct {
-	// ResourceGroupName in which to create this resource.
-	ResourceGroupName string `json:"resourceGroupName"`
-
-	// Location in which to create this resource.
-	Location string `json:"location"`
-
-	// SKU of the Redis cache to deploy.
-	SKU SKUSpec `json:"sku"`
-
-	// EnableNonSSLPort specifies whether the non-ssl Redis server port (6379)
-	// is enabled.
-	// +optional
-	EnableNonSSLPort bool `json:"enableNonSslPort,omitempty"`
-
-	// ShardCount specifies the number of shards to be created on a Premium
-	// Cluster Cache.
-	// +optional
-	ShardCount int `json:"shardCount,omitempty"`
-
-	// StaticIP address. Required when deploying a Redis cache inside an
-	// existing Azure Virtual Network.
-	// +optional
-	StaticIP string `json:"staticIP,omitempty"`
-
-	// SubnetID specifies the full resource ID of a subnet in a virtual network
-	// to deploy the Redis cache in. Example format:
-	// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1
-	// +optional
-	SubnetID string `json:"subnetId,omitempty"`
-
-	// RedisConfiguration specifies Redis Settings.
-	// +optional
-	RedisConfiguration map[string]string `json:"redisConfiguration,omitempty"`
-}
-
-// TODO(negz): Rename SKU to PricingTier? Both SQL databases and Redis caches
-// call this an 'SKU' in their API, but we call it a PricingTier in our Azure
-// SQL database CRD.
-
-// An SKUSpec represents the performance and cost oriented properties of a
+// An SKU represents the performance and cost oriented properties of a
 // Redis.
-type SKUSpec struct {
+type SKU struct {
+	//TODO: all three of them required? they might set defaults when sent as empty
+
 	// Name specifies what type of Redis cache to deploy. Valid values: (Basic,
 	// Standard, Premium). Possible values include: 'Basic', 'Standard',
 	// 'Premium'
@@ -120,37 +52,128 @@ type SKUSpec struct {
 	Capacity int `json:"capacity"`
 }
 
+// TODO: trial-error the optional fields.
+
+// RedisParameters define the desired state of an Azure Redis cluster.
+// https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
+type RedisParameters struct {
+	// ResourceGroupName in which to create this resource.
+	// +immutable
+	ResourceGroupName string `json:"resourceGroupName"`
+
+	// Sku - The SKU of the Redis cache to deploy.
+	SKU SKU `json:"sku"`
+
+	// Location in which to create this resource.
+	// +immutable
+	Location string `json:"location"`
+
+	// SubnetID specifies the full resource ID of a subnet in a virtual network
+	// to deploy the Redis cache in. Example format:
+	// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1
+	// +immutable
+	// +optional
+	SubnetID *string `json:"subnetId,omitempty"`
+
+	// StaticIP address. Required when deploying a Redis cache inside an
+	// existing Azure Virtual Network.
+	// +immutable
+	// +optional
+	StaticIP *string `json:"staticIp,omitempty"`
+
+	// RedisConfiguration specifies Redis Settings.
+	// +optional
+	RedisConfiguration map[string]string `json:"redisConfiguration,omitempty"`
+
+	// EnableNonSSLPort specifies whether the non-ssl Redis server port (6379)
+	// is enabled.
+	// +optional
+	EnableNonSSLPort *bool `json:"enableNonSslPort,omitempty"`
+
+	// TenantSettings - A dictionary of tenant settings
+	// +optional
+	TenantSettings map[string]*string `json:"tenantSettings,omitempty"`
+
+	// ShardCount specifies the number of shards to be created on a Premium
+	// Cluster Cache.
+	// +optional
+	ShardCount *int `json:"shardCount,omitempty"`
+
+	// MinimumTLSVersion - Optional: requires clients to use a specified TLS
+	// version (or higher) to connect (e,g, '1.0', '1.1', '1.2'). Possible
+	// values include: 'OneFullStopZero', 'OneFullStopOne', 'OneFullStopTwo'
+	// +optional
+	MinimumTLSVersion *string `json:"minimumTlsVersion,omitempty"`
+
+	// Zones - A list of availability zones denoting where the resource needs to come from.
+	// +immutable
+	// +optional
+	Zones []string `json:"zones,omitempty"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]string `json:"tags,omitempty"`
+}
+
 // A RedisSpec defines the desired state of a Redis.
 type RedisSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
-	RedisParameters              `json:",inline"`
+	ForProvider                  RedisParameters `json:"forProvider,omitempty"`
+}
+
+// RedisObservation represents the observed state of the Redis object in Azure.
+type RedisObservation struct {
+	// RedisVersion - Redis version.
+	RedisVersion string `json:"redisVersion,omitempty"`
+
+	// ProvisioningState - Redis instance provisioning status. Possible values
+	// include: 'Creating', 'Deleting', 'Disabled', 'Failed', 'Linking',
+	// 'Provisioning', 'RecoveringScaleFailure', 'Scaling', 'Succeeded',
+	// 'Unlinking', 'Unprovisioning', 'Updating'
+	ProvisioningState string `json:"provisioningState,omitempty"`
+
+	// HostName - Redis host name.
+	HostName string `json:"hostName,omitempty"`
+
+	// Port - Redis non-SSL port.
+	Port int `json:"port,omitempty"`
+
+	// SSLPort - Redis SSL port.
+	SSLPort int `json:"sslPort,omitempty"`
+
+	// TODO: keep in connection secret.
+	// AccessKeys - The keys of the Redis cache - not set if this object is not
+	// the response to Create or Update redis cache
+	// AccessKeys *AccessKeys `json:"accessKeys,omitempty"`
+
+	// LinkedServers - List of the linked servers associated with the cache
+	LinkedServers []string `json:"linkedServers,omitempty"`
+
+	// RedisConfiguration - All Redis Settings. Few possible keys:
+	// rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency
+	// maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples,
+	// slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries,
+	// list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value,
+	// set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value etc.
+	RedisConfiguration map[string]string `json:"redisConfiguration"`
+
+	// EnableNonSSLPort - Specifies whether the non-ssl Redis server port (6379) is enabled.
+	EnableNonSSLPort bool `json:"enableNonSslPort,omitempty"`
+
+	// TenantSettings - A dictionary of tenant settings
+	TenantSettings map[string]string `json:"tenantSettings"`
+
+	// ShardCount - The number of shards to be created on a Premium Cluster Cache.
+	ShardCount int `json:"shardCount,omitempty"`
+
+	// MinimumTLSVersion - Requires clients to use a specified TLS version (or higher) to connect (e,g, '1.0', '1.1', '1.2'). Possible values include: 'OneFullStopZero', 'OneFullStopOne', 'OneFullStopTwo'
+	MinimumTLSVersion string `json:"minimumTlsVersion,omitempty"`
 }
 
 // A RedisStatus represents the observed state of a Redis.
 type RedisStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
-
-	// State represents the state of an Azure Redis.
-	State string `json:"state,omitempty"`
-
-	// ProviderID is the external ID to identify this resource in the cloud
-	// provider.
-	ProviderID string `json:"providerID,omitempty"`
-
-	// Endpoint of the Redis resource used in connection strings.
-	Endpoint string `json:"endpoint,omitempty"`
-
-	// Port at which the Redis endpoint is listening.
-	Port int `json:"port,omitempty"`
-
-	// SSLPort at which the Redis endpoint is listening.
-	SSLPort int `json:"sslPort,omitempty"`
-
-	// RedisVersion the Redis endpoint is running.
-	RedisVersion string `json:"redisVersion,omitempty"`
-
-	// ResourceName of the Redis cache resource.
-	ResourceName string `json:"resourceName,omitempty"`
+	AtProvider                     RedisObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -183,7 +206,7 @@ type RedisList struct {
 // provisioned Redis.
 type RedisClassSpecTemplate struct {
 	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	RedisParameters                   `json:",inline"`
+	ForProvider                       RedisParameters `json:"forProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

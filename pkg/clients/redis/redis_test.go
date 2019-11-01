@@ -54,7 +54,7 @@ func TestNewCreateParameters(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -106,7 +106,7 @@ func TestNewUpdateParameters(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -136,7 +136,7 @@ func TestNewUpdateParameters(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -189,7 +189,7 @@ func TestNeedsUpdate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -220,7 +220,7 @@ func TestNeedsUpdate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -251,7 +251,7 @@ func TestNeedsUpdate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -282,7 +282,7 @@ func TestNeedsUpdate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -313,7 +313,7 @@ func TestNeedsUpdate(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.RedisSpec{
 					RedisParameters: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKUSpec{
+						SKU: v1alpha3.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,

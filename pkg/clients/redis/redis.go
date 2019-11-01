@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"reflect"
 
-	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
+	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
@@ -29,6 +29,32 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
+
+// Resource states
+const (
+	ProvisioningStateCreating  = string(redis.Creating)
+	ProvisioningStateDeleting  = string(redis.Deleting)
+	ProvisioningStateFailed    = string(redis.Failed)
+	ProvisioningStateSucceeded = string(redis.Succeeded)
+	ProvisioningStateUpdating  = string(redis.Updating)
+)
+
+// SKU options.
+const (
+	SKUNameBasic    = string(redis.Basic)
+	SKUNamePremium  = string(redis.Premium)
+	SKUNameStandard = string(redis.Standard)
+
+	SKUFamilyC = string(redis.C)
+	SKUFamilyP = string(redis.P)
+)
+
+// NamePrefix is the prefix for all created Azure Cache instances.
+const NamePrefix = "acr"
+
+// A Client handles CRUD operations for Azure Cache resources. This interface is
+// compatible with the upstream Azure redis client.
+type Client redisapi.ClientAPI
 
 // NewClient returns a new Azure Cache for Redis client. Credentials must be
 // passed as JSON encoded data.
@@ -88,7 +114,7 @@ func NewUpdateParameters(r *v1alpha3.Redis) redismgmt.UpdateParameters {
 }
 
 // NewSKU returns a Redis resource SKU suitable for use with the Azure API.
-func NewSKU(s v1alpha3.SKUSpec) *redismgmt.Sku {
+func NewSKU(s v1alpha3.SKU) *redismgmt.Sku {
 	return &redismgmt.Sku{
 		Name:     redismgmt.SkuName(s.Name),
 		Family:   redismgmt.SkuFamily(s.Family),
