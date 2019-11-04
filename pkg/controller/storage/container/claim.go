@@ -104,8 +104,6 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
 		resource.ClassKind(v1alpha3.ContainerClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.ContainerGroupVersionKind),
-		resource.WithManagedBinder(resource.NewAPIManagedStatusBinder(mgr.GetClient(), mgr.GetScheme())),
-		resource.WithManagedFinalizer(resource.NewAPIManagedStatusUnbinder(mgr.GetClient())),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureContainer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
