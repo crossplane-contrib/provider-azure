@@ -46,7 +46,7 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error {
 		&cache.RedisClaimSchedulingController{},
 		&cache.RedisClaimDefaultingController{},
 		&cache.RedisClaimController{},
-		&cache.RedisController{},
+		&cache.Controller{},
 		&compute.AKSClusterClaimSchedulingController{},
 		&compute.AKSClusterClaimDefaultingController{},
 		&compute.AKSClusterClaimController{},

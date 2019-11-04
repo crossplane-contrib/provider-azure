@@ -31,7 +31,6 @@ import (
 
 const (
 	uid              = types.UID("definitely-a-uuid")
-	resourceName     = NamePrefix + "-" + string(uid)
 	enableNonSSLPort = true
 	subnetID         = "coolsubnet"
 	staticIP         = "172.16.0.1"
@@ -42,29 +41,6 @@ const (
 )
 
 var redisConfiguration = map[string]string{"cool": "socool"}
-
-func TestNewResourceName(t *testing.T) {
-	cases := []struct {
-		name string
-		o    metav1.Object
-		want string
-	}{
-		{
-			name: "Successful",
-			o:    &v1alpha3.Redis{ObjectMeta: metav1.ObjectMeta{UID: uid}},
-			want: resourceName,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := NewResourceName(tc.o)
-			if got != tc.want {
-				t.Errorf("NewResourceName(...): want %s, got %s", tc.want, got)
-			}
-		})
-	}
-}
 
 func TestNewCreateParameters(t *testing.T) {
 	cases := []struct {

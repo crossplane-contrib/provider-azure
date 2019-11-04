@@ -19,26 +19,20 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 
 	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
-
-// NamePrefix is the prefix for all created Azure Cache instances.
-const NamePrefix = "acr"
 
 // NewClient returns a new Azure Cache for Redis client. Credentials must be
 // passed as JSON encoded data.
-func NewClient(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error) {
+func NewClient(_ context.Context, credentials []byte) (redisapi.ClientAPI, error) {
 	c := azure.Credentials{}
 	if err := json.Unmarshal(credentials, &c); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
@@ -62,12 +56,6 @@ func NewClient(ctx context.Context, credentials []byte) (redisapi.ClientAPI, err
 	}
 
 	return client, nil
-}
-
-// NewResourceName returns a resource name used to identify a Redis resource in
-// the Azure API.
-func NewResourceName(o metav1.Object) string {
-	return fmt.Sprintf("%s-%s", NamePrefix, o.GetUID())
 }
 
 // NewCreateParameters returns Redis resource creation parameters suitable for

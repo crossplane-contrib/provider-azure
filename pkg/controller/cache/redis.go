@@ -18,298 +18,150 @@ package cache
 
 import (
 	"context"
-	"time"
+	"fmt"
+	"strconv"
+	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis/redisapi"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	common "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/redis"
 )
 
 const (
-	controllerName   = "redis.cache.azure.crossplane.io"
-	finalizerName    = "finalizer." + controllerName
-	reconcileTimeout = 1 * time.Minute
+	errNotRedis = "the custom resource is not a Redis instance"
 )
 
-// Amounts of time we wait before requeuing a reconcile.
-const (
-	aLongWait = 60 * time.Second
-)
+// Controller is responsible for adding the MySQLServer controller and its
+// corresponding reconciler to the manager with any runtime configuration.
+type Controller struct{}
 
-// Error strings
-const (
-	errUpdateManagedStatus = "cannot update managed resource status"
-)
-
-var log = logging.Logger.WithName("controller." + controllerName)
-
-// A creator can create resources in an external store - e.g. the Azure API.
-type creator interface {
-	// Create the supplied resource in the external store. Returns true if the
-	// resource requires further reconciliation.
-	Create(ctx context.Context, r *v1alpha3.Redis) (requeue bool)
-}
-
-// A syncer can sync resources with an external store - e.g. the Azure API.
-type syncer interface {
-	// Sync the supplied resource with the external store. Returns true if the
-	// resource requires further reconciliation.
-	Sync(ctx context.Context, r *v1alpha3.Redis) (requeue bool)
-}
-
-// A deleter can delete resources from an external store - e.g. the Azure API.
-type deleter interface {
-	// Delete the supplied resource from the external store. Returns true if the
-	// resource requires further reconciliation.
-	Delete(ctx context.Context, r *v1alpha3.Redis) (requeue bool)
-}
-
-// A keyer can read the primary access key for the supplied resource.
-type keyer interface {
-	// Key returns the primary access key for the supplied resource.
-	Key(ctx context.Context, r *v1alpha3.Redis) (key string)
-}
-
-// A createsyncdeletekeyer an create, sync, and delete resources in an external
-// store - e.g. the Azure API. It can also return keys (i.e. credentials) for
-// resources.
-type createsyncdeletekeyer interface {
-	creator
-	syncer
-	deleter
-	keyer
-}
-
-// azureRedisCache is a createsyncdeletekeyer using the Azure Azure Cache API.
-type azureRedisCache struct {
-	client redisapi.ClientAPI
-}
-
-func (a *azureRedisCache) Create(ctx context.Context, r *v1alpha3.Redis) bool {
-	r.Status.SetConditions(runtimev1alpha1.Creating())
-	n := redis.NewResourceName(r)
-	if _, err := a.client.Create(ctx, r.Spec.ResourceGroupName, n, redis.NewCreateParameters(r)); err != nil {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return true
-	}
-
-	r.Status.ResourceName = n
-	meta.AddFinalizer(r, finalizerName)
-	r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-	return true
-}
-
-func (a *azureRedisCache) Sync(ctx context.Context, r *v1alpha3.Redis) bool {
-	n := redis.NewResourceName(r)
-	cacheResource, err := a.client.Get(ctx, r.Spec.ResourceGroupName, n)
-	if err != nil {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return true
-	}
-
-	r.Status.State = string(cacheResource.ProvisioningState)
-
-	switch r.Status.State {
-	case v1alpha3.ProvisioningStateSucceeded:
-		// TODO(negz): Set r.Status.State to something like 'Ready'? The Azure
-		// portal shows an instance as 'Ready', but the API shows only that the
-		// provisioning state is 'Succeeded'. It's a little weird to see a Redis
-		// resource in state 'Succeeded' in kubectl.
-		r.Status.SetConditions(runtimev1alpha1.Available())
-		if r.Status.Endpoint != "" {
-			resource.SetBindable(r)
-		}
-	case v1alpha3.ProvisioningStateCreating:
-		r.Status.SetConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess())
-		return true
-	case v1alpha3.ProvisioningStateDeleting:
-		r.Status.SetConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess())
-		return false
-	default:
-		// TODO(negz): Don't requeue in this scenario? The instance could be
-		// failed, disabled, scaling, etc.
-		r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-		return true
-	}
-
-	r.Status.Endpoint = azure.ToString(cacheResource.HostName)
-	r.Status.Port = azure.ToInt(cacheResource.Port)
-	r.Status.SSLPort = azure.ToInt(cacheResource.SslPort)
-	r.Status.RedisVersion = azure.ToString(cacheResource.RedisVersion)
-	r.Status.ProviderID = azure.ToString(cacheResource.ID)
-
-	if !redis.NeedsUpdate(r, cacheResource) {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-		return false
-	}
-
-	if _, err := a.client.Update(ctx, r.Spec.ResourceGroupName, n, redis.NewUpdateParameters(r)); err != nil {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return true
-	}
-
-	r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-	return false
-}
-
-func (a *azureRedisCache) Delete(ctx context.Context, r *v1alpha3.Redis) bool {
-	r.Status.SetConditions(runtimev1alpha1.Deleting())
-	if r.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
-		if _, err := a.client.Delete(ctx, r.Spec.ResourceGroupName, redis.NewResourceName(r)); err != nil {
-			r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-			return true
-		}
-	}
-	meta.RemoveFinalizer(r, finalizerName)
-	r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-	return false
-}
-
-func (a *azureRedisCache) Key(ctx context.Context, r *v1alpha3.Redis) string {
-	n := redis.NewResourceName(r)
-	k, err := a.client.ListKeys(ctx, r.Spec.ResourceGroupName, n)
-	if err != nil {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return ""
-	}
-	return azure.ToString(k.PrimaryKey)
-}
-
-// A connecter returns a createsyncdeletekeyer that can create, sync, and delete
-// Azure Cache resources with an external store - for example the Azure API.
-type connecter interface {
-	Connect(context.Context, *v1alpha3.Redis) (createsyncdeletekeyer, error)
-}
-
-// providerConnecter is a connecter that returns a createsyncdeletekeyer
-// authenticated using credentials read from a Crossplane Provider resource.
-type providerConnecter struct {
-	kube      client.Client
-	newClient func(ctx context.Context, creds []byte) (redisapi.ClientAPI, error)
-}
-
-// Connect returns a createsyncdeletekeyer backed by the Azure API. Azure
-// credentials are read from the Crossplane Provider referenced by the supplied
-// Redis.
-func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-	p := &azurev1alpha3.Provider{}
-	n := meta.NamespacedNameOf(r.Spec.ProviderReference)
-	if err := c.kube.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
-	if err := c.kube.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-
-	client, err := c.newClient(ctx, s.Data[p.Spec.Secret.Key])
-	return &azureRedisCache{client: client}, errors.Wrap(err, "cannot create new Azure Cache client")
-}
-
-// Reconciler reconciles Redis read from the Kubernetes API
-// with an external store, typically the Azure API.
-type Reconciler struct {
-	connecter
-	kube      client.Client
-	publisher resource.ManagedConnectionPublisher
-	resolver  resource.ManagedReferenceResolver
-}
-
-// RedisController is responsible for adding the Redis
-// controller and its corresponding reconciler to the manager with any runtime configuration.
-type RedisController struct{}
-
-// SetupWithManager creates a new Redis Controller and adds it to the
+// SetupWithManager creates a new MySQLServer Controller and adds it to the
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
-func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
-	r := &Reconciler{
-		connecter: &providerConnecter{kube: mgr.GetClient(), newClient: redis.NewClient},
-		kube:      mgr.GetClient(),
-		publisher: resource.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
-		resolver:  resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
-	}
+func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
+	r := resource.NewManagedReconciler(mgr,
+		resource.ManagedKind(v1alpha3.RedisClassGroupVersionKind),
+		resource.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))
+
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.RedisKind, v1alpha3.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(controllerName).
+		Named(name).
 		For(&v1alpha3.Redis{}).
 		Complete(r)
 }
 
-// Reconcile Azure Cache resources with the Azure API.
-func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha3.RedisKindAPIVersion, "request", req)
+type connector struct {
+	kube        client.Client
+	newClientFn func(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error)
+}
 
-	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
-	defer cancel()
-
-	rd := &v1alpha3.Redis{}
-	if err := r.kube.Get(ctx, req.NamespacedName, rd); err != nil {
-		if kerrors.IsNotFound(err) {
-			return reconcile.Result{Requeue: false}, nil
-		}
-		return reconcile.Result{Requeue: false}, errors.Wrapf(err, "cannot get resource %s", req.NamespacedName)
+func (c connector) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
+	cr, ok := mg.(*v1alpha3.Redis)
+	if !ok {
+		return nil, errors.New(errNotRedis)
+	}
+	p := &azurev1alpha3.Provider{}
+	if err := c.kube.Get(ctx, meta.NamespacedNameOf(cr.Spec.ProviderReference), p); err != nil {
+		return nil, errors.Wrap(err, "cannot get provider")
 	}
 
-	client, err := r.Connect(ctx, rd)
+	s := &corev1.Secret{}
+	n := types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
+	if err := c.kube.Get(ctx, n, s); err != nil {
+		return nil, errors.Wrap(err, "cannot get provider secret")
+	}
+	rclient, err := c.newClientFn(ctx, s.Data[p.Spec.Secret.Key])
+	return &external{kube: c.kube, client: rclient}, errors.Wrap(err, "cannot connect to Azure Redis Service")
+}
+
+type external struct {
+	kube   client.Client
+	client redisapi.ClientAPI
+}
+
+func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
+	cr, ok := mg.(*v1alpha3.Redis)
+	if !ok {
+		return resource.ExternalObservation{}, errors.New(errNotRedis)
+	}
+	cache, err := c.client.Get(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
-		rd.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return reconcile.Result{Requeue: true}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
+		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(common.IsNotFound, err), "cannot get Redis resource")
 	}
 
-	if !resource.IsConditionTrue(rd.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
-		if err := r.resolver.ResolveReferences(ctx, rd); err != nil {
-			condition := runtimev1alpha1.ReconcileError(err)
-			if resource.IsReferencesAccessError(err) {
-				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
-			}
+	cr.Status.State = string(cache.ProvisioningState)
+	cr.Status.Endpoint = common.ToString(cache.HostName)
+	cr.Status.Port = common.ToInt(cache.Port)
+	cr.Status.SSLPort = common.ToInt(cache.SslPort)
+	cr.Status.RedisVersion = common.ToString(cache.RedisVersion)
+	cr.Status.ProviderID = common.ToString(cache.ID)
 
-			rd.Status.SetConditions(condition)
-			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.kube.Update(ctx, rd), errUpdateManagedStatus)
+	var conn resource.ConnectionDetails
+	switch cr.Status.State {
+	case v1alpha3.ProvisioningStateSucceeded:
+		k, err := c.client.ListKeys(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr))
+		if err != nil {
+			return resource.ExternalObservation{}, errors.Wrap(err, "cannot get access key list")
 		}
-
-		// Add ReferenceResolutionSuccess to the conditions
-		rd.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
+		conn = resource.ConnectionDetails{
+			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.Endpoint),
+			runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.Port)),
+			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(common.ToString(k.PrimaryKey)),
+		}
+		cr.Status.SetConditions(runtimev1alpha1.Available())
+		resource.SetBindable(cr)
+	case v1alpha3.ProvisioningStateCreating:
+		cr.Status.SetConditions(runtimev1alpha1.Creating())
+	case v1alpha3.ProvisioningStateDeleting:
+		cr.Status.SetConditions(runtimev1alpha1.Deleting())
+	default:
+		cr.Status.SetConditions(runtimev1alpha1.Unavailable())
 	}
+	return resource.ExternalObservation{
+		ResourceExists:    true,
+		ResourceUpToDate:  !redis.NeedsUpdate(cr, cache),
+		ConnectionDetails: conn,
+	}, nil
+}
 
-	// The resource has been deleted from the API server. Delete from Azure.
-	if rd.DeletionTimestamp != nil {
-		return reconcile.Result{Requeue: client.Delete(ctx, rd)}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
+func (c *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
+	cr, ok := mg.(*v1alpha3.Redis)
+	if !ok {
+		return resource.ExternalCreation{}, errors.New(errNotRedis)
 	}
+	cr.Status.SetConditions(runtimev1alpha1.Creating())
+	_, err := c.client.Create(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr), redis.NewCreateParameters(cr))
+	return resource.ExternalCreation{}, errors.Wrap(err, "cannot create the Redis instance")
+}
 
-	// The resource is unnamed. Assume it has not been created in Azure.
-	if rd.Status.ResourceName == "" {
-		return reconcile.Result{Requeue: client.Create(ctx, rd)}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
+func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
+	cr, ok := mg.(*v1alpha3.Redis)
+	if !ok {
+		return resource.ExternalUpdate{}, errors.New(errNotRedis)
 	}
+	_, err := c.client.Update(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr), redis.NewUpdateParameters(cr))
+	return resource.ExternalUpdate{}, errors.Wrap(err, "cannot update the Redis instance")
+}
 
-	// TODO(negz): Include the ports here too?
-	// TODO(negz): Include both access keys? Azure has two because reasons.
-	cd := resource.ConnectionDetails{
-		runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(rd.Status.Endpoint),
-		runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(client.Key(ctx, rd)),
+func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
+	cr, ok := mg.(*v1alpha3.Redis)
+	if !ok {
+		return errors.New(errNotRedis)
 	}
-	if err := r.publisher.PublishConnection(ctx, rd, cd); err != nil {
-		rd.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return reconcile.Result{Requeue: true}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
-	}
-
-	// The resource exists in the API server and Azure. Sync it.
-	return reconcile.Result{Requeue: client.Sync(ctx, rd)}, errors.Wrapf(r.kube.Update(ctx, rd), "cannot update resource %s", req.NamespacedName)
+	cr.Status.SetConditions(runtimev1alpha1.Deleting())
+	_, err := c.client.Delete(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr))
+	return errors.Wrap(resource.Ignore(common.IsNotFound, err), "cannot delete Redis instance")
 }
