@@ -101,6 +101,7 @@ func (c *RedisClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),
 		resource.ClassKind(v1alpha3.RedisClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.RedisGroupVersionKind),
+		resource.WithBinder(resource.NewAPIBinder(mgr.GetClient(), mgr.GetScheme())),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureRedis),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
