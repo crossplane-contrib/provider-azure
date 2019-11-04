@@ -103,6 +103,7 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 		resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind),
+		resource.WithBinder(resource.NewAPIBinder(mgr.GetClient(), mgr.GetScheme())),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
