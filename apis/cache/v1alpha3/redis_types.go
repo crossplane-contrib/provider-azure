@@ -57,6 +57,7 @@ type SKU struct {
 // RedisParameters define the desired state of an Azure Redis cluster.
 // https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
 type RedisParameters struct {
+	// TODO(muvaf): not included in received object.
 	// ResourceGroupName in which to create this resource.
 	// +immutable
 	ResourceGroupName string `json:"resourceGroupName"`
@@ -92,7 +93,7 @@ type RedisParameters struct {
 
 	// TenantSettings - A dictionary of tenant settings
 	// +optional
-	TenantSettings map[string]*string `json:"tenantSettings,omitempty"`
+	TenantSettings map[string]string `json:"tenantSettings,omitempty"`
 
 	// ShardCount specifies the number of shards to be created on a Premium
 	// Cluster Cache.

@@ -45,13 +45,97 @@ spec:
           description: SpecTemplate is a template for the spec of a dynamically provisioned
             Redis.
           properties:
-            enableNonSslPort:
-              description: EnableNonSSLPort specifies whether the non-ssl Redis server
-                port (6379) is enabled.
-              type: boolean
-            location:
-              description: Location in which to create this resource.
-              type: string
+            forProvider:
+              description: RedisParameters define the desired state of an Azure Redis
+                cluster. https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
+              properties:
+                enableNonSslPort:
+                  description: EnableNonSSLPort specifies whether the non-ssl Redis
+                    server port (6379) is enabled.
+                  type: boolean
+                location:
+                  description: Location in which to create this resource.
+                  type: string
+                minimumTlsVersion:
+                  description: 'MinimumTLSVersion - Optional: requires clients to
+                    use a specified TLS version (or higher) to connect (e,g, ''1.0'',
+                    ''1.1'', ''1.2''). Possible values include: ''OneFullStopZero'',
+                    ''OneFullStopOne'', ''OneFullStopTwo'''
+                  type: string
+                redisConfiguration:
+                  additionalProperties:
+                    type: string
+                  description: RedisConfiguration specifies Redis Settings.
+                  type: object
+                resourceGroupName:
+                  description: 'TODO(muvaf): not included in received object. ResourceGroupName
+                    in which to create this resource.'
+                  type: string
+                shardCount:
+                  description: ShardCount specifies the number of shards to be created
+                    on a Premium Cluster Cache.
+                  type: integer
+                sku:
+                  description: Sku - The SKU of the Redis cache to deploy.
+                  properties:
+                    capacity:
+                      description: 'Capacity specifies the size of Redis cache to
+                        deploy. Valid values: for C family (0, 1, 2, 3, 4, 5, 6),
+                        for P family (1, 2, 3, 4).'
+                      maximum: 6
+                      minimum: 0
+                      type: integer
+                    family:
+                      description: 'Family specifies which family to use. Valid values:
+                        (C, P). Possible values include: ''C'', ''P'''
+                      enum:
+                      - C
+                      - P
+                      type: string
+                    name:
+                      description: 'Name specifies what type of Redis cache to deploy.
+                        Valid values: (Basic, Standard, Premium). Possible values
+                        include: ''Basic'', ''Standard'', ''Premium'''
+                      enum:
+                      - Basic
+                      - Standard
+                      - Premium
+                      type: string
+                  required:
+                  - capacity
+                  - family
+                  - name
+                  type: object
+                staticIp:
+                  description: StaticIP address. Required when deploying a Redis cache
+                    inside an existing Azure Virtual Network.
+                  type: string
+                subnetId:
+                  description: 'SubnetID specifies the full resource ID of a subnet
+                    in a virtual network to deploy the Redis cache in. Example format:
+                    /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1'
+                  type: string
+                tags:
+                  additionalProperties:
+                    type: string
+                  description: Tags - Resource tags.
+                  type: object
+                tenantSettings:
+                  additionalProperties:
+                    type: string
+                  description: TenantSettings - A dictionary of tenant settings
+                  type: object
+                zones:
+                  description: Zones - A list of availability zones denoting where
+                    the resource needs to come from.
+                  items:
+                    type: string
+                  type: array
+              required:
+              - location
+              - resourceGroupName
+              - sku
+              type: object
             providerRef:
               description: ProviderReference specifies the provider that will be used
                 to create, observe, update, and delete managed resources that are
@@ -98,67 +182,13 @@ spec:
                 other uses of the ReclaimPolicy concept within the Kubernetes ecosystem
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
-            redisConfiguration:
-              additionalProperties:
-                type: string
-              description: RedisConfiguration specifies Redis Settings.
-              type: object
-            resourceGroupName:
-              description: ResourceGroupName in which to create this resource.
-              type: string
-            shardCount:
-              description: ShardCount specifies the number of shards to be created
-                on a Premium Cluster Cache.
-              type: integer
-            sku:
-              description: SKU of the Redis cache to deploy.
-              properties:
-                capacity:
-                  description: 'Capacity specifies the size of Redis cache to deploy.
-                    Valid values: for C family (0, 1, 2, 3, 4, 5, 6), for P family
-                    (1, 2, 3, 4).'
-                  maximum: 6
-                  minimum: 0
-                  type: integer
-                family:
-                  description: 'Family specifies which family to use. Valid values:
-                    (C, P). Possible values include: ''C'', ''P'''
-                  enum:
-                  - C
-                  - P
-                  type: string
-                name:
-                  description: 'Name specifies what type of Redis cache to deploy.
-                    Valid values: (Basic, Standard, Premium). Possible values include:
-                    ''Basic'', ''Standard'', ''Premium'''
-                  enum:
-                  - Basic
-                  - Standard
-                  - Premium
-                  type: string
-              required:
-              - capacity
-              - family
-              - name
-              type: object
-            staticIP:
-              description: StaticIP address. Required when deploying a Redis cache
-                inside an existing Azure Virtual Network.
-              type: string
-            subnetId:
-              description: 'SubnetID specifies the full resource ID of a subnet in
-                a virtual network to deploy the Redis cache in. Example format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1'
-              type: string
             writeConnectionSecretsToNamespace:
               description: WriteConnectionSecretsToNamespace specifies the namespace
                 in which the connection secrets of managed resources dynamically provisioned
                 using this claim will be created.
               type: string
           required:
-          - location
           - providerRef
-          - resourceGroupName
-          - sku
           - writeConnectionSecretsToNamespace
           type: object
       required:

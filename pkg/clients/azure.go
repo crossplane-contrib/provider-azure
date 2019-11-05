@@ -170,7 +170,17 @@ func ToBoolPtr(b bool, o ...FieldOption) *bool {
 
 // ToStringPtrMap converts the supplied map for use with the Azure Go SDK.
 func ToStringPtrMap(m map[string]string) map[string]*string {
+	if len(m) == 0 {
+		return nil
+	}
 	return *(to.StringMapPtr(m))
+}
+
+func ToStringArrayPtr(m []string) *[]string {
+	if len(m) == 0 {
+		return nil
+	}
+	return &m
 }
 
 // ToString converts the supplied pointer to string to a string, returning the
@@ -185,8 +195,53 @@ func ToInt(i *int32) int {
 	return int(to.Int32(i))
 }
 
+func ToInt32(i *int) *int32 {
+	if i == nil {
+		return nil
+	}
+	return to.Int32Ptr(int32(*i))
+}
+
 // ToBool converts the supplied pointer to bool to a bool, returning the
 // false if the pointer is nil.
 func ToBool(b *bool) bool {
 	return to.Bool(b)
+}
+
+func LateInitializeStringPtrFromPtr(in, from *string) *string {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
+func LateInitializeStringMap(in map[string]string, from map[string]*string) map[string]string {
+	if in != nil {
+		return in
+	}
+	return to.StringMap(from)
+}
+
+func LateInitializeBoolPtrFromPtr(in, from *bool) *bool {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
+func LateInitializeIntPtrFromInt32Ptr(in *int, from *int32) *int {
+	if in != nil {
+		return in
+	}
+	if from != nil {
+		return to.IntPtr(int(*from))
+	}
+	return nil
+}
+
+func LateInitializeStringValArrFromArrPtr(in []string, from *[]string) []string {
+	if in != nil {
+		return in
+	}
+	return to.StringSlice(from)
 }

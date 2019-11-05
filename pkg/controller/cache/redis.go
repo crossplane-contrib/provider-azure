@@ -97,35 +97,34 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotRedis)
 	}
-	cache, err := c.client.Get(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr))
+	cache, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
 		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(common.IsNotFound, err), "cannot get Redis resource")
 	}
 
-	cr.Status.State = string(cache.ProvisioningState)
-	cr.Status.Endpoint = common.ToString(cache.HostName)
-	cr.Status.Port = common.ToInt(cache.Port)
-	cr.Status.SSLPort = common.ToInt(cache.SslPort)
-	cr.Status.RedisVersion = common.ToString(cache.RedisVersion)
-	cr.Status.ProviderID = common.ToString(cache.ID)
+	redis.LateInitialize(&cr.Spec.ForProvider, cache)
+	if err := c.kube.Update(ctx, cr); err != nil {
+		return resource.ExternalObservation{}, errors.Wrap(err, "cannot update Redis custom resource instance")
+	}
+	cr.Status.AtProvider = redis.GenerateObservation(cache)
 
 	var conn resource.ConnectionDetails
-	switch cr.Status.State {
-	case v1alpha3.ProvisioningStateSucceeded:
-		k, err := c.client.ListKeys(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr))
+	switch cr.Status.AtProvider.ProvisioningState {
+	case redis.ProvisioningStateSucceeded:
+		k, err := c.client.ListKeys(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 		if err != nil {
 			return resource.ExternalObservation{}, errors.Wrap(err, "cannot get access key list")
 		}
 		conn = resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.Endpoint),
-			runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.Port)),
+			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.HostName),
+			runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.AtProvider.Port)),
 			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(common.ToString(k.PrimaryKey)),
 		}
 		cr.Status.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(cr)
-	case v1alpha3.ProvisioningStateCreating:
+	case redis.ProvisioningStateCreating:
 		cr.Status.SetConditions(runtimev1alpha1.Creating())
-	case v1alpha3.ProvisioningStateDeleting:
+	case redis.ProvisioningStateDeleting:
 		cr.Status.SetConditions(runtimev1alpha1.Deleting())
 	default:
 		cr.Status.SetConditions(runtimev1alpha1.Unavailable())
@@ -143,7 +142,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 		return resource.ExternalCreation{}, errors.New(errNotRedis)
 	}
 	cr.Status.SetConditions(runtimev1alpha1.Creating())
-	_, err := c.client.Create(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr), redis.NewCreateParameters(cr))
+	_, err := c.client.Create(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redis.NewCreateParameters(cr))
 	return resource.ExternalCreation{}, errors.Wrap(err, "cannot create the Redis instance")
 }
 
@@ -152,7 +151,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotRedis)
 	}
-	_, err := c.client.Update(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr), redis.NewUpdateParameters(cr))
+	_, err := c.client.Update(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redis.NewUpdateParameters(cr))
 	return resource.ExternalUpdate{}, errors.Wrap(err, "cannot update the Redis instance")
 }
 
@@ -162,6 +161,6 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotRedis)
 	}
 	cr.Status.SetConditions(runtimev1alpha1.Deleting())
-	_, err := c.client.Delete(ctx, cr.Spec.ResourceGroupName, meta.GetExternalName(cr))
+	_, err := c.client.Delete(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	return errors.Wrap(resource.Ignore(common.IsNotFound, err), "cannot delete Redis instance")
 }

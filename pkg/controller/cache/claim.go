@@ -144,15 +144,10 @@ func ConfigureRedis(_ context.Context, cm resource.Claim, cs resource.Class, mg 
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},
-		RedisParameters: rs.SpecTemplate.RedisParameters,
+		ForProvider: rs.SpecTemplate.ForProvider,
 	}
 	if err := resolveAzureClassValues(rc); err != nil {
 		return errors.Wrap(err, "cannot resolve Azure class instance values")
-	}
-
-	// NOTE(hasheddan): consider moving defaulting to either CRD or managed reconciler level
-	if spec.RedisConfiguration == nil {
-		spec.RedisConfiguration = map[string]string{}
 	}
 
 	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{

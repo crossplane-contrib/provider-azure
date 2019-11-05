@@ -24,6 +24,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
@@ -39,19 +40,6 @@ const (
 	ProvisioningStateUpdating  = string(redis.Updating)
 )
 
-// SKU options.
-const (
-	SKUNameBasic    = string(redis.Basic)
-	SKUNamePremium  = string(redis.Premium)
-	SKUNameStandard = string(redis.Standard)
-
-	SKUFamilyC = string(redis.C)
-	SKUFamilyP = string(redis.P)
-)
-
-// NamePrefix is the prefix for all created Azure Cache instances.
-const NamePrefix = "acr"
-
 // A Client handles CRUD operations for Azure Cache resources. This interface is
 // compatible with the upstream Azure redis client.
 type Client redisapi.ClientAPI
@@ -63,7 +51,7 @@ func NewClient(_ context.Context, credentials []byte) (redisapi.ClientAPI, error
 	if err := json.Unmarshal(credentials, &c); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
 	}
-	client := redismgmt.NewClient(c.SubscriptionID)
+	client := redis.NewClient(c.SubscriptionID)
 
 	cfg := auth.ClientCredentialsConfig{
 		ClientID:     c.ClientID,
@@ -86,38 +74,45 @@ func NewClient(_ context.Context, credentials []byte) (redisapi.ClientAPI, error
 
 // NewCreateParameters returns Redis resource creation parameters suitable for
 // use with the Azure API.
-func NewCreateParameters(r *v1alpha3.Redis) redismgmt.CreateParameters {
-	return redismgmt.CreateParameters{
-		Location: azure.ToStringPtr(r.Spec.Location),
-		CreateProperties: &redismgmt.CreateProperties{
-			Sku:                NewSKU(r.Spec.SKU),
-			SubnetID:           azure.ToStringPtr(r.Spec.SubnetID),
-			StaticIP:           azure.ToStringPtr(r.Spec.StaticIP),
-			EnableNonSslPort:   azure.ToBoolPtr(r.Spec.EnableNonSSLPort),
-			RedisConfiguration: azure.ToStringPtrMap(r.Spec.RedisConfiguration),
-			ShardCount:         azure.ToInt32Ptr(r.Spec.ShardCount),
+func NewCreateParameters(cr *v1alpha3.Redis) redis.CreateParameters {
+	return redis.CreateParameters{
+		Location: azure.ToStringPtr(cr.Spec.ForProvider.Location),
+		Zones:    azure.ToStringArrayPtr(cr.Spec.ForProvider.Zones),
+		Tags:     azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
+		CreateProperties: &redis.CreateProperties{
+			Sku:                NewSKU(cr.Spec.ForProvider.SKU),
+			SubnetID:           cr.Spec.ForProvider.SubnetID,
+			StaticIP:           cr.Spec.ForProvider.StaticIP,
+			EnableNonSslPort:   cr.Spec.ForProvider.EnableNonSSLPort,
+			RedisConfiguration: azure.ToStringPtrMap(cr.Spec.ForProvider.RedisConfiguration),
+			TenantSettings:     azure.ToStringPtrMap(cr.Spec.ForProvider.TenantSettings),
+			ShardCount:         azure.ToInt32(cr.Spec.ForProvider.ShardCount),
+			MinimumTLSVersion:  redis.TLSVersion(azure.ToString(cr.Spec.ForProvider.MinimumTLSVersion)),
 		},
 	}
 }
 
 // NewUpdateParameters returns Redis resource update parameters suitable for use
 // with the Azure API.
-func NewUpdateParameters(r *v1alpha3.Redis) redismgmt.UpdateParameters {
-	return redismgmt.UpdateParameters{
-		UpdateProperties: &redismgmt.UpdateProperties{
-			Sku:                NewSKU(r.Spec.SKU),
-			RedisConfiguration: azure.ToStringPtrMap(r.Spec.RedisConfiguration),
-			EnableNonSslPort:   azure.ToBoolPtr(r.Spec.EnableNonSSLPort),
-			ShardCount:         azure.ToInt32Ptr(r.Spec.ShardCount),
+func NewUpdateParameters(cr *v1alpha3.Redis) redis.UpdateParameters {
+	return redis.UpdateParameters{
+		Tags: azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
+		UpdateProperties: &redis.UpdateProperties{
+			Sku:                NewSKU(cr.Spec.ForProvider.SKU),
+			RedisConfiguration: azure.ToStringPtrMap(cr.Spec.ForProvider.RedisConfiguration),
+			EnableNonSslPort:   cr.Spec.ForProvider.EnableNonSSLPort,
+			ShardCount:         azure.ToInt32(cr.Spec.ForProvider.ShardCount),
+			TenantSettings:     azure.ToStringPtrMap(cr.Spec.ForProvider.TenantSettings),
+			MinimumTLSVersion:  redis.TLSVersion(azure.ToString(cr.Spec.ForProvider.MinimumTLSVersion)),
 		},
 	}
 }
 
 // NewSKU returns a Redis resource SKU suitable for use with the Azure API.
-func NewSKU(s v1alpha3.SKU) *redismgmt.Sku {
-	return &redismgmt.Sku{
-		Name:     redismgmt.SkuName(s.Name),
-		Family:   redismgmt.SkuFamily(s.Family),
+func NewSKU(s v1alpha3.SKU) *redis.Sku {
+	return &redis.Sku{
+		Name:     redis.SkuName(s.Name),
+		Family:   redis.SkuFamily(s.Family),
 		Capacity: azure.ToInt32Ptr(s.Capacity, azure.FieldRequired),
 	}
 }
@@ -125,7 +120,7 @@ func NewSKU(s v1alpha3.SKU) *redismgmt.Sku {
 // NeedsUpdate returns true if the supplied Kubernetes resource differs from the
 // supplied Azure resource. It considers only fields that can be modified in
 // place without deleting and recreating the instance.
-func NeedsUpdate(kube *v1alpha3.Redis, az redismgmt.ResourceType) bool {
+func NeedsUpdate(kube *v1alpha3.Redis, az redis.ResourceType) bool {
 	up := NewUpdateParameters(kube)
 
 	switch {
@@ -137,7 +132,48 @@ func NeedsUpdate(kube *v1alpha3.Redis, az redismgmt.ResourceType) bool {
 		return true
 	case !reflect.DeepEqual(up.ShardCount, az.ShardCount):
 		return true
+	case !reflect.DeepEqual(up.TenantSettings, az.TenantSettings):
+		return true
+	case !reflect.DeepEqual(up.MinimumTLSVersion, az.MinimumTLSVersion):
+		return true
+	case !reflect.DeepEqual(up.Tags, az.Tags):
+		return true
 	}
 
 	return false
+}
+
+func GenerateObservation(az redis.ResourceType) v1alpha3.RedisObservation {
+	o := v1alpha3.RedisObservation{
+		RedisVersion:       azure.ToString(az.RedisVersion),
+		ProvisioningState:  string(az.ProvisioningState),
+		HostName:           azure.ToString(az.HostName),
+		Port:               azure.ToInt(az.Port),
+		SSLPort:            azure.ToInt(az.SslPort),
+		RedisConfiguration: to.StringMap(az.RedisConfiguration),
+		EnableNonSSLPort:   azure.ToBool(az.EnableNonSslPort),
+		TenantSettings:     to.StringMap(az.TenantSettings),
+		ShardCount:         azure.ToInt(az.ShardCount),
+		MinimumTLSVersion:  string(az.MinimumTLSVersion),
+	}
+	if az.LinkedServers != nil {
+		o.LinkedServers = make([]string, len(*az.LinkedServers))
+		for i, val := range *az.LinkedServers {
+			o.LinkedServers[i] = azure.ToString(val.ID)
+		}
+	}
+	return o
+}
+
+func LateInitialize(spec *v1alpha3.RedisParameters, az redis.ResourceType) {
+	spec.SubnetID = azure.LateInitializeStringPtrFromPtr(spec.SubnetID, az.SubnetID)
+	spec.StaticIP = azure.LateInitializeStringPtrFromPtr(spec.StaticIP, az.StaticIP)
+	spec.RedisConfiguration = azure.LateInitializeStringMap(spec.RedisConfiguration, az.RedisConfiguration)
+	spec.EnableNonSSLPort = azure.LateInitializeBoolPtrFromPtr(spec.EnableNonSSLPort, az.EnableNonSslPort)
+	spec.TenantSettings = azure.LateInitializeStringMap(spec.TenantSettings, az.TenantSettings)
+	spec.ShardCount = azure.LateInitializeIntPtrFromInt32Ptr(spec.ShardCount, az.ShardCount)
+	minTLS := string(az.MinimumTLSVersion)
+	spec.MinimumTLSVersion = azure.LateInitializeStringPtrFromPtr(spec.MinimumTLSVersion, &minTLS)
+	spec.Zones = azure.LateInitializeStringValArrFromArrPtr(spec.Zones, az.Zones)
+	spec.Tags = azure.LateInitializeStringMap(spec.Tags, az.Tags)
 }
