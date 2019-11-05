@@ -185,6 +185,7 @@ type RedisStatus struct {
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".status.redisVersion"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 type Redis struct {
 	metav1.TypeMeta   `json:",inline"`

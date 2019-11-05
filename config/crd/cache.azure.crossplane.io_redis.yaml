@@ -29,7 +29,8 @@ spec:
     plural: redis
     singular: redis
   scope: Cluster
-  subresources: {}
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: A Redis is a managed resource that represents an Azure Redis cluster.
