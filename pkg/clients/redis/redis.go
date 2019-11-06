@@ -24,7 +24,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
@@ -121,6 +120,9 @@ func NewSKU(s v1alpha3.SKU) *redis.Sku {
 // supplied Azure resource. It considers only fields that can be modified in
 // place without deleting and recreating the instance.
 func NeedsUpdate(kube *v1alpha3.Redis, az redis.ResourceType) bool {
+	if az.Properties == nil {
+		return true
+	}
 	up := NewUpdateParameters(kube)
 
 	switch {
@@ -143,19 +145,21 @@ func NeedsUpdate(kube *v1alpha3.Redis, az redis.ResourceType) bool {
 	return false
 }
 
+// GenerateObservation produces a RedisObservation object from the redis.ResourceType
+// received from Azure.
 func GenerateObservation(az redis.ResourceType) v1alpha3.RedisObservation {
 	o := v1alpha3.RedisObservation{
-		RedisVersion:       azure.ToString(az.RedisVersion),
-		ProvisioningState:  string(az.ProvisioningState),
-		HostName:           azure.ToString(az.HostName),
-		Port:               azure.ToInt(az.Port),
-		SSLPort:            azure.ToInt(az.SslPort),
-		RedisConfiguration: to.StringMap(az.RedisConfiguration),
-		EnableNonSSLPort:   azure.ToBool(az.EnableNonSslPort),
-		TenantSettings:     to.StringMap(az.TenantSettings),
-		ShardCount:         azure.ToInt(az.ShardCount),
-		MinimumTLSVersion:  string(az.MinimumTLSVersion),
+		ID:   azure.ToString(az.ID),
+		Name: azure.ToString(az.Name),
 	}
+	if az.Properties == nil {
+		return o
+	}
+	o.RedisVersion = azure.ToString(az.RedisVersion)
+	o.ProvisioningState = string(az.ProvisioningState)
+	o.HostName = azure.ToString(az.HostName)
+	o.Port = azure.ToInt(az.Port)
+	o.SSLPort = azure.ToInt(az.SslPort)
 	if az.LinkedServers != nil {
 		o.LinkedServers = make([]string, len(*az.LinkedServers))
 		for i, val := range *az.LinkedServers {
@@ -165,15 +169,21 @@ func GenerateObservation(az redis.ResourceType) v1alpha3.RedisObservation {
 	return o
 }
 
+// LateInitialize fills the spec values that user did not fill with their
+// corresponding value in the Azure, if there is any.
 func LateInitialize(spec *v1alpha3.RedisParameters, az redis.ResourceType) {
-	spec.SubnetID = azure.LateInitializeStringPtrFromPtr(spec.SubnetID, az.SubnetID)
-	spec.StaticIP = azure.LateInitializeStringPtrFromPtr(spec.StaticIP, az.StaticIP)
-	spec.RedisConfiguration = azure.LateInitializeStringMap(spec.RedisConfiguration, az.RedisConfiguration)
-	spec.EnableNonSSLPort = azure.LateInitializeBoolPtrFromPtr(spec.EnableNonSSLPort, az.EnableNonSslPort)
-	spec.TenantSettings = azure.LateInitializeStringMap(spec.TenantSettings, az.TenantSettings)
-	spec.ShardCount = azure.LateInitializeIntPtrFromInt32Ptr(spec.ShardCount, az.ShardCount)
-	minTLS := string(az.MinimumTLSVersion)
-	spec.MinimumTLSVersion = azure.LateInitializeStringPtrFromPtr(spec.MinimumTLSVersion, &minTLS)
 	spec.Zones = azure.LateInitializeStringValArrFromArrPtr(spec.Zones, az.Zones)
 	spec.Tags = azure.LateInitializeStringMap(spec.Tags, az.Tags)
+	if az.Properties == nil {
+		return
+	}
+	spec.SubnetID = azure.LateInitializeStringPtrFromPtr(spec.SubnetID, az.Properties.SubnetID)
+	spec.StaticIP = azure.LateInitializeStringPtrFromPtr(spec.StaticIP, az.Properties.StaticIP)
+	spec.RedisConfiguration = azure.LateInitializeStringMap(spec.RedisConfiguration, az.Properties.RedisConfiguration)
+	spec.EnableNonSSLPort = azure.LateInitializeBoolPtrFromPtr(spec.EnableNonSSLPort, az.Properties.EnableNonSslPort)
+	spec.TenantSettings = azure.LateInitializeStringMap(spec.TenantSettings, az.Properties.TenantSettings)
+	spec.ShardCount = azure.LateInitializeIntPtrFromInt32Ptr(spec.ShardCount, az.Properties.ShardCount)
+	minTLS := string(az.Properties.MinimumTLSVersion)
+	spec.MinimumTLSVersion = azure.LateInitializeStringPtrFromPtr(spec.MinimumTLSVersion, &minTLS)
+
 }

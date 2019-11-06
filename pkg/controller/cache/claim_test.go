@@ -85,9 +85,6 @@ func TestConfigureRedis(t *testing.T) {
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						RedisParameters: v1alpha3.RedisParameters{
-							RedisConfiguration: map[string]string{},
-						},
 					},
 				},
 				err: nil,

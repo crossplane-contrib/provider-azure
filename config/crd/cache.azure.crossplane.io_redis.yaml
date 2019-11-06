@@ -147,7 +147,13 @@ spec:
                 redisConfiguration:
                   additionalProperties:
                     type: string
-                  description: RedisConfiguration specifies Redis Settings.
+                  description: 'RedisConfiguration - All Redis Settings. Few possible
+                    keys: rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency
+                    maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples,
+                    slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries,
+                    list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value,
+                    set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value
+                    etc.'
                   type: object
                 resourceGroupName:
                   description: 'TODO(muvaf): not included in received object. ResourceGroupName
@@ -290,12 +296,11 @@ spec:
               description: RedisObservation represents the observed state of the Redis
                 object in Azure.
               properties:
-                enableNonSslPort:
-                  description: EnableNonSSLPort - Specifies whether the non-ssl Redis
-                    server port (6379) is enabled.
-                  type: boolean
                 hostName:
                   description: HostName - Redis host name.
+                  type: string
+                id:
+                  description: ID - Resource ID.
                   type: string
                 linkedServers:
                   description: LinkedServers - List of the linked servers associated
@@ -303,11 +308,8 @@ spec:
                   items:
                     type: string
                   type: array
-                minimumTlsVersion:
-                  description: 'MinimumTLSVersion - Requires clients to use a specified
-                    TLS version (or higher) to connect (e,g, ''1.0'', ''1.1'', ''1.2'').
-                    Possible values include: ''OneFullStopZero'', ''OneFullStopOne'',
-                    ''OneFullStopTwo'''
+                name:
+                  description: Name - Resource name.
                   type: string
                 port:
                   description: Port - Redis non-SSL port.
@@ -319,35 +321,12 @@ spec:
                     ''Scaling'', ''Succeeded'', ''Unlinking'', ''Unprovisioning'',
                     ''Updating'''
                   type: string
-                redisConfiguration:
-                  additionalProperties:
-                    type: string
-                  description: 'RedisConfiguration - All Redis Settings. Few possible
-                    keys: rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency
-                    maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples,
-                    slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries,
-                    list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value,
-                    set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value
-                    etc.'
-                  type: object
                 redisVersion:
                   description: RedisVersion - Redis version.
                   type: string
-                shardCount:
-                  description: ShardCount - The number of shards to be created on
-                    a Premium Cluster Cache.
-                  type: integer
                 sslPort:
                   description: SSLPort - Redis SSL port.
                   type: integer
-                tenantSettings:
-                  additionalProperties:
-                    type: string
-                  description: TenantSettings - A dictionary of tenant settings
-                  type: object
-              required:
-              - redisConfiguration
-              - tenantSettings
               type: object
             bindingPhase:
               description: Phase represents the binding phase of a managed resource

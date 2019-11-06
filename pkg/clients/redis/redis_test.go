@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 const (
@@ -51,6 +51,8 @@ var (
 	port          = 6374
 	sslPort       = 453
 	linkedServers = []string{"server1", "server2"}
+	resourceName  = "some-name"
+	resourceID    = "23123"
 )
 
 func TestNewCreateParameters(t *testing.T) {
@@ -440,6 +442,8 @@ func TestGenerateObservation(t *testing.T) {
 	}{
 		"FullConversion": {
 			arg: redismgmt.ResourceType{
+				Name: azure.ToStringPtr(resourceName),
+				ID:   azure.ToStringPtr(resourceID),
 				Properties: &redismgmt.Properties{
 					RedisVersion:      azure.ToStringPtr(redisVersion),
 					ProvisioningState: redismgmt.ProvisioningState(ProvisioningStateCreating),
@@ -465,17 +469,14 @@ func TestGenerateObservation(t *testing.T) {
 				},
 			},
 			want: v1alpha3.RedisObservation{
-				RedisVersion:       redisVersion,
-				ProvisioningState:  ProvisioningStateCreating,
-				HostName:           hostName,
-				Port:               port,
-				SSLPort:            sslPort,
-				RedisConfiguration: redisConfiguration,
-				EnableNonSSLPort:   enableNonSSLPort,
-				TenantSettings:     tenantSettings,
-				ShardCount:         shardCount,
-				MinimumTLSVersion:  minTLSVersion,
-				LinkedServers:      linkedServers,
+				RedisVersion:      redisVersion,
+				ProvisioningState: ProvisioningStateCreating,
+				HostName:          hostName,
+				Port:              port,
+				SSLPort:           sslPort,
+				LinkedServers:     linkedServers,
+				Name:              resourceName,
+				ID:                resourceID,
 			},
 		},
 	}

@@ -40,7 +40,17 @@ import (
 )
 
 const (
-	errNotRedis = "the custom resource is not a Redis instance"
+	errNotRedis                = "the custom resource is not a Redis instance"
+	errUpdateRedisCRFailed     = "cannot update Redis custom resource instance"
+	errGetProviderFailed       = "cannot get provider"
+	errGetProviderSecretFailed = "cannot get provider secret"
+
+	errConnectFailed        = "cannot connect to Azure API"
+	errGetFailed            = "cannot get Redis instance from Azure API"
+	errListAccessKeysFailed = "cannot get access key list"
+	errCreateFailed         = "cannot create the Redis instance"
+	errUpdateFailed         = "cannot update the Redis instance"
+	errDeleteFailed         = "cannot delete the Redis instance"
 )
 
 // Controller is responsible for adding the MySQLServer controller and its
@@ -75,16 +85,16 @@ func (c connector) Connect(ctx context.Context, mg resource.Managed) (resource.E
 	}
 	p := &azurev1alpha3.Provider{}
 	if err := c.kube.Get(ctx, meta.NamespacedNameOf(cr.Spec.ProviderReference), p); err != nil {
-		return nil, errors.Wrap(err, "cannot get provider")
+		return nil, errors.Wrap(err, errGetProviderFailed)
 	}
 
 	s := &corev1.Secret{}
 	n := types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
 	if err := c.kube.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrap(err, "cannot get provider secret")
+		return nil, errors.Wrap(err, errGetProviderSecretFailed)
 	}
 	rclient, err := c.newClientFn(ctx, s.Data[p.Spec.Secret.Key])
-	return &external{kube: c.kube, client: rclient}, errors.Wrap(err, "cannot connect to Azure Redis Service")
+	return &external{kube: c.kube, client: rclient}, errors.Wrap(err, errConnectFailed)
 }
 
 type external struct {
@@ -99,12 +109,12 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	}
 	cache, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
-		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(common.IsNotFound, err), "cannot get Redis resource")
+		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(common.IsNotFound, err), errGetFailed)
 	}
 
 	redis.LateInitialize(&cr.Spec.ForProvider, cache)
 	if err := c.kube.Update(ctx, cr); err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, "cannot update Redis custom resource instance")
+		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateRedisCRFailed)
 	}
 	cr.Status.AtProvider = redis.GenerateObservation(cache)
 
@@ -113,7 +123,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	case redis.ProvisioningStateSucceeded:
 		k, err := c.client.ListKeys(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 		if err != nil {
-			return resource.ExternalObservation{}, errors.Wrap(err, "cannot get access key list")
+			return resource.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
 		conn = resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.HostName),
@@ -143,7 +153,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 	}
 	cr.Status.SetConditions(runtimev1alpha1.Creating())
 	_, err := c.client.Create(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redis.NewCreateParameters(cr))
-	return resource.ExternalCreation{}, errors.Wrap(err, "cannot create the Redis instance")
+	return resource.ExternalCreation{}, errors.Wrap(err, errCreateFailed)
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
@@ -152,7 +162,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 		return resource.ExternalUpdate{}, errors.New(errNotRedis)
 	}
 	_, err := c.client.Update(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redis.NewUpdateParameters(cr))
-	return resource.ExternalUpdate{}, errors.Wrap(err, "cannot update the Redis instance")
+	return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -162,5 +172,5 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	}
 	cr.Status.SetConditions(runtimev1alpha1.Deleting())
 	_, err := c.client.Delete(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
-	return errors.Wrap(resource.Ignore(common.IsNotFound, err), "cannot delete Redis instance")
+	return errors.Wrap(resource.Ignore(common.IsNotFound, err), errDeleteFailed)
 }

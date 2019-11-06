@@ -82,7 +82,12 @@ type RedisParameters struct {
 	// +optional
 	StaticIP *string `json:"staticIp,omitempty"`
 
-	// RedisConfiguration specifies Redis Settings.
+	// RedisConfiguration - All Redis Settings. Few possible keys:
+	// rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency
+	// maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples,
+	// slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries,
+	// list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value,
+	// set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value etc.
 	// +optional
 	RedisConfiguration map[string]string `json:"redisConfiguration,omitempty"`
 
@@ -142,33 +147,14 @@ type RedisObservation struct {
 	// SSLPort - Redis SSL port.
 	SSLPort int `json:"sslPort,omitempty"`
 
-	// TODO: keep in connection secret.
-	// AccessKeys - The keys of the Redis cache - not set if this object is not
-	// the response to Create or Update redis cache
-	// AccessKeys *AccessKeys `json:"accessKeys,omitempty"`
-
 	// LinkedServers - List of the linked servers associated with the cache
 	LinkedServers []string `json:"linkedServers,omitempty"`
 
-	// RedisConfiguration - All Redis Settings. Few possible keys:
-	// rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency
-	// maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples,
-	// slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries,
-	// list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value,
-	// set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value etc.
-	RedisConfiguration map[string]string `json:"redisConfiguration"`
+	// ID - Resource ID.
+	ID string `json:"id,omitempty"`
 
-	// EnableNonSSLPort - Specifies whether the non-ssl Redis server port (6379) is enabled.
-	EnableNonSSLPort bool `json:"enableNonSslPort,omitempty"`
-
-	// TenantSettings - A dictionary of tenant settings
-	TenantSettings map[string]string `json:"tenantSettings"`
-
-	// ShardCount - The number of shards to be created on a Premium Cluster Cache.
-	ShardCount int `json:"shardCount,omitempty"`
-
-	// MinimumTLSVersion - Requires clients to use a specified TLS version (or higher) to connect (e,g, '1.0', '1.1', '1.2'). Possible values include: 'OneFullStopZero', 'OneFullStopOne', 'OneFullStopTwo'
-	MinimumTLSVersion string `json:"minimumTlsVersion,omitempty"`
+	// Name - Resource name.
+	Name string `json:"name,omitempty"`
 }
 
 // A RedisStatus represents the observed state of a Redis.
