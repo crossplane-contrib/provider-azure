@@ -33,7 +33,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/redis"
@@ -62,14 +62,14 @@ type RedisController struct{}
 // start it when the Manager is Started.
 func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha3.RedisGroupVersionKind),
+		resource.ManagedKind(v1beta1.RedisGroupVersionKind),
 		resource.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.RedisKind, v1alpha3.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1beta1.RedisKind, v1beta1.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha3.Redis{}).
+		For(&v1beta1.Redis{}).
 		Complete(r)
 }
 
@@ -79,7 +79,7 @@ type connector struct {
 }
 
 func (c connector) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	cr, ok := mg.(*v1alpha3.Redis)
+	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
 		return nil, errors.New(errNotRedis)
 	}
@@ -103,7 +103,7 @@ type external struct {
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	cr, ok := mg.(*v1alpha3.Redis)
+	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotRedis)
 	}
@@ -147,7 +147,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (c *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	cr, ok := mg.(*v1alpha3.Redis)
+	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotRedis)
 	}
@@ -157,7 +157,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
-	cr, ok := mg.(*v1alpha3.Redis)
+	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotRedis)
 	}
@@ -179,7 +179,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
-	cr, ok := mg.(*v1alpha3.Redis)
+	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
 		return errors.New(errNotRedis)
 	}

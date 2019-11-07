@@ -37,7 +37,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	redisclient "github.com/crossplaneio/stack-azure/pkg/clients/redis"
@@ -95,36 +95,36 @@ var (
 	}
 )
 
-type redisResourceModifier func(*v1alpha3.Redis)
+type redisResourceModifier func(*v1beta1.Redis)
 
 func withConditions(c ...runtimev1alpha1.Condition) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1beta1.Redis) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withBindingPhase(p runtimev1alpha1.BindingPhase) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.SetBindingPhase(p) }
+	return func(r *v1beta1.Redis) { r.Status.SetBindingPhase(p) }
 }
 
 func withProvisioningState(s string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.AtProvider.ProvisioningState = s }
+	return func(r *v1beta1.Redis) { r.Status.AtProvider.ProvisioningState = s }
 }
 
 func withHostName(h string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.AtProvider.HostName = h }
+	return func(r *v1beta1.Redis) { r.Status.AtProvider.HostName = h }
 }
 
 func withPort(p int) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.AtProvider.Port = p }
+	return func(r *v1beta1.Redis) { r.Status.AtProvider.Port = p }
 }
 
-func instance(rm ...redisResourceModifier) *v1alpha3.Redis {
-	r := &v1alpha3.Redis{
+func instance(rm ...redisResourceModifier) *v1beta1.Redis {
+	r := &v1beta1.Redis{
 		ObjectMeta: metav1.ObjectMeta{
 			Annotations: map[string]string{
 				meta.ExternalNameAnnotationKey: name,
 			},
 		},
-		Spec: v1alpha3.RedisSpec{
+		Spec: v1beta1.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Name: providerName},
 				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
@@ -132,10 +132,10 @@ func instance(rm ...redisResourceModifier) *v1alpha3.Redis {
 					Name:      connectionSecretName,
 				},
 			},
-			ForProvider: v1alpha3.RedisParameters{
+			ForProvider: v1beta1.RedisParameters{
 				Location:          location,
 				ResourceGroupName: "group1",
-				SKU: v1alpha3.SKU{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Capacity: skuCapacity,
 					Family:   skuFamily,
@@ -165,7 +165,7 @@ var _ resource.ExternalConnecter = &connector{}
 
 func TestConnect(t *testing.T) {
 	type args struct {
-		cr          *v1alpha3.Redis
+		cr          *v1beta1.Redis
 		newClientFn func(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error)
 		kube        client.Client
 	}
@@ -278,12 +278,12 @@ func TestConnect(t *testing.T) {
 
 func TestObserve(t *testing.T) {
 	type args struct {
-		cr   *v1alpha3.Redis
+		cr   *v1beta1.Redis
 		r    redisapi.ClientAPI
 		kube client.Client
 	}
 	type want struct {
-		cr  *v1alpha3.Redis
+		cr  *v1beta1.Redis
 		o   resource.ExternalObservation
 		err error
 	}
@@ -489,11 +489,11 @@ func TestObserve(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	type args struct {
-		cr *v1alpha3.Redis
+		cr *v1beta1.Redis
 		r  redisapi.ClientAPI
 	}
 	type want struct {
-		cr  *v1alpha3.Redis
+		cr  *v1beta1.Redis
 		o   resource.ExternalCreation
 		err error
 	}
@@ -554,11 +554,11 @@ func TestCreate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	type args struct {
-		cr *v1alpha3.Redis
+		cr *v1beta1.Redis
 		r  redisapi.ClientAPI
 	}
 	type want struct {
-		cr  *v1alpha3.Redis
+		cr  *v1beta1.Redis
 		o   resource.ExternalUpdate
 		err error
 	}
@@ -643,11 +643,11 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	type args struct {
-		cr *v1alpha3.Redis
+		cr *v1beta1.Redis
 		r  redisapi.ClientAPI
 	}
 	type want struct {
-		cr  *v1alpha3.Redis
+		cr  *v1beta1.Redis
 		err error
 	}
 	cases := map[string]struct {

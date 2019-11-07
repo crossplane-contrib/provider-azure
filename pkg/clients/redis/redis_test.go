@@ -22,7 +22,7 @@ import (
 	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -57,18 +57,18 @@ var (
 func TestNewCreateParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *v1alpha3.Redis
+		r    *v1beta1.Redis
 		want redismgmt.CreateParameters
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
+			r: &v1beta1.Redis{
+				Spec: v1beta1.RedisSpec{
+					ForProvider: v1beta1.RedisParameters{
 						Location: location,
 						Zones:    zones,
 						Tags:     tags,
-						SKU: v1alpha3.SKU{
+						SKU: v1beta1.SKU{
 							Name:     skuName,
 							Family:   skuFamily,
 							Capacity: skuCapacity,
@@ -121,15 +121,15 @@ func TestNewUpdateParameters(t *testing.T) {
 	}
 	cases := []struct {
 		name    string
-		spec    v1alpha3.RedisParameters
+		spec    v1beta1.RedisParameters
 		current redismgmt.ResourceType
 		want    redismgmt.UpdateParameters
 	}{
 		{
 			name: "FullConversion",
-			spec: v1alpha3.RedisParameters{
+			spec: v1beta1.RedisParameters{
 				Tags: tags,
-				SKU: v1alpha3.SKU{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
@@ -158,9 +158,9 @@ func TestNewUpdateParameters(t *testing.T) {
 		},
 		{
 			name: "PatchTags",
-			spec: v1alpha3.RedisParameters{
+			spec: v1beta1.RedisParameters{
 				Tags: tags,
-				SKU: v1alpha3.SKU{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
@@ -192,8 +192,8 @@ func TestNewUpdateParameters(t *testing.T) {
 		},
 		{
 			name: "PatchRedisConfig",
-			spec: v1alpha3.RedisParameters{
-				SKU: v1alpha3.SKU{
+			spec: v1beta1.RedisParameters{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
@@ -239,14 +239,14 @@ func TestNewUpdateParameters(t *testing.T) {
 func TestNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		spec v1alpha3.RedisParameters
+		spec v1beta1.RedisParameters
 		az   redismgmt.ResourceType
 		want bool
 	}{
 		{
 			name: "DifferentField",
-			spec: v1alpha3.RedisParameters{
-				SKU: v1alpha3.SKU{
+			spec: v1beta1.RedisParameters{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
@@ -273,8 +273,8 @@ func TestNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NoProperties",
-			spec: v1alpha3.RedisParameters{
-				SKU: v1alpha3.SKU{
+			spec: v1beta1.RedisParameters{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
@@ -291,8 +291,8 @@ func TestNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "NeedsNoUpdate",
-			spec: v1alpha3.RedisParameters{
-				SKU: v1alpha3.SKU{
+			spec: v1beta1.RedisParameters{
+				SKU: v1beta1.SKU{
 					Name:     skuName,
 					Family:   skuFamily,
 					Capacity: skuCapacity,
@@ -330,7 +330,7 @@ func TestNeedsUpdate(t *testing.T) {
 func TestGenerateObservation(t *testing.T) {
 	cases := map[string]struct {
 		arg  redismgmt.ResourceType
-		want v1alpha3.RedisObservation
+		want v1beta1.RedisObservation
 	}{
 		"FullConversion": {
 			arg: redismgmt.ResourceType{
@@ -360,7 +360,7 @@ func TestGenerateObservation(t *testing.T) {
 					SslPort:            azure.ToInt32(&sslPort),
 				},
 			},
-			want: v1alpha3.RedisObservation{
+			want: v1beta1.RedisObservation{
 				RedisVersion:      redisVersion,
 				ProvisioningState: ProvisioningStateCreating,
 				HostName:          hostName,
@@ -385,10 +385,10 @@ func TestGenerateObservation(t *testing.T) {
 func TestLateInitialize(t *testing.T) {
 	type args struct {
 		az   redismgmt.ResourceType
-		spec *v1alpha3.RedisParameters
+		spec *v1beta1.RedisParameters
 	}
 	type want struct {
-		spec *v1alpha3.RedisParameters
+		spec *v1beta1.RedisParameters
 	}
 	cases := map[string]struct {
 		args
@@ -423,10 +423,10 @@ func TestLateInitialize(t *testing.T) {
 						SslPort:            azure.ToInt32(&sslPort),
 					},
 				},
-				spec: &v1alpha3.RedisParameters{},
+				spec: &v1beta1.RedisParameters{},
 			},
 			want: want{
-				spec: &v1alpha3.RedisParameters{
+				spec: &v1beta1.RedisParameters{
 					Zones:              zones,
 					Tags:               tags,
 					SubnetID:           &subnetID,

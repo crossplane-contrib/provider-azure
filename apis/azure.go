@@ -26,7 +26,7 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	cachev1alpha3 "github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	cachev1beta1 "github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
 	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 	databasev1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	networkv1alpha3 "github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
@@ -38,7 +38,7 @@ func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
 		azurev1alpha3.SchemeBuilder.AddToScheme,
-		cachev1alpha3.SchemeBuilder.AddToScheme,
+		cachev1beta1.SchemeBuilder.AddToScheme,
 		computev1alpha3.SchemeBuilder.AddToScheme,
 		databasev1alpha3.SchemeBuilder.AddToScheme,
 		networkv1alpha3.SchemeBuilder.AddToScheme,

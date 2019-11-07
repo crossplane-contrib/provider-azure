@@ -26,7 +26,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -68,7 +68,7 @@ func NewClient(_ context.Context, credentials []byte) (redisapi.ClientAPI, error
 
 // NewCreateParameters returns Redis resource creation parameters suitable for
 // use with the Azure API.
-func NewCreateParameters(cr *v1alpha3.Redis) redis.CreateParameters {
+func NewCreateParameters(cr *v1beta1.Redis) redis.CreateParameters {
 	return redis.CreateParameters{
 		Location: azure.ToStringPtr(cr.Spec.ForProvider.Location),
 		Zones:    azure.ToStringArrayPtr(cr.Spec.ForProvider.Zones),
@@ -95,7 +95,7 @@ func NewCreateParameters(cr *v1alpha3.Redis) redis.CreateParameters {
 // statements which increase the cyclomatic complexity even though it's actually
 // easier to maintain all this in one function.
 // nolint:gocyclo
-func NewUpdateParameters(spec v1alpha3.RedisParameters, state redis.ResourceType) redis.UpdateParameters {
+func NewUpdateParameters(spec v1beta1.RedisParameters, state redis.ResourceType) redis.UpdateParameters {
 	patch := redis.UpdateParameters{
 		Tags: azure.ToStringPtrMap(spec.Tags),
 		UpdateProperties: &redis.UpdateProperties{
@@ -154,7 +154,7 @@ func NewUpdateParameters(spec v1alpha3.RedisParameters, state redis.ResourceType
 }
 
 // NewSKU returns a Redis resource SKU suitable for use with the Azure API.
-func NewSKU(s v1alpha3.SKU) *redis.Sku {
+func NewSKU(s v1beta1.SKU) *redis.Sku {
 	return &redis.Sku{
 		Name:     redis.SkuName(s.Name),
 		Family:   redis.SkuFamily(s.Family),
@@ -165,7 +165,7 @@ func NewSKU(s v1alpha3.SKU) *redis.Sku {
 // NeedsUpdate returns true if the supplied spec object differs from the
 // supplied Azure resource. It considers only fields that can be modified in
 // place without deleting and recreating the instance.
-func NeedsUpdate(spec v1alpha3.RedisParameters, az redis.ResourceType) bool {
+func NeedsUpdate(spec v1beta1.RedisParameters, az redis.ResourceType) bool {
 	if az.Properties == nil {
 		return true
 	}
@@ -176,8 +176,8 @@ func NeedsUpdate(spec v1alpha3.RedisParameters, az redis.ResourceType) bool {
 
 // GenerateObservation produces a RedisObservation object from the redis.ResourceType
 // received from Azure.
-func GenerateObservation(az redis.ResourceType) v1alpha3.RedisObservation {
-	o := v1alpha3.RedisObservation{
+func GenerateObservation(az redis.ResourceType) v1beta1.RedisObservation {
+	o := v1beta1.RedisObservation{
 		ID:   azure.ToString(az.ID),
 		Name: azure.ToString(az.Name),
 	}
@@ -200,7 +200,7 @@ func GenerateObservation(az redis.ResourceType) v1alpha3.RedisObservation {
 
 // LateInitialize fills the spec values that user did not fill with their
 // corresponding value in the Azure, if there is any.
-func LateInitialize(spec *v1alpha3.RedisParameters, az redis.ResourceType) {
+func LateInitialize(spec *v1beta1.RedisParameters, az redis.ResourceType) {
 	spec.Zones = azure.LateInitializeStringValArrFromArrPtr(spec.Zones, az.Zones)
 	spec.Tags = azure.LateInitializeStringMap(spec.Tags, az.Tags)
 	if az.Properties == nil {
