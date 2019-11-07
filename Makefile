@@ -36,14 +36,6 @@ GO111MODULE = on
 -include build/makelib/golang.mk
 
 # ====================================================================================
-# Setup Kubebuilder
-
-CRD_DIR=config/crd
-API_DIR=./apis/...
-
--include build/makelib/kubebuilder.mk
-
-# ====================================================================================
 # Setup Kubernetes tools
 
 -include build/makelib/k8s_tools.mk
@@ -83,7 +75,7 @@ cobertura:
 		$(GOCOVER_COBERTURA) > $(GO_TEST_OUTPUT)/cobertura-coverage.xml
 
 # Ensure a PR is ready for review.
-reviewable: vendor generate manifests lint
+reviewable: generate lint
 
 # integration tests
 e2e.run: test-integration
@@ -117,6 +109,7 @@ $(STACK_PACKAGE_REGISTRY):
 
 build.artifacts: build-stack-package
 
+CRD_DIR=config/crd
 build-stack-package: $(STACK_PACKAGE_REGISTRY)
 # Copy CRDs over
 #
@@ -139,7 +132,20 @@ clean: clean-stack-package
 clean-stack-package:
 	@rm -rf $(STACK_PACKAGE)
 
-.PHONY: cobertura reviewable submodules fallthrough test-integration run clean-stack-package build-stack-package
+manifests:
+	@$(WARN) Deprecated. Please run make generate instead.
+
+# TODO(negz): This is only used for the AKS tests. Remove it once we test AKS
+# using unit tests.
+KUBEBUILDER_VERSION ?= 1.0.8
+KUBEBUILDER := $(TOOLS_HOST_DIR)/kubebuilder-$(KUBEBUILDER_VERSION)
+TEST_ASSET_KUBE_APISERVER := $(KUBEBUILDER)/kube-apiserver
+TEST_ASSET_ETCD := $(KUBEBUILDER)/etcd
+export TEST_ASSET_KUBE_APISERVER TEST_ASSET_ETCD
+
+test.init: $(KUBEBUILDER)
+
+.PHONY: cobertura reviewable submodules fallthrough test-integration run clean-stack-package build-stack-package manifests
 
 # ====================================================================================
 # Special Targets
@@ -165,16 +171,13 @@ help-special: crossplane.help
 
 .PHONY: crossplane.help help-special
 
-# target for resolving angryjet dependency
-# TODO(soorena776): move this to golang.mk in build submodule
-CROSSPLANETOOLS_ANGRYJET := $(TOOLS_HOST_DIR)/angryjet
-export CROSSPLANETOOLS_ANGRYJET
+# TODO(negz): This is only used for the AKS tests. Remove it once we test AKS
+# using unit tests.
+$(KUBEBUILDER):
+	@$(INFO) installing kubebuilder $(KUBEBUILDER_VERSION)
+	@mkdir -p $(TOOLS_HOST_DIR)/tmp || $(FAIL)
+	@curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOHOSTOS)_$(GOHOSTARCH).tar.gz | tar -xz -C $(TOOLS_HOST_DIR)/tmp  || $(FAIL)
+	@mv $(TOOLS_HOST_DIR)/tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOHOSTOS)_$(GOHOSTARCH)/bin $(KUBEBUILDER) || $(FAIL)
+	@rm -fr $(TOOLS_HOST_DIR)/tmp
+	@$(OK) installing kubebuilder $(KUBEBUILDER_VERSION)
 
-$(CROSSPLANETOOLS_ANGRYJET):
-	@$(INFO) installing Crossplane AngryJet
-	@mkdir -p $(TOOLS_HOST_DIR)/tmp-angryjet || $(FAIL)
-	@GO111MODULE=off GOPATH=$(TOOLS_HOST_DIR)/tmp-angryjet GOBIN=$(TOOLS_HOST_DIR) $(GOHOST) get github.com/crossplaneio/crossplane-tools/cmd/angryjet || rm -fr $(TOOLS_HOST_DIR)/tmp-angryjet|| $(FAIL)
-	@rm -fr $(TOOLS_HOST_DIR)/tmp-angryjet
-	@$(OK) installing Crossplane AngryJet
-
-go.generate: $(CROSSPLANETOOLS_ANGRYJET)
