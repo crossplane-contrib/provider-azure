@@ -49,6 +49,14 @@ spec:
               description: RedisParameters define the desired state of an Azure Redis
                 cluster. https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
               properties:
+                ResourceGroupNameRef:
+                  description: ResourceGroupNameRef to fetch resource group name.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
                 enableNonSslPort:
                   description: EnableNonSSLPort specifies whether the non-ssl Redis
                     server port (6379) is enabled.
@@ -74,8 +82,7 @@ spec:
                     etc.'
                   type: object
                 resourceGroupName:
-                  description: 'TODO(muvaf): not included in received object. ResourceGroupName
-                    in which to create this resource.'
+                  description: ResourceGroupName in which to create this resource.
                   type: string
                 shardCount:
                   description: ShardCount specifies the number of shards to be created
@@ -139,7 +146,6 @@ spec:
                   type: array
               required:
               - location
-              - resourceGroupName
               - sku
               type: object
             providerRef:

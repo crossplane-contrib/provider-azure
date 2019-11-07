@@ -53,14 +53,14 @@ const (
 	errDeleteFailed         = "cannot delete the Redis instance"
 )
 
-// Controller is responsible for adding the MySQLServer controller and its
+// RedisController is responsible for adding the MySQLServer controller and its
 // corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
+type RedisController struct{}
 
-// SetupWithManager creates a new MySQLServer Controller and adds it to the
-// Manager with default RBAC. The Manager will set fields on the Controller and
+// SetupWithManager creates a new MySQLServer RedisController and adds it to the
+// Manager with default RBAC. The Manager will set fields on the RedisController and
 // start it when the Manager is Started.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
+func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
 		resource.ManagedKind(v1alpha3.RedisGroupVersionKind),
 		resource.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))

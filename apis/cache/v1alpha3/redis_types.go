@@ -17,9 +17,13 @@ limitations under the License.
 package v1alpha3
 
 import (
+	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
 const (
@@ -27,7 +31,25 @@ const (
 	// supported by Azure Cache for Redis. The version cannot be specified at
 	// creation time.
 	SupportedRedisVersion = "3.2"
+
+	errNotRedis = "the given resource is not a Redis custom resource instance"
 )
+
+// ResourceGroupNameReferencerForRedis is an attribute referencer that
+// resolves the name of a the ResourceGroup.
+type ResourceGroupNameReferencerForRedis struct {
+	v1alpha3.ResourceGroupNameReferencer `json:",inline"`
+}
+
+// Assign assigns the retrieved group name to the managed resource
+func (v *ResourceGroupNameReferencerForRedis) Assign(res resource.CanReference, value string) error {
+	cr, ok := res.(*Redis)
+	if !ok {
+		return errors.New(errNotRedis)
+	}
+	cr.Spec.ForProvider.ResourceGroupName = value
+	return nil
+}
 
 // An SKU represents the performance and cost oriented properties of a
 // Redis.
@@ -55,10 +77,18 @@ type SKU struct {
 // RedisParameters define the desired state of an Azure Redis cluster.
 // https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
 type RedisParameters struct {
-	// TODO(muvaf): not included in received object.
+	// NOTE(muvaf): ResourceGroupName is a required field for calls made to Azure
+	// API but we mark it with omitempty, meaning CRs without that will be accepted,
+	// because if ResourceGroupNameRef is given we'll programmatically fill it out
+	// before making any calls to Azure API.
+
 	// ResourceGroupName in which to create this resource.
 	// +immutable
-	ResourceGroupName string `json:"resourceGroupName"`
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef to fetch resource group name.
+	// +immutable
+	ResourceGroupNameRef *ResourceGroupNameReferencerForRedis `json:"ResourceGroupNameRef,omitempty"`
 
 	// Sku - The SKU of the Redis cache to deploy.
 	SKU SKU `json:"sku"`
