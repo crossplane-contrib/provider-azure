@@ -82,7 +82,7 @@ func withProviderRef(r *corev1.ObjectReference) modifier {
 
 func withAdminName(name string) modifier {
 	return func(p *v1alpha3.PostgreSQLServer) {
-		p.Spec.AdminLoginName = name
+		p.Spec.ForProvider.AdministratorLogin = name
 	}
 }
 

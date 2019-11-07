@@ -143,14 +143,14 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServer)
 	}
 
-	s.Status.State = string(external.UserVisibleState)
-	s.Status.ProviderID = azure.ToString(external.ID)
-	s.Status.Endpoint = azure.ToString(external.FullyQualifiedDomainName)
+	s.Status.AtProvider.State = string(external.UserVisibleState)
+	s.Status.AtProvider.ProviderID = azure.ToString(external.ID)
+	s.Status.AtProvider.Endpoint = azure.ToString(external.FullyQualifiedDomainName)
 
 	switch external.UserVisibleState {
 	case mysql.ServerStateReady:
 		s.SetConditions(runtimev1alpha1.Available())
-		if s.Status.Endpoint != "" {
+		if s.Status.AtProvider.Endpoint != "" {
 			resource.SetBindable(s)
 		}
 	default:
@@ -161,8 +161,8 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		ResourceExists:   true,
 		ResourceUpToDate: true, // NOTE(negz): We don't yet support updating Azure SQL servers.
 		ConnectionDetails: resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(s.Status.Endpoint),
-			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", s.Spec.AdminLoginName, s.GetName())),
+			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(s.Status.AtProvider.Endpoint),
+			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", s.Spec.ForProvider.AdministratorLogin, s.GetName())),
 		},
 	}
 

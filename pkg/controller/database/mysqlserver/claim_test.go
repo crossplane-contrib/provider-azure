@@ -50,6 +50,7 @@ func TestConfigureMySQLServer(t *testing.T) {
 
 	claimUID := types.UID("definitely-a-uuid")
 	providerName := "coolprovider"
+	version := "5.6"
 
 	cases := map[string]struct {
 		args args
@@ -79,8 +80,8 @@ func TestConfigureMySQLServer(t *testing.T) {
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						SQLServerParameters: v1alpha3.SQLServerParameters{
-							Version: "5.6",
+						ForProvider: v1alpha3.SQLServerParameters{
+							Version: &version,
 						},
 					},
 				},

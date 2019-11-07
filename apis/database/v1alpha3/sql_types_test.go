@@ -106,7 +106,7 @@ func TestResourceGroupNameReferencerForSQLServer_AssignValidType_ReturnsExpected
 		t.Errorf("Assign(...): -want error, +got error:\n%s", diff)
 	}
 
-	if diff := cmp.Diff(res.Spec.ResourceGroupName, "mockValue"); diff != "" {
+	if diff := cmp.Diff(res.Spec.ForProvider.ResourceGroupName, "mockValue"); diff != "" {
 		t.Errorf("Assign(...): -want value, +got value:\n%s", diff)
 	}
 }

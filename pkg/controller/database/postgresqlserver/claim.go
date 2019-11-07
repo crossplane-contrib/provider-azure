@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -143,11 +145,11 @@ func ConfigurePostgreSQLServer(_ context.Context, cm resource.Claim, cs resource
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},
-		SQLServerParameters: rs.SpecTemplate.SQLServerParameters,
+		ForProvider: rs.SpecTemplate.ForProvider,
 	}
 
 	if pg.Spec.EngineVersion != "" {
-		spec.Version = pg.Spec.EngineVersion
+		spec.ForProvider.Version = azure.ToStringPtr(pg.Spec.EngineVersion)
 	}
 
 	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{

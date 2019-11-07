@@ -95,9 +95,9 @@ type ResourceGroupNameReferencerForSQLServer struct {
 func (v *ResourceGroupNameReferencerForSQLServer) Assign(res resource.CanReference, value string) error {
 	switch sql := res.(type) {
 	case *MySQLServer:
-		sql.Spec.ResourceGroupName = value
+		sql.Spec.ForProvider.ResourceGroupName = value
 	case *PostgreSQLServer:
-		sql.Spec.ResourceGroupName = value
+		sql.Spec.ForProvider.ResourceGroupName = value
 	default:
 		return errors.New(errResourceIsNotSQLServer)
 	}
@@ -198,7 +198,7 @@ type PostgreSQLServerList struct {
 // provisioned MySQLServer or PostgreSQLServer.
 type SQLServerClassSpecTemplate struct {
 	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	SQLServerParameters               `json:",inline"`
+	ForProvider                       SQLServerParameters `json:"forProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -228,50 +228,126 @@ type SQLServerClassList struct {
 	Items           []SQLServerClass `json:"items"`
 }
 
+// TODO(muvaf): see what fields are optional.
+
+// SKU billing information related properties of a server.
+type SKU struct {
+	// Name - The name of the sku, typically, tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
+	Name string `json:"name"`
+
+	// Tier - The tier of the particular SKU, e.g. Basic. Possible values include: 'Basic', 'GeneralPurpose', 'MemoryOptimized'
+	Tier string `json:"tier"`
+
+	// Capacity - The scale up/out capacity, representing server's compute units.
+	Capacity int `json:"capacity"`
+
+	// Size - The size code, to be interpreted by resource as appropriate.
+	Size string `json:"size"`
+
+	// Family - The family of hardware.
+	Family string `json:"family"`
+}
+
+// StorageProfile storage Profile properties of a server
+type StorageProfile struct {
+	// BackupRetentionDays - Backup retention days for the server.
+	// +immutable
+	// +optional
+	BackupRetentionDays *int `json:"backupRetentionDays,omitempty"`
+
+	// GeoRedundantBackup - Enable Geo-redundant or not for server backup.
+	// Possible values include: 'Enabled', 'Disabled'
+	// +kubebuilder:validation:Enum=Enabled;Disabled
+	// +immutable
+	// +optional
+	GeoRedundantBackup *string `json:"geoRedundantBackup,omitempty"`
+
+	// StorageMB - Max storage allowed for a server.
+	// +immutable
+	// +optional
+	StorageMB *int `json:"storageMB,omitempty"`
+
+	// StorageAutogrow - Enable Storage Auto Grow.
+	// +kubebuilder:validation:Enum=Enabled;Disabled
+	// +immutable
+	// +optional
+	StorageAutogrow *string `json:"storageAutogrow,omitempty"`
+}
+
 // SQLServerParameters define the desired state of an Azure SQL Database, either
 // PostgreSQL or MySQL.
 type SQLServerParameters struct {
-
 	// ResourceGroupName specifies the name of the resource group that should
 	// contain this SQLServer.
+	// +immutable
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
 	// its name
-	ResourceGroupNameRef *ResourceGroupNameReferencerForSQLServer `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
+	// +immutable
+	ResourceGroupNameRef *ResourceGroupNameReferencerForSQLServer `json:"resourceGroupNameRef,omitempty"`
+
+	// SKU is the billing information related properties of the server.
+	SKU SKU `json:"sku"`
 
 	// Location specifies the location of this SQLServer.
+	// +immutable
 	Location string `json:"location"`
 
-	// PricingTier specifies the pricing tier (aka SKU) for this SQLServer.
-	PricingTier PricingTierSpec `json:"pricingTier"`
+	// AdministratorLogin - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
+	// +immutable
+	AdministratorLogin string `json:"administratorLogin"`
 
-	// StorageProfile configures the storage profile of this SQLServer.
-	StorageProfile StorageProfileSpec `json:"storageProfile"`
-
-	// AdminLoginName specifies the administrator login name for this SQLServer.
-	AdminLoginName string `json:"adminLoginName"`
-
-	// Version specifies the version of this server, for
-	// example "5.6", or "9.6".
-	Version string `json:"version"`
-
-	// SSLEnforced specifies whether SSL is required to connect to this
-	// SQLServer.
+	// Tags - Application-specific metadata in the form of key-value pairs.
+	// +immutable
 	// +optional
-	SSLEnforced bool `json:"sslEnforced,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// Version - Server version. Possible values include: 'FiveFullStopSix', 'FiveFullStopSeven'
+	// +immutable
+	// +optional
+	Version *string `json:"version,omitempty"`
+
+	// SslEnforcement - Enable ssl enforcement or not when connect to server. Possible values include: 'SslEnforcementEnumEnabled', 'SslEnforcementEnumDisabled'
+	// +kubebuilder:validation:Enum=Enabled;Disabled
+	// +immutable
+	// +optional
+	SslEnforcement *string `json:"sslEnforcement,omitempty"`
+
+	// FullyQualifiedDomainName - The fully qualified domain name of a server.
+	// +immutable
+	// +optional
+	FullyQualifiedDomainName *string `json:"fullyQualifiedDomainName,omitempty"`
+
+	// EarliestRestoreDate - Earliest restore point creation time (ISO8601 format)
+	// +immutable
+	// +optional
+	EarliestRestoreDate *metav1.Time `json:"earliestRestoreDate,omitempty"`
+
+	// StorageProfile - Storage profile of a server.
+	// +immutable
+	// +optional
+	StorageProfile *StorageProfile `json:"storageProfile,omitempty"`
+
+	// ReplicationRole - The replication role of the server.
+	// +immutable
+	// +optional
+	ReplicationRole *string `json:"replicationRole,omitempty"`
+
+	// ReplicaCapacity - The maximum number of replicas that a master server can have.
+	// +immutable
+	// +optional
+	ReplicaCapacity *int `json:"replicaCapacity,omitempty"`
 }
 
 // A SQLServerSpec defines the desired state of a SQLServer.
 type SQLServerSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
-	SQLServerParameters          `json:",inline"`
+	ForProvider                  SQLServerParameters `json:"forProvider,omitempty"`
 }
 
-// A SQLServerStatus represents the observed state of a SQLServer.
-type SQLServerStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
-
+// SQLServerObservation represents the current state of Azure SQL resource.
+type SQLServerObservation struct {
 	// State of this SQLServer.
 	State string `json:"state,omitempty"`
 
@@ -286,19 +362,10 @@ type SQLServerStatus struct {
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
-// PricingTierSpec represents the performance and cost oriented properties of a
-// SQLServer.
-type PricingTierSpec struct {
-	// Tier of the particular SKU, e.g. Basic. Possible values include: 'Basic',
-	// 'GeneralPurpose', 'MemoryOptimized'
-	Tier string `json:"tier"`
-
-	// VCores (aka Capacity) specifies how many virtual cores this SQLServer
-	// requires.
-	VCores int `json:"vcores"`
-
-	// Family of hardware.
-	Family string `json:"family"`
+// A SQLServerStatus represents the observed state of a SQLServer.
+type SQLServerStatus struct {
+	runtimev1alpha1.ResourceStatus `json:",inline"`
+	AtProvider                     SQLServerObservation `json:"atProvider,omitempty"`
 }
 
 // A StorageProfileSpec represents storage related properties of a SQLServer.

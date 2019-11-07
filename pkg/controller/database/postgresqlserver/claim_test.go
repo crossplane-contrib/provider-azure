@@ -50,6 +50,7 @@ func TestConfigurePostgreSQLServer(t *testing.T) {
 
 	claimUID := types.UID("definitely-a-uuid")
 	providerName := "coolprovider"
+	version := "9.6"
 
 	cases := map[string]struct {
 		args args
@@ -81,8 +82,8 @@ func TestConfigurePostgreSQLServer(t *testing.T) {
 							},
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 						},
-						SQLServerParameters: v1alpha3.SQLServerParameters{
-							Version: "9.6",
+						ForProvider: v1alpha3.SQLServerParameters{
+							Version: &version,
 						},
 					},
 				},
