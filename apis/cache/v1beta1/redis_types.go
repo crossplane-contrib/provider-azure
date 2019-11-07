@@ -88,7 +88,7 @@ type RedisParameters struct {
 
 	// ResourceGroupNameRef to fetch resource group name.
 	// +immutable
-	ResourceGroupNameRef *ResourceGroupNameReferencerForRedis `json:"ResourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *ResourceGroupNameReferencerForRedis `json:"resourceGroupNameRef,omitempty"`
 
 	// Sku - The SKU of the Redis cache to deploy.
 	SKU SKU `json:"sku"`
