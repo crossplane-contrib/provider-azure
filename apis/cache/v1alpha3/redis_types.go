@@ -52,8 +52,6 @@ type SKU struct {
 	Capacity int `json:"capacity"`
 }
 
-// TODO: trial-error the optional fields.
-
 // RedisParameters define the desired state of an Azure Redis cluster.
 // https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
 type RedisParameters struct {

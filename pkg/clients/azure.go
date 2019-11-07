@@ -170,7 +170,7 @@ func ToBoolPtr(b bool, o ...FieldOption) *bool {
 
 // ToStringPtrMap converts the supplied map for use with the Azure Go SDK.
 func ToStringPtrMap(m map[string]string) map[string]*string {
-	if len(m) == 0 {
+	if m == nil {
 		return nil
 	}
 	return *(to.StringMapPtr(m))
@@ -178,7 +178,7 @@ func ToStringPtrMap(m map[string]string) map[string]*string {
 
 // ToStringArrayPtr converts []string to *[]string which is expected by Azure API.
 func ToStringArrayPtr(m []string) *[]string {
-	if len(m) == 0 {
+	if m == nil {
 		return nil
 	}
 	return &m

@@ -43,7 +43,6 @@ var (
 	shardCount         = 3
 	redisConfiguration = map[string]string{"cool": "socool"}
 	tenantSettings     = map[string]string{"tenant1": "is-crazy"}
-	tenantSettings2    = map[string]string{"tenant1": "is-crazy", "tenant2": "not-so-much"}
 	minTLSVersion      = "1.1"
 
 	redisVersion  = "3.2"
@@ -117,29 +116,29 @@ func TestNewCreateParameters(t *testing.T) {
 }
 
 func TestNewUpdateParameters(t *testing.T) {
+	redisConfiguration2 := map[string]string{
+		"another": "val",
+	}
 	cases := []struct {
-		name string
-		r    *v1alpha3.Redis
-		want redismgmt.UpdateParameters
+		name    string
+		spec    v1alpha3.RedisParameters
+		current redismgmt.ResourceType
+		want    redismgmt.UpdateParameters
 	}{
 		{
-			name: "UpdatableFieldsOnly",
-			r: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						Tags: tags,
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-						TenantSettings:     tenantSettings,
-						MinimumTLSVersion:  &minTLSVersion,
-					},
+			name: "FullConversion",
+			spec: v1alpha3.RedisParameters{
+				Tags: tags,
+				SKU: v1alpha3.SKU{
+					Name:     skuName,
+					Family:   skuFamily,
+					Capacity: skuCapacity,
 				},
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration,
+				ShardCount:         &shardCount,
+				TenantSettings:     tenantSettings,
+				MinimumTLSVersion:  &minTLSVersion,
 			},
 			want: redismgmt.UpdateParameters{
 				Tags: azure.ToStringPtrMap(tags),
@@ -158,27 +157,22 @@ func TestNewUpdateParameters(t *testing.T) {
 			},
 		},
 		{
-			name: "SuperfluousFields",
-			r: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						SubnetID:           &subnetID,
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-
-						// StaticIP cannot be updated and should be omitted.
-						StaticIP: &staticIP,
-					},
+			name: "PatchTags",
+			spec: v1alpha3.RedisParameters{
+				Tags: tags,
+				SKU: v1alpha3.SKU{
+					Name:     skuName,
+					Family:   skuFamily,
+					Capacity: skuCapacity,
 				},
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration,
+				ShardCount:         &shardCount,
+				TenantSettings:     tenantSettings,
+				MinimumTLSVersion:  &minTLSVersion,
 			},
-			want: redismgmt.UpdateParameters{
-				UpdateProperties: &redismgmt.UpdateProperties{
+			current: redismgmt.ResourceType{
+				Properties: &redismgmt.Properties{
 					Sku: &redismgmt.Sku{
 						Name:     redismgmt.SkuName(skuName),
 						Family:   redismgmt.SkuFamily(skuFamily),
@@ -187,6 +181,46 @@ func TestNewUpdateParameters(t *testing.T) {
 					EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
 					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
 					ShardCount:         azure.ToInt32Ptr(shardCount),
+					TenantSettings:     azure.ToStringPtrMap(tenantSettings),
+					MinimumTLSVersion:  redismgmt.TLSVersion(minTLSVersion),
+				},
+			},
+			want: redismgmt.UpdateParameters{
+				UpdateProperties: &redismgmt.UpdateProperties{},
+				Tags:             azure.ToStringPtrMap(tags),
+			},
+		},
+		{
+			name: "PatchRedisConfig",
+			spec: v1alpha3.RedisParameters{
+				SKU: v1alpha3.SKU{
+					Name:     skuName,
+					Family:   skuFamily,
+					Capacity: skuCapacity,
+				},
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration2,
+				ShardCount:         &shardCount,
+				TenantSettings:     tenantSettings,
+				MinimumTLSVersion:  &minTLSVersion,
+			},
+			current: redismgmt.ResourceType{
+				Properties: &redismgmt.Properties{
+					Sku: &redismgmt.Sku{
+						Name:     redismgmt.SkuName(skuName),
+						Family:   redismgmt.SkuFamily(skuFamily),
+						Capacity: azure.ToInt32Ptr(skuCapacity),
+					},
+					EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
+					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
+					ShardCount:         azure.ToInt32Ptr(shardCount),
+					TenantSettings:     azure.ToStringPtrMap(tenantSettings),
+					MinimumTLSVersion:  redismgmt.TLSVersion(minTLSVersion),
+				},
+			},
+			want: redismgmt.UpdateParameters{
+				UpdateProperties: &redismgmt.UpdateProperties{
+					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration2),
 				},
 			},
 		},
@@ -194,7 +228,7 @@ func TestNewUpdateParameters(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := NewUpdateParameters(tc.r)
+			got := NewUpdateParameters(tc.spec, tc.current)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("NewUpdateParameters(...): -want, +got\n%s", diff)
 			}
@@ -205,178 +239,22 @@ func TestNewUpdateParameters(t *testing.T) {
 func TestNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *v1alpha3.Redis
+		spec v1alpha3.RedisParameters
 		az   redismgmt.ResourceType
 		want bool
 	}{
 		{
-			name: "NeedsLessCapacity",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-					},
+			name: "DifferentField",
+			spec: v1alpha3.RedisParameters{
+				SKU: v1alpha3.SKU{
+					Name:     skuName,
+					Family:   skuFamily,
+					Capacity: skuCapacity,
 				},
-			},
-			az: redismgmt.ResourceType{
-				Properties: &redismgmt.Properties{
-					Sku: &redismgmt.Sku{
-						Name:     redismgmt.SkuName(skuName),
-						Family:   redismgmt.SkuFamily(skuFamily),
-						Capacity: azure.ToInt32Ptr(skuCapacity + 1),
-					},
-					EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-					ShardCount:         azure.ToInt32Ptr(shardCount),
-				},
-			},
-			want: true,
-		},
-		{
-			name: "NeedsNewRedisConfiguration",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-					},
-				},
-			},
-			az: redismgmt.ResourceType{
-				Properties: &redismgmt.Properties{
-					Sku: &redismgmt.Sku{
-						Name:     redismgmt.SkuName(skuName),
-						Family:   redismgmt.SkuFamily(skuFamily),
-						Capacity: azure.ToInt32Ptr(skuCapacity),
-					},
-					EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-					RedisConfiguration: azure.ToStringPtrMap(map[string]string{"super": "cool"}),
-					ShardCount:         azure.ToInt32Ptr(shardCount),
-				},
-			},
-			want: true,
-		},
-		{
-			name: "NeedsSSLPortDisabled",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-					},
-				},
-			},
-			az: redismgmt.ResourceType{
-				Properties: &redismgmt.Properties{
-					Sku: &redismgmt.Sku{
-						Name:     redismgmt.SkuName(skuName),
-						Family:   redismgmt.SkuFamily(skuFamily),
-						Capacity: azure.ToInt32Ptr(skuCapacity),
-					},
-					EnableNonSslPort:   azure.ToBoolPtr(!enableNonSSLPort),
-					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-					ShardCount:         azure.ToInt32Ptr(shardCount),
-				},
-			},
-			want: true,
-		},
-		{
-			name: "NeedsFewerShards",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-					},
-				},
-			},
-			az: redismgmt.ResourceType{
-				Properties: &redismgmt.Properties{
-					Sku: &redismgmt.Sku{
-						Name:     redismgmt.SkuName(skuName),
-						Family:   redismgmt.SkuFamily(skuFamily),
-						Capacity: azure.ToInt32Ptr(skuCapacity),
-					},
-					EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-					ShardCount:         azure.ToInt32Ptr(shardCount + 1),
-				},
-			},
-			want: true,
-		},
-		{
-			name: "NeedsDifferentTenantSettings",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-						TenantSettings:     tenantSettings2,
-					},
-				},
-			},
-			az: redismgmt.ResourceType{
-				Properties: &redismgmt.Properties{
-					Sku: &redismgmt.Sku{
-						Name:     redismgmt.SkuName(skuName),
-						Family:   redismgmt.SkuFamily(skuFamily),
-						Capacity: azure.ToInt32Ptr(skuCapacity),
-					},
-					EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-					RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-					ShardCount:         azure.ToInt32Ptr(shardCount + 1),
-					TenantSettings:     azure.ToStringPtrMap(tenantSettings),
-				},
-			},
-			want: true,
-		},
-		{
-			name: "NeedsTagsToBeUpdated",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-						Tags:               tags2,
-					},
-				},
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration,
+				ShardCount:         &shardCount,
+				Tags:               tags2,
 			},
 			az: redismgmt.ResourceType{
 				Tags: azure.ToStringPtrMap(tags),
@@ -394,20 +272,34 @@ func TestNeedsUpdate(t *testing.T) {
 			want: true,
 		},
 		{
-			name: "NeedsNoUpdate",
-			kube: &v1alpha3.Redis{
-				Spec: v1alpha3.RedisSpec{
-					ForProvider: v1alpha3.RedisParameters{
-						SKU: v1alpha3.SKU{
-							Name:     skuName,
-							Family:   skuFamily,
-							Capacity: skuCapacity,
-						},
-						EnableNonSSLPort:   &enableNonSSLPort,
-						RedisConfiguration: redisConfiguration,
-						ShardCount:         &shardCount,
-					},
+			name: "NoProperties",
+			spec: v1alpha3.RedisParameters{
+				SKU: v1alpha3.SKU{
+					Name:     skuName,
+					Family:   skuFamily,
+					Capacity: skuCapacity,
 				},
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration,
+				ShardCount:         &shardCount,
+				Tags:               tags,
+			},
+			az: redismgmt.ResourceType{
+				Tags: azure.ToStringPtrMap(tags),
+			},
+			want: true,
+		},
+		{
+			name: "NeedsNoUpdate",
+			spec: v1alpha3.RedisParameters{
+				SKU: v1alpha3.SKU{
+					Name:     skuName,
+					Family:   skuFamily,
+					Capacity: skuCapacity,
+				},
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration,
+				ShardCount:         &shardCount,
 			},
 			az: redismgmt.ResourceType{
 				Properties: &redismgmt.Properties{
@@ -427,7 +319,7 @@ func TestNeedsUpdate(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := NeedsUpdate(tc.kube, tc.az)
+			got := NeedsUpdate(tc.spec, tc.az)
 			if got != tc.want {
 				t.Errorf("NeedsUpdate(...): want %t, got %t", tc.want, got)
 			}

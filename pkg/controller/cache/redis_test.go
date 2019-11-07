@@ -568,28 +568,56 @@ func TestUpdate(t *testing.T) {
 	}{
 		"Successful": {
 			args: args{
-				cr: instance(),
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
 				r: &fake.MockClient{
+					MockGet: func(_ context.Context, _ string, _ string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, nil
+					},
 					MockUpdate: func(_ context.Context, resourceGroupName string, name string, parameters redis.UpdateParameters) (result redis.ResourceType, err error) {
 						return redis.ResourceType{}, nil
 					},
 				},
 			},
 			want: want{
-				cr: instance(),
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
 			},
 		},
-		"Failed": {
+		"NotReady": {
 			args: args{
-				cr: instance(),
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateFailed)),
+			},
+			want: want{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateFailed)),
+			},
+		},
+		"GetFailed": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
 				r: &fake.MockClient{
+					MockGet: func(_ context.Context, _ string, _ string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, errorBoom
+					},
+				},
+			},
+			want: want{
+				cr:  instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				err: errors.Wrap(errorBoom, errGetFailed),
+			},
+		},
+		"UpdateFailed": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, _ string, _ string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{Properties: &redis.Properties{ProvisioningState: redis.Succeeded}}, nil
+					},
 					MockUpdate: func(_ context.Context, resourceGroupName string, name string, parameters redis.UpdateParameters) (result redis.ResourceType, err error) {
 						return redis.ResourceType{}, errorBoom
 					},
 				},
 			},
 			want: want{
-				cr:  instance(),
+				cr:  instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
 				err: errors.Wrap(errorBoom, errUpdateFailed),
 			},
 		},
@@ -653,6 +681,17 @@ func TestDelete(t *testing.T) {
 			want: want{
 				cr: instance(
 					withConditions(runtimev1alpha1.Deleting()),
+				),
+			},
+		},
+		"AlreadyDeleting": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateDeleting)),
+			},
+			want: want{
+				cr: instance(
+					withConditions(runtimev1alpha1.Deleting()),
+					withProvisioningState(redisclient.ProvisioningStateDeleting),
 				),
 			},
 		},

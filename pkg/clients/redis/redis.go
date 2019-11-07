@@ -36,12 +36,7 @@ const (
 	ProvisioningStateDeleting  = string(redis.Deleting)
 	ProvisioningStateFailed    = string(redis.Failed)
 	ProvisioningStateSucceeded = string(redis.Succeeded)
-	ProvisioningStateUpdating  = string(redis.Updating)
 )
-
-// A Client handles CRUD operations for Azure Cache resources. This interface is
-// compatible with the upstream Azure redis client.
-type Client redisapi.ClientAPI
 
 // NewClient returns a new Azure Cache for Redis client. Credentials must be
 // passed as JSON encoded data.
@@ -91,20 +86,71 @@ func NewCreateParameters(cr *v1alpha3.Redis) redis.CreateParameters {
 	}
 }
 
-// NewUpdateParameters returns Redis resource update parameters suitable for use
-// with the Azure API.
-func NewUpdateParameters(cr *v1alpha3.Redis) redis.UpdateParameters {
-	return redis.UpdateParameters{
-		Tags: azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
+// NewUpdateParameters returns a redis.UpdateParameters object only with changed
+// fields.
+// TODO(muvaf): Removal of an entry from the maps such as RedisConfiguration and
+// TenantSettings is not properly supported. The user has to give empty string
+// for deletion instead of just deleting the whole entry.
+// NOTE(muvaf): This is barely a comparison function with almost identical if
+// statements which increase the cyclomatic complexity even though it's actually
+// easier to maintain all this in one function.
+// nolint:gocyclo
+func NewUpdateParameters(spec v1alpha3.RedisParameters, state redis.ResourceType) redis.UpdateParameters {
+	patch := redis.UpdateParameters{
+		Tags: azure.ToStringPtrMap(spec.Tags),
 		UpdateProperties: &redis.UpdateProperties{
-			Sku:                NewSKU(cr.Spec.ForProvider.SKU),
-			RedisConfiguration: azure.ToStringPtrMap(cr.Spec.ForProvider.RedisConfiguration),
-			EnableNonSslPort:   cr.Spec.ForProvider.EnableNonSSLPort,
-			ShardCount:         azure.ToInt32(cr.Spec.ForProvider.ShardCount),
-			TenantSettings:     azure.ToStringPtrMap(cr.Spec.ForProvider.TenantSettings),
-			MinimumTLSVersion:  redis.TLSVersion(azure.ToString(cr.Spec.ForProvider.MinimumTLSVersion)),
+			Sku:                NewSKU(spec.SKU),
+			RedisConfiguration: azure.ToStringPtrMap(spec.RedisConfiguration),
+			EnableNonSslPort:   spec.EnableNonSSLPort,
+			ShardCount:         azure.ToInt32(spec.ShardCount),
+			TenantSettings:     azure.ToStringPtrMap(spec.TenantSettings),
+			MinimumTLSVersion:  redis.TLSVersion(azure.ToString(spec.MinimumTLSVersion)),
 		},
 	}
+	// NOTE(muvaf): One could possibly generate UpdateParameters object from
+	// ResourceType and extract a JSON patch. But since the number of fields
+	// are not that many, I wanted to go with if statements. Hopefully, we'll
+	// generate this code in the future.
+	for k, v := range state.Tags {
+		if patch.Tags[k] == v {
+			delete(patch.Tags, k)
+		}
+	}
+	if len(patch.Tags) == 0 {
+		patch.Tags = nil
+	}
+	if state.Properties == nil {
+		return patch
+	}
+	if reflect.DeepEqual(patch.Sku, state.Properties.Sku) {
+		patch.Sku = nil
+	}
+	for k, v := range state.RedisConfiguration {
+		if reflect.DeepEqual(patch.RedisConfiguration[k], v) {
+			delete(patch.RedisConfiguration, k)
+		}
+	}
+	if len(patch.RedisConfiguration) == 0 {
+		patch.RedisConfiguration = nil
+	}
+	if reflect.DeepEqual(patch.EnableNonSslPort, state.EnableNonSslPort) {
+		patch.EnableNonSslPort = nil
+	}
+	if reflect.DeepEqual(patch.ShardCount, state.ShardCount) {
+		patch.ShardCount = nil
+	}
+	for k, v := range state.TenantSettings {
+		if reflect.DeepEqual(patch.TenantSettings[k], v) {
+			delete(patch.TenantSettings, k)
+		}
+	}
+	if len(patch.TenantSettings) == 0 {
+		patch.TenantSettings = nil
+	}
+	if reflect.DeepEqual(patch.MinimumTLSVersion, state.MinimumTLSVersion) {
+		patch.MinimumTLSVersion = ""
+	}
+	return patch
 }
 
 // NewSKU returns a Redis resource SKU suitable for use with the Azure API.
@@ -116,33 +162,16 @@ func NewSKU(s v1alpha3.SKU) *redis.Sku {
 	}
 }
 
-// NeedsUpdate returns true if the supplied Kubernetes resource differs from the
+// NeedsUpdate returns true if the supplied spec object differs from the
 // supplied Azure resource. It considers only fields that can be modified in
 // place without deleting and recreating the instance.
-func NeedsUpdate(kube *v1alpha3.Redis, az redis.ResourceType) bool {
+func NeedsUpdate(spec v1alpha3.RedisParameters, az redis.ResourceType) bool {
 	if az.Properties == nil {
 		return true
 	}
-	up := NewUpdateParameters(kube)
-
-	switch {
-	case !reflect.DeepEqual(up.Sku, az.Sku):
-		return true
-	case !reflect.DeepEqual(up.RedisConfiguration, az.RedisConfiguration):
-		return true
-	case !reflect.DeepEqual(up.EnableNonSslPort, az.EnableNonSslPort):
-		return true
-	case !reflect.DeepEqual(up.ShardCount, az.ShardCount):
-		return true
-	case !reflect.DeepEqual(up.TenantSettings, az.TenantSettings):
-		return true
-	case !reflect.DeepEqual(up.MinimumTLSVersion, az.MinimumTLSVersion):
-		return true
-	case !reflect.DeepEqual(up.Tags, az.Tags):
-		return true
-	}
-
-	return false
+	patch := NewUpdateParameters(spec, az)
+	empty := redis.UpdateParameters{UpdateProperties: &redis.UpdateProperties{}}
+	return !reflect.DeepEqual(empty, patch)
 }
 
 // GenerateObservation produces a RedisObservation object from the redis.ResourceType
@@ -155,14 +184,14 @@ func GenerateObservation(az redis.ResourceType) v1alpha3.RedisObservation {
 	if az.Properties == nil {
 		return o
 	}
-	o.RedisVersion = azure.ToString(az.RedisVersion)
-	o.ProvisioningState = string(az.ProvisioningState)
-	o.HostName = azure.ToString(az.HostName)
-	o.Port = azure.ToInt(az.Port)
-	o.SSLPort = azure.ToInt(az.SslPort)
+	o.RedisVersion = azure.ToString(az.Properties.RedisVersion)
+	o.ProvisioningState = string(az.Properties.ProvisioningState)
+	o.HostName = azure.ToString(az.Properties.HostName)
+	o.Port = azure.ToInt(az.Properties.Port)
+	o.SSLPort = azure.ToInt(az.Properties.SslPort)
 	if az.LinkedServers != nil {
-		o.LinkedServers = make([]string, len(*az.LinkedServers))
-		for i, val := range *az.LinkedServers {
+		o.LinkedServers = make([]string, len(*az.Properties.LinkedServers))
+		for i, val := range *az.Properties.LinkedServers {
 			o.LinkedServers[i] = azure.ToString(val.ID)
 		}
 	}
@@ -185,5 +214,4 @@ func LateInitialize(spec *v1alpha3.RedisParameters, az redis.ResourceType) {
 	spec.ShardCount = azure.LateInitializeIntPtrFromInt32Ptr(spec.ShardCount, az.Properties.ShardCount)
 	minTLS := string(az.Properties.MinimumTLSVersion)
 	spec.MinimumTLSVersion = azure.LateInitializeStringPtrFromPtr(spec.MinimumTLSVersion, &minTLS)
-
 }

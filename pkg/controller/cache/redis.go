@@ -35,7 +35,7 @@ import (
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	common "github.com/crossplaneio/stack-azure/pkg/clients"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/redis"
 )
 
@@ -62,7 +62,7 @@ type Controller struct{}
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha3.RedisClassGroupVersionKind),
+		resource.ManagedKind(v1alpha3.RedisGroupVersionKind),
 		resource.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))
 
 	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.RedisKind, v1alpha3.Group))
@@ -109,7 +109,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	}
 	cache, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
-		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(common.IsNotFound, err), errGetFailed)
+		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(azure.IsNotFound, err), errGetFailed)
 	}
 
 	redis.LateInitialize(&cr.Spec.ForProvider, cache)
@@ -128,7 +128,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		conn = resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.HostName),
 			runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.AtProvider.Port)),
-			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(common.ToString(k.PrimaryKey)),
+			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(azure.ToString(k.PrimaryKey)),
 		}
 		cr.Status.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(cr)
@@ -141,7 +141,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	}
 	return resource.ExternalObservation{
 		ResourceExists:    true,
-		ResourceUpToDate:  !redis.NeedsUpdate(cr, cache),
+		ResourceUpToDate:  !redis.NeedsUpdate(cr.Spec.ForProvider, cache),
 		ConnectionDetails: conn,
 	}, nil
 }
@@ -161,7 +161,20 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotRedis)
 	}
-	_, err := c.client.Update(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redis.NewUpdateParameters(cr))
+	// NOTE(muvaf): redis service rejects updates while another operation
+	// is ongoing.
+	if cr.Status.AtProvider.ProvisioningState != redis.ProvisioningStateSucceeded {
+		return resource.ExternalUpdate{}, nil
+	}
+	cache, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
+	if err != nil {
+		return resource.ExternalUpdate{}, errors.Wrap(err, errGetFailed)
+	}
+	_, err = c.client.Update(
+		ctx,
+		cr.Spec.ForProvider.ResourceGroupName,
+		meta.GetExternalName(cr),
+		redis.NewUpdateParameters(cr.Spec.ForProvider, cache))
 	return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 }
 
@@ -171,6 +184,9 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotRedis)
 	}
 	cr.Status.SetConditions(runtimev1alpha1.Deleting())
+	if cr.Status.AtProvider.ProvisioningState == redis.ProvisioningStateDeleting {
+		return nil
+	}
 	_, err := c.client.Delete(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
-	return errors.Wrap(resource.Ignore(common.IsNotFound, err), errDeleteFailed)
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, err), errDeleteFailed)
 }
