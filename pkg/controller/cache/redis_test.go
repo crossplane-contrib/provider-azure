@@ -18,51 +18,35 @@ package cache
 
 import (
 	"context"
+	"net/http"
+	"strconv"
 	"testing"
-	"time"
 
-	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis/redisapi"
+	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-
-	"github.com/crossplaneio/stack-azure/apis/cache/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	"github.com/crossplaneio/stack-azure/pkg/clients/redis"
-	fakeredis "github.com/crossplaneio/stack-azure/pkg/clients/redis/fake"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	redisclient "github.com/crossplaneio/stack-azure/pkg/clients/redis"
+	"github.com/crossplaneio/stack-azure/pkg/clients/redis/fake"
 )
 
 const (
-	namespace              = "cool-namespace"
-	uid                    = types.UID("definitely-a-uuid")
-	redisResourceName      = redis.NamePrefix + "-" + string(uid)
-	redisResourceGroupName = "coolgroup"
-	location               = "coolplace"
-	subscription           = "totally-a-uuid"
-	qualifiedName          = "/subscriptions/" + subscription + "/redisResourceGroups/" + redisResourceGroupName + "/providers/Microsoft.Cache/Redis/" + redisResourceName
-	host                   = "172.16.0.1"
-	port                   = 6379
-	sslPort                = 6380
-	enableNonSSLPort       = true
-	shardCount             = 3
-	skuName                = v1alpha3.SKUNameBasic
-	skuFamily              = v1alpha3.SKUFamilyC
-	skuCapacity            = 1
-
-	primaryAccessKey = "sosecret"
+	name      = "cool-redis-53scf"
+	namespace = "cool-namespace"
 
 	providerName       = "cool-azure"
 	providerSecretName = "cool-azure-secret"
@@ -73,7 +57,22 @@ const (
 )
 
 var (
-	ctx                = context.Background()
+	enableNonSSLPort = true
+	subnetID         = "coolsubnet"
+	staticIP         = "172.16.0.1"
+	shardCount       = 3
+	location         = "coolplace"
+	minTLSVersion    = "1.1"
+	tenantSettings   = map[string]string{"tenant1": "is-crazy"}
+	hostName         = "108.8.8.1"
+	port             = 6374
+	primaryKey       = "secretpass"
+	skuName          = "basic"
+	skuFamily        = "C"
+	skuCapacity      = 1
+)
+
+var (
 	errorBoom          = errors.New("boom")
 	redisConfiguration = map[string]string{"cool": "socool"}
 
@@ -96,60 +95,36 @@ var (
 	}
 )
 
-type redisResourceModifier func(*v1alpha3.Redis)
+type redisResourceModifier func(*v1beta1.Redis)
 
 func withConditions(c ...runtimev1alpha1.Condition) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.ConditionedStatus.Conditions = c }
+	return func(r *v1beta1.Redis) { r.Status.ConditionedStatus.Conditions = c }
 }
 
 func withBindingPhase(p runtimev1alpha1.BindingPhase) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.SetBindingPhase(p) }
+	return func(r *v1beta1.Redis) { r.Status.SetBindingPhase(p) }
 }
 
-func withState(s string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.State = s }
+func withProvisioningState(s string) redisResourceModifier {
+	return func(r *v1beta1.Redis) { r.Status.AtProvider.ProvisioningState = s }
 }
 
-func withFinalizers(f ...string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.ObjectMeta.Finalizers = f }
-}
-
-func withReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Spec.ReclaimPolicy = p }
-}
-
-func withResourceName(n string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.ResourceName = n }
-}
-
-func withProviderID(id string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.ProviderID = id }
-}
-
-func withEndpoint(e string) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.Endpoint = e }
+func withHostName(h string) redisResourceModifier {
+	return func(r *v1beta1.Redis) { r.Status.AtProvider.HostName = h }
 }
 
 func withPort(p int) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.Port = p }
+	return func(r *v1beta1.Redis) { r.Status.AtProvider.Port = p }
 }
 
-func withSSLPort(p int) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.Status.SSLPort = p }
-}
-
-func withDeletionTimestamp(t time.Time) redisResourceModifier {
-	return func(r *v1alpha3.Redis) { r.ObjectMeta.DeletionTimestamp = &metav1.Time{Time: t} }
-}
-
-func redisResource(rm ...redisResourceModifier) *v1alpha3.Redis {
-	r := &v1alpha3.Redis{
+func instance(rm ...redisResourceModifier) *v1beta1.Redis {
+	r := &v1beta1.Redis{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:       redisResourceName,
-			UID:        uid,
-			Finalizers: []string{},
+			Annotations: map[string]string{
+				meta.ExternalNameAnnotationKey: name,
+			},
 		},
-		Spec: v1alpha3.RedisSpec{
+		Spec: v1beta1.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Name: providerName},
 				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
@@ -157,23 +132,24 @@ func redisResource(rm ...redisResourceModifier) *v1alpha3.Redis {
 					Name:      connectionSecretName,
 				},
 			},
-			RedisParameters: v1alpha3.RedisParameters{
-				ResourceGroupName:  redisResourceGroupName,
-				Location:           location,
-				RedisConfiguration: redisConfiguration,
-				EnableNonSSLPort:   enableNonSSLPort,
-				ShardCount:         shardCount,
-				SKU: v1alpha3.SKUSpec{
+			ForProvider: v1beta1.RedisParameters{
+				Location:          location,
+				ResourceGroupName: "group1",
+				SKU: v1beta1.SKU{
 					Name:     skuName,
-					Family:   skuFamily,
 					Capacity: skuCapacity,
+					Family:   skuFamily,
 				},
+				Zones:              []string{"us-east1a", "us-east1b"},
+				Tags:               map[string]string{"key1": "val1"},
+				SubnetID:           &subnetID,
+				StaticIP:           &staticIP,
+				EnableNonSSLPort:   &enableNonSSLPort,
+				RedisConfiguration: redisConfiguration,
+				TenantSettings:     tenantSettings,
+				ShardCount:         &shardCount,
+				MinimumTLSVersion:  &minTLSVersion,
 			},
-		},
-		Status: v1alpha3.RedisStatus{
-			Endpoint:   host,
-			Port:       port,
-			ProviderID: qualifiedName,
 		},
 	}
 
@@ -184,713 +160,567 @@ func redisResource(rm ...redisResourceModifier) *v1alpha3.Redis {
 	return r
 }
 
-// Test that our Reconciler implementation satisfies the Reconciler interface.
-var _ reconcile.Reconciler = &Reconciler{}
+var _ resource.ExternalClient = &external{}
+var _ resource.ExternalConnecter = &connector{}
 
-func TestCreate(t *testing.T) {
-	cases := []struct {
-		name        string
-		csdk        createsyncdeletekeyer
-		r           *v1alpha3.Redis
-		want        *v1alpha3.Redis
-		wantRequeue bool
+func TestConnect(t *testing.T) {
+	type args struct {
+		cr          *v1beta1.Redis
+		newClientFn func(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error)
+		kube        client.Client
+	}
+	type want struct {
+		err error
+	}
+
+	cases := map[string]struct {
+		args
+		want
 	}{
-		{
-			name: "SuccessfulCreate",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockCreate: func(_ context.Context, _, _ string, _ redismgmt.CreateParameters) (redismgmt.CreateFuture, error) {
-					return redismgmt.CreateFuture{}, nil
+		"Successful": {
+			args: args{
+				cr: instance(),
+				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
+					return &fake.MockClient{}, nil
 				},
-			}},
-			r: redisResource(),
-			want: redisResource(
-				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess()),
-				withFinalizers(finalizerName),
-				withResourceName(redisResourceName),
-			),
-			wantRequeue: true,
+				kube: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							*obj.(*azurev1alpha3.Provider) = provider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							*obj.(*corev1.Secret) = providerSecret
+						}
+						return nil
+					},
+				},
+			},
 		},
-		{
-			name: "FailedCreate",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockCreate: func(_ context.Context, _, _ string, _ redismgmt.CreateParameters) (redismgmt.CreateFuture, error) {
-					return redismgmt.CreateFuture{}, errorBoom
+		"ProviderGetFailed": {
+			args: args{
+				cr: instance(),
+				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
+					return &fake.MockClient{}, nil
 				},
-			}},
-			r: redisResource(),
-			want: redisResource(
-				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileError(errorBoom)),
-			),
-			wantRequeue: true,
+				kube: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							return errorBoom
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							*obj.(*corev1.Secret) = providerSecret
+						}
+						return nil
+					},
+				},
+			},
+			want: want{
+				err: errors.Wrap(errorBoom, errGetProviderFailed),
+			},
+		},
+		"ProviderSecretGetFailed": {
+			args: args{
+				cr: instance(),
+				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
+					return &fake.MockClient{}, nil
+				},
+				kube: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							*obj.(*azurev1alpha3.Provider) = provider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							return errorBoom
+						}
+						return nil
+					},
+				},
+			},
+			want: want{
+				err: errors.Wrap(errorBoom, errGetProviderSecretFailed),
+			},
+		},
+		"ClientFnFailed": {
+			args: args{
+				cr: instance(),
+				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
+					return &fake.MockClient{}, errorBoom
+				},
+				kube: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							*obj.(*azurev1alpha3.Provider) = provider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							*obj.(*corev1.Secret) = providerSecret
+						}
+						return nil
+					},
+				},
+			},
+			want: want{
+				err: errors.Wrap(errorBoom, errConnectFailed),
+			},
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			gotRequeue := tc.csdk.Create(ctx, tc.r)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			c := connector{kube: tc.kube, newClientFn: tc.newClientFn}
 
-			if gotRequeue != tc.wantRequeue {
-				t.Errorf("tc.csdk.Create(...): want: %t got: %t", tc.wantRequeue, gotRequeue)
-			}
-
-			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
-				t.Errorf("r: -want, +got:\n%s", diff)
+			_, err := c.Connect(context.Background(), tc.args.cr)
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("Create(...): -want, +got\n%s", diff)
 			}
 		})
 	}
 }
 
-func TestSync(t *testing.T) {
-	cases := []struct {
-		name        string
-		csdk        createsyncdeletekeyer
-		r           *v1alpha3.Redis
-		want        *v1alpha3.Redis
-		wantRequeue bool
+func TestObserve(t *testing.T) {
+	type args struct {
+		cr   *v1beta1.Redis
+		r    redisapi.ClientAPI
+		kube client.Client
+	}
+	type want struct {
+		cr  *v1beta1.Redis
+		o   resource.ExternalObservation
+		err error
+	}
+
+	cases := map[string]struct {
+		args
+		want
 	}{
-		{
-			name: "SuccessfulSyncWhileResourceCreating",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{Properties: &redismgmt.Properties{ProvisioningState: redismgmt.Creating}}, nil
+		"Successful": {
+			args: args{
+				cr: instance(),
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
 				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withState(v1alpha3.ProvisioningStateCreating),
-				withResourceName(redisResourceName),
-				withConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileSuccess()),
-			),
-			wantRequeue: true,
-		},
-		{
-			name: "SuccessfulSyncWhileResourceDeleting",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{Properties: &redismgmt.Properties{ProvisioningState: redismgmt.Deleting}}, nil
-				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withResourceName(redisResourceName),
-				withState(v1alpha3.ProvisioningStateDeleting),
-				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess()),
-			),
-			wantRequeue: false,
-		},
-		{
-			name: "SuccessfulSyncWhileResourceUpdating",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{Properties: &redismgmt.Properties{ProvisioningState: redismgmt.Updating}}, nil
-				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withResourceName(redisResourceName),
-				withState(v1alpha3.ProvisioningStateUpdating),
-				withConditions(runtimev1alpha1.ReconcileSuccess()),
-			),
-			wantRequeue: true,
-		},
-		{
-			name: "SuccessfulSyncWhileResourceReadyAndDoesNotNeedUpdate",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{
-						ID: azure.ToStringPtr(qualifiedName),
-						Properties: &redismgmt.Properties{
-							ProvisioningState: redismgmt.Succeeded,
-							Sku: &redismgmt.Sku{
-								Name:     redismgmt.SkuName(skuName),
-								Family:   redismgmt.SkuFamily(skuFamily),
-								Capacity: azure.ToInt32Ptr(skuCapacity),
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{
+							Properties: &redis.Properties{
+								ProvisioningState: redis.Succeeded,
+								HostName:          &hostName,
+								Port:              azure.ToInt32(&port),
 							},
-							EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-							RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-							ShardCount:         azure.ToInt32Ptr(shardCount),
-							HostName:           azure.ToStringPtr(host),
-							Port:               azure.ToInt32Ptr(port),
-							SslPort:            azure.ToInt32Ptr(sslPort),
-						},
-					}, nil
+						}, nil
+					},
+					MockListKeys: func(ctx context.Context, resourceGroupName string, name string) (result redis.AccessKeys, err error) {
+						return redis.AccessKeys{
+							PrimaryKey: azure.ToStringPtr(primaryKey),
+						}, nil
+					},
 				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withResourceName(redisResourceName),
-				withState(v1alpha3.ProvisioningStateSucceeded),
-				withProviderID(qualifiedName),
-				withEndpoint(host),
-				withPort(port),
-				withSSLPort(sslPort),
-				withConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()),
-				withBindingPhase(runtimev1alpha1.BindingPhaseUnbound),
-			),
-			wantRequeue: false,
+			},
+			want: want{
+				cr: instance(
+					withProvisioningState(redisclient.ProvisioningStateSucceeded),
+					withHostName(hostName),
+					withPort(port),
+					withConditions(runtimev1alpha1.Available()),
+					withBindingPhase(runtimev1alpha1.BindingPhaseUnbound),
+				),
+				o: resource.ExternalObservation{
+					ResourceExists:   true,
+					ResourceUpToDate: false,
+					ConnectionDetails: resource.ConnectionDetails{
+						runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(hostName),
+						runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(port)),
+						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(primaryKey),
+					},
+				},
+			},
 		},
-		{
-			name: "SuccessfulSyncWhileResourceReadyAndNeedsUpdate",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{
-						ID: azure.ToStringPtr(qualifiedName),
-						Properties: &redismgmt.Properties{
-							ProvisioningState: redismgmt.Succeeded,
-							Sku: &redismgmt.Sku{
-								Name:     redismgmt.SkuName(skuName),
-								Family:   redismgmt.SkuFamily(skuFamily),
-								Capacity: azure.ToInt32Ptr(skuCapacity),
-							},
-							EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-							RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-							ShardCount:         azure.ToInt32Ptr(shardCount + 1),
-							HostName:           azure.ToStringPtr(host),
-							Port:               azure.ToInt32Ptr(port),
-							SslPort:            azure.ToInt32Ptr(sslPort),
-						},
-					}, nil
+		"GetFailed": {
+			args: args{
+				cr: instance(),
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, errorBoom
+					},
 				},
-				MockUpdate: func(_ context.Context, _, _ string, p redismgmt.UpdateParameters) (redismgmt.ResourceType, error) {
-					if azure.ToInt(p.ShardCount) != shardCount {
-						t.Errorf("p.ShardCount: want %d, got %d", shardCount, azure.ToInt(p.ShardCount))
-					}
-					return redismgmt.ResourceType{}, nil
-				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withResourceName(redisResourceName),
-				withState(v1alpha3.ProvisioningStateSucceeded),
-				withProviderID(qualifiedName),
-				withEndpoint(host),
-				withPort(port),
-				withSSLPort(sslPort),
-				withConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()),
-				withBindingPhase(runtimev1alpha1.BindingPhaseUnbound),
-			),
-			wantRequeue: false,
+			},
+			want: want{
+				cr:  instance(),
+				err: errors.Wrap(errorBoom, errGetFailed),
+			},
 		},
-		{
-			name: "FailedGet",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{}, errorBoom
+		"KubeUpdateFailed": {
+			args: args{
+				cr: instance(),
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(errorBoom),
 				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withResourceName(redisResourceName),
-				withConditions(runtimev1alpha1.ReconcileError(errorBoom)),
-			),
-			wantRequeue: true,
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, nil
+					},
+				},
+			},
+			want: want{
+				cr:  instance(),
+				err: errors.Wrap(errorBoom, errUpdateRedisCRFailed),
+			},
 		},
-		{
-			name: "FailedUpdate",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockGet: func(_ context.Context, _, _ string) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{
-						ID: azure.ToStringPtr(qualifiedName),
-						Properties: &redismgmt.Properties{
-							ProvisioningState: redismgmt.Succeeded,
-							Sku: &redismgmt.Sku{
-								Name:     redismgmt.SkuName(skuName),
-								Family:   redismgmt.SkuFamily(skuFamily),
-								Capacity: azure.ToInt32Ptr(skuCapacity),
-							},
-							EnableNonSslPort:   azure.ToBoolPtr(enableNonSSLPort),
-							RedisConfiguration: azure.ToStringPtrMap(redisConfiguration),
-							ShardCount:         azure.ToInt32Ptr(shardCount + 1),
-							HostName:           azure.ToStringPtr(host),
-							Port:               azure.ToInt32Ptr(port),
-							SslPort:            azure.ToInt32Ptr(sslPort),
-						},
-					}, nil
+		"ListAccessKeysFailed": {
+			args: args{
+				cr: instance(),
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
 				},
-				MockUpdate: func(_ context.Context, _, _ string, _ redismgmt.UpdateParameters) (redismgmt.ResourceType, error) {
-					return redismgmt.ResourceType{}, errorBoom
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{Properties: &redis.Properties{ProvisioningState: redis.Succeeded}}, nil
+					},
+					MockListKeys: func(_ context.Context, resourceGroupName string, name string) (result redis.AccessKeys, err error) {
+						return redis.AccessKeys{}, errorBoom
+					},
 				},
-			}},
-			r: redisResource(
-				withResourceName(redisResourceName),
-			),
-			want: redisResource(
-				withResourceName(redisResourceName),
-				withState(v1alpha3.ProvisioningStateSucceeded),
-				withProviderID(qualifiedName),
-				withEndpoint(host),
-				withPort(port),
-				withSSLPort(sslPort),
-				withConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileError(errorBoom)),
-				withBindingPhase(runtimev1alpha1.BindingPhaseUnbound),
-			),
-			wantRequeue: true,
+			},
+			want: want{
+				cr: instance(
+					withProvisioningState(redisclient.ProvisioningStateSucceeded),
+				),
+				err: errors.Wrap(errorBoom, errListAccessKeysFailed),
+			},
+		},
+		"Creating": {
+			args: args{
+				cr: instance(),
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
+				},
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{Properties: &redis.Properties{ProvisioningState: redis.Creating}}, nil
+					},
+					MockListKeys: func(_ context.Context, resourceGroupName string, name string) (result redis.AccessKeys, err error) {
+						return redis.AccessKeys{}, nil
+					},
+				},
+			},
+			want: want{
+				cr: instance(
+					withProvisioningState(redisclient.ProvisioningStateCreating),
+					withConditions(runtimev1alpha1.Creating()),
+				),
+				o: resource.ExternalObservation{
+					ResourceUpToDate: false,
+					ResourceExists:   true,
+				},
+			},
+		},
+		"Deleting": {
+			args: args{
+				cr: instance(),
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
+				},
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{Properties: &redis.Properties{ProvisioningState: redis.Deleting}}, nil
+					},
+					MockListKeys: func(_ context.Context, resourceGroupName string, name string) (result redis.AccessKeys, err error) {
+						return redis.AccessKeys{}, nil
+					},
+				},
+			},
+			want: want{
+				cr: instance(
+					withProvisioningState(redisclient.ProvisioningStateDeleting),
+					withConditions(runtimev1alpha1.Deleting()),
+				),
+				o: resource.ExternalObservation{
+					ResourceUpToDate: false,
+					ResourceExists:   true,
+				},
+			},
+		},
+		"Unavailable": {
+			args: args{
+				cr: instance(),
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
+				},
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, resourceGroupName string, name string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{Properties: &redis.Properties{ProvisioningState: redis.Failed}}, nil
+					},
+					MockListKeys: func(_ context.Context, resourceGroupName string, name string) (result redis.AccessKeys, err error) {
+						return redis.AccessKeys{}, nil
+					},
+				},
+			},
+			want: want{
+				cr: instance(
+					withProvisioningState(redisclient.ProvisioningStateFailed),
+					withConditions(runtimev1alpha1.Unavailable()),
+				),
+				o: resource.ExternalObservation{
+					ResourceUpToDate: false,
+					ResourceExists:   true,
+				},
+			},
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			gotRequeue := tc.csdk.Sync(ctx, tc.r)
-
-			if gotRequeue != tc.wantRequeue {
-				t.Errorf("tc.csdk.Sync(...): want: %t got: %t", tc.wantRequeue, gotRequeue)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := external{
+				kube:   tc.kube,
+				client: tc.r,
 			}
+			o, err := e.Observe(context.Background(), tc.args.cr)
+			if diff := cmp.Diff(tc.want.cr, tc.args.cr); diff != "" {
+				t.Errorf("Observe(...): -want, +got\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("Observe(...): -want, +got\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.o, o); diff != "" {
+				t.Errorf("Observe(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
 
-			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
-				t.Errorf("r: -want, +got:\n%s", diff)
+func TestCreate(t *testing.T) {
+	type args struct {
+		cr *v1beta1.Redis
+		r  redisapi.ClientAPI
+	}
+	type want struct {
+		cr  *v1beta1.Redis
+		o   resource.ExternalCreation
+		err error
+	}
+	cases := map[string]struct {
+		args
+		want
+	}{
+		"Successful": {
+			args: args{
+				cr: instance(),
+				r: &fake.MockClient{
+					MockCreate: func(_ context.Context, resourceGroupName string, name string, parameters redis.CreateParameters) (result redis.CreateFuture, err error) {
+						return redis.CreateFuture{}, nil
+					},
+				},
+			},
+			want: want{
+				cr: instance(
+					withConditions(runtimev1alpha1.Creating()),
+				),
+			},
+		},
+		"Failed": {
+			args: args{
+				cr: instance(),
+				r: &fake.MockClient{
+					MockCreate: func(_ context.Context, resourceGroupName string, name string, parameters redis.CreateParameters) (result redis.CreateFuture, err error) {
+						return redis.CreateFuture{}, errorBoom
+					},
+				},
+			},
+			want: want{
+				cr: instance(
+					withConditions(runtimev1alpha1.Creating()),
+				),
+				err: errors.Wrap(errorBoom, errCreateFailed),
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := external{client: tc.r}
+
+			c, err := e.Create(context.Background(), tc.args.cr)
+			if diff := cmp.Diff(tc.want.cr, tc.args.cr); diff != "" {
+				t.Errorf("Create(...): -want, +got\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("Create(...): -want, +got\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.o, c); diff != "" {
+				t.Errorf("Create(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	type args struct {
+		cr *v1beta1.Redis
+		r  redisapi.ClientAPI
+	}
+	type want struct {
+		cr  *v1beta1.Redis
+		o   resource.ExternalUpdate
+		err error
+	}
+	cases := map[string]struct {
+		args
+		want
+	}{
+		"Successful": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, _ string, _ string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, nil
+					},
+					MockUpdate: func(_ context.Context, resourceGroupName string, name string, parameters redis.UpdateParameters) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, nil
+					},
+				},
+			},
+			want: want{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+			},
+		},
+		"NotReady": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateFailed)),
+			},
+			want: want{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateFailed)),
+			},
+		},
+		"GetFailed": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, _ string, _ string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, errorBoom
+					},
+				},
+			},
+			want: want{
+				cr:  instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				err: errors.Wrap(errorBoom, errGetFailed),
+			},
+		},
+		"UpdateFailed": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				r: &fake.MockClient{
+					MockGet: func(_ context.Context, _ string, _ string) (result redis.ResourceType, err error) {
+						return redis.ResourceType{Properties: &redis.Properties{ProvisioningState: redis.Succeeded}}, nil
+					},
+					MockUpdate: func(_ context.Context, resourceGroupName string, name string, parameters redis.UpdateParameters) (result redis.ResourceType, err error) {
+						return redis.ResourceType{}, errorBoom
+					},
+				},
+			},
+			want: want{
+				cr:  instance(withProvisioningState(redisclient.ProvisioningStateSucceeded)),
+				err: errors.Wrap(errorBoom, errUpdateFailed),
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := external{client: tc.r}
+
+			c, err := e.Update(context.Background(), tc.args.cr)
+			if diff := cmp.Diff(tc.want.cr, tc.args.cr); diff != "" {
+				t.Errorf("Update(...): -want, +got\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("Update(...): -want, +got\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.o, c); diff != "" {
+				t.Errorf("Update(...): -want, +got\n%s", diff)
 			}
 		})
 	}
 }
 
 func TestDelete(t *testing.T) {
-	cases := []struct {
-		name        string
-		csdk        createsyncdeletekeyer
-		r           *v1alpha3.Redis
-		want        *v1alpha3.Redis
-		wantRequeue bool
+	type args struct {
+		cr *v1beta1.Redis
+		r  redisapi.ClientAPI
+	}
+	type want struct {
+		cr  *v1beta1.Redis
+		err error
+	}
+	cases := map[string]struct {
+		args
+		want
 	}{
-		{
-			name: "ReclaimRetainSuccessfulDelete",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockDelete: func(_ context.Context, _, _ string) (redismgmt.DeleteFuture, error) {
-					return redismgmt.DeleteFuture{}, nil
+		"Successful": {
+			args: args{
+				cr: instance(),
+				r: &fake.MockClient{
+					MockDelete: func(_ context.Context, resourceGroupName string, name string) (result redis.DeleteFuture, err error) {
+						return redis.DeleteFuture{}, nil
+					},
 				},
-			}},
-			r: redisResource(withFinalizers(finalizerName), withReclaimPolicy(runtimev1alpha1.ReclaimRetain)),
-			want: redisResource(
-				withReclaimPolicy(runtimev1alpha1.ReclaimRetain),
-				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess()),
-			),
-			wantRequeue: false,
+			},
+			want: want{
+				cr: instance(
+					withConditions(runtimev1alpha1.Deleting()),
+				),
+			},
 		},
-		{
-			name: "ReclaimDeleteSuccessfulDelete",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockDelete: func(_ context.Context, _, _ string) (redismgmt.DeleteFuture, error) {
-					return redismgmt.DeleteFuture{}, nil
+		"AlreadyDeleted": {
+			args: args{
+				cr: instance(),
+				r: &fake.MockClient{
+					MockDelete: func(_ context.Context, resourceGroupName string, name string) (result redis.DeleteFuture, err error) {
+						return redis.DeleteFuture{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
+					},
 				},
-			}},
-			r: redisResource(withFinalizers(finalizerName), withReclaimPolicy(runtimev1alpha1.ReclaimDelete)),
-			want: redisResource(
-				withReclaimPolicy(runtimev1alpha1.ReclaimDelete),
-				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileSuccess()),
-			),
-			wantRequeue: false,
+			},
+			want: want{
+				cr: instance(
+					withConditions(runtimev1alpha1.Deleting()),
+				),
+			},
 		},
-		{
-			name: "ReclaimDeleteFailedDelete",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockDelete: func(_ context.Context, _, _ string) (redismgmt.DeleteFuture, error) {
-					return redismgmt.DeleteFuture{}, errorBoom
+		"AlreadyDeleting": {
+			args: args{
+				cr: instance(withProvisioningState(redisclient.ProvisioningStateDeleting)),
+			},
+			want: want{
+				cr: instance(
+					withConditions(runtimev1alpha1.Deleting()),
+					withProvisioningState(redisclient.ProvisioningStateDeleting),
+				),
+			},
+		},
+		"Failed": {
+			args: args{
+				cr: instance(),
+				r: &fake.MockClient{
+					MockDelete: func(_ context.Context, resourceGroupName string, name string) (result redis.DeleteFuture, err error) {
+						return redis.DeleteFuture{}, errorBoom
+					},
 				},
-			}},
-			r: redisResource(withFinalizers(finalizerName), withReclaimPolicy(runtimev1alpha1.ReclaimDelete)),
-			want: redisResource(
-				withFinalizers(finalizerName),
-				withReclaimPolicy(runtimev1alpha1.ReclaimDelete),
-				withConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileError(errorBoom)),
-			),
-			wantRequeue: true,
+			},
+			want: want{
+				cr:  instance(withConditions(runtimev1alpha1.Deleting())),
+				err: errors.Wrap(errorBoom, errDeleteFailed),
+			},
 		},
 	}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			gotRequeue := tc.csdk.Delete(ctx, tc.r)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := external{client: tc.r}
 
-			if gotRequeue != tc.wantRequeue {
-				t.Errorf("tc.csdk.Delete(...): want: %t got: %t", tc.wantRequeue, gotRequeue)
+			err := e.Delete(context.Background(), tc.args.cr)
+			if diff := cmp.Diff(tc.want.cr, tc.args.cr); diff != "" {
+				t.Errorf("Update(...): -want, +got\n%s", diff)
 			}
-
-			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
-				t.Errorf("r: -want, +got:\n%s", diff)
-			}
-		})
-	}
-}
-func TestKey(t *testing.T) {
-	cases := []struct {
-		name    string
-		csdk    createsyncdeletekeyer
-		r       *v1alpha3.Redis
-		want    *v1alpha3.Redis
-		wantKey string
-	}{
-		{
-			name: "Successful",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockListKeys: func(_ context.Context, _, _ string) (redismgmt.AccessKeys, error) {
-					return redismgmt.AccessKeys{PrimaryKey: azure.ToStringPtr(primaryAccessKey)}, nil
-				},
-			}},
-			r:       redisResource(),
-			want:    redisResource(),
-			wantKey: primaryAccessKey,
-		},
-		{
-			name: "Failed",
-			csdk: &azureRedisCache{client: &fakeredis.MockClient{
-				MockListKeys: func(_ context.Context, _, _ string) (redismgmt.AccessKeys, error) {
-					return redismgmt.AccessKeys{}, errorBoom
-				},
-			}},
-			r:    redisResource(),
-			want: redisResource(withConditions(runtimev1alpha1.ReconcileError(errorBoom))),
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			gotKey := tc.csdk.Key(ctx, tc.r)
-
-			if gotKey != tc.wantKey {
-				t.Errorf("tc.csdk.Key(...): want: %s got: %s", tc.wantKey, gotKey)
-			}
-
-			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
-				t.Errorf("r: -want, +got:\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestConnect(t *testing.T) {
-	cases := []struct {
-		name    string
-		conn    connecter
-		i       *v1alpha3.Redis
-		want    createsyncdeletekeyer
-		wantErr error
-	}{
-		{
-			name: "SuccessfulConnect",
-			conn: &providerConnecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						*obj.(*azurev1alpha3.Provider) = provider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						*obj.(*corev1.Secret) = providerSecret
-					}
-					return nil
-				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return &fakeredis.MockClient{}, nil },
-			},
-			i:    redisResource(),
-			want: &azureRedisCache{client: &fakeredis.MockClient{}},
-		},
-		{
-			name: "FailedToGetProvider",
-			conn: &providerConnecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					return kerrors.NewNotFound(schema.GroupResource{}, providerName)
-				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return &fakeredis.MockClient{}, nil },
-			},
-			i:       redisResource(),
-			wantErr: errors.WithStack(errors.Errorf("cannot get provider /%s:  \"%s\" not found", providerName, providerName)),
-		},
-		{
-			name: "FailedToGetProviderSecret",
-			conn: &providerConnecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						*obj.(*azurev1alpha3.Provider) = provider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
-					}
-					return nil
-				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return &fakeredis.MockClient{}, nil },
-			},
-			i:       redisResource(),
-			wantErr: errors.WithStack(errors.Errorf("cannot get provider secret %s/%s:  \"%s\" not found", namespace, providerSecretName, providerSecretName)),
-		},
-		{
-			name: "FailedToCreateAzureCacheClient",
-			conn: &providerConnecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						*obj.(*azurev1alpha3.Provider) = provider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						*obj.(*corev1.Secret) = providerSecret
-					}
-					return nil
-				}},
-				newClient: func(_ context.Context, _ []byte) (redis.Client, error) { return nil, errorBoom },
-			},
-			i:       redisResource(),
-			want:    &azureRedisCache{},
-			wantErr: errors.Wrap(errorBoom, "cannot create new Azure Cache client"),
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, gotErr := tc.conn.Connect(ctx, tc.i)
-
-			if diff := cmp.Diff(tc.wantErr, gotErr, test.EquateErrors()); diff != "" {
-				t.Errorf("tc.conn.Connect(...): want error != got error:\n%s", diff)
-			}
-
-			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(azureRedisCache{})); diff != "" {
-				t.Errorf("tc.conn.Connect(...): -want, +got:\n%s", diff)
-			}
-		})
-	}
-}
-
-type mockConnector struct {
-	MockConnect func(ctx context.Context, i *v1alpha3.Redis) (createsyncdeletekeyer, error)
-}
-
-func (c *mockConnector) Connect(ctx context.Context, i *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-	return c.MockConnect(ctx, i)
-}
-
-type mockCSDK struct {
-	MockCreate func(ctx context.Context, i *v1alpha3.Redis) bool
-	MockSync   func(ctx context.Context, i *v1alpha3.Redis) bool
-	MockDelete func(ctx context.Context, i *v1alpha3.Redis) bool
-	MockKey    func(ctx context.Context, i *v1alpha3.Redis) string
-}
-
-func (csdk *mockCSDK) Create(ctx context.Context, i *v1alpha3.Redis) bool {
-	return csdk.MockCreate(ctx, i)
-}
-
-func (csdk *mockCSDK) Sync(ctx context.Context, i *v1alpha3.Redis) bool {
-	return csdk.MockSync(ctx, i)
-}
-
-func (csdk *mockCSDK) Delete(ctx context.Context, i *v1alpha3.Redis) bool {
-	return csdk.MockDelete(ctx, i)
-}
-
-func (csdk *mockCSDK) Key(ctx context.Context, i *v1alpha3.Redis) string {
-	return csdk.MockKey(ctx, i)
-}
-
-func TestReconcile(t *testing.T) {
-	cases := []struct {
-		name    string
-		rec     *Reconciler
-		req     reconcile.Request
-		want    reconcile.Result
-		wantErr error
-	}{
-		{
-			name: "SuccessfulDelete",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockDelete: func(_ context.Context, _ *v1alpha3.Redis) bool { return false }}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha3.Redis) = *(redisResource(withResourceName(redisResourceName), withDeletionTimestamp(time.Now())))
-						return nil
-					},
-					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
-				},
-				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: false},
-			wantErr: nil,
-		},
-		{
-			name: "SuccessfulCreate",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{MockCreate: func(_ context.Context, _ *v1alpha3.Redis) bool { return true }}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha3.Redis) = *(redisResource())
-						return nil
-					},
-					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
-				},
-				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: true},
-			wantErr: nil,
-		},
-		{
-			name: "SuccessfulSync",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{
-						MockSync: func(_ context.Context, _ *v1alpha3.Redis) bool { return false },
-						MockKey:  func(_ context.Context, _ *v1alpha3.Redis) string { return "" },
-					}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha3.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
-						return nil
-					},
-					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
-					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
-				},
-				publisher: resource.PublisherChain{}, // A no-op publisher.
-				resolver:  resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: false},
-			wantErr: nil,
-		},
-		{
-			name: "FailedToGetNonexistentResource",
-			rec: &Reconciler{
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						return kerrors.NewNotFound(schema.GroupResource{}, redisResourceName)
-					},
-					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
-				},
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: false},
-			wantErr: nil,
-		},
-		{
-			name: "FailedToGetExtantResource",
-			rec: &Reconciler{
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						return errorBoom
-					},
-					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
-				},
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: false},
-			wantErr: errors.Wrapf(errorBoom, "cannot get resource %s/%s", namespace, redisResourceName),
-		},
-		{
-			name: "FailedToConnect",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-					return nil, errorBoom
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha3.Redis) = *(redisResource())
-						return nil
-					},
-					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
-						want := redisResource(withConditions(runtimev1alpha1.ReconcileError(errorBoom)))
-						got := obj.(*v1alpha3.Redis)
-						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
-							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
-						}
-						return nil
-					},
-				},
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: true},
-			wantErr: nil,
-		},
-		{
-			name: "FailedToPublish",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{
-						MockSync: func(_ context.Context, _ *v1alpha3.Redis) bool { return false },
-						MockKey:  func(_ context.Context, _ *v1alpha3.Redis) string { return "" },
-					}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha3.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
-						return nil
-					},
-					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
-					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
-						want := redisResource(
-							withResourceName(redisResourceName),
-							withConditions(runtimev1alpha1.ReferenceResolutionSuccess(), runtimev1alpha1.ReconcileError(errorBoom)),
-						)
-						got := obj.(*v1alpha3.Redis)
-						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
-							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
-						}
-						return nil
-					},
-				},
-				publisher: resource.ManagedConnectionPublisherFns{
-					PublishConnectionFn: func(_ context.Context, _ resource.Managed, _ resource.ConnectionDetails) error { return errorBoom },
-				},
-				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return nil }),
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{Requeue: true},
-			wantErr: nil,
-		},
-		{
-			name: "FailedToReference",
-			rec: &Reconciler{
-				connecter: &mockConnector{MockConnect: func(_ context.Context, _ *v1alpha3.Redis) (createsyncdeletekeyer, error) {
-					return &mockCSDK{
-						MockSync: func(_ context.Context, _ *v1alpha3.Redis) bool { return false },
-						MockKey:  func(_ context.Context, _ *v1alpha3.Redis) string { return "" },
-					}, nil
-				}},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						*obj.(*v1alpha3.Redis) = *(redisResource(withResourceName(redisResourceName), withEndpoint(host)))
-						return nil
-					},
-					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
-					MockUpdate: func(_ context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
-						want := redisResource(
-							withResourceName(redisResourceName),
-							withConditions(runtimev1alpha1.ReconcileError(errorBoom)),
-						)
-						got := obj.(*v1alpha3.Redis)
-						if diff := cmp.Diff(want, got, test.EquateConditions()); diff != "" {
-							t.Errorf("kube.Update(...): -want, +got:\n%s", diff)
-						}
-						return nil
-					},
-				},
-				resolver: resource.ManagedReferenceResolverFn(func(_ context.Context, _ resource.CanReference) error { return errorBoom }),
-			},
-			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: redisResourceName}},
-			want:    reconcile.Result{RequeueAfter: aLongWait},
-			wantErr: nil,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			gotResult, gotErr := tc.rec.Reconcile(tc.req)
-
-			if diff := cmp.Diff(tc.wantErr, gotErr, test.EquateErrors()); diff != "" {
-				t.Errorf("tc.rec.Reconcile(...): want error != got error:\n%s", diff)
-			}
-
-			if diff := cmp.Diff(tc.want, gotResult); diff != "" {
-				t.Errorf("tc.rec.Reconcile(...): -want, +got:\n%s", diff)
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("Update(...): -want, +got\n%s", diff)
 			}
 		})
 	}

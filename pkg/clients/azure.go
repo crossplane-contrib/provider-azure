@@ -170,7 +170,18 @@ func ToBoolPtr(b bool, o ...FieldOption) *bool {
 
 // ToStringPtrMap converts the supplied map for use with the Azure Go SDK.
 func ToStringPtrMap(m map[string]string) map[string]*string {
+	if m == nil {
+		return nil
+	}
 	return *(to.StringMapPtr(m))
+}
+
+// ToStringArrayPtr converts []string to *[]string which is expected by Azure API.
+func ToStringArrayPtr(m []string) *[]string {
+	if m == nil {
+		return nil
+	}
+	return &m
 }
 
 // ToString converts the supplied pointer to string to a string, returning the
@@ -185,8 +196,67 @@ func ToInt(i *int32) int {
 	return int(to.Int32(i))
 }
 
+// ToInt32 converts the supplied *int to *int32, while returning nil if the
+// supplied reference is nil.
+func ToInt32(i *int) *int32 {
+	if i == nil {
+		return nil
+	}
+	return to.Int32Ptr(int32(*i))
+}
+
 // ToBool converts the supplied pointer to bool to a bool, returning the
 // false if the pointer is nil.
 func ToBool(b *bool) bool {
 	return to.Bool(b)
+}
+
+// Late initialization is the concept of filling the empty fields in spec
+// via the default ones provided by the system. See
+// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#late-initialization
+
+// LateInitializeStringPtrFromPtr late-inits *string
+func LateInitializeStringPtrFromPtr(in, from *string) *string {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
+// LateInitializeStringMap late-inits map[string]string
+func LateInitializeStringMap(in map[string]string, from map[string]*string) map[string]string {
+	if in != nil {
+		return in
+	}
+	if from == nil {
+		return nil
+	}
+	return to.StringMap(from)
+}
+
+// LateInitializeBoolPtrFromPtr late-inits *bool
+func LateInitializeBoolPtrFromPtr(in, from *bool) *bool {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
+// LateInitializeIntPtrFromInt32Ptr late-inits *int
+func LateInitializeIntPtrFromInt32Ptr(in *int, from *int32) *int {
+	if in != nil {
+		return in
+	}
+	if from != nil {
+		return to.IntPtr(int(*from))
+	}
+	return nil
+}
+
+// LateInitializeStringValArrFromArrPtr late-inits []string
+func LateInitializeStringValArrFromArrPtr(in []string, from *[]string) []string {
+	if in != nil {
+		return in
+	}
+	return to.StringSlice(from)
 }
