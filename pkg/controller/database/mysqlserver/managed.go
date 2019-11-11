@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -35,7 +34,7 @@ import (
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	azuresql "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 const passwordDataLen = 20
@@ -48,6 +47,7 @@ const (
 	errGenPassword          = "cannot generate admin password"
 	errNotMySQLServer       = "managed resource is not a MySQLServer"
 	errCreateMySQLServer    = "cannot create MySQLServer"
+	errUpdateMySQLServer    = "cannot update MySQLServer"
 	errGetMySQLServer       = "cannot get MySQLServer"
 	errDeleteMySQLServer    = "cannot delete MySQLServer"
 	errCheckMySQLServerName = "cannot check MySQLServer name availability"
@@ -73,18 +73,18 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func newClient(credentials []byte) (azure.MySQLServerAPI, error) {
-	ac, err := azure.NewClient(credentials)
+func newClient(credentials []byte) (azuresql.MySQLServerAPI, error) {
+	ac, err := azuresql.NewClient(credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create Azure client")
 	}
-	mc, err := azure.NewMySQLServerClient(ac)
+	mc, err := azuresql.NewMySQLServerClient(ac)
 	return mc, errors.Wrap(err, "cannot create Azure MySQL client")
 }
 
 type connecter struct {
 	client      client.Client
-	newClientFn func(credentials []byte) (azure.MySQLServerAPI, error)
+	newClientFn func(credentials []byte) (azuresql.MySQLServerAPI, error)
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
@@ -108,18 +108,18 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 }
 
 type external struct {
-	client        azure.MySQLServerAPI
+	client        azuresql.MySQLServerAPI
 	newPasswordFn func(len int) (password string, err error)
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	s, ok := mg.(*v1alpha3.MySQLServer)
+	cr, ok := mg.(*v1alpha3.MySQLServer)
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotMySQLServer)
 	}
 
-	external, err := e.client.GetServer(ctx, s)
-	if azure.IsNotFound(err) {
+	server, err := e.client.GetServer(ctx, cr)
+	if azuresql.IsNotFound(err) {
 		// Azure SQL servers don't exist according to the Azure API until their
 		// create operation has completed, and Azure will happily let you submit
 		// several subsequent create operations for the same server. Our create
@@ -127,7 +127,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		// time, so we want to ensure it's only called once. Fortunately Azure
 		// exposes an API that reports server names to be taken as soon as their
 		// create operation is accepted.
-		creating, err := e.client.ServerNameTaken(ctx, s)
+		creating, err := e.client.ServerNameTaken(ctx, cr)
 		if err != nil {
 			return resource.ExternalObservation{}, errors.Wrap(err, errCheckMySQLServerName)
 		}
@@ -143,26 +143,22 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServer)
 	}
 
-	s.Status.AtProvider.State = string(external.UserVisibleState)
-	s.Status.AtProvider.ProviderID = azure.ToString(external.ID)
-	s.Status.AtProvider.Endpoint = azure.ToString(external.FullyQualifiedDomainName)
+	cr.Status.AtProvider = azuresql.GenerateMySQLObservation(server)
 
-	switch external.UserVisibleState {
-	case mysql.ServerStateReady:
-		s.SetConditions(runtimev1alpha1.Available())
-		if s.Status.AtProvider.Endpoint != "" {
-			resource.SetBindable(s)
-		}
+	switch cr.Status.AtProvider.UserVisibleState {
+	case azuresql.StateReady:
+		cr.SetConditions(runtimev1alpha1.Available())
+		resource.SetBindable(cr)
 	default:
-		s.SetConditions(runtimev1alpha1.Unavailable())
+		cr.SetConditions(runtimev1alpha1.Unavailable())
 	}
 
 	o := resource.ExternalObservation{
 		ResourceExists:   true,
-		ResourceUpToDate: true, // NOTE(negz): We don't yet support updating Azure SQL servers.
+		ResourceUpToDate: false,
 		ConnectionDetails: resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(s.Status.AtProvider.Endpoint),
-			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", s.Spec.ForProvider.AdministratorLogin, s.GetName())),
+			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
+			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
 		},
 	}
 
@@ -196,9 +192,13 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
-	// TODO(negz): Support updating Azure SQL servers. :)
+	cr, ok := mg.(*v1alpha3.MySQLServer)
+	if !ok {
+		return resource.ExternalUpdate{}, errors.New(errNotMySQLServer)
+	}
 
-	return resource.ExternalUpdate{}, nil
+	err := e.client.UpdateServer(ctx, cr)
+	return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMySQLServer)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -208,5 +208,5 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	}
 
 	s.SetConditions(runtimev1alpha1.Deleting())
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeleteMySQLServer)
+	return errors.Wrap(resource.Ignore(azuresql.IsNotFound, e.client.DeleteServer(ctx, s)), errDeleteMySQLServer)
 }

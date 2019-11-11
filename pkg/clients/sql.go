@@ -21,8 +21,6 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
-
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
@@ -30,14 +28,27 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
+	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 )
+
+// State strings for MySQL and PostgreSQL.
+const (
+	StateDisabled = string(mysql.ServerStateDisabled)
+	StateDropping = string(mysql.ServerStateDropping)
+	StateReady    = string(mysql.ServerStateReady)
+)
+
+// TODO: make the actual calls in the external client, use here only for
+// conversion of objects and helper methods.
 
 // MySQLServerAPI represents the API interface for a MySQL Server client
 type MySQLServerAPI interface {
 	ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (bool, error)
 	GetServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (mysql.Server, error)
 	CreateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer, adminPassword string) error
+	UpdateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
 	DeleteServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
 }
 
@@ -83,19 +94,18 @@ func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.My
 
 // CreateServer creates a MySQL Server.
 func (c *MySQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer, adminPassword string) error {
-	// initialize all the parameters that specify how to configure the server during creation
 	properties := &mysql.ServerPropertiesForDefaultCreate{
 		AdministratorLogin:         ToStringPtr(s.Spec.ForProvider.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
-		Version:                    mysql.ServerVersion(ToString(s.Spec.ForProvider.Version)),
-		SslEnforcement:             mysql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SslEnforcement)),
+		Version:                    mysql.ServerVersion(s.Spec.ForProvider.Version),
+		SslEnforcement:             mysql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SSLEnforcement)),
 		CreateMode:                 mysql.CreateModeDefault,
 	}
 	if s.Spec.ForProvider.StorageProfile != nil {
 		properties.StorageProfile = &mysql.StorageProfile{
 			BackupRetentionDays: ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.Spec.ForProvider.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.StorageMB),
+			StorageMB:           ToInt32Ptr(s.Spec.ForProvider.StorageProfile.StorageMB),
 			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.Spec.ForProvider.StorageProfile.StorageAutogrow)),
 		}
 	}
@@ -105,13 +115,45 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha3
 			Tier:     mysql.SkuTier(s.Spec.ForProvider.SKU.Tier),
 			Capacity: ToInt32Ptr(s.Spec.ForProvider.SKU.Capacity),
 			Family:   ToStringPtr(s.Spec.ForProvider.SKU.Family),
-			Size:     ToStringPtr(s.Spec.ForProvider.SKU.Size),
+			Size:     s.Spec.ForProvider.SKU.Size,
 		},
 		Properties: properties,
 		Location:   &s.Spec.ForProvider.Location,
 		Tags:       ToStringPtrMap(s.Spec.ForProvider.Tags),
 	}
 	_, err := c.Create(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), createParams)
+	return err
+}
+
+// UpdateServer updates a MySQL Server.
+func (c *MySQLServerClient) UpdateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error {
+	// TODO(muvaf): password update via Update call is supported by Azure but
+	// we don't yet have support for that.
+	properties := &mysql.ServerUpdateParametersProperties{
+		Version:        mysql.ServerVersion(s.Spec.ForProvider.Version),
+		SslEnforcement: mysql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SSLEnforcement)),
+		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
+	}
+	if s.Spec.ForProvider.StorageProfile != nil {
+		properties.StorageProfile = &mysql.StorageProfile{
+			BackupRetentionDays: ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.Spec.ForProvider.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           ToInt32Ptr(s.Spec.ForProvider.StorageProfile.StorageMB),
+			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.Spec.ForProvider.StorageProfile.StorageAutogrow)),
+		}
+	}
+	updateParams := mysql.ServerUpdateParameters{
+		Sku: &mysql.Sku{
+			Name:     ToStringPtr(s.Spec.ForProvider.SKU.Name),
+			Tier:     mysql.SkuTier(s.Spec.ForProvider.SKU.Tier),
+			Capacity: ToInt32Ptr(s.Spec.ForProvider.SKU.Capacity),
+			Family:   ToStringPtr(s.Spec.ForProvider.SKU.Family),
+			Size:     s.Spec.ForProvider.SKU.Size,
+		},
+		ServerUpdateParametersProperties: properties,
+		Tags:                             ToStringPtrMap(s.Spec.ForProvider.Tags),
+	}
+	_, err := c.Update(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), updateParams)
 	return err
 }
 
@@ -242,15 +284,15 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, s *azuredbv1a
 	properties := &postgresql.ServerPropertiesForDefaultCreate{
 		AdministratorLogin:         ToStringPtr(s.Spec.ForProvider.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
-		Version:                    postgresql.ServerVersion(ToString(s.Spec.ForProvider.Version)),
-		SslEnforcement:             postgresql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SslEnforcement)),
+		Version:                    postgresql.ServerVersion(s.Spec.ForProvider.Version),
+		SslEnforcement:             postgresql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SSLEnforcement)),
 		CreateMode:                 postgresql.CreateModeDefault,
 	}
 	if s.Spec.ForProvider.StorageProfile != nil {
 		properties.StorageProfile = &postgresql.StorageProfile{
 			BackupRetentionDays: ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  postgresql.GeoRedundantBackup(ToString(s.Spec.ForProvider.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.StorageMB),
+			StorageMB:           ToInt32Ptr(s.Spec.ForProvider.StorageProfile.StorageMB),
 			StorageAutogrow:     postgresql.StorageAutogrow(ToString(s.Spec.ForProvider.StorageProfile.StorageAutogrow)),
 		}
 	}
@@ -260,7 +302,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, s *azuredbv1a
 			Tier:     postgresql.SkuTier(s.Spec.ForProvider.SKU.Tier),
 			Capacity: ToInt32Ptr(s.Spec.ForProvider.SKU.Capacity),
 			Family:   ToStringPtr(s.Spec.ForProvider.SKU.Family),
-			Size:     ToStringPtr(s.Spec.ForProvider.SKU.Size),
+			Size:     s.Spec.ForProvider.SKU.Size,
 		},
 		Properties: properties,
 		Location:   &s.Spec.ForProvider.Location,
@@ -342,4 +384,31 @@ func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.Postgr
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = ToString(az.ID)
 	v.Status.Type = ToString(az.Type)
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Conversion code.
+
+// GeneratePostgreSQLObservation produces SQLServerObservation from postgresql.Server.
+func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1alpha3.SQLServerObservation {
+	return azuredbv1alpha3.SQLServerObservation{
+		ID:                       ToString(in.ID),
+		Name:                     ToString(in.Name),
+		Type:                     ToString(in.Type),
+		UserVisibleState:         string(in.UserVisibleState),
+		FullyQualifiedDomainName: ToString(in.FullyQualifiedDomainName),
+		MasterServerID:           ToString(in.MasterServerID),
+	}
+}
+
+// GenerateMySQLObservation produces SQLServerObservation from mysql.Server
+func GenerateMySQLObservation(in mysql.Server) azuredbv1alpha3.SQLServerObservation {
+	return azuredbv1alpha3.SQLServerObservation{
+		ID:                       ToString(in.ID),
+		Name:                     ToString(in.Name),
+		Type:                     ToString(in.Type),
+		UserVisibleState:         string(in.UserVisibleState),
+		FullyQualifiedDomainName: ToString(in.FullyQualifiedDomainName),
+		MasterServerID:           ToString(in.MasterServerID),
+	}
 }

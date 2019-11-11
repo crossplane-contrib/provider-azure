@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -149,7 +147,7 @@ func ConfigureMySQLServer(_ context.Context, cm resource.Claim, cs resource.Clas
 	}
 
 	if my.Spec.EngineVersion != "" {
-		spec.ForProvider.Version = azure.ToStringPtr(my.Spec.EngineVersion)
+		spec.ForProvider.Version = my.Spec.EngineVersion
 	}
 
 	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{

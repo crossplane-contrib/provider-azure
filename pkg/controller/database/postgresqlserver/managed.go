@@ -113,21 +113,21 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	s, ok := mg.(*v1alpha3.PostgreSQLServer)
+	cr, ok := mg.(*v1alpha3.PostgreSQLServer)
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
 	}
 
-	external, err := e.client.GetServer(ctx, s)
+	server, err := e.client.GetServer(ctx, cr)
 	if azure.IsNotFound(err) {
 		// Azure SQL servers don't exist according to the Azure API until their
 		// create operation has completed, and Azure will happily let you submit
 		// several subsequent create operations for the same server. Our create
 		// call is not idempotent because it creates a new random password each
-		// time, so we want to ensure it's only called once. Fortunately Azure
+		// time, so we want to ensure it'cr only called once. Fortunately Azure
 		// exposes an API that reports server names to be taken as soon as their
 		// create operation is accepted.
-		creating, err := e.client.ServerNameTaken(ctx, s)
+		creating, err := e.client.ServerNameTaken(ctx, cr)
 		if err != nil {
 			return resource.ExternalObservation{}, errors.Wrap(err, errCheckPostgreSQLServerName)
 		}
@@ -144,26 +144,22 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
 	}
 
-	s.Status.AtProvider.State = string(external.UserVisibleState)
-	s.Status.AtProvider.ProviderID = azure.ToString(external.ID)
-	s.Status.AtProvider.Endpoint = azure.ToString(external.FullyQualifiedDomainName)
+	cr.Status.AtProvider = azure.GeneratePostgreSQLObservation(server)
 
-	switch external.UserVisibleState {
+	switch server.UserVisibleState {
 	case postgresql.ServerStateReady:
-		s.SetConditions(runtimev1alpha1.Available())
-		if s.Status.AtProvider.Endpoint != "" {
-			resource.SetBindable(s)
-		}
+		cr.SetConditions(runtimev1alpha1.Available())
+		resource.SetBindable(cr)
 	default:
-		s.SetConditions(runtimev1alpha1.Unavailable())
+		cr.SetConditions(runtimev1alpha1.Unavailable())
 	}
 
 	o := resource.ExternalObservation{
 		ResourceExists:   true,
 		ResourceUpToDate: true, // NOTE(negz): We don't yet support updating Azure SQL servers.
 		ConnectionDetails: resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(s.Status.AtProvider.Endpoint),
-			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", s.Spec.ForProvider.AdministratorLogin, s.GetName())),
+			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
+			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
 		},
 	}
 

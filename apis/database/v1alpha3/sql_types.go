@@ -235,14 +235,17 @@ type SKU struct {
 	// Name - The name of the sku, typically, tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
 	Name string `json:"name"`
 
-	// Tier - The tier of the particular SKU, e.g. Basic. Possible values include: 'Basic', 'GeneralPurpose', 'MemoryOptimized'
+	// Tier - The tier of the particular SKU.
+	// Possible values include: 'Basic', 'GeneralPurpose', 'MemoryOptimized'
+	// +kubebuilder:validation:Enum=Basic;GeneralPurpose;MemoryOptimized
 	Tier string `json:"tier"`
 
 	// Capacity - The scale up/out capacity, representing server's compute units.
 	Capacity int `json:"capacity"`
 
 	// Size - The size code, to be interpreted by resource as appropriate.
-	Size string `json:"size"`
+	// +optional
+	Size *string `json:"size,omitempty"`
 
 	// Family - The family of hardware.
 	Family string `json:"family"`
@@ -251,25 +254,20 @@ type SKU struct {
 // StorageProfile storage Profile properties of a server
 type StorageProfile struct {
 	// BackupRetentionDays - Backup retention days for the server.
-	// +immutable
 	// +optional
 	BackupRetentionDays *int `json:"backupRetentionDays,omitempty"`
 
 	// GeoRedundantBackup - Enable Geo-redundant or not for server backup.
 	// Possible values include: 'Enabled', 'Disabled'
 	// +kubebuilder:validation:Enum=Enabled;Disabled
-	// +immutable
 	// +optional
 	GeoRedundantBackup *string `json:"geoRedundantBackup,omitempty"`
 
 	// StorageMB - Max storage allowed for a server.
-	// +immutable
-	// +optional
-	StorageMB *int `json:"storageMB,omitempty"`
+	StorageMB int `json:"storageMB"`
 
 	// StorageAutogrow - Enable Storage Auto Grow.
 	// +kubebuilder:validation:Enum=Enabled;Disabled
-	// +immutable
 	// +optional
 	StorageAutogrow *string `json:"storageAutogrow,omitempty"`
 }
@@ -287,6 +285,8 @@ type SQLServerParameters struct {
 	// +immutable
 	ResourceGroupNameRef *ResourceGroupNameReferencerForSQLServer `json:"resourceGroupNameRef,omitempty"`
 
+	//TODO(muvaf): fix ref
+
 	// SKU is the billing information related properties of the server.
 	SKU SKU `json:"sku"`
 
@@ -299,45 +299,18 @@ type SQLServerParameters struct {
 	AdministratorLogin string `json:"administratorLogin"`
 
 	// Tags - Application-specific metadata in the form of key-value pairs.
-	// +immutable
 	// +optional
 	Tags map[string]string `json:"tags,omitempty"`
 
 	// Version - Server version. Possible values include: 'FiveFullStopSix', 'FiveFullStopSeven'
-	// +immutable
-	// +optional
-	Version *string `json:"version,omitempty"`
+	Version string `json:"version"`
 
-	// SslEnforcement - Enable ssl enforcement or not when connect to server. Possible values include: 'SslEnforcementEnumEnabled', 'SslEnforcementEnumDisabled'
+	// SSLEnforcement - Enable ssl enforcement or not when connect to server. Possible values include: 'Enabled', 'Disabled'
 	// +kubebuilder:validation:Enum=Enabled;Disabled
-	// +immutable
-	// +optional
-	SslEnforcement *string `json:"sslEnforcement,omitempty"`
-
-	// FullyQualifiedDomainName - The fully qualified domain name of a server.
-	// +immutable
-	// +optional
-	FullyQualifiedDomainName *string `json:"fullyQualifiedDomainName,omitempty"`
-
-	// EarliestRestoreDate - Earliest restore point creation time (ISO8601 format)
-	// +immutable
-	// +optional
-	EarliestRestoreDate *metav1.Time `json:"earliestRestoreDate,omitempty"`
+	SSLEnforcement *string `json:"sslEnforcement"`
 
 	// StorageProfile - Storage profile of a server.
-	// +immutable
-	// +optional
-	StorageProfile *StorageProfile `json:"storageProfile,omitempty"`
-
-	// ReplicationRole - The replication role of the server.
-	// +immutable
-	// +optional
-	ReplicationRole *string `json:"replicationRole,omitempty"`
-
-	// ReplicaCapacity - The maximum number of replicas that a master server can have.
-	// +immutable
-	// +optional
-	ReplicaCapacity *int `json:"replicaCapacity,omitempty"`
+	StorageProfile *StorageProfile `json:"storageProfile"`
 }
 
 // A SQLServerSpec defines the desired state of a SQLServer.
@@ -348,36 +321,29 @@ type SQLServerSpec struct {
 
 // SQLServerObservation represents the current state of Azure SQL resource.
 type SQLServerObservation struct {
-	// State of this SQLServer.
-	State string `json:"state,omitempty"`
+	// ID - READ-ONLY; Resource ID
+	ID string `json:"id,omitempty"`
 
-	// A Message containing detail on the state of this SQLServer, if any.
-	Message string `json:"message,omitempty"`
+	// Name - READ-ONLY; Resource name.
+	Name string `json:"name,omitempty"`
 
-	// ProviderID is the external ID to identify this resource in the cloud
-	// provider.
-	ProviderID string `json:"providerID,omitempty"`
+	// Type - READ-ONLY; Resource type.
+	Type string `json:"type,omitempty"`
 
-	// Endpoint of the MySQL Server instance used in connection strings.
-	Endpoint string `json:"endpoint,omitempty"`
+	// UserVisibleState - A state of a server that is visible to user.
+	UserVisibleState string `json:"userVisibleState,omitempty"`
+
+	// FullyQualifiedDomainName - The fully qualified domain name of a server.
+	FullyQualifiedDomainName string `json:"fullyQualifiedDomainName,omitempty"`
+
+	// MasterServerID - The master server id of a replica server.
+	MasterServerID string `json:"masterServerId,omitempty"`
 }
 
 // A SQLServerStatus represents the observed state of a SQLServer.
 type SQLServerStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 	AtProvider                     SQLServerObservation `json:"atProvider,omitempty"`
-}
-
-// A StorageProfileSpec represents storage related properties of a SQLServer.
-type StorageProfileSpec struct {
-	// StorageGB configures the maximum storage allowed.
-	StorageGB int `json:"storageGB"`
-
-	// BackupRetentionDays configures how many days backups will be retained.
-	BackupRetentionDays int `json:"backupRetentionDays,omitempty"`
-
-	// GeoRedundantBackup enables geo-redunndant backups.
-	GeoRedundantBackup bool `json:"geoRedundantBackup,omitempty"`
 }
 
 // ValidMySQLVersionValues returns the valid set of engine version values.

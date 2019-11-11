@@ -55,24 +55,8 @@ spec:
                     of a server. Can only be specified when the server is being created
                     (and is required for creation).
                   type: string
-                earliestRestoreDate:
-                  description: EarliestRestoreDate - Earliest restore point creation
-                    time (ISO8601 format)
-                  format: date-time
-                  type: string
-                fullyQualifiedDomainName:
-                  description: FullyQualifiedDomainName - The fully qualified domain
-                    name of a server.
-                  type: string
                 location:
                   description: Location specifies the location of this SQLServer.
-                  type: string
-                replicaCapacity:
-                  description: ReplicaCapacity - The maximum number of replicas that
-                    a master server can have.
-                  type: integer
-                replicationRole:
-                  description: ReplicationRole - The replication role of the server.
                   type: string
                 resourceGroupName:
                   description: ResourceGroupName specifies the name of the resource
@@ -107,20 +91,22 @@ spec:
                         as appropriate.
                       type: string
                     tier:
-                      description: 'Tier - The tier of the particular SKU, e.g. Basic.
-                        Possible values include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
+                      description: 'Tier - The tier of the particular SKU. Possible
+                        values include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
+                      enum:
+                      - Basic
+                      - GeneralPurpose
+                      - MemoryOptimized
                       type: string
                   required:
                   - capacity
                   - family
                   - name
-                  - size
                   - tier
                   type: object
                 sslEnforcement:
-                  description: 'SslEnforcement - Enable ssl enforcement or not when
-                    connect to server. Possible values include: ''SslEnforcementEnumEnabled'',
-                    ''SslEnforcementEnumDisabled'''
+                  description: 'SSLEnforcement - Enable ssl enforcement or not when
+                    connect to server. Possible values include: ''Enabled'', ''Disabled'''
                   enum:
                   - Enabled
                   - Disabled
@@ -148,6 +134,8 @@ spec:
                     storageMB:
                       description: StorageMB - Max storage allowed for a server.
                       type: integer
+                  required:
+                  - storageMB
                   type: object
                 tags:
                   additionalProperties:
@@ -163,6 +151,9 @@ spec:
               - administratorLogin
               - location
               - sku
+              - sslEnforcement
+              - storageProfile
+              - version
               type: object
             providerRef:
               description: ProviderReference specifies the provider that will be used

@@ -47,6 +47,7 @@ type MockMySQLServerAPI struct {
 	MockServerNameTaken func(ctx context.Context, s *v1alpha3.MySQLServer) (bool, error)
 	MockGetServer       func(ctx context.Context, s *v1alpha3.MySQLServer) (mysql.Server, error)
 	MockCreateServer    func(ctx context.Context, s *v1alpha3.MySQLServer, adminPassword string) error
+	MockUpdateServer    func(ctx context.Context, s *v1alpha3.MySQLServer) error
 	MockDeleteServer    func(ctx context.Context, s *v1alpha3.MySQLServer) error
 }
 
@@ -60,6 +61,10 @@ func (m *MockMySQLServerAPI) GetServer(ctx context.Context, s *v1alpha3.MySQLSer
 
 func (m *MockMySQLServerAPI) CreateServer(ctx context.Context, s *v1alpha3.MySQLServer, adminPassword string) error {
 	return m.MockCreateServer(ctx, s, adminPassword)
+}
+
+func (m *MockMySQLServerAPI) UpdateServer(ctx context.Context, s *v1alpha3.MySQLServer) error {
+	return m.MockUpdateServer(ctx, s)
 }
 
 func (m *MockMySQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha3.MySQLServer) error {

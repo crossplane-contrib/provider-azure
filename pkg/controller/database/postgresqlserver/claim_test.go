@@ -83,7 +83,7 @@ func TestConfigurePostgreSQLServer(t *testing.T) {
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 						},
 						ForProvider: v1alpha3.SQLServerParameters{
-							Version: &version,
+							Version: version,
 						},
 					},
 				},
