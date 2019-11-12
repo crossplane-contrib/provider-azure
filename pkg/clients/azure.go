@@ -231,6 +231,14 @@ func LateInitializeStringPtrFromPtr(in, from *string) *string {
 	return from
 }
 
+// LateInitializeStringPtrFromVal late-inits *string using string
+func LateInitializeStringPtrFromVal(in *string, from string) *string {
+	if in != nil {
+		return in
+	}
+	return &from
+}
+
 // LateInitializeStringMap late-inits map[string]string
 func LateInitializeStringMap(in map[string]string, from map[string]*string) map[string]string {
 	if in != nil {

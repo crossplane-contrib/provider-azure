@@ -82,10 +82,6 @@ spec:
                     family:
                       description: Family - The family of hardware.
                       type: string
-                    name:
-                      description: Name - The name of the sku, typically, tier + family
-                        + cores, e.g. B_Gen4_1, GP_Gen5_8.
-                      type: string
                     size:
                       description: Size - The size code, to be interpreted by resource
                         as appropriate.
@@ -101,7 +97,6 @@ spec:
                   required:
                   - capacity
                   - family
-                  - name
                   - tier
                   type: object
                 sslEnforcement:
@@ -126,7 +121,8 @@ spec:
                       - Disabled
                       type: string
                     storageAutogrow:
-                      description: StorageAutogrow - Enable Storage Auto Grow.
+                      description: 'StorageAutogrow - Enable Storage Auto Grow. Possible
+                        values include: ''Enabled'', ''Disabled'''
                       enum:
                       - Enabled
                       - Disabled
@@ -144,8 +140,7 @@ spec:
                     key-value pairs.
                   type: object
                 version:
-                  description: 'Version - Server version. Possible values include:
-                    ''FiveFullStopSix'', ''FiveFullStopSeven'''
+                  description: Version - Server version.
                   type: string
               required:
               - administratorLogin

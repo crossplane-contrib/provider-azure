@@ -228,13 +228,8 @@ type SQLServerClassList struct {
 	Items           []SQLServerClass `json:"items"`
 }
 
-// TODO(muvaf): see what fields are optional.
-
 // SKU billing information related properties of a server.
 type SKU struct {
-	// Name - The name of the sku, typically, tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
-	Name string `json:"name"`
-
 	// Tier - The tier of the particular SKU.
 	// Possible values include: 'Basic', 'GeneralPurpose', 'MemoryOptimized'
 	// +kubebuilder:validation:Enum=Basic;GeneralPurpose;MemoryOptimized
@@ -267,6 +262,7 @@ type StorageProfile struct {
 	StorageMB int `json:"storageMB"`
 
 	// StorageAutogrow - Enable Storage Auto Grow.
+	// Possible values include: 'Enabled', 'Disabled'
 	// +kubebuilder:validation:Enum=Enabled;Disabled
 	// +optional
 	StorageAutogrow *string `json:"storageAutogrow,omitempty"`
@@ -285,8 +281,6 @@ type SQLServerParameters struct {
 	// +immutable
 	ResourceGroupNameRef *ResourceGroupNameReferencerForSQLServer `json:"resourceGroupNameRef,omitempty"`
 
-	//TODO(muvaf): fix ref
-
 	// SKU is the billing information related properties of the server.
 	SKU SKU `json:"sku"`
 
@@ -302,15 +296,15 @@ type SQLServerParameters struct {
 	// +optional
 	Tags map[string]string `json:"tags,omitempty"`
 
-	// Version - Server version. Possible values include: 'FiveFullStopSix', 'FiveFullStopSeven'
+	// Version - Server version.
 	Version string `json:"version"`
 
 	// SSLEnforcement - Enable ssl enforcement or not when connect to server. Possible values include: 'Enabled', 'Disabled'
 	// +kubebuilder:validation:Enum=Enabled;Disabled
-	SSLEnforcement *string `json:"sslEnforcement"`
+	SSLEnforcement string `json:"sslEnforcement"`
 
 	// StorageProfile - Storage profile of a server.
-	StorageProfile *StorageProfile `json:"storageProfile"`
+	StorageProfile StorageProfile `json:"storageProfile"`
 }
 
 // A SQLServerSpec defines the desired state of a SQLServer.

@@ -19,7 +19,9 @@ package azure
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
+	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
@@ -40,8 +42,13 @@ const (
 	StateReady    = string(mysql.ServerStateReady)
 )
 
-// TODO: make the actual calls in the external client, use here only for
-// conversion of objects and helper methods.
+var (
+	skuShortTiers = map[mysql.SkuTier]string{
+		mysql.Basic:           "B",
+		mysql.GeneralPurpose:  "GP",
+		mysql.MemoryOptimized: "MO",
+	}
+)
 
 // MySQLServerAPI represents the API interface for a MySQL Server client
 type MySQLServerAPI interface {
@@ -93,73 +100,97 @@ func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.My
 }
 
 // CreateServer creates a MySQL Server.
-func (c *MySQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer, adminPassword string) error {
+func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer, adminPassword string) error {
+	s := cr.Spec.ForProvider
 	properties := &mysql.ServerPropertiesForDefaultCreate{
-		AdministratorLogin:         ToStringPtr(s.Spec.ForProvider.AdministratorLogin),
+		AdministratorLogin:         ToStringPtr(s.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
-		Version:                    mysql.ServerVersion(s.Spec.ForProvider.Version),
-		SslEnforcement:             mysql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SSLEnforcement)),
+		Version:                    mysql.ServerVersion(s.Version),
+		SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
 		CreateMode:                 mysql.CreateModeDefault,
+		StorageProfile: &mysql.StorageProfile{
+			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+		},
 	}
-	if s.Spec.ForProvider.StorageProfile != nil {
-		properties.StorageProfile = &mysql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.Spec.ForProvider.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.Spec.ForProvider.StorageProfile.StorageMB),
-			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.Spec.ForProvider.StorageProfile.StorageAutogrow)),
-		}
+	sku, err := ToMySQLSKU(s.SKU)
+	if err != nil {
+		return err
 	}
 	createParams := mysql.ServerForCreate{
-		Sku: &mysql.Sku{
-			Name:     ToStringPtr(s.Spec.ForProvider.SKU.Name),
-			Tier:     mysql.SkuTier(s.Spec.ForProvider.SKU.Tier),
-			Capacity: ToInt32Ptr(s.Spec.ForProvider.SKU.Capacity),
-			Family:   ToStringPtr(s.Spec.ForProvider.SKU.Family),
-			Size:     s.Spec.ForProvider.SKU.Size,
-		},
+		Sku:        sku,
 		Properties: properties,
-		Location:   &s.Spec.ForProvider.Location,
-		Tags:       ToStringPtrMap(s.Spec.ForProvider.Tags),
+		Location:   &s.Location,
+		Tags:       ToStringPtrMap(s.Tags),
 	}
-	_, err := c.Create(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), createParams)
+	op, err := c.Create(ctx, s.ResourceGroupName, meta.GetExternalName(cr), createParams)
+	if err != nil {
+		return err
+	}
+	// NOTE(muvaf): There are cases where Create call does not return error
+	// and you don't see any SQL instance in the console UI. In those cases,
+	// since name is not taken, we always call Create with a new password each time.
+	// The problem is, error that blocks creation happens after the Create call
+	// is initiated.
+	// DoneWithContext checks the operation once and errors usually surface
+	// themselves in the first check, if there is one we are able to warn the user
+	// for a fix.
+	// However, there could be cases where the error appears after a long while.
+	// For that reason, some libraries make use of WithCompletionRef function. However,
+	// that function blocks until success or error with the context deadline.
+	// Azure does not provide any guarantees regarding provisioning time and it
+	// can get really long. In most of the cases, our context deadline gets reached.
+	//
+	// For the time being, we check only once to cover the greater possibility of
+	// capturing the error. If there is none, we'll never call Create again anyway.
+	// If the problem happens after a while, we'd fallback to old behavior where
+	// we continuously try to create and fail.
+	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
 
 // UpdateServer updates a MySQL Server.
-func (c *MySQLServerClient) UpdateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error {
+func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer) error {
 	// TODO(muvaf): password update via Update call is supported by Azure but
-	// we don't yet have support for that.
+	// we don't support that.
+	s := cr.Spec.ForProvider
 	properties := &mysql.ServerUpdateParametersProperties{
-		Version:        mysql.ServerVersion(s.Spec.ForProvider.Version),
-		SslEnforcement: mysql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SSLEnforcement)),
+		Version:        mysql.ServerVersion(s.Version),
+		SslEnforcement: mysql.SslEnforcementEnum(s.SSLEnforcement),
 		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
+		StorageProfile: &mysql.StorageProfile{
+			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+		},
 	}
-	if s.Spec.ForProvider.StorageProfile != nil {
-		properties.StorageProfile = &mysql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.Spec.ForProvider.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.Spec.ForProvider.StorageProfile.StorageMB),
-			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.Spec.ForProvider.StorageProfile.StorageAutogrow)),
-		}
+	sku, err := ToMySQLSKU(s.SKU)
+	if err != nil {
+		return err
 	}
 	updateParams := mysql.ServerUpdateParameters{
-		Sku: &mysql.Sku{
-			Name:     ToStringPtr(s.Spec.ForProvider.SKU.Name),
-			Tier:     mysql.SkuTier(s.Spec.ForProvider.SKU.Tier),
-			Capacity: ToInt32Ptr(s.Spec.ForProvider.SKU.Capacity),
-			Family:   ToStringPtr(s.Spec.ForProvider.SKU.Family),
-			Size:     s.Spec.ForProvider.SKU.Size,
-		},
+		Sku:                              sku,
 		ServerUpdateParametersProperties: properties,
-		Tags:                             ToStringPtrMap(s.Spec.ForProvider.Tags),
+		Tags:                             ToStringPtrMap(s.Tags),
 	}
-	_, err := c.Update(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), updateParams)
+	op, err := c.Update(ctx, s.ResourceGroupName, meta.GetExternalName(cr), updateParams)
+	if err != nil {
+		return err
+	}
+	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
 
 // DeleteServer deletes the given MySQLServer resource.
-func (c *MySQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error {
-	_, err := c.ServersClient.Delete(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
+func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer) error {
+	op, err := c.ServersClient.Delete(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
+	if err != nil {
+		return err
+	}
+	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
 
@@ -279,42 +310,79 @@ func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1alph
 }
 
 // CreateServer creates a PostgreSQL Server
-func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error {
-	// initialize all the parameters that s.Specify how to configure the server during creation
+func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error {
+	s := cr.Spec.ForProvider
 	properties := &postgresql.ServerPropertiesForDefaultCreate{
-		AdministratorLogin:         ToStringPtr(s.Spec.ForProvider.AdministratorLogin),
+		AdministratorLogin:         ToStringPtr(s.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
-		Version:                    postgresql.ServerVersion(s.Spec.ForProvider.Version),
-		SslEnforcement:             postgresql.SslEnforcementEnum(ToString(s.Spec.ForProvider.SSLEnforcement)),
+		Version:                    postgresql.ServerVersion(s.Version),
+		SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
 		CreateMode:                 postgresql.CreateModeDefault,
+		StorageProfile: &postgresql.StorageProfile{
+			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  postgresql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     postgresql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+		},
 	}
-	if s.Spec.ForProvider.StorageProfile != nil {
-		properties.StorageProfile = &postgresql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.Spec.ForProvider.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  postgresql.GeoRedundantBackup(ToString(s.Spec.ForProvider.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.Spec.ForProvider.StorageProfile.StorageMB),
-			StorageAutogrow:     postgresql.StorageAutogrow(ToString(s.Spec.ForProvider.StorageProfile.StorageAutogrow)),
-		}
+	sku, err := ToPostgreSQLSKU(s.SKU)
+	if err != nil {
+		return err
 	}
 	createParams := postgresql.ServerForCreate{
-		Sku: &postgresql.Sku{
-			Name:     ToStringPtr(s.Spec.ForProvider.SKU.Name),
-			Tier:     postgresql.SkuTier(s.Spec.ForProvider.SKU.Tier),
-			Capacity: ToInt32Ptr(s.Spec.ForProvider.SKU.Capacity),
-			Family:   ToStringPtr(s.Spec.ForProvider.SKU.Family),
-			Size:     s.Spec.ForProvider.SKU.Size,
-		},
+		Sku:        sku,
 		Properties: properties,
-		Location:   &s.Spec.ForProvider.Location,
-		Tags:       ToStringPtrMap(s.Spec.ForProvider.Tags),
+		Location:   &s.Location,
+		Tags:       ToStringPtrMap(s.Tags),
 	}
-	_, err := c.Create(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), createParams)
+	op, err := c.Create(ctx, s.ResourceGroupName, meta.GetExternalName(cr), createParams)
+	if err != nil {
+		return err
+	}
+	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
+	return err
+}
+
+// UpdateServer updates a PostgreSQL Server.
+func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer) error {
+	// TODO(muvaf): password update via Update call is supported by Azure but
+	// we don't support that.
+	s := cr.Spec.ForProvider
+	properties := &postgresql.ServerUpdateParametersProperties{
+		Version:        postgresql.ServerVersion(s.Version),
+		SslEnforcement: postgresql.SslEnforcementEnum(s.SSLEnforcement),
+		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
+		StorageProfile: &postgresql.StorageProfile{
+			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  postgresql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     postgresql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+		},
+	}
+	sku, err := ToPostgreSQLSKU(s.SKU)
+	if err != nil {
+		return err
+	}
+	updateParams := postgresql.ServerUpdateParameters{
+		Sku:                              sku,
+		ServerUpdateParametersProperties: properties,
+		Tags:                             ToStringPtrMap(s.Tags),
+	}
+	op, err := c.Update(ctx, s.ResourceGroupName, meta.GetExternalName(cr), updateParams)
+	if err != nil {
+		return err
+	}
+	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
 
 // DeleteServer deletes the given PostgreSQL resource
 func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error {
-	_, err := c.ServersClient.Delete(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
+	op, err := c.ServersClient.Delete(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
+	if err != nil {
+		return err
+	}
+	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
 
@@ -386,8 +454,44 @@ func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.Postgr
 	v.Status.Type = ToString(az.Type)
 }
 
-//---------------------------------------------------------------------------------------------------------------------
-// Conversion code.
+// Helper functions
+// NOTE: These helper functions work for both MySQL and PostreSQL, but we cast everything to the MySQL types because
+// the generated Azure clients for MySQL and PostgreSQL are exactly the same content, just a different package. See:
+// https://github.com/Azure/azure-sdk-for-go/blob/master/services/mysql/mgmt/2017-12-01/mysql/models.go
+// https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
+
+// The name must match the specification of the SKU, so, we don't allow user
+// to specify an arbitrary name.
+
+// ToMySQLSKU returns the name of the MySQL Server SKU, which is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
+func ToMySQLSKU(skuSpec azuredbv1alpha3.SKU) (*mysql.Sku, error) {
+	t, ok := skuShortTiers[mysql.SkuTier(skuSpec.Tier)]
+	if !ok {
+		return nil, fmt.Errorf("tier '%s' is not one of the supported values: %+v", skuSpec.Tier, mysql.PossibleSkuTierValues())
+	}
+	return &mysql.Sku{
+		Name:     ToStringPtr(fmt.Sprintf("%s_%s_%s", t, skuSpec.Family, strconv.Itoa(skuSpec.Capacity))),
+		Tier:     mysql.SkuTier(skuSpec.Tier),
+		Capacity: ToInt32Ptr(skuSpec.Capacity),
+		Family:   ToStringPtr(skuSpec.Family),
+		Size:     skuSpec.Size,
+	}, nil
+}
+
+// ToPostgreSQLSKU returns the name of the PostgreSQL SKU, which is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
+func ToPostgreSQLSKU(skuSpec azuredbv1alpha3.SKU) (*postgresql.Sku, error) {
+	t, ok := skuShortTiers[mysql.SkuTier(skuSpec.Tier)]
+	if !ok {
+		return nil, fmt.Errorf("tier '%s' is not one of the supported values: %+v", skuSpec.Tier, mysql.PossibleSkuTierValues())
+	}
+	return &postgresql.Sku{
+		Name:     ToStringPtr(fmt.Sprintf("%s_%s_%s", t, skuSpec.Family, strconv.Itoa(skuSpec.Capacity))),
+		Tier:     postgresql.SkuTier(skuSpec.Tier),
+		Capacity: ToInt32Ptr(skuSpec.Capacity),
+		Family:   ToStringPtr(skuSpec.Family),
+		Size:     skuSpec.Size,
+	}, nil
+}
 
 // GeneratePostgreSQLObservation produces SQLServerObservation from postgresql.Server.
 func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1alpha3.SQLServerObservation {
@@ -411,4 +515,45 @@ func GenerateMySQLObservation(in mysql.Server) azuredbv1alpha3.SQLServerObservat
 		FullyQualifiedDomainName: ToString(in.FullyQualifiedDomainName),
 		MasterServerID:           ToString(in.MasterServerID),
 	}
+}
+
+func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server) {
+	if in.Sku != nil {
+		p.SKU.Size = LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
+	}
+	p.Tags = LateInitializeStringMap(p.Tags, in.Tags)
+	if in.StorageProfile != nil {
+		p.StorageProfile.BackupRetentionDays = LateInitializeIntPtrFromInt32Ptr(p.StorageProfile.BackupRetentionDays, in.StorageProfile.BackupRetentionDays)
+		p.StorageProfile.GeoRedundantBackup = LateInitializeStringPtrFromVal(p.StorageProfile.GeoRedundantBackup, string(in.StorageProfile.GeoRedundantBackup))
+		p.StorageProfile.StorageAutogrow = LateInitializeStringPtrFromVal(p.StorageProfile.StorageAutogrow, string(in.StorageProfile.StorageAutogrow))
+	}
+}
+
+func IsMySQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in mysql.Server) bool {
+	if in.StorageProfile == nil || in.Sku == nil {
+		return false
+	}
+	switch {
+	case p.SSLEnforcement != string(in.SslEnforcement):
+		return false
+	case p.Version != string(in.Version):
+		return false
+	case !reflect.DeepEqual(ToStringPtrMap(p.Tags), in.Tags):
+		return false
+	case p.SKU.Tier != string(in.Sku.Tier):
+		return false
+	case p.SKU.Capacity != ToInt(in.Sku.Capacity):
+		return false
+	case p.SKU.Family != ToString(in.Sku.Family):
+		return false
+	case !reflect.DeepEqual(ToInt32PtrFromIntPtr(p.StorageProfile.BackupRetentionDays), in.StorageProfile.BackupRetentionDays):
+		return false
+	case ToString(p.StorageProfile.GeoRedundantBackup) != string(in.StorageProfile.GeoRedundantBackup):
+		return false
+	case p.StorageProfile.StorageMB != ToInt(in.StorageProfile.StorageMB):
+		return false
+	case ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
+		return false
+	}
+	return true
 }

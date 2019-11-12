@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
@@ -68,9 +70,9 @@ func (m *MockPostgreSQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha3.
 
 type modifier func(*v1alpha3.PostgreSQLServer)
 
-func withName(name string) modifier {
+func withExternalName(name string) modifier {
 	return func(p *v1alpha3.PostgreSQLServer) {
-		p.SetName(name)
+		meta.SetExternalName(p, name)
 	}
 }
 
@@ -297,7 +299,7 @@ func TestObserve(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				mg: postgresqlserver(
-					withName(name),
+					withExternalName(name),
 					withAdminName(admin),
 				),
 			},

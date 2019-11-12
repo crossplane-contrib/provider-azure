@@ -103,11 +103,12 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 	if err := c.client.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrap(err, errGetProviderSecret)
 	}
-	client, err := c.newClientFn(s.Data[p.Spec.Secret.Key])
-	return &external{client: client, newPasswordFn: util.GeneratePassword}, errors.Wrap(err, errNewClient)
+	sqlClient, err := c.newClientFn(s.Data[p.Spec.Secret.Key])
+	return &external{kube: c.client, client: sqlClient, newPasswordFn: util.GeneratePassword}, errors.Wrap(err, errNewClient)
 }
 
 type external struct {
+	kube          client.Client
 	client        azuresql.MySQLServerAPI
 	newPasswordFn func(len int) (password string, err error)
 }
@@ -131,18 +132,15 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		if err != nil {
 			return resource.ExternalObservation{}, errors.Wrap(err, errCheckMySQLServerName)
 		}
-		if creating {
-			return resource.ExternalObservation{
-				ResourceExists:   true,
-				ResourceUpToDate: true, // NOTE(negz): We don't yet support updating Azure SQL servers.
-			}, nil
-		}
-		return resource.ExternalObservation{ResourceExists: false}, nil
+		return resource.ExternalObservation{ResourceExists: creating}, nil
 	}
 	if err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServer)
 	}
-
+	azuresql.LateInitializeMySQL(&cr.Spec.ForProvider, server)
+	if err := e.kube.Update(ctx, cr); err != nil {
+		return resource.ExternalObservation{}, err
+	}
 	cr.Status.AtProvider = azuresql.GenerateMySQLObservation(server)
 
 	switch cr.Status.AtProvider.UserVisibleState {
@@ -153,42 +151,36 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		cr.SetConditions(runtimev1alpha1.Unavailable())
 	}
 
-	o := resource.ExternalObservation{
+	return resource.ExternalObservation{
 		ResourceExists:   true,
-		ResourceUpToDate: false,
+		ResourceUpToDate: azuresql.IsMySQLUpToDate(cr.Spec.ForProvider, server),
 		ConnectionDetails: resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
 			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
 		},
-	}
-
-	return o, nil
+	}, nil
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	s, ok := mg.(*v1alpha3.MySQLServer)
+	cr, ok := mg.(*v1alpha3.MySQLServer)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotMySQLServer)
 	}
 
-	s.SetConditions(runtimev1alpha1.Creating())
-
+	cr.SetConditions(runtimev1alpha1.Creating())
 	pw, err := e.newPasswordFn(passwordDataLen)
 	if err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errGenPassword)
 	}
-
-	if err := e.client.CreateServer(ctx, s, pw); err != nil {
+	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMySQLServer)
 	}
 
-	ec := resource.ExternalCreation{
+	return resource.ExternalCreation{
 		ConnectionDetails: resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
 		},
-	}
-
-	return ec, nil
+	}, nil
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
@@ -196,9 +188,13 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotMySQLServer)
 	}
-
-	err := e.client.UpdateServer(ctx, cr)
-	return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMySQLServer)
+	// TODO(muvaf): If an async update operation is ongoing, state is still ready
+	// according to Azure but your update calls will be rejected since the resource
+	// is `busy`.
+	if cr.Status.AtProvider.UserVisibleState != azuresql.StateReady {
+		return resource.ExternalUpdate{}, nil
+	}
+	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdateMySQLServer)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {

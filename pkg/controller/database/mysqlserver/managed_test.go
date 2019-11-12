@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
@@ -73,9 +75,9 @@ func (m *MockMySQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha3.MySQL
 
 type modifier func(*v1alpha3.MySQLServer)
 
-func withName(name string) modifier {
+func withExternalName(name string) modifier {
 	return func(p *v1alpha3.MySQLServer) {
-		p.SetName(name)
+		meta.SetExternalName(p, name)
 	}
 }
 
@@ -262,8 +264,7 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				eo: resource.ExternalObservation{
-					ResourceExists:   true,
-					ResourceUpToDate: true,
+					ResourceExists: true,
 				},
 			},
 		},
@@ -290,19 +291,25 @@ func TestObserve(t *testing.T) {
 		},
 		"ServerAvailable": {
 			e: &external{
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
+				},
 				client: &MockMySQLServerAPI{
 					MockGetServer: func(_ context.Context, _ *v1alpha3.MySQLServer) (mysql.Server, error) {
-						return mysql.Server{ServerProperties: &mysql.ServerProperties{
-							UserVisibleState:         mysql.ServerStateReady,
-							FullyQualifiedDomainName: &endpoint,
-						}}, nil
+						return mysql.Server{
+							Sku: &mysql.Sku{},
+							ServerProperties: &mysql.ServerProperties{
+								UserVisibleState:         mysql.ServerStateReady,
+								FullyQualifiedDomainName: &endpoint,
+								StorageProfile:           &mysql.StorageProfile{},
+							}}, nil
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
 				mg: mysqlserver(
-					withName(name),
+					withExternalName(name),
 					withAdminName(admin),
 				),
 			},
@@ -321,6 +328,8 @@ func TestObserve(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			lala := name
+			fmt.Println(lala)
 			eo, err := tc.e.Observe(tc.args.ctx, tc.args.mg)
 
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
