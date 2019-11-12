@@ -329,8 +329,6 @@ func TestObserve(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			lala := name
-			fmt.Println(lala)
 			eo, err := tc.e.Observe(tc.args.ctx, tc.args.mg)
 
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {

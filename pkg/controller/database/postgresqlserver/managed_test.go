@@ -51,6 +51,7 @@ type MockPostgreSQLServerAPI struct {
 	MockGetServer       func(ctx context.Context, s *v1alpha3.PostgreSQLServer) (postgresql.Server, error)
 	MockCreateServer    func(ctx context.Context, s *v1alpha3.PostgreSQLServer, adminPassword string) error
 	MockDeleteServer    func(ctx context.Context, s *v1alpha3.PostgreSQLServer) error
+	MockUpdateServer    func(ctx context.Context, s *v1alpha3.PostgreSQLServer) error
 }
 
 func (m *MockPostgreSQLServerAPI) ServerNameTaken(ctx context.Context, s *v1alpha3.PostgreSQLServer) (bool, error) {
@@ -63,6 +64,10 @@ func (m *MockPostgreSQLServerAPI) GetServer(ctx context.Context, s *v1alpha3.Pos
 
 func (m *MockPostgreSQLServerAPI) CreateServer(ctx context.Context, s *v1alpha3.PostgreSQLServer, adminPassword string) error {
 	return m.MockCreateServer(ctx, s, adminPassword)
+}
+
+func (m *MockPostgreSQLServerAPI) UpdateServer(ctx context.Context, s *v1alpha3.PostgreSQLServer) error {
+	return m.MockUpdateServer(ctx, s)
 }
 
 func (m *MockPostgreSQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha3.PostgreSQLServer) error {
@@ -260,8 +265,7 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				eo: resource.ExternalObservation{
-					ResourceExists:   true,
-					ResourceUpToDate: true,
+					ResourceExists: true,
 				},
 			},
 		},
@@ -288,12 +292,18 @@ func TestObserve(t *testing.T) {
 		},
 		"ServerAvailable": {
 			e: &external{
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
+				},
 				client: &MockPostgreSQLServerAPI{
 					MockGetServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
-						return postgresql.Server{ServerProperties: &postgresql.ServerProperties{
-							UserVisibleState:         postgresql.ServerStateReady,
-							FullyQualifiedDomainName: &endpoint,
-						}}, nil
+						return postgresql.Server{
+							Sku: &postgresql.Sku{},
+							ServerProperties: &postgresql.ServerProperties{
+								UserVisibleState:         postgresql.ServerStateReady,
+								FullyQualifiedDomainName: &endpoint,
+								StorageProfile:           &postgresql.StorageProfile{},
+							}}, nil
 					},
 				},
 			},

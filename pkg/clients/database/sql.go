@@ -272,6 +272,7 @@ type PostgreSQLServerAPI interface {
 	GetServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (postgresql.Server, error)
 	CreateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error
 	DeleteServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error
+	UpdateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error
 }
 
 // PostgreSQLServerClient is the concreate implementation of the SQLServerAPI interface for PostgreSQL that calls Azure API.
@@ -345,7 +346,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 }
 
 // UpdateServer updates a PostgreSQL Server.
-func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer) error {
+func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha3.PostgreSQLServer) error {
 	// TODO(muvaf): password update via Update call is supported by Azure but
 	// we don't support that.
 	s := cr.Spec.ForProvider
@@ -518,6 +519,8 @@ func GenerateMySQLObservation(in mysql.Server) azuredbv1alpha3.SQLServerObservat
 	}
 }
 
+// LateInitializeMySQL fills the empty values of SQLServerParameters with the
+// ones that are retrieved from the Azure API.
 func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server) {
 	if in.Sku != nil {
 		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
@@ -530,7 +533,56 @@ func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server
 	}
 }
 
+// IsMySQLUpToDate is used to report whether given mysql.Server is in
+// sync with the SQLServerParameters that user desires.
+// nolint:gocyclo
 func IsMySQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in mysql.Server) bool {
+	if in.StorageProfile == nil || in.Sku == nil {
+		return false
+	}
+	switch {
+	case p.SSLEnforcement != string(in.SslEnforcement):
+		return false
+	case p.Version != string(in.Version):
+		return false
+	case !reflect.DeepEqual(azure.ToStringPtrMap(p.Tags), in.Tags):
+		return false
+	case p.SKU.Tier != string(in.Sku.Tier):
+		return false
+	case p.SKU.Capacity != azure.ToInt(in.Sku.Capacity):
+		return false
+	case p.SKU.Family != azure.ToString(in.Sku.Family):
+		return false
+	case !reflect.DeepEqual(azure.ToInt32PtrFromIntPtr(p.StorageProfile.BackupRetentionDays), in.StorageProfile.BackupRetentionDays):
+		return false
+	case azure.ToString(p.StorageProfile.GeoRedundantBackup) != string(in.StorageProfile.GeoRedundantBackup):
+		return false
+	case p.StorageProfile.StorageMB != azure.ToInt(in.StorageProfile.StorageMB):
+		return false
+	case azure.ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
+		return false
+	}
+	return true
+}
+
+// LateInitializePostgreSQL fills the empty values of SQLServerParameters with the
+// ones that are retrieved from the Azure API.
+func LateInitializePostgreSQL(p *azuredbv1alpha3.SQLServerParameters, in postgresql.Server) {
+	if in.Sku != nil {
+		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
+	}
+	p.Tags = azure.LateInitializeStringMap(p.Tags, in.Tags)
+	if in.StorageProfile != nil {
+		p.StorageProfile.BackupRetentionDays = azure.LateInitializeIntPtrFromInt32Ptr(p.StorageProfile.BackupRetentionDays, in.StorageProfile.BackupRetentionDays)
+		p.StorageProfile.GeoRedundantBackup = azure.LateInitializeStringPtrFromVal(p.StorageProfile.GeoRedundantBackup, string(in.StorageProfile.GeoRedundantBackup))
+		p.StorageProfile.StorageAutogrow = azure.LateInitializeStringPtrFromVal(p.StorageProfile.StorageAutogrow, string(in.StorageProfile.StorageAutogrow))
+	}
+}
+
+// IsPostgreSQLUpToDate is used to report whether given postgresql.Server is in
+// sync with the SQLServerParameters that user desires.
+// nolint:gocyclo
+func IsPostgreSQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in postgresql.Server) bool {
 	if in.StorageProfile == nil || in.Sku == nil {
 		return false
 	}

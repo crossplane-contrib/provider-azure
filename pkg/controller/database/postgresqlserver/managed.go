@@ -50,6 +50,7 @@ const (
 	errGenPassword               = "cannot generate admin password"
 	errNotPostgreSQLServer       = "managed resource is not a PostgreSQLServer"
 	errCreatePostgreSQLServer    = "cannot create PostgreSQLServer"
+	errUpdatePostgreSQLServer    = "cannot update PostgreSQLServer"
 	errGetPostgreSQLServer       = "cannot get PostgreSQLServer"
 	errDeletePostgreSQLServer    = "cannot delete PostgreSQLServer"
 	errCheckPostgreSQLServerName = "cannot check PostgreSQLServer name availability"
@@ -105,11 +106,12 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 	if err := c.client.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrap(err, errGetProviderSecret)
 	}
-	client, err := c.newClientFn(s.Data[p.Spec.Secret.Key])
-	return &external{client: client, newPasswordFn: util.GeneratePassword}, errors.Wrap(err, errNewClient)
+	sqlClient, err := c.newClientFn(s.Data[p.Spec.Secret.Key])
+	return &external{kube: c.client, client: sqlClient, newPasswordFn: util.GeneratePassword}, errors.Wrap(err, errNewClient)
 }
 
 type external struct {
+	kube          client.Client
 	client        database.PostgreSQLServerAPI
 	newPasswordFn func(len int) (password string, err error)
 }
@@ -126,26 +128,22 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		// create operation has completed, and Azure will happily let you submit
 		// several subsequent create operations for the same server. Our create
 		// call is not idempotent because it creates a new random password each
-		// time, so we want to ensure it'cr only called once. Fortunately Azure
+		// time, so we want to ensure it's only called once. Fortunately Azure
 		// exposes an API that reports server names to be taken as soon as their
 		// create operation is accepted.
 		creating, err := e.client.ServerNameTaken(ctx, cr)
 		if err != nil {
 			return resource.ExternalObservation{}, errors.Wrap(err, errCheckPostgreSQLServerName)
 		}
-		if creating {
-			return resource.ExternalObservation{
-				ResourceExists:   true,
-				ResourceUpToDate: true, // NOTE(negz): We don't yet support updating Azure SQL servers.
-			}, nil
-		}
-
-		return resource.ExternalObservation{ResourceExists: false}, nil
+		return resource.ExternalObservation{ResourceExists: creating}, nil
 	}
 	if err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
 	}
-
+	database.LateInitializePostgreSQL(&cr.Spec.ForProvider, server)
+	if err := e.kube.Update(ctx, cr); err != nil {
+		return resource.ExternalObservation{}, err
+	}
 	cr.Status.AtProvider = database.GeneratePostgreSQLObservation(server)
 
 	switch server.UserVisibleState {
@@ -158,7 +156,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 
 	o := resource.ExternalObservation{
 		ResourceExists:   true,
-		ResourceUpToDate: true, // NOTE(negz): We don't yet support updating Azure SQL servers.
+		ResourceUpToDate: database.IsPostgreSQLUpToDate(cr.Spec.ForProvider, server), // NOTE(negz): We don't yet support updating Azure SQL servers.
 		ConnectionDetails: resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
 			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
@@ -185,18 +183,25 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
 	}
 
-	ec := resource.ExternalCreation{
+	return resource.ExternalCreation{
 		ConnectionDetails: resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
 		},
-	}
-
-	return ec, nil
+	}, nil
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
-	// TODO(negz): Support updating Azure SQL servers. :)
-	return resource.ExternalUpdate{}, nil
+	cr, ok := mg.(*v1alpha3.PostgreSQLServer)
+	if !ok {
+		return resource.ExternalUpdate{}, errors.New(errNotPostgreSQLServer)
+	}
+	// TODO(muvaf): If an async update operation is ongoing, state is still ready
+	// according to Azure but your update calls will be rejected since the resource
+	// is `busy`.
+	if cr.Status.AtProvider.UserVisibleState != database.StateReady {
+		return resource.ExternalUpdate{}, nil
+	}
+	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdatePostgreSQLServer)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
