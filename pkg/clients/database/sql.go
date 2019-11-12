@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package azure
+package database
 
 import (
 	"context"
@@ -33,6 +33,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 // State strings for MySQL and PostgreSQL.
@@ -70,14 +71,14 @@ type MySQLServerClient struct {
 }
 
 // NewMySQLServerClient creates and initializes a MySQLServerClient instance.
-func NewMySQLServerClient(c *Client) (*MySQLServerClient, error) {
+func NewMySQLServerClient(c *azure.Client) (*MySQLServerClient, error) {
 	mysqlServersClient := mysql.NewServersClient(c.SubscriptionID)
 	mysqlServersClient.Authorizer = c.Authorizer
-	mysqlServersClient.AddToUserAgent(UserAgent)
+	mysqlServersClient.AddToUserAgent(azure.UserAgent)
 
 	nameClient := mysql.NewCheckNameAvailabilityClient(c.SubscriptionID)
 	nameClient.Authorizer = c.Authorizer
-	nameClient.AddToUserAgent(UserAgent)
+	nameClient.AddToUserAgent(azure.UserAgent)
 
 	return &MySQLServerClient{
 		ServersClient:               mysqlServersClient,
@@ -87,11 +88,11 @@ func NewMySQLServerClient(c *Client) (*MySQLServerClient, error) {
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
 func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (bool, error) {
-	r, err := c.Execute(ctx, mysql.NameAvailabilityRequest{Name: ToStringPtr(meta.GetExternalName(s))})
+	r, err := c.Execute(ctx, mysql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
 	if err != nil {
 		return false, err
 	}
-	return !ToBool(r.NameAvailable), nil
+	return !azure.ToBool(r.NameAvailable), nil
 }
 
 // GetServer retrieves the requested MySQL Server
@@ -103,16 +104,16 @@ func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.My
 func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer, adminPassword string) error {
 	s := cr.Spec.ForProvider
 	properties := &mysql.ServerPropertiesForDefaultCreate{
-		AdministratorLogin:         ToStringPtr(s.AdministratorLogin),
+		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
 		Version:                    mysql.ServerVersion(s.Version),
 		SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
 		CreateMode:                 mysql.CreateModeDefault,
 		StorageProfile: &mysql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
-			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
 		},
 	}
 	sku, err := ToMySQLSKU(s.SKU)
@@ -123,7 +124,7 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha
 		Sku:        sku,
 		Properties: properties,
 		Location:   &s.Location,
-		Tags:       ToStringPtrMap(s.Tags),
+		Tags:       azure.ToStringPtrMap(s.Tags),
 	}
 	op, err := c.Create(ctx, s.ResourceGroupName, meta.GetExternalName(cr), createParams)
 	if err != nil {
@@ -161,10 +162,10 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha
 		SslEnforcement: mysql.SslEnforcementEnum(s.SSLEnforcement),
 		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
 		StorageProfile: &mysql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  mysql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
-			StorageAutogrow:     mysql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
 		},
 	}
 	sku, err := ToMySQLSKU(s.SKU)
@@ -174,7 +175,7 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha
 	updateParams := mysql.ServerUpdateParameters{
 		Sku:                              sku,
 		ServerUpdateParametersProperties: properties,
-		Tags:                             ToStringPtrMap(s.Tags),
+		Tags:                             azure.ToStringPtrMap(s.Tags),
 	}
 	op, err := c.Update(ctx, s.ResourceGroupName, meta.GetExternalName(cr), updateParams)
 	if err != nil {
@@ -203,7 +204,7 @@ type MySQLVirtualNetworkRulesClient mysqlapi.VirtualNetworkRulesClientAPI
 // NewMySQLVirtualNetworkRulesClient returns a new Azure Virtual Network Rules client. Credentials must be
 // passed as JSON encoded data.
 func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) (MySQLVirtualNetworkRulesClient, error) {
-	c := Credentials{}
+	c := azure.Credentials{}
 	if err := json.Unmarshal(credentials, &c); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
 	}
@@ -222,7 +223,7 @@ func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) 
 		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
 	}
 	client.Authorizer = a
-	if err := client.AddToUserAgent(UserAgent); err != nil {
+	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
 		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
 	}
 
@@ -232,10 +233,10 @@ func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) 
 // NewMySQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule) mysql.VirtualNetworkRule {
 	return mysql.VirtualNetworkRule{
-		Name: ToStringPtr(v.Spec.Name),
+		Name: azure.ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
-			VirtualNetworkSubnetID:           ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
-			IgnoreMissingVnetServiceEndpoint: ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, FieldRequired),
+			VirtualNetworkSubnetID:           azure.ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
+			IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, azure.FieldRequired),
 		},
 	}
 }
@@ -258,8 +259,8 @@ func MySQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha3.MySQLServerV
 // Azure MySQLVirtualNetworkRule in the VirtualNetworkStatus
 func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule, az mysql.VirtualNetworkRule) {
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
-	v.Status.ID = ToString(az.ID)
-	v.Status.Type = ToString(az.Type)
+	v.Status.ID = azure.ToString(az.ID)
+	v.Status.Type = azure.ToString(az.Type)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -280,14 +281,14 @@ type PostgreSQLServerClient struct {
 }
 
 // NewPostgreSQLServerClient creates and initializes a PostgreSQLServerClient instance.
-func NewPostgreSQLServerClient(c *Client) (*PostgreSQLServerClient, error) {
+func NewPostgreSQLServerClient(c *azure.Client) (*PostgreSQLServerClient, error) {
 	postgreSQLServerClient := postgresql.NewServersClient(c.SubscriptionID)
 	postgreSQLServerClient.Authorizer = c.Authorizer
-	postgreSQLServerClient.AddToUserAgent(UserAgent)
+	postgreSQLServerClient.AddToUserAgent(azure.UserAgent)
 
 	nameClient := postgresql.NewCheckNameAvailabilityClient(c.SubscriptionID)
 	nameClient.Authorizer = c.Authorizer
-	nameClient.AddToUserAgent(UserAgent)
+	nameClient.AddToUserAgent(azure.UserAgent)
 
 	return &PostgreSQLServerClient{
 		ServersClient:               postgreSQLServerClient,
@@ -297,11 +298,11 @@ func NewPostgreSQLServerClient(c *Client) (*PostgreSQLServerClient, error) {
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
 func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (bool, error) {
-	r, err := c.Execute(ctx, postgresql.NameAvailabilityRequest{Name: ToStringPtr(meta.GetExternalName(s))})
+	r, err := c.Execute(ctx, postgresql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
 	if err != nil {
 		return false, err
 	}
-	return !ToBool(r.NameAvailable), nil
+	return !azure.ToBool(r.NameAvailable), nil
 }
 
 // GetServer retrieves the requested PostgreSQL Server
@@ -313,16 +314,16 @@ func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1alph
 func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error {
 	s := cr.Spec.ForProvider
 	properties := &postgresql.ServerPropertiesForDefaultCreate{
-		AdministratorLogin:         ToStringPtr(s.AdministratorLogin),
+		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
 		Version:                    postgresql.ServerVersion(s.Version),
 		SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
 		CreateMode:                 postgresql.CreateModeDefault,
 		StorageProfile: &postgresql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  postgresql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
-			StorageAutogrow:     postgresql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
 		},
 	}
 	sku, err := ToPostgreSQLSKU(s.SKU)
@@ -333,7 +334,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 		Sku:        sku,
 		Properties: properties,
 		Location:   &s.Location,
-		Tags:       ToStringPtrMap(s.Tags),
+		Tags:       azure.ToStringPtrMap(s.Tags),
 	}
 	op, err := c.Create(ctx, s.ResourceGroupName, meta.GetExternalName(cr), createParams)
 	if err != nil {
@@ -353,10 +354,10 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 		SslEnforcement: postgresql.SslEnforcementEnum(s.SSLEnforcement),
 		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
 		StorageProfile: &postgresql.StorageProfile{
-			BackupRetentionDays: ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  postgresql.GeoRedundantBackup(ToString(s.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           ToInt32Ptr(s.StorageProfile.StorageMB),
-			StorageAutogrow:     postgresql.StorageAutogrow(ToString(s.StorageProfile.StorageAutogrow)),
+			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+			StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+			StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
 		},
 	}
 	sku, err := ToPostgreSQLSKU(s.SKU)
@@ -366,7 +367,7 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 	updateParams := postgresql.ServerUpdateParameters{
 		Sku:                              sku,
 		ServerUpdateParametersProperties: properties,
-		Tags:                             ToStringPtrMap(s.Tags),
+		Tags:                             azure.ToStringPtrMap(s.Tags),
 	}
 	op, err := c.Update(ctx, s.ResourceGroupName, meta.GetExternalName(cr), updateParams)
 	if err != nil {
@@ -395,7 +396,7 @@ type PostgreSQLVirtualNetworkRulesClient postgresqlapi.VirtualNetworkRulesClient
 // NewPostgreSQLVirtualNetworkRulesClient returns a new Azure Virtual Network Rules client. Credentials must be
 // passed as JSON encoded data.
 func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) (PostgreSQLVirtualNetworkRulesClient, error) {
-	c := Credentials{}
+	c := azure.Credentials{}
 	if err := json.Unmarshal(credentials, &c); err != nil {
 		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
 	}
@@ -414,7 +415,7 @@ func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []b
 		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
 	}
 	client.Authorizer = a
-	if err := client.AddToUserAgent(UserAgent); err != nil {
+	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
 		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
 	}
 
@@ -424,10 +425,10 @@ func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []b
 // NewPostgreSQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
 	return postgresql.VirtualNetworkRule{
-		Name: ToStringPtr(v.Spec.Name),
+		Name: azure.ToStringPtr(v.Spec.Name),
 		VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-			VirtualNetworkSubnetID:           ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
-			IgnoreMissingVnetServiceEndpoint: ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, FieldRequired),
+			VirtualNetworkSubnetID:           azure.ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
+			IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, azure.FieldRequired),
 		},
 	}
 }
@@ -450,8 +451,8 @@ func PostgreSQLServerVirtualNetworkRuleNeedsUpdate(kube *azuredbv1alpha3.Postgre
 // Azure PostgreSQLVirtualNetworkRule in the VirtualNetworkStatus
 func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule, az postgresql.VirtualNetworkRule) {
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
-	v.Status.ID = ToString(az.ID)
-	v.Status.Type = ToString(az.Type)
+	v.Status.ID = azure.ToString(az.ID)
+	v.Status.Type = azure.ToString(az.Type)
 }
 
 // Helper functions
@@ -470,10 +471,10 @@ func ToMySQLSKU(skuSpec azuredbv1alpha3.SKU) (*mysql.Sku, error) {
 		return nil, fmt.Errorf("tier '%s' is not one of the supported values: %+v", skuSpec.Tier, mysql.PossibleSkuTierValues())
 	}
 	return &mysql.Sku{
-		Name:     ToStringPtr(fmt.Sprintf("%s_%s_%s", t, skuSpec.Family, strconv.Itoa(skuSpec.Capacity))),
+		Name:     azure.ToStringPtr(fmt.Sprintf("%s_%s_%s", t, skuSpec.Family, strconv.Itoa(skuSpec.Capacity))),
 		Tier:     mysql.SkuTier(skuSpec.Tier),
-		Capacity: ToInt32Ptr(skuSpec.Capacity),
-		Family:   ToStringPtr(skuSpec.Family),
+		Capacity: azure.ToInt32Ptr(skuSpec.Capacity),
+		Family:   azure.ToStringPtr(skuSpec.Family),
 		Size:     skuSpec.Size,
 	}, nil
 }
@@ -485,10 +486,10 @@ func ToPostgreSQLSKU(skuSpec azuredbv1alpha3.SKU) (*postgresql.Sku, error) {
 		return nil, fmt.Errorf("tier '%s' is not one of the supported values: %+v", skuSpec.Tier, mysql.PossibleSkuTierValues())
 	}
 	return &postgresql.Sku{
-		Name:     ToStringPtr(fmt.Sprintf("%s_%s_%s", t, skuSpec.Family, strconv.Itoa(skuSpec.Capacity))),
+		Name:     azure.ToStringPtr(fmt.Sprintf("%s_%s_%s", t, skuSpec.Family, strconv.Itoa(skuSpec.Capacity))),
 		Tier:     postgresql.SkuTier(skuSpec.Tier),
-		Capacity: ToInt32Ptr(skuSpec.Capacity),
-		Family:   ToStringPtr(skuSpec.Family),
+		Capacity: azure.ToInt32Ptr(skuSpec.Capacity),
+		Family:   azure.ToStringPtr(skuSpec.Family),
 		Size:     skuSpec.Size,
 	}, nil
 }
@@ -496,36 +497,36 @@ func ToPostgreSQLSKU(skuSpec azuredbv1alpha3.SKU) (*postgresql.Sku, error) {
 // GeneratePostgreSQLObservation produces SQLServerObservation from postgresql.Server.
 func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1alpha3.SQLServerObservation {
 	return azuredbv1alpha3.SQLServerObservation{
-		ID:                       ToString(in.ID),
-		Name:                     ToString(in.Name),
-		Type:                     ToString(in.Type),
+		ID:                       azure.ToString(in.ID),
+		Name:                     azure.ToString(in.Name),
+		Type:                     azure.ToString(in.Type),
 		UserVisibleState:         string(in.UserVisibleState),
-		FullyQualifiedDomainName: ToString(in.FullyQualifiedDomainName),
-		MasterServerID:           ToString(in.MasterServerID),
+		FullyQualifiedDomainName: azure.ToString(in.FullyQualifiedDomainName),
+		MasterServerID:           azure.ToString(in.MasterServerID),
 	}
 }
 
 // GenerateMySQLObservation produces SQLServerObservation from mysql.Server
 func GenerateMySQLObservation(in mysql.Server) azuredbv1alpha3.SQLServerObservation {
 	return azuredbv1alpha3.SQLServerObservation{
-		ID:                       ToString(in.ID),
-		Name:                     ToString(in.Name),
-		Type:                     ToString(in.Type),
+		ID:                       azure.ToString(in.ID),
+		Name:                     azure.ToString(in.Name),
+		Type:                     azure.ToString(in.Type),
 		UserVisibleState:         string(in.UserVisibleState),
-		FullyQualifiedDomainName: ToString(in.FullyQualifiedDomainName),
-		MasterServerID:           ToString(in.MasterServerID),
+		FullyQualifiedDomainName: azure.ToString(in.FullyQualifiedDomainName),
+		MasterServerID:           azure.ToString(in.MasterServerID),
 	}
 }
 
 func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server) {
 	if in.Sku != nil {
-		p.SKU.Size = LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
+		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
 	}
-	p.Tags = LateInitializeStringMap(p.Tags, in.Tags)
+	p.Tags = azure.LateInitializeStringMap(p.Tags, in.Tags)
 	if in.StorageProfile != nil {
-		p.StorageProfile.BackupRetentionDays = LateInitializeIntPtrFromInt32Ptr(p.StorageProfile.BackupRetentionDays, in.StorageProfile.BackupRetentionDays)
-		p.StorageProfile.GeoRedundantBackup = LateInitializeStringPtrFromVal(p.StorageProfile.GeoRedundantBackup, string(in.StorageProfile.GeoRedundantBackup))
-		p.StorageProfile.StorageAutogrow = LateInitializeStringPtrFromVal(p.StorageProfile.StorageAutogrow, string(in.StorageProfile.StorageAutogrow))
+		p.StorageProfile.BackupRetentionDays = azure.LateInitializeIntPtrFromInt32Ptr(p.StorageProfile.BackupRetentionDays, in.StorageProfile.BackupRetentionDays)
+		p.StorageProfile.GeoRedundantBackup = azure.LateInitializeStringPtrFromVal(p.StorageProfile.GeoRedundantBackup, string(in.StorageProfile.GeoRedundantBackup))
+		p.StorageProfile.StorageAutogrow = azure.LateInitializeStringPtrFromVal(p.StorageProfile.StorageAutogrow, string(in.StorageProfile.StorageAutogrow))
 	}
 }
 
@@ -538,21 +539,21 @@ func IsMySQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in mysql.Server) boo
 		return false
 	case p.Version != string(in.Version):
 		return false
-	case !reflect.DeepEqual(ToStringPtrMap(p.Tags), in.Tags):
+	case !reflect.DeepEqual(azure.ToStringPtrMap(p.Tags), in.Tags):
 		return false
 	case p.SKU.Tier != string(in.Sku.Tier):
 		return false
-	case p.SKU.Capacity != ToInt(in.Sku.Capacity):
+	case p.SKU.Capacity != azure.ToInt(in.Sku.Capacity):
 		return false
-	case p.SKU.Family != ToString(in.Sku.Family):
+	case p.SKU.Family != azure.ToString(in.Sku.Family):
 		return false
-	case !reflect.DeepEqual(ToInt32PtrFromIntPtr(p.StorageProfile.BackupRetentionDays), in.StorageProfile.BackupRetentionDays):
+	case !reflect.DeepEqual(azure.ToInt32PtrFromIntPtr(p.StorageProfile.BackupRetentionDays), in.StorageProfile.BackupRetentionDays):
 		return false
-	case ToString(p.StorageProfile.GeoRedundantBackup) != string(in.StorageProfile.GeoRedundantBackup):
+	case azure.ToString(p.StorageProfile.GeoRedundantBackup) != string(in.StorageProfile.GeoRedundantBackup):
 		return false
-	case p.StorageProfile.StorageMB != ToInt(in.StorageProfile.StorageMB):
+	case p.StorageProfile.StorageMB != azure.ToInt(in.StorageProfile.StorageMB):
 		return false
-	case ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
+	case azure.ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
 		return false
 	}
 	return true

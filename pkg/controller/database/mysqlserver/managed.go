@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -73,18 +75,18 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func newClient(credentials []byte) (azuresql.MySQLServerAPI, error) {
+func newClient(credentials []byte) (database.MySQLServerAPI, error) {
 	ac, err := azuresql.NewClient(credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create Azure client")
 	}
-	mc, err := azuresql.NewMySQLServerClient(ac)
+	mc, err := database.NewMySQLServerClient(ac)
 	return mc, errors.Wrap(err, "cannot create Azure MySQL client")
 }
 
 type connecter struct {
 	client      client.Client
-	newClientFn func(credentials []byte) (azuresql.MySQLServerAPI, error)
+	newClientFn func(credentials []byte) (database.MySQLServerAPI, error)
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
@@ -109,7 +111,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 
 type external struct {
 	kube          client.Client
-	client        azuresql.MySQLServerAPI
+	client        database.MySQLServerAPI
 	newPasswordFn func(len int) (password string, err error)
 }
 
@@ -137,14 +139,14 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServer)
 	}
-	azuresql.LateInitializeMySQL(&cr.Spec.ForProvider, server)
+	database.LateInitializeMySQL(&cr.Spec.ForProvider, server)
 	if err := e.kube.Update(ctx, cr); err != nil {
 		return resource.ExternalObservation{}, err
 	}
-	cr.Status.AtProvider = azuresql.GenerateMySQLObservation(server)
+	cr.Status.AtProvider = database.GenerateMySQLObservation(server)
 
 	switch cr.Status.AtProvider.UserVisibleState {
-	case azuresql.StateReady:
+	case database.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(cr)
 	default:
@@ -153,7 +155,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 
 	return resource.ExternalObservation{
 		ResourceExists:   true,
-		ResourceUpToDate: azuresql.IsMySQLUpToDate(cr.Spec.ForProvider, server),
+		ResourceUpToDate: database.IsMySQLUpToDate(cr.Spec.ForProvider, server),
 		ConnectionDetails: resource.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
 			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
@@ -191,7 +193,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	// TODO(muvaf): If an async update operation is ongoing, state is still ready
 	// according to Azure but your update calls will be rejected since the resource
 	// is `busy`.
-	if cr.Status.AtProvider.UserVisibleState != azuresql.StateReady {
+	if cr.Status.AtProvider.UserVisibleState != database.StateReady {
 		return resource.ExternalUpdate{}, nil
 	}
 	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdateMySQLServer)

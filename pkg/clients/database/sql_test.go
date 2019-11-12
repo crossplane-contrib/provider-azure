@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package azure
+package database
 
 import (
 	"context"
 	"testing"
+
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
@@ -112,7 +114,7 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 				},
 			},
 			want: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           to.StringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: to.BoolPtr(ignoreMissing),
@@ -133,7 +135,7 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 				},
 			},
 			want: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           to.StringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: to.BoolPtr(false),
@@ -174,10 +176,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 				},
 			},
 			az: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 				},
 			},
 			want: false,
@@ -197,10 +199,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 				},
 			},
 			az: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr("some/other/subnet"),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr("some/other/subnet"),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 				},
 			},
 			want: true,
@@ -220,10 +222,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 				},
 			},
 			az: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(!ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(!ignoreMissing),
 				},
 			},
 			want: true,
@@ -257,12 +259,12 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 		{
 			name: "SuccessfulFull",
 			r: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
-				ID:   ToStringPtr(id),
-				Type: ToStringPtr(resourceType),
+				Name: azure.ToStringPtr(vnetRuleName),
+				ID:   azure.ToStringPtr(id),
+				Type: azure.ToStringPtr(resourceType),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 					State:                            mysql.Ready,
 				},
 			},
@@ -275,11 +277,11 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 		{
 			name: "SuccessfulPartial",
 			r: mysql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
-				ID:   ToStringPtr(id),
+				Name: azure.ToStringPtr(vnetRuleName),
+				ID:   azure.ToStringPtr(id),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 					State:                            mysql.Ready,
 				},
 			},
@@ -367,7 +369,7 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 				},
 			},
 			want: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           to.StringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: to.BoolPtr(ignoreMissing),
@@ -388,7 +390,7 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 				},
 			},
 			want: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           to.StringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: to.BoolPtr(false),
@@ -429,10 +431,10 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 				},
 			},
 			az: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 				},
 			},
 			want: false,
@@ -452,10 +454,10 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 				},
 			},
 			az: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr("some/other/subnet"),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr("some/other/subnet"),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 				},
 			},
 			want: true,
@@ -475,10 +477,10 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 				},
 			},
 			az: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
+				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(!ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(!ignoreMissing),
 				},
 			},
 			want: true,
@@ -511,12 +513,12 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 		{
 			name: "SuccessfulFull",
 			r: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
-				ID:   ToStringPtr(id),
-				Type: ToStringPtr(resourceType),
+				Name: azure.ToStringPtr(vnetRuleName),
+				ID:   azure.ToStringPtr(id),
+				Type: azure.ToStringPtr(resourceType),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 					State:                            postgresql.Ready,
 				},
 			},
@@ -529,11 +531,11 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 		{
 			name: "SuccessfulPartial",
 			r: postgresql.VirtualNetworkRule{
-				Name: ToStringPtr(vnetRuleName),
-				ID:   ToStringPtr(id),
+				Name: azure.ToStringPtr(vnetRuleName),
+				ID:   azure.ToStringPtr(id),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-					VirtualNetworkSubnetID:           ToStringPtr(vnetSubnetID),
-					IgnoreMissingVnetServiceEndpoint: ToBoolPtr(ignoreMissing),
+					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
+					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
 					State:                            postgresql.Ready,
 				},
 			},

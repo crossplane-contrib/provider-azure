@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
 	"github.com/negz/crossplane/pkg/util"
 	"github.com/pkg/errors"
@@ -73,18 +75,18 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func newClient(credentials []byte) (azure.PostgreSQLServerAPI, error) {
+func newClient(credentials []byte) (database.PostgreSQLServerAPI, error) {
 	ac, err := azure.NewClient(credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create Azure client")
 	}
-	pc, err := azure.NewPostgreSQLServerClient(ac)
+	pc, err := database.NewPostgreSQLServerClient(ac)
 	return pc, errors.Wrap(err, "cannot create Azure MySQL client")
 }
 
 type connecter struct {
 	client      client.Client
-	newClientFn func(credentials []byte) (azure.PostgreSQLServerAPI, error)
+	newClientFn func(credentials []byte) (database.PostgreSQLServerAPI, error)
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
@@ -108,7 +110,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 }
 
 type external struct {
-	client        azure.PostgreSQLServerAPI
+	client        database.PostgreSQLServerAPI
 	newPasswordFn func(len int) (password string, err error)
 }
 
@@ -144,7 +146,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
 	}
 
-	cr.Status.AtProvider = azure.GeneratePostgreSQLObservation(server)
+	cr.Status.AtProvider = database.GeneratePostgreSQLObservation(server)
 
 	switch server.UserVisibleState {
 	case postgresql.ServerStateReady:

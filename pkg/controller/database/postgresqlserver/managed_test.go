@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
@@ -37,7 +39,6 @@ import (
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 var (
@@ -127,7 +128,7 @@ func TestConnect(t *testing.T) {
 						return errors.New("unexpected type")
 					}
 				})},
-				newClientFn: func(credentials []byte) (azure.PostgreSQLServerAPI, error) { return nil, nil },
+				newClientFn: func(credentials []byte) (database.PostgreSQLServerAPI, error) { return nil, nil },
 			},
 			args: args{
 				ctx: context.Background(),
@@ -147,7 +148,7 @@ func TestConnect(t *testing.T) {
 						return errors.New("unexpected type")
 					}
 				})},
-				newClientFn: func(credentials []byte) (azure.PostgreSQLServerAPI, error) { return nil, nil },
+				newClientFn: func(credentials []byte) (database.PostgreSQLServerAPI, error) { return nil, nil },
 			},
 			args: args{
 				ctx: context.Background(),
@@ -158,7 +159,7 @@ func TestConnect(t *testing.T) {
 		"Successful": {
 			ec: &connecter{
 				client:      &test.MockClient{MockGet: test.NewMockGetFn(nil)},
-				newClientFn: func(credentials []byte) (azure.PostgreSQLServerAPI, error) { return nil, nil },
+				newClientFn: func(credentials []byte) (database.PostgreSQLServerAPI, error) { return nil, nil },
 			},
 			args: args{
 				ctx: context.Background(),

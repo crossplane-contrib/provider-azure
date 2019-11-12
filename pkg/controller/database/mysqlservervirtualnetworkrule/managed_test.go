@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
@@ -450,7 +452,7 @@ func TestConnect(t *testing.T) {
 						return nil
 					},
 				},
-				newClientFn: func(_ context.Context, _ []byte) (azure.MySQLVirtualNetworkRulesClient, error) {
+				newClientFn: func(_ context.Context, _ []byte) (database.MySQLVirtualNetworkRulesClient, error) {
 					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
 				},
 			},
