@@ -21,19 +21,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
-	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 // Error strings.
@@ -69,7 +71,7 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 
 type connecter struct {
 	client      client.Client
-	newClientFn func(ctx context.Context, credentials []byte) (azure.MySQLVirtualNetworkRulesClient, error)
+	newClientFn func(ctx context.Context, credentials []byte) (database.MySQLVirtualNetworkRulesClient, error)
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
@@ -89,7 +91,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 	if err := c.client.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
 	}
-	newClientFn := azure.NewMySQLVirtualNetworkRulesClient
+	newClientFn := database.NewMySQLVirtualNetworkRulesClient
 	if c.newClientFn != nil {
 		newClientFn = c.newClientFn
 	}
@@ -98,7 +100,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 }
 
 type external struct {
-	client azure.MySQLVirtualNetworkRulesClient
+	client database.MySQLVirtualNetworkRulesClient
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
@@ -115,7 +117,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetMySQLServerVirtualNetworkRule)
 	}
 
-	azure.UpdateMySQLVirtualNetworkRuleStatusFromAzure(v, az)
+	database.UpdateMySQLVirtualNetworkRuleStatusFromAzure(v, az)
 	v.SetConditions(runtimev1alpha1.Available())
 
 	o := resource.ExternalObservation{
@@ -134,7 +136,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 
 	v.SetConditions(runtimev1alpha1.Creating())
 
-	vnet := azure.NewMySQLVirtualNetworkRuleParameters(v)
+	vnet := database.NewMySQLVirtualNetworkRuleParameters(v)
 	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMySQLServerVirtualNetworkRule)
 	}
@@ -153,8 +155,8 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 		return resource.ExternalUpdate{}, errors.Wrap(err, errGetMySQLServerVirtualNetworkRule)
 	}
 
-	if azure.MySQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
-		vnet := azure.NewMySQLVirtualNetworkRuleParameters(v)
+	if database.MySQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
+		vnet := database.NewMySQLVirtualNetworkRuleParameters(v)
 		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
 			return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMySQLServerVirtualNetworkRule)
 		}

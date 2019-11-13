@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
@@ -31,14 +33,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+	"github.com/crossplaneio/crossplane-runtime/pkg/test"
+
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/fake"
-
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 )
 
 const (
@@ -450,7 +452,7 @@ func TestConnect(t *testing.T) {
 						return nil
 					},
 				},
-				newClientFn: func(_ context.Context, _ []byte) (azure.MySQLVirtualNetworkRulesClient, error) {
+				newClientFn: func(_ context.Context, _ []byte) (database.MySQLVirtualNetworkRulesClient, error) {
 					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
 				},
 			},

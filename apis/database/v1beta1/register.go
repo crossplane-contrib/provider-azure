@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha3
+package v1beta1
 
 import (
 	"reflect"
@@ -26,7 +26,7 @@ import (
 // Package type metadata.
 const (
 	Group   = "database.azure.crossplane.io"
-	Version = "v1alpha3"
+	Version = "v1beta1"
 )
 
 var (
@@ -37,21 +37,29 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-// MySQLServerVirtualNetworkRule type metadata.
+// MySQLServer type metadata.
 var (
-	MySQLServerVirtualNetworkRuleKind             = reflect.TypeOf(MySQLServerVirtualNetworkRule{}).Name()
-	MySQLServerVirtualNetworkRuleKindAPIVersion   = MySQLServerVirtualNetworkRuleKind + "." + SchemeGroupVersion.String()
-	MySQLServerVirtualNetworkRuleGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerVirtualNetworkRuleKind)
+	MySQLServerKind             = reflect.TypeOf(MySQLServer{}).Name()
+	MySQLServerKindAPIVersion   = MySQLServerKind + "." + SchemeGroupVersion.String()
+	MySQLServerGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerKind)
 )
 
-// PostgreSQLServerVirtualNetworkRule type metadata.
+// PostgreSQLServer type metadata.
 var (
-	PostgreSQLServerVirtualNetworkRuleKind             = reflect.TypeOf(PostgreSQLServerVirtualNetworkRule{}).Name()
-	PostgreSQLServerVirtualNetworkRuleKindAPIVersion   = PostgreSQLServerVirtualNetworkRuleKind + "." + SchemeGroupVersion.String()
-	PostgreSQLServerVirtualNetworkRuleGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerVirtualNetworkRuleKind)
+	PostgreSQLServerKind             = reflect.TypeOf(PostgreSQLServer{}).Name()
+	PostgreSQLServerKindAPIVersion   = PostgreSQLServerKind + "." + SchemeGroupVersion.String()
+	PostgreSQLServerGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerKind)
+)
+
+// SQLServerClass type metadata.
+var (
+	SQLServerClassKind             = reflect.TypeOf(SQLServerClass{}).Name()
+	SQLServerClassKindAPIVersion   = SQLServerClassKind + "." + SchemeGroupVersion.String()
+	SQLServerClassGroupVersionKind = SchemeGroupVersion.WithKind(SQLServerClassKind)
 )
 
 func init() {
-	SchemeBuilder.Register(&MySQLServerVirtualNetworkRule{}, &MySQLServerVirtualNetworkRuleList{})
-	SchemeBuilder.Register(&PostgreSQLServerVirtualNetworkRule{}, &PostgreSQLServerVirtualNetworkRuleList{})
+	SchemeBuilder.Register(&MySQLServer{}, &MySQLServerList{})
+	SchemeBuilder.Register(&PostgreSQLServer{}, &PostgreSQLServerList{})
+	SchemeBuilder.Register(&SQLServerClass{}, &SQLServerClassList{})
 }

@@ -38,6 +38,7 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 	"github.com/crossplaneio/stack-azure/pkg/clients/fake"
 )
 
@@ -450,7 +451,7 @@ func TestConnect(t *testing.T) {
 						return nil
 					},
 				},
-				newClientFn: func(_ context.Context, _ []byte) (azure.PostgreSQLVirtualNetworkRulesClient, error) {
+				newClientFn: func(_ context.Context, _ []byte) (database.PostgreSQLVirtualNetworkRulesClient, error) {
 					return &fake.MockPostgreSQLVirtualNetworkRulesClient{}, nil
 				},
 			},

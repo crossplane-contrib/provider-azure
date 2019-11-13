@@ -46,32 +46,109 @@ spec:
           description: SpecTemplate is a template for the spec of a dynamically provisioned
             SQLServer.
           properties:
-            adminLoginName:
-              description: AdminLoginName specifies the administrator login name for
-                this SQLServer.
-              type: string
-            location:
-              description: Location specifies the location of this SQLServer.
-              type: string
-            pricingTier:
-              description: PricingTier specifies the pricing tier (aka SKU) for this
-                SQLServer.
+            forProvider:
+              description: SQLServerParameters define the desired state of an Azure
+                SQL Database, either PostgreSQL or MySQL.
               properties:
-                family:
-                  description: Family of hardware.
+                administratorLogin:
+                  description: AdministratorLogin - The administrator's login name
+                    of a server. Can only be specified when the server is being created
+                    (and is required for creation).
                   type: string
-                tier:
-                  description: 'Tier of the particular SKU, e.g. Basic. Possible values
-                    include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
+                location:
+                  description: Location specifies the location of this SQLServer.
                   type: string
-                vcores:
-                  description: VCores (aka Capacity) specifies how many virtual cores
-                    this SQLServer requires.
-                  type: integer
+                resourceGroupName:
+                  description: ResourceGroupName specifies the name of the resource
+                    group that should contain this SQLServer.
+                  type: string
+                resourceGroupNameRef:
+                  description: ResourceGroupNameRef - A reference to a ResourceGroup
+                    object to retrieve its name
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                sku:
+                  description: SKU is the billing information related properties of
+                    the server.
+                  properties:
+                    capacity:
+                      description: Capacity - The scale up/out capacity, representing
+                        server's compute units.
+                      type: integer
+                    family:
+                      description: Family - The family of hardware.
+                      type: string
+                    size:
+                      description: Size - The size code, to be interpreted by resource
+                        as appropriate.
+                      type: string
+                    tier:
+                      description: 'Tier - The tier of the particular SKU. Possible
+                        values include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
+                      enum:
+                      - Basic
+                      - GeneralPurpose
+                      - MemoryOptimized
+                      type: string
+                  required:
+                  - capacity
+                  - family
+                  - tier
+                  type: object
+                sslEnforcement:
+                  description: 'SSLEnforcement - Enable ssl enforcement or not when
+                    connect to server. Possible values include: ''Enabled'', ''Disabled'''
+                  enum:
+                  - Enabled
+                  - Disabled
+                  type: string
+                storageProfile:
+                  description: StorageProfile - Storage profile of a server.
+                  properties:
+                    backupRetentionDays:
+                      description: BackupRetentionDays - Backup retention days for
+                        the server.
+                      type: integer
+                    geoRedundantBackup:
+                      description: 'GeoRedundantBackup - Enable Geo-redundant or not
+                        for server backup. Possible values include: ''Enabled'', ''Disabled'''
+                      enum:
+                      - Enabled
+                      - Disabled
+                      type: string
+                    storageAutogrow:
+                      description: 'StorageAutogrow - Enable Storage Auto Grow. Possible
+                        values include: ''Enabled'', ''Disabled'''
+                      enum:
+                      - Enabled
+                      - Disabled
+                      type: string
+                    storageMB:
+                      description: StorageMB - Max storage allowed for a server.
+                      type: integer
+                  required:
+                  - storageMB
+                  type: object
+                tags:
+                  additionalProperties:
+                    type: string
+                  description: Tags - Application-specific metadata in the form of
+                    key-value pairs.
+                  type: object
+                version:
+                  description: Version - Server version.
+                  type: string
               required:
-              - family
-              - tier
-              - vcores
+              - administratorLogin
+              - location
+              - sku
+              - sslEnforcement
+              - storageProfile
+              - version
               type: object
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -119,63 +196,21 @@ spec:
                 other uses of the ReclaimPolicy concept within the Kubernetes ecosystem
                 per https://github.com/crossplaneio/crossplane-runtime/issues/21
               type: string
-            resourceGroupName:
-              description: ResourceGroupName specifies the name of the resource group
-                that should contain this SQLServer.
-              type: string
-            resourceGroupNameRef:
-              description: ResourceGroupNameRef - A reference to a ResourceGroup object
-                to retrieve its name
-              properties:
-                name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
-                  type: string
-              type: object
-            sslEnforced:
-              description: SSLEnforced specifies whether SSL is required to connect
-                to this SQLServer.
-              type: boolean
-            storageProfile:
-              description: StorageProfile configures the storage profile of this SQLServer.
-              properties:
-                backupRetentionDays:
-                  description: BackupRetentionDays configures how many days backups
-                    will be retained.
-                  type: integer
-                geoRedundantBackup:
-                  description: GeoRedundantBackup enables geo-redunndant backups.
-                  type: boolean
-                storageGB:
-                  description: StorageGB configures the maximum storage allowed.
-                  type: integer
-              required:
-              - storageGB
-              type: object
-            version:
-              description: Version specifies the version of this server, for example
-                "5.6", or "9.6".
-              type: string
             writeConnectionSecretsToNamespace:
               description: WriteConnectionSecretsToNamespace specifies the namespace
                 in which the connection secrets of managed resources dynamically provisioned
                 using this claim will be created.
               type: string
           required:
-          - adminLoginName
-          - location
-          - pricingTier
           - providerRef
-          - storageProfile
-          - version
           - writeConnectionSecretsToNamespace
           type: object
       required:
       - specTemplate
       type: object
-  version: v1alpha3
+  version: v1beta1
   versions:
-  - name: v1alpha3
+  - name: v1beta1
     served: true
     storage: true
 status:

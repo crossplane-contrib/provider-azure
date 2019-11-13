@@ -154,6 +154,14 @@ func ToInt32Ptr(i int, o ...FieldOption) *int32 {
 	return to.Int32Ptr(int32(i))
 }
 
+// ToInt32PtrFromIntPtr converts the supplied int pointer for use with the Azure Go SDK.
+func ToInt32PtrFromIntPtr(i *int, o ...FieldOption) *int32 {
+	if i == nil {
+		return nil
+	}
+	return to.Int32Ptr(int32(*i))
+}
+
 // ToBoolPtr converts the supplied bool for use with the Azure Go SDK.
 func ToBoolPtr(b bool, o ...FieldOption) *bool {
 	for _, fo := range o {
@@ -221,6 +229,14 @@ func LateInitializeStringPtrFromPtr(in, from *string) *string {
 		return in
 	}
 	return from
+}
+
+// LateInitializeStringPtrFromVal late-inits *string using string
+func LateInitializeStringPtrFromVal(in *string, from string) *string {
+	if in != nil {
+		return in
+	}
+	return &from
 }
 
 // LateInitializeStringMap late-inits map[string]string

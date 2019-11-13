@@ -27,13 +27,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
-	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 )
 
 // Error strings.
@@ -69,7 +70,7 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 
 type connecter struct {
 	client      client.Client
-	newClientFn func(ctx context.Context, credentials []byte) (azure.PostgreSQLVirtualNetworkRulesClient, error)
+	newClientFn func(ctx context.Context, credentials []byte) (database.PostgreSQLVirtualNetworkRulesClient, error)
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
@@ -89,7 +90,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 	if err := c.client.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
 	}
-	newClientFn := azure.NewPostgreSQLVirtualNetworkRulesClient
+	newClientFn := database.NewPostgreSQLVirtualNetworkRulesClient
 	if c.newClientFn != nil {
 		newClientFn = c.newClientFn
 	}
@@ -98,7 +99,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 }
 
 type external struct {
-	client azure.PostgreSQLVirtualNetworkRulesClient
+	client database.PostgreSQLVirtualNetworkRulesClient
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
@@ -115,7 +116,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
 	}
 
-	azure.UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v, az)
+	database.UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v, az)
 
 	v.SetConditions(runtimev1alpha1.Available())
 
@@ -135,7 +136,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 
 	v.SetConditions(runtimev1alpha1.Creating())
 
-	vnet := azure.NewPostgreSQLVirtualNetworkRuleParameters(v)
+	vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
 	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServerVirtualNetworkRule)
 	}
@@ -154,8 +155,8 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 		return resource.ExternalUpdate{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
 	}
 
-	if azure.PostgreSQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
-		vnet := azure.NewPostgreSQLVirtualNetworkRuleParameters(v)
+	if database.PostgreSQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
+		vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
 		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
 			return resource.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServerVirtualNetworkRule)
 		}
