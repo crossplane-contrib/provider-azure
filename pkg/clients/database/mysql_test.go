@@ -20,8 +20,6 @@ import (
 	"context"
 	"testing"
 
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
@@ -30,7 +28,8 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
-	databasev1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 const (
@@ -95,18 +94,18 @@ func TestNewMySQLVirtualNetworkRulesClient(t *testing.T) {
 func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *databasev1alpha3.MySQLServerVirtualNetworkRule
+		r    *v1alpha3.MySQLServerVirtualNetworkRule
 		want mysql.VirtualNetworkRule
 	}{
 		{
 			name: "Successful",
-			r: &databasev1alpha3.MySQLServerVirtualNetworkRule{
+			r: &v1alpha3.MySQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.MySQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -122,13 +121,13 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &databasev1alpha3.MySQLServerVirtualNetworkRule{
+			r: &v1alpha3.MySQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.MySQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID: vnetSubnetID,
 					},
 				},
@@ -156,19 +155,19 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *databasev1alpha3.MySQLServerVirtualNetworkRule
+		kube *v1alpha3.MySQLServerVirtualNetworkRule
 		az   mysql.VirtualNetworkRule
 		want bool
 	}{
 		{
 			name: "NoUpdateNeeded",
-			kube: &databasev1alpha3.MySQLServerVirtualNetworkRule{
+			kube: &v1alpha3.MySQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.MySQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -185,13 +184,13 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededVirtualNetworkSubnetID",
-			kube: &databasev1alpha3.MySQLServerVirtualNetworkRule{
+			kube: &v1alpha3.MySQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.MySQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -208,13 +207,13 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededIgnoreMissingVnetServiceEndpoint",
-			kube: &databasev1alpha3.MySQLServerVirtualNetworkRule{
+			kube: &v1alpha3.MySQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.MySQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -253,7 +252,7 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 	cases := []struct {
 		name string
 		r    mysql.VirtualNetworkRule
-		want databasev1alpha3.VirtualNetworkRuleStatus
+		want v1alpha3.VirtualNetworkRuleStatus
 	}{
 		{
 			name: "SuccessfulFull",
@@ -267,7 +266,7 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            mysql.Ready,
 				},
 			},
-			want: databasev1alpha3.VirtualNetworkRuleStatus{
+			want: v1alpha3.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 				Type:  resourceType,
@@ -284,7 +283,7 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            mysql.Ready,
 				},
 			},
-			want: databasev1alpha3.VirtualNetworkRuleStatus{
+			want: v1alpha3.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 			},
@@ -293,8 +292,8 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			v := &databasev1alpha3.MySQLServerVirtualNetworkRule{
-				Status: databasev1alpha3.VirtualNetworkRuleStatus{
+			v := &v1alpha3.MySQLServerVirtualNetworkRule{
+				Status: v1alpha3.VirtualNetworkRuleStatus{
 					ResourceStatus: resourceStatus,
 				},
 			}

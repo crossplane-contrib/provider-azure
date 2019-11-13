@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/crossplaneio/stack-azure/pkg/clients/database"
-
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
@@ -40,6 +38,7 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 	"github.com/crossplaneio/stack-azure/pkg/clients/fake"
 )
 

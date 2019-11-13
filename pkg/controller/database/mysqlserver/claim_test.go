@@ -30,7 +30,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 )
 
 var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureMySQLServer)
@@ -62,25 +62,25 @@ func TestConfigureMySQLServer(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
 					Spec:       databasev1alpha1.MySQLInstanceSpec{EngineVersion: "5.6"},
 				},
-				cs: &v1alpha3.SQLServerClass{
-					SpecTemplate: v1alpha3.SQLServerClassSpecTemplate{
+				cs: &v1beta1.SQLServerClass{
+					SpecTemplate: v1beta1.SQLServerClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
 							ProviderReference: &corev1.ObjectReference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
 				},
-				mg: &v1alpha3.MySQLServer{},
+				mg: &v1beta1.MySQLServer{},
 			},
 			want: want{
-				mg: &v1alpha3.MySQLServer{
-					Spec: v1alpha3.SQLServerSpec{
+				mg: &v1beta1.MySQLServer{
+					Spec: v1beta1.SQLServerSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
-						ForProvider: v1alpha3.SQLServerParameters{
+						ForProvider: v1beta1.SQLServerParameters{
 							Version: version,
 						},
 					},

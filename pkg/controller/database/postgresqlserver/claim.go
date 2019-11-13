@@ -29,7 +29,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	databasev1alpha1 "github.com/crossplaneio/crossplane/apis/database/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 )
 
 // A ClaimSchedulingController reconciles PostgreSQLInstance claims that include
@@ -42,8 +42,8 @@ type ClaimSchedulingController struct{}
 func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha3.PostgreSQLServerKind,
-		v1alpha3.Group))
+		v1beta1.PostgreSQLServerKind,
+		v1beta1.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -55,7 +55,7 @@ func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 		))).
 		Complete(resource.NewClaimSchedulingReconciler(mgr,
 			resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-			resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind),
+			resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind),
 		))
 }
 
@@ -69,8 +69,8 @@ type ClaimDefaultingController struct{}
 func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha3.PostgreSQLServerKind,
-		v1alpha3.Group))
+		v1beta1.PostgreSQLServerKind,
+		v1beta1.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -82,7 +82,7 @@ func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 		))).
 		Complete(resource.NewClaimDefaultingReconciler(mgr,
 			resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-			resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind),
+			resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind),
 		))
 }
 
@@ -94,27 +94,27 @@ type ClaimController struct{}
 func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
 		databasev1alpha1.PostgreSQLInstanceKind,
-		v1alpha3.PostgreSQLServerKind,
-		v1alpha3.Group))
+		v1beta1.PostgreSQLServerKind,
+		v1beta1.Group))
 
 	r := resource.NewClaimReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
-		resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind),
-		resource.ManagedKind(v1alpha3.PostgreSQLServerGroupVersionKind),
+		resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind),
+		resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigurePostgreSQLServer),
 			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
-		resource.HasClassReferenceKind(resource.ClassKind(v1alpha3.SQLServerClassGroupVersionKind)),
-		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha3.PostgreSQLServerGroupVersionKind)),
-		resource.IsManagedKind(resource.ManagedKind(v1alpha3.PostgreSQLServerGroupVersionKind), mgr.GetScheme()),
+		resource.HasClassReferenceKind(resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind)),
+		resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind)),
+		resource.IsManagedKind(resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind), mgr.GetScheme()),
 	))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		Watches(&source.Kind{Type: &v1alpha3.PostgreSQLServer{}}, &resource.EnqueueRequestForClaim{}).
+		Watches(&source.Kind{Type: &v1beta1.PostgreSQLServer{}}, &resource.EnqueueRequestForClaim{}).
 		For(&databasev1alpha1.PostgreSQLInstance{}).
 		WithEventFilter(p).
 		Complete(r)
@@ -129,17 +129,17 @@ func ConfigurePostgreSQLServer(_ context.Context, cm resource.Claim, cs resource
 		return errors.Errorf("expected resource claim %s to be %s", cm.GetName(), databasev1alpha1.PostgreSQLInstanceGroupVersionKind)
 	}
 
-	rs, csok := cs.(*v1alpha3.SQLServerClass)
+	rs, csok := cs.(*v1beta1.SQLServerClass)
 	if !csok {
-		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1alpha3.SQLServerClassGroupVersionKind)
+		return errors.Errorf("expected resource class %s to be %s", cs.GetName(), v1beta1.SQLServerClassGroupVersionKind)
 	}
 
-	s, mgok := mg.(*v1alpha3.PostgreSQLServer)
+	s, mgok := mg.(*v1beta1.PostgreSQLServer)
 	if !mgok {
-		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha3.PostgreSQLServerGroupVersionKind)
+		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1beta1.PostgreSQLServerGroupVersionKind)
 	}
 
-	spec := &v1alpha3.SQLServerSpec{
+	spec := &v1beta1.SQLServerSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
 		},

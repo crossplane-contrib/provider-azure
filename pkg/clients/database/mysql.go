@@ -31,6 +31,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azuredbv1beta1 "github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -58,11 +59,11 @@ var (
 
 // MySQLServerAPI represents the API interface for a MySQL Server client
 type MySQLServerAPI interface {
-	ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (bool, error)
-	GetServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (mysql.Server, error)
-	CreateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer, adminPassword string) error
-	UpdateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
-	DeleteServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
+	ServerNameTaken(ctx context.Context, s *azuredbv1beta1.MySQLServer) (bool, error)
+	GetServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) (mysql.Server, error)
+	CreateServer(ctx context.Context, s *azuredbv1beta1.MySQLServer, adminPassword string) error
+	UpdateServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) error
+	DeleteServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) error
 }
 
 // MySQLServerClient is the concrete implementation of the MySQLServerAPI
@@ -89,7 +90,7 @@ func NewMySQLServerClient(c *azure.Client) (*MySQLServerClient, error) {
 }
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (bool, error) {
+func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1beta1.MySQLServer) (bool, error) {
 	r, err := c.Execute(ctx, mysql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
 	if err != nil {
 		return false, err
@@ -98,12 +99,12 @@ func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alp
 }
 
 // GetServer retrieves the requested MySQL Server
-func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) (mysql.Server, error) {
+func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) (mysql.Server, error) {
 	return c.ServersClient.Get(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
 }
 
 // CreateServer creates a MySQL Server.
-func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer, adminPassword string) error {
+func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1.MySQLServer, adminPassword string) error {
 	s := cr.Spec.ForProvider
 	properties := &mysql.ServerPropertiesForDefaultCreate{
 		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
@@ -155,7 +156,7 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha
 }
 
 // UpdateServer updates a MySQL Server.
-func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer) error {
+func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1.MySQLServer) error {
 	// TODO(muvaf): password update via Update call is supported by Azure but
 	// we don't support that.
 	s := cr.Spec.ForProvider
@@ -187,7 +188,7 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha
 }
 
 // DeleteServer deletes the given MySQLServer resource.
-func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1alpha3.MySQLServer) error {
+func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1.MySQLServer) error {
 	op, err := c.ServersClient.Delete(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
 		return err
@@ -265,7 +266,7 @@ func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServer
 // to specify an arbitrary name. The format is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
 
 // ToMySQLSKU returns a *mysql.Sku object that can be used in Azure API calls.
-func ToMySQLSKU(skuSpec azuredbv1alpha3.SKU) (*mysql.Sku, error) {
+func ToMySQLSKU(skuSpec azuredbv1beta1.SKU) (*mysql.Sku, error) {
 	t, ok := skuShortTiers[mysql.SkuTier(skuSpec.Tier)]
 	if !ok {
 		return nil, fmt.Errorf("tier '%s' is not one of the supported values: %+v", skuSpec.Tier, mysql.PossibleSkuTierValues())
@@ -280,8 +281,8 @@ func ToMySQLSKU(skuSpec azuredbv1alpha3.SKU) (*mysql.Sku, error) {
 }
 
 // GenerateMySQLObservation produces SQLServerObservation from mysql.Server
-func GenerateMySQLObservation(in mysql.Server) azuredbv1alpha3.SQLServerObservation {
-	return azuredbv1alpha3.SQLServerObservation{
+func GenerateMySQLObservation(in mysql.Server) azuredbv1beta1.SQLServerObservation {
+	return azuredbv1beta1.SQLServerObservation{
 		ID:                       azure.ToString(in.ID),
 		Name:                     azure.ToString(in.Name),
 		Type:                     azure.ToString(in.Type),
@@ -293,7 +294,7 @@ func GenerateMySQLObservation(in mysql.Server) azuredbv1alpha3.SQLServerObservat
 
 // LateInitializeMySQL fills the empty values of SQLServerParameters with the
 // ones that are retrieved from the Azure API.
-func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server) {
+func LateInitializeMySQL(p *azuredbv1beta1.SQLServerParameters, in mysql.Server) {
 	if in.Sku != nil {
 		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
 	}
@@ -307,7 +308,7 @@ func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server
 
 // IsMySQLUpToDate is used to report whether given mysql.Server is in
 // sync with the SQLServerParameters that user desires.
-func IsMySQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in mysql.Server) bool { // nolint:gocyclo
+func IsMySQLUpToDate(p azuredbv1beta1.SQLServerParameters, in mysql.Server) bool { // nolint:gocyclo
 	if in.StorageProfile == nil || in.Sku == nil {
 		return false
 	}

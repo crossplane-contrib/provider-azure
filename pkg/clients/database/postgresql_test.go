@@ -26,7 +26,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 
-	databasev1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -65,18 +65,18 @@ func TestNewPostgreSQLVirtualNetworkRulesClient(t *testing.T) {
 func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 	cases := []struct {
 		name string
-		r    *databasev1alpha3.PostgreSQLServerVirtualNetworkRule
+		r    *v1alpha3.PostgreSQLServerVirtualNetworkRule
 		want postgresql.VirtualNetworkRule
 	}{
 		{
 			name: "Successful",
-			r: &databasev1alpha3.PostgreSQLServerVirtualNetworkRule{
+			r: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.PostgreSQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -92,13 +92,13 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &databasev1alpha3.PostgreSQLServerVirtualNetworkRule{
+			r: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.PostgreSQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID: vnetSubnetID,
 					},
 				},
@@ -126,19 +126,19 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 	cases := []struct {
 		name string
-		kube *databasev1alpha3.PostgreSQLServerVirtualNetworkRule
+		kube *v1alpha3.PostgreSQLServerVirtualNetworkRule
 		az   postgresql.VirtualNetworkRule
 		want bool
 	}{
 		{
 			name: "NoUpdateNeeded",
-			kube: &databasev1alpha3.PostgreSQLServerVirtualNetworkRule{
+			kube: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.PostgreSQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -155,13 +155,13 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededVirtualNetworkSubnetID",
-			kube: &databasev1alpha3.PostgreSQLServerVirtualNetworkRule{
+			kube: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.PostgreSQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -178,13 +178,13 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededIgnoreMissingVnetServiceEndpoint",
-			kube: &databasev1alpha3.PostgreSQLServerVirtualNetworkRule{
+			kube: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: databasev1alpha3.PostgreSQLVirtualNetworkRuleSpec{
+				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
 					Name:              vnetRuleName,
 					ServerName:        serverName,
 					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: databasev1alpha3.VirtualNetworkRuleProperties{
+					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
 						VirtualNetworkSubnetID:           vnetSubnetID,
 						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
 					},
@@ -222,7 +222,7 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 	cases := []struct {
 		name string
 		r    postgresql.VirtualNetworkRule
-		want databasev1alpha3.VirtualNetworkRuleStatus
+		want v1alpha3.VirtualNetworkRuleStatus
 	}{
 		{
 			name: "SuccessfulFull",
@@ -236,7 +236,7 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            postgresql.Ready,
 				},
 			},
-			want: databasev1alpha3.VirtualNetworkRuleStatus{
+			want: v1alpha3.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 				Type:  resourceType,
@@ -253,7 +253,7 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 					State:                            postgresql.Ready,
 				},
 			},
-			want: databasev1alpha3.VirtualNetworkRuleStatus{
+			want: v1alpha3.VirtualNetworkRuleStatus{
 				State: "Ready",
 				ID:    id,
 			},
@@ -262,8 +262,8 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			v := &databasev1alpha3.PostgreSQLServerVirtualNetworkRule{
-				Status: databasev1alpha3.VirtualNetworkRuleStatus{
+			v := &v1alpha3.PostgreSQLServerVirtualNetworkRule{
+				Status: v1alpha3.VirtualNetworkRuleStatus{
 					ResourceStatus: resourceStatus,
 				},
 			}

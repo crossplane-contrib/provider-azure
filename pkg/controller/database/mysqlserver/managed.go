@@ -34,7 +34,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
@@ -65,14 +65,14 @@ type Controller struct{}
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := resource.NewManagedReconciler(mgr,
-		resource.ManagedKind(v1alpha3.MySQLServerGroupVersionKind),
+		resource.ManagedKind(v1beta1.MySQLServerGroupVersionKind),
 		resource.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
 
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.MySQLServerKind, v1alpha3.Group))
+	name := strings.ToLower(fmt.Sprintf("%s.%s", v1beta1.MySQLServerKind, v1beta1.Group))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		For(&v1alpha3.MySQLServer{}).
+		For(&v1beta1.MySQLServer{}).
 		Complete(r)
 }
 
@@ -91,7 +91,7 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
-	v, ok := mg.(*v1alpha3.MySQLServer)
+	v, ok := mg.(*v1beta1.MySQLServer)
 	if !ok {
 		return nil, errors.New(errNotMySQLServer)
 	}
@@ -117,7 +117,7 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
-	cr, ok := mg.(*v1alpha3.MySQLServer)
+	cr, ok := mg.(*v1beta1.MySQLServer)
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotMySQLServer)
 	}
@@ -165,7 +165,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	cr, ok := mg.(*v1alpha3.MySQLServer)
+	cr, ok := mg.(*v1beta1.MySQLServer)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotMySQLServer)
 	}
@@ -187,7 +187,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
-	cr, ok := mg.(*v1alpha3.MySQLServer)
+	cr, ok := mg.(*v1beta1.MySQLServer)
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotMySQLServer)
 	}
@@ -202,7 +202,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	cr, ok := mg.(*v1alpha3.MySQLServer)
+	cr, ok := mg.(*v1beta1.MySQLServer)
 	if !ok {
 		return errors.New(errNotMySQLServer)
 	}

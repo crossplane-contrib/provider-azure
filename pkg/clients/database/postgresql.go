@@ -32,6 +32,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	azuredbv1beta1 "github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -44,11 +45,11 @@ import (
 
 // PostgreSQLServerAPI represents the API interface for a MySQL Server client
 type PostgreSQLServerAPI interface {
-	ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (bool, error)
-	GetServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (postgresql.Server, error)
-	CreateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error
-	DeleteServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error
-	UpdateServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error
+	ServerNameTaken(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (bool, error)
+	GetServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (postgresql.Server, error)
+	CreateServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer, adminPassword string) error
+	DeleteServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error
+	UpdateServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error
 }
 
 // PostgreSQLServerClient is the concreate implementation of the SQLServerAPI interface for PostgreSQL that calls Azure API.
@@ -74,7 +75,7 @@ func NewPostgreSQLServerClient(c *azure.Client) (*PostgreSQLServerClient, error)
 }
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (bool, error) {
+func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (bool, error) {
 	r, err := c.Execute(ctx, postgresql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
 	if err != nil {
 		return false, err
@@ -83,12 +84,12 @@ func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredb
 }
 
 // GetServer retrieves the requested PostgreSQL Server
-func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (postgresql.Server, error) {
 	return c.ServersClient.Get(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
 }
 
 // CreateServer creates a PostgreSQL Server
-func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1alpha3.PostgreSQLServer, adminPassword string) error {
+func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServer, adminPassword string) error {
 	s := cr.Spec.ForProvider
 	properties := &postgresql.ServerPropertiesForDefaultCreate{
 		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
@@ -122,7 +123,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 }
 
 // UpdateServer updates a PostgreSQL Server.
-func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha3.PostgreSQLServer) error {
+func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServer) error {
 	// TODO(muvaf): password update via Update call is supported by Azure but
 	// we don't support that.
 	s := cr.Spec.ForProvider
@@ -154,7 +155,7 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 }
 
 // DeleteServer deletes the given PostgreSQL resource
-func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1alpha3.PostgreSQLServer) error {
+func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error {
 	op, err := c.ServersClient.Delete(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
 	if err != nil {
 		return err
@@ -232,7 +233,7 @@ func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.Postgr
 // to specify an arbitrary name. The format is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
 
 // ToPostgreSQLSKU returns a *postgresql.Sku object that can be used in Azure API calls.
-func ToPostgreSQLSKU(skuSpec azuredbv1alpha3.SKU) (*postgresql.Sku, error) {
+func ToPostgreSQLSKU(skuSpec azuredbv1beta1.SKU) (*postgresql.Sku, error) {
 	t, ok := skuShortTiers[mysql.SkuTier(skuSpec.Tier)]
 	if !ok {
 		return nil, fmt.Errorf("tier '%s' is not one of the supported values: %+v", skuSpec.Tier, mysql.PossibleSkuTierValues())
@@ -247,8 +248,8 @@ func ToPostgreSQLSKU(skuSpec azuredbv1alpha3.SKU) (*postgresql.Sku, error) {
 }
 
 // GeneratePostgreSQLObservation produces SQLServerObservation from postgresql.Server.
-func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1alpha3.SQLServerObservation {
-	return azuredbv1alpha3.SQLServerObservation{
+func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1beta1.SQLServerObservation {
+	return azuredbv1beta1.SQLServerObservation{
 		ID:                       azure.ToString(in.ID),
 		Name:                     azure.ToString(in.Name),
 		Type:                     azure.ToString(in.Type),
@@ -260,7 +261,7 @@ func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1alpha3.SQLServ
 
 // LateInitializePostgreSQL fills the empty values of SQLServerParameters with the
 // ones that are retrieved from the Azure API.
-func LateInitializePostgreSQL(p *azuredbv1alpha3.SQLServerParameters, in postgresql.Server) {
+func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgresql.Server) {
 	if in.Sku != nil {
 		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
 	}
@@ -274,7 +275,7 @@ func LateInitializePostgreSQL(p *azuredbv1alpha3.SQLServerParameters, in postgre
 
 // IsPostgreSQLUpToDate is used to report whether given postgresql.Server is in
 // sync with the SQLServerParameters that user desires.
-func IsPostgreSQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in postgresql.Server) bool { // nolint:gocyclo
+func IsPostgreSQLUpToDate(p azuredbv1beta1.SQLServerParameters, in postgresql.Server) bool { // nolint:gocyclo
 	if in.StorageProfile == nil || in.Sku == nil {
 		return false
 	}

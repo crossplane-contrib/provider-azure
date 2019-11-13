@@ -37,7 +37,7 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
+	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
@@ -47,55 +47,55 @@ var (
 )
 
 type MockPostgreSQLServerAPI struct {
-	MockServerNameTaken func(ctx context.Context, s *v1alpha3.PostgreSQLServer) (bool, error)
-	MockGetServer       func(ctx context.Context, s *v1alpha3.PostgreSQLServer) (postgresql.Server, error)
-	MockCreateServer    func(ctx context.Context, s *v1alpha3.PostgreSQLServer, adminPassword string) error
-	MockDeleteServer    func(ctx context.Context, s *v1alpha3.PostgreSQLServer) error
-	MockUpdateServer    func(ctx context.Context, s *v1alpha3.PostgreSQLServer) error
+	MockServerNameTaken func(ctx context.Context, s *v1beta1.PostgreSQLServer) (bool, error)
+	MockGetServer       func(ctx context.Context, s *v1beta1.PostgreSQLServer) (postgresql.Server, error)
+	MockCreateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer, adminPassword string) error
+	MockDeleteServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
+	MockUpdateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
 }
 
-func (m *MockPostgreSQLServerAPI) ServerNameTaken(ctx context.Context, s *v1alpha3.PostgreSQLServer) (bool, error) {
+func (m *MockPostgreSQLServerAPI) ServerNameTaken(ctx context.Context, s *v1beta1.PostgreSQLServer) (bool, error) {
 	return m.MockServerNameTaken(ctx, s)
 }
 
-func (m *MockPostgreSQLServerAPI) GetServer(ctx context.Context, s *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+func (m *MockPostgreSQLServerAPI) GetServer(ctx context.Context, s *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 	return m.MockGetServer(ctx, s)
 }
 
-func (m *MockPostgreSQLServerAPI) CreateServer(ctx context.Context, s *v1alpha3.PostgreSQLServer, adminPassword string) error {
+func (m *MockPostgreSQLServerAPI) CreateServer(ctx context.Context, s *v1beta1.PostgreSQLServer, adminPassword string) error {
 	return m.MockCreateServer(ctx, s, adminPassword)
 }
 
-func (m *MockPostgreSQLServerAPI) UpdateServer(ctx context.Context, s *v1alpha3.PostgreSQLServer) error {
+func (m *MockPostgreSQLServerAPI) UpdateServer(ctx context.Context, s *v1beta1.PostgreSQLServer) error {
 	return m.MockUpdateServer(ctx, s)
 }
 
-func (m *MockPostgreSQLServerAPI) DeleteServer(ctx context.Context, s *v1alpha3.PostgreSQLServer) error {
+func (m *MockPostgreSQLServerAPI) DeleteServer(ctx context.Context, s *v1beta1.PostgreSQLServer) error {
 	return m.MockDeleteServer(ctx, s)
 }
 
-type modifier func(*v1alpha3.PostgreSQLServer)
+type modifier func(*v1beta1.PostgreSQLServer)
 
 func withExternalName(name string) modifier {
-	return func(p *v1alpha3.PostgreSQLServer) {
+	return func(p *v1beta1.PostgreSQLServer) {
 		meta.SetExternalName(p, name)
 	}
 }
 
 func withProviderRef(r *corev1.ObjectReference) modifier {
-	return func(p *v1alpha3.PostgreSQLServer) {
+	return func(p *v1beta1.PostgreSQLServer) {
 		p.Spec.ProviderReference = r
 	}
 }
 
 func withAdminName(name string) modifier {
-	return func(p *v1alpha3.PostgreSQLServer) {
+	return func(p *v1beta1.PostgreSQLServer) {
 		p.Spec.ForProvider.AdministratorLogin = name
 	}
 }
 
-func postgresqlserver(m ...modifier) *v1alpha3.PostgreSQLServer {
-	p := &v1alpha3.PostgreSQLServer{}
+func postgresqlserver(m ...modifier) *v1beta1.PostgreSQLServer {
+	p := &v1beta1.PostgreSQLServer{}
 
 	for _, mod := range m {
 		mod(p)
@@ -216,7 +216,7 @@ func TestObserve(t *testing.T) {
 		"ErrGetServer": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{}, errBoom
 					},
 				},
@@ -232,10 +232,10 @@ func TestObserve(t *testing.T) {
 		"ErrCheckServerName": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (bool, error) {
+					MockServerNameTaken: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (bool, error) {
 						return false, errBoom
 					},
 				},
@@ -251,10 +251,10 @@ func TestObserve(t *testing.T) {
 		"ServerCreating": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (bool, error) {
+					MockServerNameTaken: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (bool, error) {
 						return true, nil
 					},
 				},
@@ -272,10 +272,10 @@ func TestObserve(t *testing.T) {
 		"ServerNotFound": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (bool, error) {
+					MockServerNameTaken: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (bool, error) {
 						return false, nil
 					},
 				},
@@ -296,7 +296,7 @@ func TestObserve(t *testing.T) {
 					MockUpdate: test.NewMockUpdateFn(nil),
 				},
 				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) (postgresql.Server, error) {
+					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{
 							Sku: &postgresql.Sku{},
 							ServerProperties: &postgresql.ServerProperties{
@@ -383,7 +383,7 @@ func TestCreate(t *testing.T) {
 		"ErrCreateServer": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockCreateServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer, _ string) error { return errBoom },
+					MockCreateServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer, _ string) error { return errBoom },
 				},
 				newPasswordFn: func(int) (string, error) { return password, nil },
 			},
@@ -398,7 +398,7 @@ func TestCreate(t *testing.T) {
 		"Successful": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockCreateServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer, _ string) error { return nil },
+					MockCreateServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer, _ string) error { return nil },
 				},
 				newPasswordFn: func(int) (string, error) { return password, nil },
 			},
@@ -451,7 +451,7 @@ func TestDelete(t *testing.T) {
 		"ErrDeleteServer": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockDeleteServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) error { return errBoom },
+					MockDeleteServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) error { return errBoom },
 				},
 			},
 			args: args{
@@ -463,7 +463,7 @@ func TestDelete(t *testing.T) {
 		"Successful": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
-					MockDeleteServer: func(_ context.Context, _ *v1alpha3.PostgreSQLServer) error { return nil },
+					MockDeleteServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) error { return nil },
 				},
 			},
 			args: args{
