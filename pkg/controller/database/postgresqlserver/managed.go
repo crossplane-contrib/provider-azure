@@ -196,9 +196,10 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotPostgreSQLServer)
 	}
-	// TODO(muvaf): If an async update operation is ongoing, state is still ready
+	// NOTE(muvaf): If an async update operation is ongoing, state is still ready
 	// according to Azure but your update calls will be rejected since the resource
-	// is `busy`.
+	// is `busy`. However, GET call returns the updated object even though it is
+	// still being applied, so, we call Update only once.
 	if cr.Status.AtProvider.UserVisibleState != database.StateReady {
 		return resource.ExternalUpdate{}, nil
 	}
@@ -206,11 +207,13 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	s, ok := mg.(*v1alpha3.PostgreSQLServer)
+	cr, ok := mg.(*v1alpha3.PostgreSQLServer)
 	if !ok {
 		return errors.New(errNotPostgreSQLServer)
 	}
-
-	s.SetConditions(runtimev1alpha1.Deleting())
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeletePostgreSQLServer)
+	cr.SetConditions(runtimev1alpha1.Deleting())
+	if cr.Status.AtProvider.UserVisibleState == database.StateDropping {
+		return nil
+	}
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, cr)), errDeletePostgreSQLServer)
 }
