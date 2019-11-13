@@ -309,17 +309,17 @@ spec:
                     name of a server.
                   type: string
                 id:
-                  description: ID - READ-ONLY; Resource ID
+                  description: ID - Resource ID
                   type: string
                 masterServerId:
                   description: MasterServerID - The master server id of a replica
                     server.
                   type: string
                 name:
-                  description: Name - READ-ONLY; Resource name.
+                  description: Name - Resource name.
                   type: string
                 type:
-                  description: Type - READ-ONLY; Resource type.
+                  description: Type - Resource type.
                   type: string
                 userVisibleState:
                   description: UserVisibleState - A state of a server that is visible

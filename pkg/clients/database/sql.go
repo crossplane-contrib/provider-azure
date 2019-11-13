@@ -36,6 +36,14 @@ import (
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
+// Helper functions
+// NOTE: postgresql and mysql structs and functions live in their respective
+// packages even though they are exactly the same. However, Crossplane does not
+// make that assumption and use the respective package for each type, although,
+// they both share the same SQLServerParameters and SQLServerObservation objects.
+// https://github.com/Azure/azure-sdk-for-go/blob/master/services/mysql/mgmt/2017-12-01/mysql/models.go
+// https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
+
 // State strings for MySQL and PostgreSQL.
 const (
 	StateDisabled = string(mysql.ServerStateDisabled)
@@ -59,9 +67,6 @@ type MySQLServerAPI interface {
 	UpdateServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
 	DeleteServer(ctx context.Context, s *azuredbv1alpha3.MySQLServer) error
 }
-
-//---------------------------------------------------------------------------------------------------------------------
-// MySQLServerClient
 
 // MySQLServerClient is the concrete implementation of the MySQLServerAPI
 // interface for MySQL that calls Azure API.
@@ -160,7 +165,6 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1alpha
 	properties := &mysql.ServerUpdateParametersProperties{
 		Version:        mysql.ServerVersion(s.Version),
 		SslEnforcement: mysql.SslEnforcementEnum(s.SSLEnforcement),
-		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
 		StorageProfile: &mysql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -194,9 +198,6 @@ func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1alpha
 	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
-
-//---------------------------------------------------------------------------------------------------------------------
-// MySQLVirtualNetworkRulesClient
 
 // A MySQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
 type MySQLVirtualNetworkRulesClient mysqlapi.VirtualNetworkRulesClientAPI
@@ -262,9 +263,6 @@ func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServer
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Type = azure.ToString(az.Type)
 }
-
-//---------------------------------------------------------------------------------------------------------------------
-// PostgreSQLServerClient
 
 // PostgreSQLServerAPI represents the API interface for a MySQL Server client
 type PostgreSQLServerAPI interface {
@@ -353,7 +351,6 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 	properties := &postgresql.ServerUpdateParametersProperties{
 		Version:        postgresql.ServerVersion(s.Version),
 		SslEnforcement: postgresql.SslEnforcementEnum(s.SSLEnforcement),
-		//ReplicationRole: s.Spec.ForProvider.ReplicationRole,
 		StorageProfile: &postgresql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -387,9 +384,6 @@ func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1a
 	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
 	return err
 }
-
-//---------------------------------------------------------------------------------------------------------------------
-// PostgreSQLVirtualNetworkRulesClient
 
 // A PostgreSQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
 type PostgreSQLVirtualNetworkRulesClient postgresqlapi.VirtualNetworkRulesClientAPI
@@ -456,16 +450,10 @@ func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.Postgr
 	v.Status.Type = azure.ToString(az.Type)
 }
 
-// Helper functions
-// NOTE: These helper functions work for both MySQL and PostreSQL, but we cast everything to the MySQL types because
-// the generated Azure clients for MySQL and PostgreSQL are exactly the same content, just a different package. See:
-// https://github.com/Azure/azure-sdk-for-go/blob/master/services/mysql/mgmt/2017-12-01/mysql/models.go
-// https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
-
 // The name must match the specification of the SKU, so, we don't allow user
-// to specify an arbitrary name.
+// to specify an arbitrary name. The format is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
 
-// ToMySQLSKU returns the name of the MySQL Server SKU, which is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
+// ToMySQLSKU returns a *mysql.Sku object that can be used in Azure API calls.
 func ToMySQLSKU(skuSpec azuredbv1alpha3.SKU) (*mysql.Sku, error) {
 	t, ok := skuShortTiers[mysql.SkuTier(skuSpec.Tier)]
 	if !ok {
@@ -480,7 +468,7 @@ func ToMySQLSKU(skuSpec azuredbv1alpha3.SKU) (*mysql.Sku, error) {
 	}, nil
 }
 
-// ToPostgreSQLSKU returns the name of the PostgreSQL SKU, which is tier + family + cores, e.g. B_Gen4_1, GP_Gen5_8.
+// ToPostgreSQLSKU returns a *postgresql.Sku object that can be used in Azure API calls.
 func ToPostgreSQLSKU(skuSpec azuredbv1alpha3.SKU) (*postgresql.Sku, error) {
 	t, ok := skuShortTiers[mysql.SkuTier(skuSpec.Tier)]
 	if !ok {
@@ -535,8 +523,7 @@ func LateInitializeMySQL(p *azuredbv1alpha3.SQLServerParameters, in mysql.Server
 
 // IsMySQLUpToDate is used to report whether given mysql.Server is in
 // sync with the SQLServerParameters that user desires.
-// nolint:gocyclo
-func IsMySQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in mysql.Server) bool {
+func IsMySQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in mysql.Server) bool { // nolint:gocyclo
 	if in.StorageProfile == nil || in.Sku == nil {
 		return false
 	}
@@ -581,8 +568,7 @@ func LateInitializePostgreSQL(p *azuredbv1alpha3.SQLServerParameters, in postgre
 
 // IsPostgreSQLUpToDate is used to report whether given postgresql.Server is in
 // sync with the SQLServerParameters that user desires.
-// nolint:gocyclo
-func IsPostgreSQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in postgresql.Server) bool {
+func IsPostgreSQLUpToDate(p azuredbv1alpha3.SQLServerParameters, in postgresql.Server) bool { // nolint:gocyclo
 	if in.StorageProfile == nil || in.Sku == nil {
 		return false
 	}

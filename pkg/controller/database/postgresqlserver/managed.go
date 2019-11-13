@@ -47,6 +47,7 @@ const (
 	errNewClient                 = "cannot create new PostgreSQLServer client"
 	errGetProvider               = "cannot get Azure provider"
 	errGetProviderSecret         = "cannot get Azure provider Secret"
+	errUpdateCR                  = "cannot update PostgreSQL custom resource"
 	errGenPassword               = "cannot generate admin password"
 	errNotPostgreSQLServer       = "managed resource is not a PostgreSQLServer"
 	errCreatePostgreSQLServer    = "cannot create PostgreSQLServer"
@@ -142,7 +143,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	}
 	database.LateInitializePostgreSQL(&cr.Spec.ForProvider, server)
 	if err := e.kube.Update(ctx, cr); err != nil {
-		return resource.ExternalObservation{}, err
+		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
 	cr.Status.AtProvider = database.GeneratePostgreSQLObservation(server)
 

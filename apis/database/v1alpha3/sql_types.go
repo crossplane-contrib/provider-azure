@@ -315,13 +315,13 @@ type SQLServerSpec struct {
 
 // SQLServerObservation represents the current state of Azure SQL resource.
 type SQLServerObservation struct {
-	// ID - READ-ONLY; Resource ID
+	// ID - Resource ID
 	ID string `json:"id,omitempty"`
 
-	// Name - READ-ONLY; Resource name.
+	// Name - Resource name.
 	Name string `json:"name,omitempty"`
 
-	// Type - READ-ONLY; Resource type.
+	// Type - Resource type.
 	Type string `json:"type,omitempty"`
 
 	// UserVisibleState - A state of a server that is visible to user.
@@ -338,16 +338,6 @@ type SQLServerObservation struct {
 type SQLServerStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 	AtProvider                     SQLServerObservation `json:"atProvider,omitempty"`
-}
-
-// ValidMySQLVersionValues returns the valid set of engine version values.
-func ValidMySQLVersionValues() []string {
-	return []string{"5.6", "5.7"}
-}
-
-// ValidPostgreSQLVersionValues returns the valid set of engine version values.
-func ValidPostgreSQLVersionValues() []string {
-	return []string{"9.5", "9.6", "10", "10.0", "10.2"}
 }
 
 // VirtualNetworkRuleProperties defines the properties of a VirtualNetworkRule.

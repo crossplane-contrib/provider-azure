@@ -36,7 +36,7 @@ import (
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azuresql "github.com/crossplaneio/stack-azure/pkg/clients"
+	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
 const passwordDataLen = 20
@@ -46,6 +46,7 @@ const (
 	errNewClient            = "cannot create new MySQLServer client"
 	errGetProvider          = "cannot get Azure provider"
 	errGetProviderSecret    = "cannot get Azure provider Secret"
+	errUpdateCR             = "cannot update MySQLServer custom resource"
 	errGenPassword          = "cannot generate admin password"
 	errNotMySQLServer       = "managed resource is not a MySQLServer"
 	errCreateMySQLServer    = "cannot create MySQLServer"
@@ -76,7 +77,7 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func newClient(credentials []byte) (database.MySQLServerAPI, error) {
-	ac, err := azuresql.NewClient(credentials)
+	ac, err := azure.NewClient(credentials)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create Azure client")
 	}
@@ -122,7 +123,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	}
 
 	server, err := e.client.GetServer(ctx, cr)
-	if azuresql.IsNotFound(err) {
+	if azure.IsNotFound(err) {
 		// Azure SQL servers don't exist according to the Azure API until their
 		// create operation has completed, and Azure will happily let you submit
 		// several subsequent create operations for the same server. Our create
@@ -141,7 +142,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	}
 	database.LateInitializeMySQL(&cr.Spec.ForProvider, server)
 	if err := e.kube.Update(ctx, cr); err != nil {
-		return resource.ExternalObservation{}, err
+		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
 	cr.Status.AtProvider = database.GenerateMySQLObservation(server)
 
@@ -206,5 +207,5 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	}
 
 	s.SetConditions(runtimev1alpha1.Deleting())
-	return errors.Wrap(resource.Ignore(azuresql.IsNotFound, e.client.DeleteServer(ctx, s)), errDeleteMySQLServer)
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, s)), errDeleteMySQLServer)
 }
