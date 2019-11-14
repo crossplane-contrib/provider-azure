@@ -481,5 +481,6 @@ func (r *Reconciler) connectionDetails(instance *computev1alpha3.AKSCluster, cli
 		runtimev1alpha1.ResourceCredentialsSecretCAKey:         cluster.CertificateAuthorityData,
 		runtimev1alpha1.ResourceCredentialsSecretClientCertKey: auth.ClientCertificateData,
 		runtimev1alpha1.ResourceCredentialsSecretClientKeyKey:  auth.ClientKeyData,
+		runtimev1alpha1.ResourceCredentialsSecretKubeconfigKey: *(*creds.Kubeconfigs)[0].Value,
 	}, nil
 }
