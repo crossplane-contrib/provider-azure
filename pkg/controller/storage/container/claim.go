@@ -106,7 +106,8 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ManagedKind(v1alpha3.ContainerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureContainer),
-			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
+			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
+			resource.ManagedConfiguratorFn(resource.ConfigureNames),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(

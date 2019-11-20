@@ -84,12 +84,6 @@ func TestConfigureAccount(t *testing.T) {
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: classNamespace,
 						Name:      claimName,
-						OwnerReferences: []metav1.OwnerReference{{
-							APIVersion: storagev1alpha1.BucketGroupVersionKind.GroupVersion().String(),
-							Kind:       storagev1alpha1.BucketGroupVersionKind.Kind,
-							Name:       claimName,
-							UID:        claimUID,
-						}},
 					},
 					Spec: v1alpha3.AccountSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
