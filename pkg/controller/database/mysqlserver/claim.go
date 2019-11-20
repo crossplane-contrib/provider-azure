@@ -103,7 +103,8 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ManagedKind(v1beta1.MySQLServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureMySQLServer),
-			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
+			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
+			resource.ManagedConfiguratorFn(resource.ConfigureNames),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
