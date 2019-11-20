@@ -22,12 +22,10 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
 
@@ -103,7 +101,10 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
 		resource.ClassKind(v1alpha3.AccountClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.AccountGroupVersionKind),
-		resource.WithManagedConfigurators(resource.ManagedConfiguratorFn(ConfigureAccount)))
+		resource.WithManagedConfigurators(
+			resource.ManagedConfiguratorFn(ConfigureAccount),
+			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
+		))
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasClassReferenceKind(resource.ClassKind(v1alpha3.AccountClassGroupVersionKind)),
@@ -170,13 +171,6 @@ func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.Class, m
 	// Instead we create an account with the same name as the claim.
 	a.SetNamespace(cs.GetNamespace())
 	a.SetName(b.GetName())
-
-	// TODO(negz): Don't set this potentially cross-namespace owner reference.
-	// We probably want to use the resource's reclaim policy, not Kubernetes
-	// garbage collection, to determine whether to delete the managed resource
-	// when the claim is deleted per
-	// https://github.com/crossplaneio/crossplane/issues/550
-	a.SetOwnerReferences([]v1.OwnerReference{meta.AsOwner(meta.ReferenceTo(b, storagev1alpha1.BucketGroupVersionKind))})
 
 	return nil
 }

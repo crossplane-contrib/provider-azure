@@ -103,7 +103,8 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigurePostgreSQLServer),
-			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
+			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
+			resource.ManagedConfiguratorFn(resource.ConfigureNames),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
