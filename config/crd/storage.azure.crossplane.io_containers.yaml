@@ -193,6 +193,7 @@ spec:
               - Unbindable
               - Unbound
               - Bound
+              - Released
               type: string
             conditions:
               description: Conditions of the resource.

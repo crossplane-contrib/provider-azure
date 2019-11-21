@@ -106,7 +106,8 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		resource.WithBinder(resource.NewAPIBinder(mgr.GetClient(), mgr.GetScheme())),
 		resource.WithManagedConfigurators(
 			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
-			resource.NewObjectMetaConfigurator(mgr.GetScheme()),
+			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
+			resource.ManagedConfiguratorFn(resource.ConfigureNames),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(
