@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: "stack-azure-controller"
-        image: "crossplane/stack-azure:v0.3.0"
+        image: "crossplane/stack-azure:v0.3.1"
         env:
         - name: POD_NAME
           valueFrom:
