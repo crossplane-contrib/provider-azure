@@ -52,6 +52,11 @@ type MockPostgreSQLServerAPI struct {
 	MockCreateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer, adminPassword string) error
 	MockDeleteServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
 	MockUpdateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
+	MockGetRESTClient   func() autorest.Sender
+}
+
+func (m *MockPostgreSQLServerAPI) GetRESTClient() autorest.Sender {
+	return m.MockGetRESTClient()
 }
 
 func (m *MockPostgreSQLServerAPI) ServerNameTaken(ctx context.Context, s *v1beta1.PostgreSQLServer) (bool, error) {
@@ -304,6 +309,11 @@ func TestObserve(t *testing.T) {
 								FullyQualifiedDomainName: &endpoint,
 								StorageProfile:           &postgresql.StorageProfile{},
 							}}, nil
+					},
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
 					},
 				},
 			},

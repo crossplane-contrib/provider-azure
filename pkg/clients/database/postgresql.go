@@ -20,12 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql/postgresqlapi"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
@@ -50,6 +52,7 @@ type PostgreSQLServerAPI interface {
 	CreateServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer, adminPassword string) error
 	DeleteServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error
 	UpdateServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error
+	GetRESTClient() autorest.Sender
 }
 
 // PostgreSQLServerClient is the concreate implementation of the SQLServerAPI interface for PostgreSQL that calls Azure API.
@@ -62,16 +65,25 @@ type PostgreSQLServerClient struct {
 func NewPostgreSQLServerClient(c *azure.Client) (*PostgreSQLServerClient, error) {
 	postgreSQLServerClient := postgresql.NewServersClient(c.SubscriptionID)
 	postgreSQLServerClient.Authorizer = c.Authorizer
-	postgreSQLServerClient.AddToUserAgent(azure.UserAgent)
+	if err := postgreSQLServerClient.AddToUserAgent(azure.UserAgent); err != nil {
+		return nil, err
+	}
 
 	nameClient := postgresql.NewCheckNameAvailabilityClient(c.SubscriptionID)
 	nameClient.Authorizer = c.Authorizer
-	nameClient.AddToUserAgent(azure.UserAgent)
+	if err := nameClient.AddToUserAgent(azure.UserAgent); err != nil {
+		return nil, err
+	}
 
 	return &PostgreSQLServerClient{
 		ServersClient:               postgreSQLServerClient,
 		CheckNameAvailabilityClient: nameClient,
 	}, nil
+}
+
+// GetRESTClient returns the underlying REST client that the client object uses.
+func (c *PostgreSQLServerClient) GetRESTClient() autorest.Sender {
+	return c.ServersClient.Client
 }
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
@@ -84,8 +96,8 @@ func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredb
 }
 
 // GetServer retrieves the requested PostgreSQL Server
-func (c *PostgreSQLServerClient) GetServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (postgresql.Server, error) {
-	return c.ServersClient.Get(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
+func (c *PostgreSQLServerClient) GetServer(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServer) (postgresql.Server, error) {
+	return c.ServersClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 }
 
 // CreateServer creates a PostgreSQL Server
@@ -118,8 +130,11 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 	if err != nil {
 		return err
 	}
-	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
-	return err
+	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+		PollingURL: op.PollingURL(),
+		Method:     http.MethodPut,
+	}
+	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // UpdateServer updates a PostgreSQL Server.
@@ -150,18 +165,24 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 	if err != nil {
 		return err
 	}
-	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
-	return err
+	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+		PollingURL: op.PollingURL(),
+		Method:     http.MethodPatch,
+	}
+	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // DeleteServer deletes the given PostgreSQL resource
-func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error {
-	op, err := c.ServersClient.Delete(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
+func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServer) error {
+	op, err := c.ServersClient.Delete(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
 		return err
 	}
-	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
-	return err
+	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+		PollingURL: op.PollingURL(),
+		Method:     http.MethodDelete,
+	}
+	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // A PostgreSQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
@@ -247,16 +268,14 @@ func ToPostgreSQLSKU(skuSpec azuredbv1beta1.SKU) (*postgresql.Sku, error) {
 	}, nil
 }
 
-// GeneratePostgreSQLObservation produces SQLServerObservation from postgresql.Server.
-func GeneratePostgreSQLObservation(in postgresql.Server) azuredbv1beta1.SQLServerObservation {
-	return azuredbv1beta1.SQLServerObservation{
-		ID:                       azure.ToString(in.ID),
-		Name:                     azure.ToString(in.Name),
-		Type:                     azure.ToString(in.Type),
-		UserVisibleState:         string(in.UserVisibleState),
-		FullyQualifiedDomainName: azure.ToString(in.FullyQualifiedDomainName),
-		MasterServerID:           azure.ToString(in.MasterServerID),
-	}
+// UpdatePostgreSQLObservation produces SQLServerObservation from postgresql.Server.
+func UpdatePostgreSQLObservation(o *azuredbv1beta1.SQLServerObservation, in postgresql.Server) {
+	o.ID = azure.ToString(in.ID)
+	o.Name = azure.ToString(in.Name)
+	o.Type = azure.ToString(in.Type)
+	o.UserVisibleState = string(in.UserVisibleState)
+	o.FullyQualifiedDomainName = azure.ToString(in.FullyQualifiedDomainName)
+	o.MasterServerID = azure.ToString(in.MasterServerID)
 }
 
 // LateInitializePostgreSQL fills the empty values of SQLServerParameters with the

@@ -52,6 +52,11 @@ type MockMySQLServerAPI struct {
 	MockCreateServer    func(ctx context.Context, s *v1beta1.MySQLServer, adminPassword string) error
 	MockUpdateServer    func(ctx context.Context, s *v1beta1.MySQLServer) error
 	MockDeleteServer    func(ctx context.Context, s *v1beta1.MySQLServer) error
+	MockGetRESTClient   func() autorest.Sender
+}
+
+func (m *MockMySQLServerAPI) GetRESTClient() autorest.Sender {
+	return m.MockGetRESTClient()
 }
 
 func (m *MockMySQLServerAPI) ServerNameTaken(ctx context.Context, s *v1beta1.MySQLServer) (bool, error) {
@@ -304,6 +309,11 @@ func TestObserve(t *testing.T) {
 								FullyQualifiedDomainName: &endpoint,
 								StorageProfile:           &mysql.StorageProfile{},
 							}}, nil
+					},
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
 					},
 				},
 			},

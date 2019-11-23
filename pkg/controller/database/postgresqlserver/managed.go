@@ -55,6 +55,7 @@ const (
 	errGetPostgreSQLServer       = "cannot get PostgreSQLServer"
 	errDeletePostgreSQLServer    = "cannot delete PostgreSQLServer"
 	errCheckPostgreSQLServerName = "cannot check PostgreSQLServer name availability"
+	errFetchLastOperation        = "cannot fetch last operation"
 )
 
 // Controller is responsible for adding the PostgreSQLServer controller and its
@@ -122,7 +123,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
 	}
-
 	server, err := e.client.GetServer(ctx, cr)
 	if azure.IsNotFound(err) {
 		// Azure SQL servers don't exist according to the Azure API until their
@@ -145,8 +145,14 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if err := e.kube.Update(ctx, cr); err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
-	cr.Status.AtProvider = database.GeneratePostgreSQLObservation(server)
-
+	database.UpdatePostgreSQLObservation(&cr.Status.AtProvider, server)
+	// We make this call after kube.Update since it doesn't update the
+	// status subresource but fetches the the whole object after it's done. So,
+	// changes to status has to be done after kube.Update in order not to get them
+	// lost.
+	if err := database.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
+		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
+	}
 	switch server.UserVisibleState {
 	case postgresql.ServerStateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
@@ -196,11 +202,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotPostgreSQLServer)
 	}
-	// NOTE(muvaf): If an async update operation is ongoing, state is still ready
-	// according to Azure but your update calls will be rejected since the resource
-	// is `busy`. However, GET call returns the updated object even though it is
-	// still being applied, so, we call Update only once.
-	if cr.Status.AtProvider.UserVisibleState != database.StateReady {
+	if cr.Status.AtProvider.LastOperation.Status == database.AsyncOperationStatusInProgress {
 		return resource.ExternalUpdate{}, nil
 	}
 	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdatePostgreSQLServer)
