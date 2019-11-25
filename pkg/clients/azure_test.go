@@ -17,11 +17,21 @@ limitations under the License.
 package azure
 
 import (
+	"context"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/google/go-cmp/cmp"
 	"github.com/onsi/gomega"
+
+	"github.com/crossplaneio/crossplane-runtime/pkg/test"
+
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
 const (
@@ -45,6 +55,96 @@ func TestNewClient(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	g.Expect(client).NotTo(gomega.BeNil())
 	g.Expect(client.SubscriptionID).To(gomega.Equal("bf1b0e59-93da-42e0-82c6-5a1d94227911"))
+}
+
+func TestFetchAsyncOperation(t *testing.T) {
+	inprogressStatus := "inprogress"
+	inProgressResponse := fmt.Sprintf(`{"status": "%s"}`, inprogressStatus)
+
+	errorStatus := "Failed"
+	errorResponse := fmt.Sprintf(`{"status": "%s"}`, errorStatus)
+	errorMessage := fmt.Sprintf(`Code="Failed" Message="The async operation failed." AdditionalInfo=[{"status":"%s"}]`, errorStatus)
+
+	pollingURL := "https://crossplane.io"
+
+	type args struct {
+		sender autorest.Sender
+		as     *v1alpha3.AsyncOperation
+	}
+	type want struct {
+		op  *v1alpha3.AsyncOperation
+		err error
+	}
+	cases := map[string]struct {
+		args args
+		want want
+	}{
+		"Should skip when there is no operation": {},
+		"In progress": {
+			args: args{
+				as: &v1alpha3.AsyncOperation{
+					Method:     http.MethodPut,
+					PollingURL: pollingURL,
+				},
+				sender: autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
+					req.URL, _ = url.Parse("https://crossplane.io/resource1")
+					return &http.Response{
+						Request:       req,
+						StatusCode:    http.StatusAccepted,
+						Body:          ioutil.NopCloser(strings.NewReader(inProgressResponse)),
+						ContentLength: int64(len([]byte(inProgressResponse))),
+					}, nil
+				}),
+			},
+			want: want{
+				op: &v1alpha3.AsyncOperation{
+					Method:     http.MethodPut,
+					PollingURL: pollingURL,
+					Status:     inprogressStatus,
+				},
+			},
+		},
+		"Failure": {
+			args: args{
+				as: &v1alpha3.AsyncOperation{
+					Method:     http.MethodPut,
+					PollingURL: pollingURL,
+				},
+				sender: autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
+					req.URL, _ = url.Parse("https://crossplane.io/resource1")
+					return &http.Response{
+						Request:       req,
+						StatusCode:    http.StatusOK,
+						Body:          ioutil.NopCloser(strings.NewReader(errorResponse)),
+						ContentLength: int64(len([]byte(inProgressResponse))),
+					}, nil
+				}),
+			},
+			want: want{
+				op: &v1alpha3.AsyncOperation{
+					Method:       http.MethodPut,
+					PollingURL:   pollingURL,
+					Status:       errorStatus,
+					ErrorMessage: errorMessage,
+				},
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			mina := name
+			fmt.Println(mina)
+			err := FetchAsyncOperation(context.Background(), tc.args.sender, tc.args.as)
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("FetchAsyncOperation(...): -want error, +got error:\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.op, tc.args.as); diff != "" {
+				t.Errorf("FetchAsyncOperation(...): -want, +got:\n%s", diff)
+			}
+		})
+	}
+
 }
 
 func TestIsNotFound(t *testing.T) {

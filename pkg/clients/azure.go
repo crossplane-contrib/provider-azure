@@ -23,14 +23,21 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
+
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
 const (
 	// UserAgent is the user agent addition that identifies the Crossplane Azure client
 	UserAgent = "crossplane-azure-client"
+	// AsyncOperationStatusInProgress is the status value for AsyncOperation type
+	// that indicates the operation is still ongoing.
+	AsyncOperationStatusInProgress = "InProgress"
+	asyncOperationPollingMethod    = "AsyncOperation"
 )
 
 // A FieldOption determines how common Go types are translated to the types
@@ -108,6 +115,43 @@ func ValidateClient(client *Client) error {
 
 	_, err := groupsClient.ListComplete(context.TODO(), "", nil)
 	return err
+}
+
+// FetchAsyncOperation updates the given operation object with the most up-to-date
+// status retrieved from Azure API.
+func FetchAsyncOperation(ctx context.Context, client autorest.Sender, as *v1alpha3.AsyncOperation) error {
+	if as == nil || as.PollingURL == "" || as.Method == "" {
+		return nil
+	}
+	// NOTE(muvaf):There is NewFutureFromResponse method to construct Future
+	// object but that requires http.Request object. Even though we construct a
+	// fake http.Request object, the poll operation makes decisions based on the
+	// response status code and request headers. JSON marshal needs less
+	// information and it's safer to cover all types of pollingTrackedBase objects.
+	futureJSON, err := json.Marshal(map[string]string{
+		"method":        as.Method,
+		"pollingMethod": asyncOperationPollingMethod,
+		"pollingURI":    as.PollingURL,
+	})
+	if err != nil {
+		return err
+	}
+	op := &azure.Future{}
+	if err := op.UnmarshalJSON(futureJSON); err != nil {
+		return err
+	}
+	// NOTE(muvaf): This function is meant to fetch the operation status, meaning
+	// it shouldn't fail if the operation reports error. It should fail if an
+	// error appears during the HTTP calls that are made to fetch operation
+	// status. But DoneWithContext returns uses the same error variable for both
+	// cases, so, we make a compromise and not return the error even if it's
+	// related to fetch call.
+	_, err = op.DoneWithContext(ctx, client)
+	as.Status = op.Status()
+	if err != nil {
+		as.ErrorMessage = err.Error()
+	}
+	return nil
 }
 
 // IsNotFound returns a value indicating whether the given error represents that the resource was not found.

@@ -35,6 +35,7 @@ import (
 
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azuredbv1beta1 "github.com/crossplaneio/stack-azure/apis/database/v1beta1"
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -130,11 +131,11 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 	if err != nil {
 		return err
 	}
-	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPut,
 	}
-	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // UpdateServer updates a PostgreSQL Server.
@@ -165,11 +166,11 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 	if err != nil {
 		return err
 	}
-	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPatch,
 	}
-	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // DeleteServer deletes the given PostgreSQL resource
@@ -178,11 +179,11 @@ func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1
 	if err != nil {
 		return err
 	}
-	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodDelete,
 	}
-	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // A PostgreSQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.

@@ -27,7 +27,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
 	"github.com/Azure/go-autorest/autorest"
-	azureautorest "github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
@@ -35,6 +34,7 @@ import (
 
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azuredbv1beta1 "github.com/crossplaneio/stack-azure/apis/database/v1beta1"
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -50,10 +50,6 @@ const (
 	StateDisabled = string(mysql.ServerStateDisabled)
 	StateDropping = string(mysql.ServerStateDropping)
 	StateReady    = string(mysql.ServerStateReady)
-
-	AsyncOperationStatusInProgress = "InProgress"
-
-	asyncOperationPollingMethod = "AsyncOperation"
 )
 
 var (
@@ -150,11 +146,11 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1
 	if err != nil {
 		return err
 	}
-	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPut,
 	}
-	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // UpdateServer updates a MySQL Server.
@@ -185,11 +181,11 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1
 	if err != nil {
 		return err
 	}
-	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPatch,
 	}
-	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // DeleteServer deletes the given MySQLServer resource.
@@ -198,11 +194,11 @@ func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1
 	if err != nil {
 		return err
 	}
-	cr.Status.AtProvider.LastOperation = azuredbv1beta1.AsyncOperation{
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodDelete,
 	}
-	return FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
 }
 
 // A MySQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
@@ -341,43 +337,4 @@ func IsMySQLUpToDate(p azuredbv1beta1.SQLServerParameters, in mysql.Server) bool
 		return false
 	}
 	return true
-}
-
-// TODO(muvaf): FetchAsyncOperation can be used by other managed resources as well.
-
-// FetchAsyncOperation updates the given operation object with the most up-to-date
-// status retrieved from Azure API.
-func FetchAsyncOperation(ctx context.Context, client autorest.Sender, as *azuredbv1beta1.AsyncOperation) error {
-	if as == nil || as.PollingURL == "" {
-		return nil
-	}
-	// NOTE(muvaf):There is NewFutureFromResponse method to construct Future
-	// object but that requires http.Request object. Even though we construct a
-	// fake http.Request object, the poll operation makes decisions based on the
-	// response status code and request headers. JSON marshal needs less
-	// information and it's safer to cover all types of pollingTrackedBase objects.
-	futureJSON, err := json.Marshal(map[string]string{
-		"method":        as.Method,
-		"pollingMethod": asyncOperationPollingMethod,
-		"pollingURI":    as.PollingURL,
-	})
-	if err != nil {
-		return err
-	}
-	op := &azureautorest.Future{}
-	if err := op.UnmarshalJSON(futureJSON); err != nil {
-		return err
-	}
-	// NOTE(muvaf): This function is meant to fetch the operation status, meaning
-	// it shouldn't fail if the operation reports error. It should fail if an
-	// error appears during the HTTP calls that are made to fetch operation
-	// status. But DoneWithContext returns uses the same error variable for both
-	// cases, so, we make a compromise and not return the error even if it's
-	// related to fetch call.
-	_, err = op.DoneWithContext(ctx, client)
-	as.Status = op.Status()
-	if err != nil {
-		as.ErrorMessage = err.Error()
-	}
-	return nil
 }

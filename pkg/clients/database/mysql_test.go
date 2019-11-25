@@ -18,25 +18,17 @@ package database
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
-	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -320,94 +312,4 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestFetchAsyncOperation(t *testing.T) {
-	inprogressStatus := "inprogress"
-	inProgressResponse := fmt.Sprintf(`{"status": "%s"}`, inprogressStatus)
-
-	errorStatus := "Failed"
-	errorResponse := fmt.Sprintf(`{"status": "%s"}`, errorStatus)
-	errorMessage := fmt.Sprintf(`Code="Failed" Message="The async operation failed." AdditionalInfo=[{"status":"%s"}]`, errorStatus)
-
-	pollingURL := "https://crossplane.io"
-
-	type args struct {
-		sender autorest.Sender
-		as     *v1beta1.AsyncOperation
-	}
-	type want struct {
-		op  *v1beta1.AsyncOperation
-		err error
-	}
-	cases := map[string]struct {
-		args args
-		want want
-	}{
-		"Should skip when there is no operation": {},
-		"In progress": {
-			args: args{
-				as: &v1beta1.AsyncOperation{
-					Method:     http.MethodPut,
-					PollingURL: pollingURL,
-				},
-				sender: autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
-					req.URL, _ = url.Parse("https://crossplane.io/resource1")
-					return &http.Response{
-						Request:       req,
-						StatusCode:    http.StatusAccepted,
-						Body:          ioutil.NopCloser(strings.NewReader(inProgressResponse)),
-						ContentLength: int64(len([]byte(inProgressResponse))),
-					}, nil
-				}),
-			},
-			want: want{
-				op: &v1beta1.AsyncOperation{
-					Method:     http.MethodPut,
-					PollingURL: pollingURL,
-					Status:     inprogressStatus,
-				},
-			},
-		},
-		"Failure": {
-			args: args{
-				as: &v1beta1.AsyncOperation{
-					Method:     http.MethodPut,
-					PollingURL: pollingURL,
-				},
-				sender: autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
-					req.URL, _ = url.Parse("https://crossplane.io/resource1")
-					return &http.Response{
-						Request:       req,
-						StatusCode:    http.StatusOK,
-						Body:          ioutil.NopCloser(strings.NewReader(errorResponse)),
-						ContentLength: int64(len([]byte(inProgressResponse))),
-					}, nil
-				}),
-			},
-			want: want{
-				op: &v1beta1.AsyncOperation{
-					Method:       http.MethodPut,
-					PollingURL:   pollingURL,
-					Status:       errorStatus,
-					ErrorMessage: errorMessage,
-				},
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			mina := name
-			fmt.Println(mina)
-			err := FetchAsyncOperation(context.Background(), tc.args.sender, tc.args.as)
-			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("FetchAsyncOperation(...): -want error, +got error:\n%s", diff)
-			}
-			if diff := cmp.Diff(tc.want.op, tc.args.as); diff != "" {
-				t.Errorf("FetchAsyncOperation(...): -want, +got:\n%s", diff)
-			}
-		})
-	}
-
 }

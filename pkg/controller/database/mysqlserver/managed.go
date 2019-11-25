@@ -149,7 +149,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	// status subresource but fetches the the whole object after it's done. So,
 	// changes to status has to be done after kube.Update in order not to get them
 	// lost.
-	if err := database.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
+	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 	}
 	switch cr.Status.AtProvider.UserVisibleState {
@@ -197,7 +197,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotMySQLServer)
 	}
-	if cr.Status.AtProvider.LastOperation.Status == database.AsyncOperationStatusInProgress {
+	if cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress {
 		return resource.ExternalUpdate{}, nil
 	}
 	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdateMySQLServer)
