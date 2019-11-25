@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
 	"github.com/negz/crossplane/pkg/util"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -153,7 +152,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 	}
 	switch server.UserVisibleState {
-	case postgresql.ServerStateReady:
+	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(cr)
 	default:
@@ -173,27 +172,28 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	s, ok := mg.(*v1beta1.PostgreSQLServer)
+	cr, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
 	}
 
-	s.SetConditions(runtimev1alpha1.Creating())
+	cr.SetConditions(runtimev1alpha1.Creating())
 
 	pw, err := e.newPasswordFn(passwordDataLen)
 	if err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errGenPassword)
 	}
-
-	if err := e.client.CreateServer(ctx, s, pw); err != nil {
+	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
 	}
 
 	return resource.ExternalCreation{
-		ConnectionDetails: resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
-		},
-	}, nil
+			ConnectionDetails: resource.ConnectionDetails{
+				runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
+			},
+		}, errors.Wrap(
+			azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+			errFetchLastOperation)
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
@@ -204,7 +204,13 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress {
 		return resource.ExternalUpdate{}, nil
 	}
-	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdatePostgreSQLServer)
+	if err := e.client.UpdateServer(ctx, cr); err != nil {
+		return resource.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServer)
+	}
+
+	return resource.ExternalUpdate{}, errors.Wrap(
+		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+		errFetchLastOperation)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -213,8 +219,13 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotPostgreSQLServer)
 	}
 	cr.SetConditions(runtimev1alpha1.Deleting())
-	if cr.Status.AtProvider.UserVisibleState == database.StateDropping {
+	if cr.Status.AtProvider.UserVisibleState == v1beta1.StateDropping {
 		return nil
 	}
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, cr)), errDeletePostgreSQLServer)
+	if err := e.client.DeleteServer(ctx, cr); resource.Ignore(azure.IsNotFound, err) != nil {
+		return errors.Wrap(err, errDeletePostgreSQLServer)
+	}
+	return errors.Wrap(
+		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+		errFetchLastOperation)
 }

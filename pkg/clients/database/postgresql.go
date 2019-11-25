@@ -135,7 +135,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPut,
 	}
-	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return nil
 }
 
 // UpdateServer updates a PostgreSQL Server.
@@ -170,7 +170,7 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPatch,
 	}
-	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return nil
 }
 
 // DeleteServer deletes the given PostgreSQL resource
@@ -183,7 +183,7 @@ func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodDelete,
 	}
-	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return nil
 }
 
 // A PostgreSQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.

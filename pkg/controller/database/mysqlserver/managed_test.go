@@ -409,6 +409,11 @@ func TestCreate(t *testing.T) {
 			e: &external{
 				client: &MockMySQLServerAPI{
 					MockCreateServer: func(_ context.Context, _ *v1beta1.MySQLServer, _ string) error { return nil },
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
+					},
 				},
 				newPasswordFn: func(int) (string, error) { return password, nil },
 			},
@@ -474,6 +479,11 @@ func TestDelete(t *testing.T) {
 			e: &external{
 				client: &MockMySQLServerAPI{
 					MockDeleteServer: func(_ context.Context, _ *v1beta1.MySQLServer) error { return nil },
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
+					},
 				},
 			},
 			args: args{

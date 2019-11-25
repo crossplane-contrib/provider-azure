@@ -45,13 +45,6 @@ import (
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/mysql/mgmt/2017-12-01/mysql/models.go
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
 
-// State strings for MySQL and PostgreSQL.
-const (
-	StateDisabled = string(mysql.ServerStateDisabled)
-	StateDropping = string(mysql.ServerStateDropping)
-	StateReady    = string(mysql.ServerStateReady)
-)
-
 var (
 	skuShortTiers = map[mysql.SkuTier]string{
 		mysql.Basic:           "B",
@@ -150,7 +143,7 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPut,
 	}
-	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return nil
 }
 
 // UpdateServer updates a MySQL Server.
@@ -185,7 +178,7 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodPatch,
 	}
-	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return nil
 }
 
 // DeleteServer deletes the given MySQLServer resource.
@@ -198,7 +191,7 @@ func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1
 		PollingURL: op.PollingURL(),
 		Method:     http.MethodDelete,
 	}
-	return azure.FetchAsyncOperation(ctx, c.ServersClient.Client, &cr.Status.AtProvider.LastOperation)
+	return nil
 }
 
 // A MySQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.

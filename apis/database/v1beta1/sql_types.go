@@ -26,14 +26,11 @@ import (
 	apisv1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
+// Possible state strings for SQL types.
 const (
-	// OperationCreateServer is the operation type for creating a new mysql
-	// server.
-	OperationCreateServer = "createServer"
-
-	// OperationCreateFirewallRules is the operation type for creating a
-	// firewall rule.
-	OperationCreateFirewallRules = "createFirewallRules"
+	StateDisabled = "Disabled"
+	StateDropping = "Dropping"
+	StateReady    = "Ready"
 )
 
 // Error strings

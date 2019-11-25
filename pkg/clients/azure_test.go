@@ -79,8 +79,8 @@ func TestFetchAsyncOperation(t *testing.T) {
 		args args
 		want want
 	}{
-		"Should skip when there is no operation": {},
-		"In progress": {
+		"NoOperation": {},
+		"InProgress": {
 			args: args{
 				as: &v1alpha3.AsyncOperation{
 					Method:     http.MethodPut,

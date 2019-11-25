@@ -140,7 +140,7 @@ func FetchAsyncOperation(ctx context.Context, client autorest.Sender, as *v1alph
 	if err := op.UnmarshalJSON(futureJSON); err != nil {
 		return err
 	}
-	// NOTE(muvaf): This function is meant to fetch the operation status, meaning
+	// NOTE(muvaf): FetchAsyncOperation is meant to fetch the operation status, meaning
 	// it shouldn't fail if the operation reports error. It should fail if an
 	// error appears during the HTTP calls that are made to fetch operation
 	// status. But DoneWithContext returns uses the same error variable for both
