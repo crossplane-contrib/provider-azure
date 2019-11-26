@@ -52,6 +52,11 @@ type MockPostgreSQLServerAPI struct {
 	MockCreateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer, adminPassword string) error
 	MockDeleteServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
 	MockUpdateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
+	MockGetRESTClient   func() autorest.Sender
+}
+
+func (m *MockPostgreSQLServerAPI) GetRESTClient() autorest.Sender {
+	return m.MockGetRESTClient()
 }
 
 func (m *MockPostgreSQLServerAPI) ServerNameTaken(ctx context.Context, s *v1beta1.PostgreSQLServer) (bool, error) {
@@ -305,6 +310,11 @@ func TestObserve(t *testing.T) {
 								StorageProfile:           &postgresql.StorageProfile{},
 							}}, nil
 					},
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
+					},
 				},
 			},
 			args: args{
@@ -399,6 +409,11 @@ func TestCreate(t *testing.T) {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
 					MockCreateServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer, _ string) error { return nil },
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
+					},
 				},
 				newPasswordFn: func(int) (string, error) { return password, nil },
 			},
@@ -464,6 +479,11 @@ func TestDelete(t *testing.T) {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
 					MockDeleteServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) error { return nil },
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
+							return nil, nil
+						})
+					},
 				},
 			},
 			args: args{

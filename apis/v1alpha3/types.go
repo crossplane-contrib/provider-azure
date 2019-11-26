@@ -95,3 +95,18 @@ type ResourceGroupList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ResourceGroup `json:"items"`
 }
+
+// AsyncOperation is used to save Azure Async operation details.
+type AsyncOperation struct {
+	// Method is HTTP method that the initial request is made with.
+	Method string `json:"method,omitempty"`
+
+	// PollingURL is used to fetch the status of the given operation.
+	PollingURL string `json:"pollingUrl,omitempty"`
+
+	// Status represents the status of the operation.
+	Status string `json:"status,omitempty"`
+
+	// ErrorMessage represents the error that occurred during the operation.
+	ErrorMessage string `json:"errorMessage,omitempty"`
+}

@@ -318,6 +318,26 @@ spec:
                 id:
                   description: ID - Resource ID
                   type: string
+                lastOperation:
+                  description: LastOperation represents the state of the last operation
+                    started by the controller.
+                  properties:
+                    errorMessage:
+                      description: ErrorMessage represents the error that occurred
+                        during the operation.
+                      type: string
+                    method:
+                      description: Method is HTTP method that the initial request
+                        is made with.
+                      type: string
+                    pollingUrl:
+                      description: PollingURL is used to fetch the status of the given
+                        operation.
+                      type: string
+                    status:
+                      description: Status represents the status of the operation.
+                      type: string
+                  type: object
                 masterServerId:
                   description: MasterServerID - The master server id of a replica
                     server.

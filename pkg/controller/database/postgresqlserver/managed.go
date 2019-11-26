@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/crossplaneio/stack-azure/pkg/clients/database"
-
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
 	"github.com/negz/crossplane/pkg/util"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -38,6 +35,7 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 )
 
 const passwordDataLen = 20
@@ -55,6 +53,7 @@ const (
 	errGetPostgreSQLServer       = "cannot get PostgreSQLServer"
 	errDeletePostgreSQLServer    = "cannot delete PostgreSQLServer"
 	errCheckPostgreSQLServerName = "cannot check PostgreSQLServer name availability"
+	errFetchLastOperation        = "cannot fetch last operation"
 )
 
 // Controller is responsible for adding the PostgreSQLServer controller and its
@@ -122,7 +121,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if !ok {
 		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
 	}
-
 	server, err := e.client.GetServer(ctx, cr)
 	if azure.IsNotFound(err) {
 		// Azure SQL servers don't exist according to the Azure API until their
@@ -145,10 +143,16 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if err := e.kube.Update(ctx, cr); err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
-	cr.Status.AtProvider = database.GeneratePostgreSQLObservation(server)
-
+	database.UpdatePostgreSQLObservation(&cr.Status.AtProvider, server)
+	// We make this call after kube.Update since it doesn't update the
+	// status subresource but fetches the the whole object after it's done. So,
+	// changes to status has to be done after kube.Update in order not to get them
+	// lost.
+	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
+		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
+	}
 	switch server.UserVisibleState {
-	case postgresql.ServerStateReady:
+	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(cr)
 	default:
@@ -168,27 +172,28 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
-	s, ok := mg.(*v1beta1.PostgreSQLServer)
+	cr, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
 		return resource.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
 	}
 
-	s.SetConditions(runtimev1alpha1.Creating())
+	cr.SetConditions(runtimev1alpha1.Creating())
 
 	pw, err := e.newPasswordFn(passwordDataLen)
 	if err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errGenPassword)
 	}
-
-	if err := e.client.CreateServer(ctx, s, pw); err != nil {
+	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
 	}
 
 	return resource.ExternalCreation{
-		ConnectionDetails: resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
-		},
-	}, nil
+			ConnectionDetails: resource.ConnectionDetails{
+				runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
+			},
+		}, errors.Wrap(
+			azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+			errFetchLastOperation)
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
@@ -196,14 +201,16 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotPostgreSQLServer)
 	}
-	// NOTE(muvaf): If an async update operation is ongoing, state is still ready
-	// according to Azure but your update calls will be rejected since the resource
-	// is `busy`. However, GET call returns the updated object even though it is
-	// still being applied, so, we call Update only once.
-	if cr.Status.AtProvider.UserVisibleState != database.StateReady {
+	if cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress {
 		return resource.ExternalUpdate{}, nil
 	}
-	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdatePostgreSQLServer)
+	if err := e.client.UpdateServer(ctx, cr); err != nil {
+		return resource.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServer)
+	}
+
+	return resource.ExternalUpdate{}, errors.Wrap(
+		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+		errFetchLastOperation)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -212,8 +219,13 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotPostgreSQLServer)
 	}
 	cr.SetConditions(runtimev1alpha1.Deleting())
-	if cr.Status.AtProvider.UserVisibleState == database.StateDropping {
+	if cr.Status.AtProvider.UserVisibleState == v1beta1.StateDropping {
 		return nil
 	}
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, cr)), errDeletePostgreSQLServer)
+	if err := e.client.DeleteServer(ctx, cr); resource.Ignore(azure.IsNotFound, err) != nil {
+		return errors.Wrap(err, errDeletePostgreSQLServer)
+	}
+	return errors.Wrap(
+		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+		errFetchLastOperation)
 }

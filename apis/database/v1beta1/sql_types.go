@@ -26,14 +26,11 @@ import (
 	apisv1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 )
 
+// Possible state strings for SQL types.
 const (
-	// OperationCreateServer is the operation type for creating a new mysql
-	// server.
-	OperationCreateServer = "createServer"
-
-	// OperationCreateFirewallRules is the operation type for creating a
-	// firewall rule.
-	OperationCreateFirewallRules = "createFirewallRules"
+	StateDisabled = "Disabled"
+	StateDropping = "Dropping"
+	StateReady    = "Ready"
 )
 
 // Error strings
@@ -254,6 +251,10 @@ type SQLServerObservation struct {
 
 	// MasterServerID - The master server id of a replica server.
 	MasterServerID string `json:"masterServerId,omitempty"`
+
+	// LastOperation represents the state of the last operation started by the
+	// controller.
+	LastOperation apisv1alpha3.AsyncOperation `json:"lastOperation,omitempty"`
 }
 
 // A SQLServerStatus represents the observed state of a SQLServer.

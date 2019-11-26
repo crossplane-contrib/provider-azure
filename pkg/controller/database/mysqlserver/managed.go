@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/crossplaneio/stack-azure/pkg/clients/database"
-
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -37,6 +35,7 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 )
 
 const passwordDataLen = 20
@@ -54,6 +53,7 @@ const (
 	errGetMySQLServer       = "cannot get MySQLServer"
 	errDeleteMySQLServer    = "cannot delete MySQLServer"
 	errCheckMySQLServerName = "cannot check MySQLServer name availability"
+	errFetchLastOperation   = "cannot fetch last operation"
 )
 
 // Controller is responsible for adding the MySQLServer controller and its
@@ -144,10 +144,16 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if err := e.kube.Update(ctx, cr); err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
-	cr.Status.AtProvider = database.GenerateMySQLObservation(server)
-
+	database.UpdateMySQLObservation(&cr.Status.AtProvider, server)
+	// We make this call after kube.Update since it doesn't update the
+	// status subresource but fetches the the whole object after it's done. So,
+	// changes to status has to be done after kube.Update in order not to get them
+	// lost.
+	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
+		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
+	}
 	switch cr.Status.AtProvider.UserVisibleState {
-	case database.StateReady:
+	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
 		resource.SetBindable(cr)
 	default:
@@ -180,10 +186,12 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 	}
 
 	return resource.ExternalCreation{
-		ConnectionDetails: resource.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
-		},
-	}, nil
+			ConnectionDetails: resource.ConnectionDetails{
+				runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
+			},
+		}, errors.Wrap(
+			azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+			errFetchLastOperation)
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
@@ -191,14 +199,16 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if !ok {
 		return resource.ExternalUpdate{}, errors.New(errNotMySQLServer)
 	}
-	// NOTE(muvaf): If an async update operation is ongoing, state is still ready
-	// according to Azure but your update calls will be rejected since the resource
-	// is `busy`. However, GET call returns the updated object even though it is
-	// still being applied, so, we call Update only once.
-	if cr.Status.AtProvider.UserVisibleState != database.StateReady {
+	if cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress {
 		return resource.ExternalUpdate{}, nil
 	}
-	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdateMySQLServer)
+	if err := e.client.UpdateServer(ctx, cr); err != nil {
+		return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMySQLServer)
+	}
+
+	return resource.ExternalUpdate{}, errors.Wrap(
+		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+		errFetchLastOperation)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -207,8 +217,14 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotMySQLServer)
 	}
 	cr.SetConditions(runtimev1alpha1.Deleting())
-	if cr.Status.AtProvider.UserVisibleState == database.StateDropping {
+	if cr.Status.AtProvider.UserVisibleState == v1beta1.StateDropping {
 		return nil
 	}
-	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, cr)), errDeleteMySQLServer)
+	if err := e.client.DeleteServer(ctx, cr); resource.Ignore(azure.IsNotFound, err) != nil {
+		return errors.Wrap(err, errDeleteMySQLServer)
+	}
+
+	return errors.Wrap(
+		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
+		errFetchLastOperation)
 }

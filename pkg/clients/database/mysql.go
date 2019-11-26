@@ -20,11 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
@@ -32,6 +34,7 @@ import (
 
 	azuredbv1alpha3 "github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
 	azuredbv1beta1 "github.com/crossplaneio/stack-azure/apis/database/v1beta1"
+	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 )
 
@@ -41,13 +44,6 @@ import (
 // they both share the same SQLServerParameters and SQLServerObservation objects.
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/mysql/mgmt/2017-12-01/mysql/models.go
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
-
-// State strings for MySQL and PostgreSQL.
-const (
-	StateDisabled = string(mysql.ServerStateDisabled)
-	StateDropping = string(mysql.ServerStateDropping)
-	StateReady    = string(mysql.ServerStateReady)
-)
 
 var (
 	skuShortTiers = map[mysql.SkuTier]string{
@@ -64,6 +60,7 @@ type MySQLServerAPI interface {
 	CreateServer(ctx context.Context, s *azuredbv1beta1.MySQLServer, adminPassword string) error
 	UpdateServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) error
 	DeleteServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) error
+	GetRESTClient() autorest.Sender
 }
 
 // MySQLServerClient is the concrete implementation of the MySQLServerAPI
@@ -77,16 +74,25 @@ type MySQLServerClient struct {
 func NewMySQLServerClient(c *azure.Client) (*MySQLServerClient, error) {
 	mysqlServersClient := mysql.NewServersClient(c.SubscriptionID)
 	mysqlServersClient.Authorizer = c.Authorizer
-	mysqlServersClient.AddToUserAgent(azure.UserAgent)
+	if err := mysqlServersClient.AddToUserAgent(azure.UserAgent); err != nil {
+		return nil, err
+	}
 
 	nameClient := mysql.NewCheckNameAvailabilityClient(c.SubscriptionID)
 	nameClient.Authorizer = c.Authorizer
-	nameClient.AddToUserAgent(azure.UserAgent)
+	if err := nameClient.AddToUserAgent(azure.UserAgent); err != nil {
+		return nil, err
+	}
 
 	return &MySQLServerClient{
 		ServersClient:               mysqlServersClient,
 		CheckNameAvailabilityClient: nameClient,
 	}, nil
+}
+
+// GetRESTClient returns the underlying REST client that the client object uses.
+func (c *MySQLServerClient) GetRESTClient() autorest.Sender {
+	return c.ServersClient.Client
 }
 
 // ServerNameTaken returns true if the supplied server's name has been taken.
@@ -99,8 +105,8 @@ func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1bet
 }
 
 // GetServer retrieves the requested MySQL Server
-func (c *MySQLServerClient) GetServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) (mysql.Server, error) {
-	return c.ServersClient.Get(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s))
+func (c *MySQLServerClient) GetServer(ctx context.Context, cr *azuredbv1beta1.MySQLServer) (mysql.Server, error) {
+	return c.ServersClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 }
 
 // CreateServer creates a MySQL Server.
@@ -133,26 +139,11 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1
 	if err != nil {
 		return err
 	}
-	// NOTE(muvaf): There are cases where Create call does not return error
-	// and you don't see any SQL instance in the console UI. In those cases,
-	// since name is not taken, we always call Create with a new password each time.
-	// The problem is, error that blocks creation happens after the Create call
-	// is initiated.
-	// DoneWithContext checks the operation once and errors usually surface
-	// themselves in the first check, if there is one we are able to warn the user
-	// for a fix.
-	// However, there could be cases where the error appears after a long while.
-	// For that reason, some libraries make use of WithCompletionRef function. However,
-	// that function blocks until success or error with the context deadline.
-	// Azure does not provide any guarantees regarding provisioning time and it
-	// can get really long. In most of the cases, our context deadline gets reached.
-	//
-	// For the time being, we check only once to cover the greater possibility of
-	// capturing the error. If there is none, we'll never call Create again anyway.
-	// If the problem happens after a while, we'd fallback to old behavior where
-	// we continuously try to create and fail.
-	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
-	return err
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
+		PollingURL: op.PollingURL(),
+		Method:     http.MethodPut,
+	}
+	return nil
 }
 
 // UpdateServer updates a MySQL Server.
@@ -183,8 +174,11 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1
 	if err != nil {
 		return err
 	}
-	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
-	return err
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
+		PollingURL: op.PollingURL(),
+		Method:     http.MethodPatch,
+	}
+	return nil
 }
 
 // DeleteServer deletes the given MySQLServer resource.
@@ -193,8 +187,11 @@ func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1
 	if err != nil {
 		return err
 	}
-	_, err = op.DoneWithContext(ctx, c.ServersClient.Client)
-	return err
+	cr.Status.AtProvider.LastOperation = v1alpha3.AsyncOperation{
+		PollingURL: op.PollingURL(),
+		Method:     http.MethodDelete,
+	}
+	return nil
 }
 
 // A MySQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
@@ -280,16 +277,14 @@ func ToMySQLSKU(skuSpec azuredbv1beta1.SKU) (*mysql.Sku, error) {
 	}, nil
 }
 
-// GenerateMySQLObservation produces SQLServerObservation from mysql.Server
-func GenerateMySQLObservation(in mysql.Server) azuredbv1beta1.SQLServerObservation {
-	return azuredbv1beta1.SQLServerObservation{
-		ID:                       azure.ToString(in.ID),
-		Name:                     azure.ToString(in.Name),
-		Type:                     azure.ToString(in.Type),
-		UserVisibleState:         string(in.UserVisibleState),
-		FullyQualifiedDomainName: azure.ToString(in.FullyQualifiedDomainName),
-		MasterServerID:           azure.ToString(in.MasterServerID),
-	}
+// UpdateMySQLObservation produces SQLServerObservation from mysql.Server.
+func UpdateMySQLObservation(o *azuredbv1beta1.SQLServerObservation, in mysql.Server) {
+	o.ID = azure.ToString(in.ID)
+	o.Name = azure.ToString(in.Name)
+	o.Type = azure.ToString(in.Type)
+	o.UserVisibleState = string(in.UserVisibleState)
+	o.FullyQualifiedDomainName = azure.ToString(in.FullyQualifiedDomainName)
+	o.MasterServerID = azure.ToString(in.MasterServerID)
 }
 
 // LateInitializeMySQL fills the empty values of SQLServerParameters with the
