@@ -81,7 +81,7 @@ func (in *RedisClass) DeepCopyObject() runtime.Object {
 func (in *RedisClassList) DeepCopyInto(out *RedisClassList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]RedisClass, len(*in))
@@ -130,7 +130,7 @@ func (in *RedisClassSpecTemplate) DeepCopy() *RedisClassSpecTemplate {
 func (in *RedisList) DeepCopyInto(out *RedisList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Redis, len(*in))

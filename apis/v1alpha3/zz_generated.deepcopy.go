@@ -69,7 +69,7 @@ func (in *Provider) DeepCopyObject() runtime.Object {
 func (in *ProviderList) DeepCopyInto(out *ProviderList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Provider, len(*in))
@@ -144,7 +144,7 @@ func (in *ResourceGroup) DeepCopyObject() runtime.Object {
 func (in *ResourceGroupList) DeepCopyInto(out *ResourceGroupList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ResourceGroup, len(*in))

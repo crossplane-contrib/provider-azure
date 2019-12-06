@@ -84,7 +84,7 @@ func (in *AccountClass) DeepCopyObject() runtime.Object {
 func (in *AccountClassList) DeepCopyInto(out *AccountClassList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AccountClass, len(*in))
@@ -133,7 +133,7 @@ func (in *AccountClassSpecTemplate) DeepCopy() *AccountClassSpecTemplate {
 func (in *AccountList) DeepCopyInto(out *AccountList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Account, len(*in))
@@ -276,7 +276,7 @@ func (in *ContainerClass) DeepCopyObject() runtime.Object {
 func (in *ContainerClassList) DeepCopyInto(out *ContainerClassList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]ContainerClass, len(*in))
@@ -325,7 +325,7 @@ func (in *ContainerClassSpecTemplate) DeepCopy() *ContainerClassSpecTemplate {
 func (in *ContainerList) DeepCopyInto(out *ContainerList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Container, len(*in))

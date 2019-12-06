@@ -81,7 +81,7 @@ func (in *AKSClusterClass) DeepCopyObject() runtime.Object {
 func (in *AKSClusterClassList) DeepCopyInto(out *AKSClusterClassList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AKSClusterClass, len(*in))
@@ -130,7 +130,7 @@ func (in *AKSClusterClassSpecTemplate) DeepCopy() *AKSClusterClassSpecTemplate {
 func (in *AKSClusterList) DeepCopyInto(out *AKSClusterList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AKSCluster, len(*in))

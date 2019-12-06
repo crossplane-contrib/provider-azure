@@ -325,6 +325,11 @@ func TestReconciler_Reconcile(t *testing.T) {
 				if err := r.Get(ctx, key, b); err != nil {
 					t.Errorf("Reconciler.Reconcile() account error: %s", err)
 				}
+				// NOTE(muvaf): Get call returns TypeMeta and ResourceVersion
+				// that we are not interested. Since diff shows them, we have to
+				// assign the right values.
+				b.TypeMeta = tt.want.acct.TypeMeta
+				tt.want.acct.ResourceVersion = b.ResourceVersion
 				if diff := cmp.Diff(tt.want.acct, b, test.EquateConditions()); diff != "" {
 					t.Errorf("Reconciler.Reconcile() account: -want, +got\n%s", diff)
 				}
