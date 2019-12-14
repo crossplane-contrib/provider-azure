@@ -269,6 +269,11 @@ func TestReconciler_Reconcile(t *testing.T) {
 				if err := tt.fields.Client.Get(ctx, key, c); err != nil {
 					t.Errorf("Reconciler.Reconcile() container error: %s", err)
 				}
+				// NOTE(muvaf): Get call returns TypeMeta and ResourceVersion
+				// that we are not interested. Since diff shows them, we have to
+				// assign the right values.
+				c.TypeMeta = tt.want.con.TypeMeta
+				tt.want.con.ResourceVersion = c.ResourceVersion
 				if diff := cmp.Diff(tt.want.con, c, test.EquateConditions()); diff != "" {
 					t.Errorf("Reconciler.Reconcile() container: -want, +got\n%s", diff)
 				}

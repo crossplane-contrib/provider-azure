@@ -143,7 +143,7 @@ func (in *SubnetIDReferencer) DeepCopy() *SubnetIDReferencer {
 func (in *SubnetList) DeepCopyInto(out *SubnetList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Subnet, len(*in))
@@ -267,7 +267,7 @@ func (in *VirtualNetwork) DeepCopyObject() runtime.Object {
 func (in *VirtualNetworkList) DeepCopyInto(out *VirtualNetworkList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]VirtualNetwork, len(*in))

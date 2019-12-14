@@ -57,7 +57,7 @@ func (in *MySQLServerVirtualNetworkRule) DeepCopyObject() runtime.Object {
 func (in *MySQLServerVirtualNetworkRuleList) DeepCopyInto(out *MySQLServerVirtualNetworkRuleList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]MySQLServerVirtualNetworkRule, len(*in))
@@ -143,7 +143,7 @@ func (in *PostgreSQLServerVirtualNetworkRule) DeepCopyObject() runtime.Object {
 func (in *PostgreSQLServerVirtualNetworkRuleList) DeepCopyInto(out *PostgreSQLServerVirtualNetworkRuleList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]PostgreSQLServerVirtualNetworkRule, len(*in))

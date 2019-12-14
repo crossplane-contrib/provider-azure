@@ -55,7 +55,7 @@ func (in *MySQLServer) DeepCopyObject() runtime.Object {
 func (in *MySQLServerList) DeepCopyInto(out *MySQLServerList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]MySQLServer, len(*in))
@@ -130,7 +130,7 @@ func (in *PostgreSQLServer) DeepCopyObject() runtime.Object {
 func (in *PostgreSQLServerList) DeepCopyInto(out *PostgreSQLServerList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]PostgreSQLServer, len(*in))
@@ -240,7 +240,7 @@ func (in *SQLServerClass) DeepCopyObject() runtime.Object {
 func (in *SQLServerClassList) DeepCopyInto(out *SQLServerClassList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]SQLServerClass, len(*in))
