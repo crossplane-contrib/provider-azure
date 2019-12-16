@@ -72,7 +72,7 @@ type MySQLServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SQLServerSpec   `json:"spec,omitempty"`
+	Spec   SQLServerSpec   `json:"spec"`
 	Status SQLServerStatus `json:"status,omitempty"`
 }
 
@@ -100,7 +100,7 @@ type PostgreSQLServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SQLServerSpec   `json:"spec,omitempty"`
+	Spec   SQLServerSpec   `json:"spec"`
 	Status SQLServerStatus `json:"status,omitempty"`
 }
 
@@ -117,7 +117,7 @@ type PostgreSQLServerList struct {
 // provisioned MySQLServer or PostgreSQLServer.
 type SQLServerClassSpecTemplate struct {
 	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	ForProvider                       SQLServerParameters `json:"forProvider,omitempty"`
+	ForProvider                       SQLServerParameters `json:"forProvider"`
 }
 
 // +kubebuilder:object:root=true
@@ -229,7 +229,7 @@ type SQLServerParameters struct {
 // A SQLServerSpec defines the desired state of a SQLServer.
 type SQLServerSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ForProvider                  SQLServerParameters `json:"forProvider,omitempty"`
+	ForProvider                  SQLServerParameters `json:"forProvider"`
 }
 
 // SQLServerObservation represents the current state of Azure SQL resource.

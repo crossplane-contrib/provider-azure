@@ -185,7 +185,7 @@ type AKSCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AKSClusterSpec   `json:"spec,omitempty"`
+	Spec   AKSClusterSpec   `json:"spec"`
 	Status AKSClusterStatus `json:"status,omitempty"`
 }
 

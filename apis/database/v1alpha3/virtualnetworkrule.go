@@ -189,7 +189,7 @@ type PostgreSQLServerVirtualNetworkRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   PostgreSQLVirtualNetworkRuleSpec `json:"spec,omitempty"`
+	Spec   PostgreSQLVirtualNetworkRuleSpec `json:"spec"`
 	Status VirtualNetworkRuleStatus         `json:"status,omitempty"`
 }
 
@@ -239,7 +239,7 @@ type MySQLServerVirtualNetworkRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MySQLVirtualNetworkRuleSpec `json:"spec,omitempty"`
+	Spec   MySQLVirtualNetworkRuleSpec `json:"spec"`
 	Status VirtualNetworkRuleStatus    `json:"status,omitempty"`
 }
 

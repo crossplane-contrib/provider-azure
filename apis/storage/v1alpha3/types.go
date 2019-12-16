@@ -65,7 +65,7 @@ type AccountStatus struct {
 type Account struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              AccountSpec   `json:"spec,omitempty"`
+	Spec              AccountSpec   `json:"spec"`
 	Status            AccountStatus `json:"status,omitempty"`
 }
 
@@ -197,7 +197,7 @@ type ContainerStatus struct {
 type Container struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ContainerSpec   `json:"spec,omitempty"`
+	Spec              ContainerSpec   `json:"spec"`
 	Status            ContainerStatus `json:"status,omitempty"`
 }
 
