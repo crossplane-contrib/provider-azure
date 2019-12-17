@@ -152,7 +152,7 @@ type RedisParameters struct {
 // A RedisSpec defines the desired state of a Redis.
 type RedisSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ForProvider                  RedisParameters `json:"forProvider,omitempty"`
+	ForProvider                  RedisParameters `json:"forProvider"`
 }
 
 // RedisObservation represents the observed state of the Redis object in Azure.
@@ -205,7 +205,7 @@ type Redis struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RedisSpec   `json:"spec,omitempty"`
+	Spec   RedisSpec   `json:"spec"`
 	Status RedisStatus `json:"status,omitempty"`
 }
 
@@ -222,7 +222,7 @@ type RedisList struct {
 // provisioned Redis.
 type RedisClassSpecTemplate struct {
 	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	ForProvider                       RedisParameters `json:"forProvider,omitempty"`
+	ForProvider                       RedisParameters `json:"forProvider"`
 }
 
 // +kubebuilder:object:root=true
