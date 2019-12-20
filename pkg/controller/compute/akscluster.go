@@ -181,12 +181,12 @@ func (r *Reconciler) connect(instance *computev1alpha3.AKSCluster) (*compute.AKS
 	}
 
 	s := &v1.Secret{}
-	n := types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
+	n := types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
 	if err := r.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrap(err, "failed to get provider secret")
 	}
 
-	c, err := r.newClientFn(s.Data[p.Spec.Secret.Key])
+	c, err := r.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create Azure client")
 	}

@@ -158,12 +158,12 @@ func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha
 	}
 
 	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
+	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
 	if err := m.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider's secret %s", n)
 	}
 
-	storageClient, err := azurestorage.NewStorageAccountClient(s.Data[p.Spec.Secret.Key])
+	storageClient, err := azurestorage.NewStorageAccountClient(s.Data[p.Spec.CredentialsSecretRef.Key])
 	if err != nil {
 		return nil, errors.Wrapf(err, "cannot create storageClient from json")
 	}

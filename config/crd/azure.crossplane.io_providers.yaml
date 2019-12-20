@@ -42,9 +42,8 @@ spec:
           description: A ProviderSpec defines the desired state of a Provider.
           properties:
             credentialsSecretRef:
-              description: Azure service principal credentials json secret key reference
-                A Secret containing JSON encoded credentials for an Azure Service
-                Principal that will be used to authenticate to this Azure Provider.
+              description: CredentialsSecretRef references a specific secret's key
+                that contains the credentials that are used to connect to the provider.
               properties:
                 key:
                   description: The key to select.

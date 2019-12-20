@@ -24,10 +24,7 @@ import (
 
 // A ProviderSpec defines the desired state of a Provider.
 type ProviderSpec struct {
-	// Azure service principal credentials json secret key reference
-	// A Secret containing JSON encoded credentials for an Azure Service
-	// Principal that will be used to authenticate to this Azure Provider.
-	Secret runtimev1alpha1.SecretKeySelector `json:"credentialsSecretRef"`
+	runtimev1alpha1.ProviderSpec `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
