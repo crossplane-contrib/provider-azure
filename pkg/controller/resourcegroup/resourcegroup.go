@@ -166,12 +166,12 @@ func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.ResourceGro
 	}
 
 	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.Secret.Namespace, Name: p.Spec.Secret.Name}
+	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
 	if err := c.kube.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
 	}
 
-	client, err := c.newClient(s.Data[p.Spec.Secret.Key])
+	client, err := c.newClient(s.Data[p.Spec.CredentialsSecretRef.Key])
 	return &azureResourceGroup{client: client}, errors.Wrap(err, "cannot create new Azure Resource Group client")
 }
 

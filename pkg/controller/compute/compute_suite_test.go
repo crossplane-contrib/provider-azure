@@ -145,12 +145,14 @@ func testProvider() *azurev1alpha3.Provider {
 			Name: providerName,
 		},
 		Spec: azurev1alpha3.ProviderSpec{
-			Secret: runtimev1alpha1.SecretKeySelector{
-				SecretReference: runtimev1alpha1.SecretReference{
-					Namespace: namespace,
-					Name:      providerSecretName,
+			ProviderSpec: runtimev1alpha1.ProviderSpec{
+				CredentialsSecretRef: runtimev1alpha1.SecretKeySelector{
+					SecretReference: runtimev1alpha1.SecretReference{
+						Namespace: namespace,
+						Name:      providerSecretName,
+					},
+					Key: providerSecretDataKey,
 				},
-				Key: providerSecretDataKey,
 			},
 		},
 	}
