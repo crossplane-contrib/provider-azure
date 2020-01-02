@@ -23,7 +23,6 @@ package v1alpha3
 import (
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
