@@ -79,6 +79,8 @@ github.com/coreos/pkg v0.0.0-20180108230652-97fdf19511ea/go.mod h1:E3G3o1h8I7cfc
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/crossplaneio/crossplane v0.5.0-rc.0.20191211203849-05517d46525d h1:Xie+cgdanhW6PN1mbcMWYs7q//HM1z1O/JgzgQj0R5k=
 github.com/crossplaneio/crossplane v0.5.0-rc.0.20191211203849-05517d46525d/go.mod h1:f/e99LDWClmhkvMuvK7UMP1g5b718DGmdnpdrflK0HI=
+github.com/crossplaneio/crossplane v0.6.0 h1:mDR0XG+mcwsedSgqLh0kCp+SVtwyPr5cJxYesTDZvsk=
+github.com/crossplaneio/crossplane v0.6.0/go.mod h1:f/e99LDWClmhkvMuvK7UMP1g5b718DGmdnpdrflK0HI=
 github.com/crossplaneio/crossplane-runtime v0.2.4-0.20191211004842-fa83d075257c h1:Xmv6RSdmFf2WeBpzVaqEBVxmGVAAUxA61eMgrdQ+Vsw=
 github.com/crossplaneio/crossplane-runtime v0.2.4-0.20191211004842-fa83d075257c/go.mod h1:aVLQmXiPeb/jhGGQFIxx4Rc1CFC6xq2BA6A3neLZIHA=
 github.com/crossplaneio/crossplane-runtime v0.3.0 h1:d3937o6XhVUcm/bqgUPUjTo/OjVlAjh1c7rx4VPJoV8=

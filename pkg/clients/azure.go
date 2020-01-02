@@ -34,10 +34,14 @@ import (
 const (
 	// UserAgent is the user agent addition that identifies the Crossplane Azure client
 	UserAgent = "crossplane-azure-client"
-	// AsyncOperationStatusInProgress is the status value for AsyncOperation type
-	// that indicates the operation is still ongoing.
+
+	// AsyncOperationStatusInProgress is a status value for AsyncOperation.
 	AsyncOperationStatusInProgress = "InProgress"
-	asyncOperationPollingMethod    = "AsyncOperation"
+
+	// AsyncOperationStatusSucceeded is a status value for AsyncOperation.
+	AsyncOperationStatusSucceeded = "Succeeded"
+
+	asyncOperationPollingMethod = "AsyncOperation"
 )
 
 // A FieldOption determines how common Go types are translated to the types
@@ -150,6 +154,9 @@ func FetchAsyncOperation(ctx context.Context, client autorest.Sender, as *v1alph
 	as.Status = op.Status()
 	if err != nil {
 		as.ErrorMessage = err.Error()
+	}
+	if as.Status == AsyncOperationStatusSucceeded {
+		as.ErrorMessage = ""
 	}
 	return nil
 }

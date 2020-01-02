@@ -255,6 +255,9 @@ type SQLServerObservation struct {
 	// LastOperation represents the state of the last operation started by the
 	// controller.
 	LastOperation apisv1alpha3.AsyncOperation `json:"lastOperation,omitempty"`
+
+	// LastError is the last error encountered during async operations.
+	LastError string `json:"lastError,omitempty"`
 }
 
 // A SQLServerStatus represents the observed state of a SQLServer.

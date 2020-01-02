@@ -152,6 +152,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 	}
+	cr.Status.AtProvider.LastError = cr.Status.AtProvider.LastOperation.ErrorMessage
 	switch cr.Status.AtProvider.UserVisibleState {
 	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
@@ -181,17 +182,11 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 	if err != nil {
 		return resource.ExternalCreation{}, errors.Wrap(err, errGenPassword)
 	}
-	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreateMySQLServer)
-	}
-
 	return resource.ExternalCreation{
-			ConnectionDetails: resource.ConnectionDetails{
-				runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
-			},
-		}, errors.Wrap(
-			azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
-			errFetchLastOperation)
+		ConnectionDetails: resource.ConnectionDetails{
+			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
+		},
+	}, errors.Wrap(e.client.CreateServer(ctx, cr, pw), errCreateMySQLServer)
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
@@ -202,13 +197,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.Ex
 	if cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress {
 		return resource.ExternalUpdate{}, nil
 	}
-	if err := e.client.UpdateServer(ctx, cr); err != nil {
-		return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateMySQLServer)
-	}
-
-	return resource.ExternalUpdate{}, errors.Wrap(
-		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
-		errFetchLastOperation)
+	return resource.ExternalUpdate{}, errors.Wrap(e.client.UpdateServer(ctx, cr), errUpdateMySQLServer)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -220,11 +209,5 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if cr.Status.AtProvider.UserVisibleState == v1beta1.StateDropping {
 		return nil
 	}
-	if err := e.client.DeleteServer(ctx, cr); resource.Ignore(azure.IsNotFound, err) != nil {
-		return errors.Wrap(err, errDeleteMySQLServer)
-	}
-
-	return errors.Wrap(
-		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
-		errFetchLastOperation)
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, e.client.DeleteServer(ctx, cr)), errDeleteMySQLServer)
 }

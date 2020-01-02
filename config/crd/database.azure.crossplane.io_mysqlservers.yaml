@@ -321,6 +321,10 @@ spec:
                 id:
                   description: ID - Resource ID
                   type: string
+                lastError:
+                  description: LastError is the last error encountered during async
+                    operations.
+                  type: string
                 lastOperation:
                   description: LastOperation represents the state of the last operation
                     started by the controller.

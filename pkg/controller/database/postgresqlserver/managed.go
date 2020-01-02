@@ -151,6 +151,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
 		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 	}
+	cr.Status.AtProvider.LastError = cr.Status.AtProvider.LastOperation.ErrorMessage
 	switch server.UserVisibleState {
 	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
