@@ -13,7 +13,7 @@ require (
 	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/crossplaneio/crossplane v0.5.0-rc.0.20191211203849-05517d46525d
-	github.com/crossplaneio/crossplane-runtime v0.2.4-0.20191220203046-1ab588031d3f
+	github.com/crossplaneio/crossplane-runtime v0.3.0
 	github.com/crossplaneio/crossplane-tools v0.0.0-20191220202319-9033bd8a02ce
 	github.com/google/go-cmp v0.3.1
 	github.com/google/uuid v1.1.1
