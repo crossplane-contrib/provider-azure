@@ -26,6 +26,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimbinding"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimdefaulting"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimscheduling"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	storagev1alpha1 "github.com/crossplaneio/crossplane/apis/storage/v1alpha1"
 
@@ -53,7 +56,7 @@ func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 			resource.HasNoClassReference(),
 			resource.HasNoManagedResourceReference(),
 		))).
-		Complete(resource.NewClaimSchedulingReconciler(mgr,
+		Complete(claimscheduling.NewReconciler(mgr,
 			resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
 			resource.ClassKind(v1alpha3.AccountClassGroupVersionKind),
 		))
@@ -80,7 +83,7 @@ func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 			resource.HasNoClassReference(),
 			resource.HasNoManagedResourceReference(),
 		))).
-		Complete(resource.NewClaimDefaultingReconciler(mgr,
+		Complete(claimdefaulting.NewReconciler(mgr,
 			resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
 			resource.ClassKind(v1alpha3.AccountClassGroupVersionKind),
 		))
@@ -97,13 +100,13 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		v1alpha3.AccountKind,
 		v1alpha3.Group))
 
-	r := resource.NewClaimReconciler(mgr,
+	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),
 		resource.ClassKind(v1alpha3.AccountClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.AccountGroupVersionKind),
-		resource.WithManagedConfigurators(
-			resource.ManagedConfiguratorFn(ConfigureAccount),
-			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
+		claimbinding.WithManagedConfigurators(
+			claimbinding.ManagedConfiguratorFn(ConfigureAccount),
+			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureReclaimPolicy),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(

@@ -31,6 +31,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
@@ -61,9 +62,9 @@ type RedisController struct{}
 // Manager with default RBAC. The Manager will set fields on the RedisController and
 // start it when the Manager is Started.
 func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
-	r := resource.NewManagedReconciler(mgr,
+	r := managed.NewReconciler(mgr,
 		resource.ManagedKind(v1beta1.RedisGroupVersionKind),
-		resource.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))
+		managed.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))
 
 	name := strings.ToLower(fmt.Sprintf("%s.%s", v1beta1.RedisKind, v1beta1.Group))
 
@@ -78,7 +79,7 @@ type connector struct {
 	newClientFn func(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error)
 }
 
-func (c connector) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
+func (c connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
 		return nil, errors.New(errNotRedis)
@@ -102,30 +103,30 @@ type external struct {
 	client redisapi.ClientAPI
 }
 
-func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
+func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotRedis)
+		return managed.ExternalObservation{}, errors.New(errNotRedis)
 	}
 	cache, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
-		return resource.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(azure.IsNotFound, err), errGetFailed)
+		return managed.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(azure.IsNotFound, err), errGetFailed)
 	}
 
 	redis.LateInitialize(&cr.Spec.ForProvider, cache)
 	if err := c.kube.Update(ctx, cr); err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateRedisCRFailed)
+		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateRedisCRFailed)
 	}
 	cr.Status.AtProvider = redis.GenerateObservation(cache)
 
-	var conn resource.ConnectionDetails
+	var conn managed.ConnectionDetails
 	switch cr.Status.AtProvider.ProvisioningState {
 	case redis.ProvisioningStateSucceeded:
 		k, err := c.client.ListKeys(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 		if err != nil {
-			return resource.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
+			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
-		conn = resource.ConnectionDetails{
+		conn = managed.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.HostName),
 			runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.AtProvider.Port)),
 			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(azure.ToString(k.PrimaryKey)),
@@ -139,43 +140,43 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	default:
 		cr.Status.SetConditions(runtimev1alpha1.Unavailable())
 	}
-	return resource.ExternalObservation{
+	return managed.ExternalObservation{
 		ResourceExists:    true,
 		ResourceUpToDate:  !redis.NeedsUpdate(cr.Spec.ForProvider, cache),
 		ConnectionDetails: conn,
 	}, nil
 }
 
-func (c *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
+func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
 	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotRedis)
+		return managed.ExternalCreation{}, errors.New(errNotRedis)
 	}
 	cr.Status.SetConditions(runtimev1alpha1.Creating())
 	_, err := c.client.Create(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redis.NewCreateParameters(cr))
-	return resource.ExternalCreation{}, errors.Wrap(err, errCreateFailed)
+	return managed.ExternalCreation{}, errors.Wrap(err, errCreateFailed)
 }
 
-func (c *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
+func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
 	cr, ok := mg.(*v1beta1.Redis)
 	if !ok {
-		return resource.ExternalUpdate{}, errors.New(errNotRedis)
+		return managed.ExternalUpdate{}, errors.New(errNotRedis)
 	}
 	// NOTE(muvaf): redis service rejects updates while another operation
 	// is ongoing.
 	if cr.Status.AtProvider.ProvisioningState != redis.ProvisioningStateSucceeded {
-		return resource.ExternalUpdate{}, nil
+		return managed.ExternalUpdate{}, nil
 	}
 	cache, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 	if err != nil {
-		return resource.ExternalUpdate{}, errors.Wrap(err, errGetFailed)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errGetFailed)
 	}
 	_, err = c.client.Update(
 		ctx,
 		cr.Spec.ForProvider.ResourceGroupName,
 		meta.GetExternalName(cr),
 		redis.NewUpdateParameters(cr.Spec.ForProvider, cache))
-	return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
+	return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {

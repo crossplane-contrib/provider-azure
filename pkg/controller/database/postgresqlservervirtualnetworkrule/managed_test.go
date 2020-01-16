@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
@@ -85,7 +86,7 @@ var (
 
 type testCase struct {
 	name    string
-	e       resource.ExternalClient
+	e       managed.ExternalClient
 	r       resource.Managed
 	want    resource.Managed
 	wantErr error
@@ -139,8 +140,8 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.PostgreSQLSe
 }
 
 // Test that our Reconciler implementation satisfies the Reconciler interface.
-var _ resource.ExternalClient = &external{}
-var _ resource.ExternalConnecter = &connecter{}
+var _ managed.ExternalClient = &external{}
+var _ managed.ExternalConnecter = &connecter{}
 
 func TestCreate(t *testing.T) {
 	cases := []testCase{
@@ -429,7 +430,7 @@ func TestConnect(t *testing.T) {
 		name    string
 		conn    *connecter
 		i       resource.Managed
-		want    resource.ExternalClient
+		want    managed.ExternalClient
 		wantErr error
 	}{
 		{

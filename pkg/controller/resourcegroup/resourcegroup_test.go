@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
@@ -513,7 +513,7 @@ func TestReconcile(t *testing.T) {
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 				},
-				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
+				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: false},
@@ -532,7 +532,7 @@ func TestReconcile(t *testing.T) {
 					},
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 				},
-				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
+				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: true},
@@ -554,7 +554,7 @@ func TestReconcile(t *testing.T) {
 					MockUpdate: func(_ context.Context, _ runtime.Object, _ ...client.UpdateOption) error { return nil },
 					MockCreate: func(_ context.Context, _ runtime.Object, _ ...client.CreateOption) error { return nil },
 				},
-				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
+				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: false},
@@ -608,7 +608,7 @@ func TestReconcile(t *testing.T) {
 						return nil
 					},
 				},
-				ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(struct{ client.Client }{}),
+				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
 			},
 			req:     reconcile.Request{NamespacedName: types.NamespacedName{Namespace: namespace, Name: name}},
 			want:    reconcile.Result{Requeue: true},

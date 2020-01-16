@@ -25,6 +25,7 @@ import (
 	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
 	"github.com/Azure/go-autorest/autorest"
@@ -42,8 +43,8 @@ import (
 )
 
 var (
-	_ resource.ExternalClient    = &external{}
-	_ resource.ExternalConnecter = &connecter{}
+	_ managed.ExternalClient    = &external{}
+	_ managed.ExternalConnecter = &connecter{}
 )
 
 type MockMySQLServerAPI struct {
@@ -117,7 +118,7 @@ func TestConnect(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		ec   resource.ExternalConnecter
+		ec   managed.ExternalConnecter
 		args args
 		want error
 	}{
@@ -200,12 +201,12 @@ func TestObserve(t *testing.T) {
 		mg  resource.Managed
 	}
 	type want struct {
-		eo  resource.ExternalObservation
+		eo  managed.ExternalObservation
 		err error
 	}
 
 	cases := map[string]struct {
-		e    resource.ExternalClient
+		e    managed.ExternalClient
 		args args
 		want want
 	}{
@@ -269,7 +270,7 @@ func TestObserve(t *testing.T) {
 				mg:  mysqlserver(),
 			},
 			want: want{
-				eo: resource.ExternalObservation{
+				eo: managed.ExternalObservation{
 					ResourceExists: true,
 				},
 			},
@@ -290,7 +291,7 @@ func TestObserve(t *testing.T) {
 				mg:  mysqlserver(),
 			},
 			want: want{
-				eo: resource.ExternalObservation{
+				eo: managed.ExternalObservation{
 					ResourceExists: false,
 				},
 			},
@@ -325,10 +326,10 @@ func TestObserve(t *testing.T) {
 				),
 			},
 			want: want{
-				eo: resource.ExternalObservation{
+				eo: managed.ExternalObservation{
 					ResourceExists:   true,
 					ResourceUpToDate: true,
-					ConnectionDetails: resource.ConnectionDetails{
+					ConnectionDetails: managed.ConnectionDetails{
 						runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(endpoint),
 						runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", admin, name)),
 					},
@@ -360,12 +361,12 @@ func TestCreate(t *testing.T) {
 		mg  resource.Managed
 	}
 	type want struct {
-		ec  resource.ExternalCreation
+		ec  managed.ExternalCreation
 		err error
 	}
 
 	cases := map[string]struct {
-		e    resource.ExternalClient
+		e    managed.ExternalClient
 		args args
 		want want
 	}{
@@ -422,8 +423,8 @@ func TestCreate(t *testing.T) {
 				mg:  mysqlserver(),
 			},
 			want: want{
-				ec: resource.ExternalCreation{
-					ConnectionDetails: resource.ConnectionDetails{runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(password)},
+				ec: managed.ExternalCreation{
+					ConnectionDetails: managed.ConnectionDetails{runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(password)},
 				},
 			},
 		},
@@ -452,7 +453,7 @@ func TestDelete(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		e    resource.ExternalClient
+		e    managed.ExternalClient
 		args args
 		want error
 	}{

@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimbinding"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 	cachev1alpha1 "github.com/crossplaneio/crossplane/apis/cache/v1alpha1"
@@ -39,7 +40,7 @@ const (
 	claimVersion40 = "4.0"
 )
 
-var _ resource.ManagedConfigurator = resource.ManagedConfiguratorFn(ConfigureRedis)
+var _ claimbinding.ManagedConfigurator = claimbinding.ManagedConfiguratorFn(ConfigureRedis)
 
 func TestConfigureRedis(t *testing.T) {
 	type args struct {
