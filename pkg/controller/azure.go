@@ -50,6 +50,7 @@ func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error {
 		&compute.AKSClusterClaimSchedulingController{},
 		&compute.AKSClusterClaimDefaultingController{},
 		&compute.AKSClusterClaimController{},
+		&compute.AKSClusterTargetController{},
 		&compute.AKSClusterController{Reconciler: aksReconciler},
 		&mysqlserver.ClaimSchedulingController{},
 		&mysqlserver.ClaimDefaultingController{},
