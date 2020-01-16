@@ -109,5 +109,5 @@ func IsNotFoundError(err error) bool {
 		return false
 	}
 
-	return storageErr.Response().StatusCode == http.StatusNotFound
+	return storageErr.Response().StatusCode == http.StatusNotFound // nolint: bodyclose
 }

@@ -32,6 +32,7 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
@@ -181,7 +182,7 @@ type Reconciler struct {
 	connecter
 	kube client.Client
 
-	resource.ManagedReferenceResolver
+	managed.ReferenceResolver
 }
 
 // Controller is responsible for adding the ResourceGroup controller and its
@@ -191,9 +192,9 @@ type Controller struct{}
 // SetupWithManager creates a Controller that reconciles ResourceGroup resources.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
-		connecter:                &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},
-		kube:                     mgr.GetClient(),
-		ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
+		connecter:         &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},
+		kube:              mgr.GetClient(),
+		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -226,7 +227,7 @@ func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) 
 	if !resource.IsConditionTrue(rg.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
 		if err := r.ResolveReferences(ctx, rg); err != nil {
 			condition := runtimev1alpha1.ReconcileError(err)
-			if resource.IsReferencesAccessError(err) {
+			if managed.IsReferencesAccessError(err) {
 				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
 			}
 

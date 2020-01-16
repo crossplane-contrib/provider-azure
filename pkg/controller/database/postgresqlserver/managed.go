@@ -30,6 +30,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
@@ -64,9 +65,9 @@ type Controller struct{}
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := resource.NewManagedReconciler(mgr,
+	r := managed.NewReconciler(mgr,
 		resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
-		resource.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
+		managed.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
 
 	name := strings.ToLower(fmt.Sprintf("%s.%s", v1beta1.PostgreSQLServerKind, v1beta1.Group))
 
@@ -90,7 +91,7 @@ type connecter struct {
 	newClientFn func(credentials []byte) (database.PostgreSQLServerAPI, error)
 }
 
-func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
+func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	v, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
 		return nil, errors.New(errNotPostgreSQLServer)
@@ -116,10 +117,10 @@ type external struct {
 	newPasswordFn func(len int) (password string, err error)
 }
 
-func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
+func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	cr, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
+		return managed.ExternalObservation{}, errors.New(errNotPostgreSQLServer)
 	}
 	server, err := e.client.GetServer(ctx, cr)
 	if azure.IsNotFound(err) {
@@ -132,16 +133,16 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		// create operation is accepted.
 		creating, err := e.client.ServerNameTaken(ctx, cr)
 		if err != nil {
-			return resource.ExternalObservation{}, errors.Wrap(err, errCheckPostgreSQLServerName)
+			return managed.ExternalObservation{}, errors.Wrap(err, errCheckPostgreSQLServerName)
 		}
-		return resource.ExternalObservation{ResourceExists: creating}, nil
+		return managed.ExternalObservation{ResourceExists: creating}, nil
 	}
 	if err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
 	}
 	database.LateInitializePostgreSQL(&cr.Spec.ForProvider, server)
 	if err := e.kube.Update(ctx, cr); err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
+		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
 	database.UpdatePostgreSQLObservation(&cr.Status.AtProvider, server)
 	// We make this call after kube.Update since it doesn't update the
@@ -149,7 +150,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	// changes to status has to be done after kube.Update in order not to get them
 	// lost.
 	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
+		return managed.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 	}
 	switch server.UserVisibleState {
 	case v1beta1.StateReady:
@@ -159,10 +160,10 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 		cr.SetConditions(runtimev1alpha1.Unavailable())
 	}
 
-	o := resource.ExternalObservation{
+	o := managed.ExternalObservation{
 		ResourceExists:   true,
 		ResourceUpToDate: database.IsPostgreSQLUpToDate(cr.Spec.ForProvider, server), // NOTE(negz): We don't yet support updating Azure SQL servers.
-		ConnectionDetails: resource.ConnectionDetails{
+		ConnectionDetails: managed.ConnectionDetails{
 			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
 			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
 		},
@@ -171,24 +172,24 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.E
 	return o, nil
 }
 
-func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
+func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
 	cr, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
+		return managed.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
 	}
 
 	cr.SetConditions(runtimev1alpha1.Creating())
 
 	pw, err := e.newPasswordFn(passwordDataLen)
 	if err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errGenPassword)
+		return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
 	}
 	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
+		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
 	}
 
-	return resource.ExternalCreation{
-			ConnectionDetails: resource.ConnectionDetails{
+	return managed.ExternalCreation{
+			ConnectionDetails: managed.ConnectionDetails{
 				runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
 			},
 		}, errors.Wrap(
@@ -196,19 +197,19 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.Ex
 			errFetchLastOperation)
 }
 
-func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
+func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
 	cr, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
-		return resource.ExternalUpdate{}, errors.New(errNotPostgreSQLServer)
+		return managed.ExternalUpdate{}, errors.New(errNotPostgreSQLServer)
 	}
 	if cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress {
-		return resource.ExternalUpdate{}, nil
+		return managed.ExternalUpdate{}, nil
 	}
 	if err := e.client.UpdateServer(ctx, cr); err != nil {
-		return resource.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServer)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServer)
 	}
 
-	return resource.ExternalUpdate{}, errors.Wrap(
+	return managed.ExternalUpdate{}, errors.Wrap(
 		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
 		errFetchLastOperation)
 }

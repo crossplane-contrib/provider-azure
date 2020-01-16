@@ -34,6 +34,7 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
@@ -71,7 +72,7 @@ var (
 type Reconciler struct {
 	client.Client
 	syncdeleterMaker
-	resource.ManagedReferenceResolver
+	managed.ReferenceResolver
 }
 
 // Controller is responsible for adding the Container controller and its
@@ -82,9 +83,9 @@ type Controller struct{}
 // The Manager will set fields on the Controller and Start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
-		Client:                   mgr.GetClient(),
-		syncdeleterMaker:         &containerSyncdeleterMaker{mgr.GetClient()},
-		ManagedReferenceResolver: resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
+		Client:            mgr.GetClient(),
+		syncdeleterMaker:  &containerSyncdeleterMaker{mgr.GetClient()},
+		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -112,7 +113,7 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	if !resource.IsConditionTrue(c.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
 		if err := r.ResolveReferences(ctx, c); err != nil {
 			condition := runtimev1alpha1.ReconcileError(err)
-			if resource.IsReferencesAccessError(err) {
+			if managed.IsReferencesAccessError(err) {
 				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
 			}
 
@@ -206,7 +207,7 @@ type syncer interface {
 	sync(context.Context) (reconcile.Result, error)
 }
 
-type creater interface {
+type creator interface {
 	create(context.Context) (reconcile.Result, error)
 }
 
@@ -257,7 +258,7 @@ func (csd *containerSyncdeleter) sync(ctx context.Context) (reconcile.Result, er
 }
 
 type createupdater interface {
-	creater
+	creator
 	updater
 }
 

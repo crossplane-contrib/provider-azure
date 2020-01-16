@@ -29,6 +29,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
@@ -55,10 +56,10 @@ type Controller struct{}
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := resource.NewManagedReconciler(mgr,
+	r := managed.NewReconciler(mgr,
 		resource.ManagedKind(v1alpha3.VirtualNetworkGroupVersionKind),
-		resource.WithManagedConnectionPublishers(),
-		resource.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
+		managed.WithConnectionPublishers(),
+		managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
 
 	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.VirtualNetworkKind, v1alpha3.Group))
 
@@ -73,7 +74,7 @@ type connecter struct {
 	newClientFn func(ctx context.Context, credentials []byte) (network.VirtualNetworksClient, error)
 }
 
-func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
+func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	g, ok := mg.(*v1alpha3.VirtualNetwork)
 	if !ok {
 		return nil, errors.New(errNotVirtualNetwork)
@@ -100,66 +101,66 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.
 
 type external struct{ client network.VirtualNetworksClient }
 
-func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
+func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	v, ok := mg.(*v1alpha3.VirtualNetwork)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotVirtualNetwork)
+		return managed.ExternalObservation{}, errors.New(errNotVirtualNetwork)
 	}
 
 	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.Name, "")
 	if azureclients.IsNotFound(err) {
-		return resource.ExternalObservation{ResourceExists: false}, nil
+		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 	if err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errGetVirtualNetwork)
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetVirtualNetwork)
 	}
 
 	network.UpdateVirtualNetworkStatusFromAzure(v, az)
 
 	v.SetConditions(runtimev1alpha1.Available())
 
-	o := resource.ExternalObservation{
+	o := managed.ExternalObservation{
 		ResourceExists:    true,
-		ConnectionDetails: resource.ConnectionDetails{},
+		ConnectionDetails: managed.ConnectionDetails{},
 	}
 
 	return o, nil
 }
 
-func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
+func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
 	v, ok := mg.(*v1alpha3.VirtualNetwork)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotVirtualNetwork)
+		return managed.ExternalCreation{}, errors.New(errNotVirtualNetwork)
 	}
 
 	v.Status.SetConditions(runtimev1alpha1.Creating())
 
 	vnet := network.NewVirtualNetworkParameters(v)
 	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.Name, vnet); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreateVirtualNetwork)
+		return managed.ExternalCreation{}, errors.Wrap(err, errCreateVirtualNetwork)
 	}
 
-	return resource.ExternalCreation{}, nil
+	return managed.ExternalCreation{}, nil
 }
 
-func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
+func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
 	v, ok := mg.(*v1alpha3.VirtualNetwork)
 	if !ok {
-		return resource.ExternalUpdate{}, errors.New(errNotVirtualNetwork)
+		return managed.ExternalUpdate{}, errors.New(errNotVirtualNetwork)
 	}
 
 	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.Name, "")
 	if err != nil {
-		return resource.ExternalUpdate{}, errors.Wrap(err, errGetVirtualNetwork)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errGetVirtualNetwork)
 	}
 
 	if network.VirtualNetworkNeedsUpdate(v, az) {
 		vnet := network.NewVirtualNetworkParameters(v)
 		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.Name, vnet); err != nil {
-			return resource.ExternalUpdate{}, errors.Wrap(err, errUpdateVirtualNetwork)
+			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateVirtualNetwork)
 		}
 	}
-	return resource.ExternalUpdate{}, nil
+	return managed.ExternalUpdate{}, nil
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {

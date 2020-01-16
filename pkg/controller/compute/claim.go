@@ -27,6 +27,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimbinding"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimdefaulting"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimscheduling"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	computev1alpha1 "github.com/crossplaneio/crossplane/apis/compute/v1alpha1"
 
@@ -54,7 +57,7 @@ func (c *AKSClusterClaimSchedulingController) SetupWithManager(mgr ctrl.Manager)
 			resource.HasNoClassReference(),
 			resource.HasNoManagedResourceReference(),
 		))).
-		Complete(resource.NewClaimSchedulingReconciler(mgr,
+		Complete(claimscheduling.NewReconciler(mgr,
 			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 			resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
 		))
@@ -81,7 +84,7 @@ func (c *AKSClusterClaimDefaultingController) SetupWithManager(mgr ctrl.Manager)
 			resource.HasNoClassReference(),
 			resource.HasNoManagedResourceReference(),
 		))).
-		Complete(resource.NewClaimDefaultingReconciler(mgr,
+		Complete(claimdefaulting.NewReconciler(mgr,
 			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 			resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
 		))
@@ -99,15 +102,15 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		v1alpha3.AKSClusterKind,
 		v1alpha3.Group))
 
-	r := resource.NewClaimReconciler(mgr,
+	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 		resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind),
-		resource.WithBinder(resource.NewAPIBinder(mgr.GetClient(), mgr.GetScheme())),
-		resource.WithManagedConfigurators(
-			resource.ManagedConfiguratorFn(ConfigureAKSCluster),
-			resource.ManagedConfiguratorFn(resource.ConfigureReclaimPolicy),
-			resource.ManagedConfiguratorFn(resource.ConfigureNames),
+		claimbinding.WithBinder(claimbinding.NewAPIBinder(mgr.GetClient(), mgr.GetScheme())),
+		claimbinding.WithManagedConfigurators(
+			claimbinding.ManagedConfiguratorFn(ConfigureAKSCluster),
+			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureReclaimPolicy),
+			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureNames),
 		))
 
 	p := resource.NewPredicates(resource.AnyOf(

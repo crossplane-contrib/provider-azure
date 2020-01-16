@@ -37,6 +37,7 @@ import (
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
@@ -75,8 +76,8 @@ type Reconciler struct {
 	client.Client
 	newClientFn        func(creds []byte) (*azureclients.Client, error)
 	aksSetupAPIFactory compute.AKSSetupAPIFactory
-	publisher          resource.ManagedConnectionPublisher
-	resolver           resource.ManagedReferenceResolver
+	publisher          managed.ConnectionPublisher
+	resolver           managed.ReferenceResolver
 }
 
 // AKSClusterController is responsible for adding the AKSCluster
@@ -100,8 +101,8 @@ func NewAKSClusterReconciler(mgr manager.Manager, aksSetupAPIFactory compute.AKS
 		Client:             mgr.GetClient(),
 		newClientFn:        azureclients.NewClient,
 		aksSetupAPIFactory: aksSetupAPIFactory,
-		publisher:          resource.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
-		resolver:           resource.NewAPIManagedReferenceResolver(mgr.GetClient()),
+		publisher:          managed.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
+		resolver:           managed.NewAPIReferenceResolver(mgr.GetClient()),
 	}
 }
 
@@ -135,7 +136,7 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	if !resource.IsConditionTrue(instance.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
 		if err := r.resolver.ResolveReferences(ctx, instance); err != nil {
 			condition := runtimev1alpha1.ReconcileError(err)
-			if resource.IsReferencesAccessError(err) {
+			if managed.IsReferencesAccessError(err) {
 				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
 			}
 
@@ -444,7 +445,7 @@ func (r *Reconciler) servicePrincipalSecret(instance *computev1alpha3.AKSCluster
 	return newSPSecretValue.String(), nil
 }
 
-func (r *Reconciler) connectionDetails(instance *computev1alpha3.AKSCluster, client *compute.AKSSetupClient) (resource.ConnectionDetails, error) {
+func (r *Reconciler) connectionDetails(instance *computev1alpha3.AKSCluster, client *compute.AKSSetupClient) (managed.ConnectionDetails, error) {
 	creds, err := client.ListClusterAdminCredentials(ctx, *instance)
 	if err != nil {
 		return nil, err
@@ -476,7 +477,7 @@ func (r *Reconciler) connectionDetails(instance *computev1alpha3.AKSCluster, cli
 		return nil, errors.Errorf("auth-info configuration is not found: %s", kctx.AuthInfo)
 	}
 
-	return resource.ConnectionDetails{
+	return managed.ConnectionDetails{
 		runtimev1alpha1.ResourceCredentialsSecretEndpointKey:   []byte(cluster.Server),
 		runtimev1alpha1.ResourceCredentialsSecretCAKey:         cluster.CertificateAuthorityData,
 		runtimev1alpha1.ResourceCredentialsSecretClientCertKey: auth.ClientCertificateData,

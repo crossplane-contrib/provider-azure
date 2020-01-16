@@ -34,7 +34,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
@@ -162,8 +162,8 @@ func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 	return r
 }
 
-var _ resource.ExternalClient = &external{}
-var _ resource.ExternalConnecter = &connector{}
+var _ managed.ExternalClient = &external{}
+var _ managed.ExternalConnecter = &connector{}
 
 func TestConnect(t *testing.T) {
 	type args struct {
@@ -286,7 +286,7 @@ func TestObserve(t *testing.T) {
 	}
 	type want struct {
 		cr  *v1beta1.Redis
-		o   resource.ExternalObservation
+		o   managed.ExternalObservation
 		err error
 	}
 
@@ -325,10 +325,10 @@ func TestObserve(t *testing.T) {
 					withConditions(runtimev1alpha1.Available()),
 					withBindingPhase(runtimev1alpha1.BindingPhaseUnbound),
 				),
-				o: resource.ExternalObservation{
+				o: managed.ExternalObservation{
 					ResourceExists:   true,
 					ResourceUpToDate: false,
-					ConnectionDetails: resource.ConnectionDetails{
+					ConnectionDetails: managed.ConnectionDetails{
 						runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(hostName),
 						runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(port)),
 						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(primaryKey),
@@ -409,7 +409,7 @@ func TestObserve(t *testing.T) {
 					withProvisioningState(redisclient.ProvisioningStateCreating),
 					withConditions(runtimev1alpha1.Creating()),
 				),
-				o: resource.ExternalObservation{
+				o: managed.ExternalObservation{
 					ResourceUpToDate: false,
 					ResourceExists:   true,
 				},
@@ -435,7 +435,7 @@ func TestObserve(t *testing.T) {
 					withProvisioningState(redisclient.ProvisioningStateDeleting),
 					withConditions(runtimev1alpha1.Deleting()),
 				),
-				o: resource.ExternalObservation{
+				o: managed.ExternalObservation{
 					ResourceUpToDate: false,
 					ResourceExists:   true,
 				},
@@ -461,7 +461,7 @@ func TestObserve(t *testing.T) {
 					withProvisioningState(redisclient.ProvisioningStateFailed),
 					withConditions(runtimev1alpha1.Unavailable()),
 				),
-				o: resource.ExternalObservation{
+				o: managed.ExternalObservation{
 					ResourceUpToDate: false,
 					ResourceExists:   true,
 				},
@@ -496,7 +496,7 @@ func TestCreate(t *testing.T) {
 	}
 	type want struct {
 		cr  *v1beta1.Redis
-		o   resource.ExternalCreation
+		o   managed.ExternalCreation
 		err error
 	}
 	cases := map[string]struct {
@@ -561,7 +561,7 @@ func TestUpdate(t *testing.T) {
 	}
 	type want struct {
 		cr  *v1beta1.Redis
-		o   resource.ExternalUpdate
+		o   managed.ExternalUpdate
 		err error
 	}
 	cases := map[string]struct {

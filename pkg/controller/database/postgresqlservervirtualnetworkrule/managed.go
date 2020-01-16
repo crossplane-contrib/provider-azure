@@ -29,6 +29,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
@@ -55,10 +56,10 @@ type Controller struct{}
 // Manager with default RBAC. The Manager will set fields on the Controller and
 // start it when the Manager is Started.
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := resource.NewManagedReconciler(mgr,
+	r := managed.NewReconciler(mgr,
 		resource.ManagedKind(v1alpha3.PostgreSQLServerVirtualNetworkRuleGroupVersionKind),
-		resource.WithManagedConnectionPublishers(),
-		resource.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
+		managed.WithConnectionPublishers(),
+		managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
 
 	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.PostgreSQLServerVirtualNetworkRuleKind, v1alpha3.Group))
 
@@ -73,7 +74,7 @@ type connecter struct {
 	newClientFn func(ctx context.Context, credentials []byte) (database.PostgreSQLVirtualNetworkRulesClient, error)
 }
 
-func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (resource.ExternalClient, error) {
+func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	v, ok := mg.(*v1alpha3.PostgreSQLServerVirtualNetworkRule)
 	if !ok {
 		return nil, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
@@ -102,66 +103,66 @@ type external struct {
 	client database.PostgreSQLVirtualNetworkRulesClient
 }
 
-func (e *external) Observe(ctx context.Context, mg resource.Managed) (resource.ExternalObservation, error) {
+func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	v, ok := mg.(*v1alpha3.PostgreSQLServerVirtualNetworkRule)
 	if !ok {
-		return resource.ExternalObservation{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
+		return managed.ExternalObservation{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
 	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
 	if azure.IsNotFound(err) {
-		return resource.ExternalObservation{ResourceExists: false}, nil
+		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 	if err != nil {
-		return resource.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
 	}
 
 	database.UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v, az)
 
 	v.SetConditions(runtimev1alpha1.Available())
 
-	o := resource.ExternalObservation{
+	o := managed.ExternalObservation{
 		ResourceExists:    true,
-		ConnectionDetails: resource.ConnectionDetails{},
+		ConnectionDetails: managed.ConnectionDetails{},
 	}
 
 	return o, nil
 }
 
-func (e *external) Create(ctx context.Context, mg resource.Managed) (resource.ExternalCreation, error) {
+func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
 	v, ok := mg.(*v1alpha3.PostgreSQLServerVirtualNetworkRule)
 	if !ok {
-		return resource.ExternalCreation{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
+		return managed.ExternalCreation{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
 	v.SetConditions(runtimev1alpha1.Creating())
 
 	vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
 	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
-		return resource.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServerVirtualNetworkRule)
+		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServerVirtualNetworkRule)
 	}
 
-	return resource.ExternalCreation{}, nil
+	return managed.ExternalCreation{}, nil
 }
 
-func (e *external) Update(ctx context.Context, mg resource.Managed) (resource.ExternalUpdate, error) {
+func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
 	v, ok := mg.(*v1alpha3.PostgreSQLServerVirtualNetworkRule)
 	if !ok {
-		return resource.ExternalUpdate{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
+		return managed.ExternalUpdate{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
 	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
 	if err != nil {
-		return resource.ExternalUpdate{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
 	}
 
 	if database.PostgreSQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
 		vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
 		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
-			return resource.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServerVirtualNetworkRule)
+			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServerVirtualNetworkRule)
 		}
 	}
-	return resource.ExternalUpdate{}, nil
+	return managed.ExternalUpdate{}, nil
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
