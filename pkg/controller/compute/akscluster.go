@@ -39,7 +39,6 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
 	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
@@ -269,8 +268,14 @@ func (r *Reconciler) create(instance *computev1alpha3.AKSCluster, aksClient *com
 
 	instance.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
 
+	b := wait.Backoff{
+		Steps:    10,
+		Duration: 500 * time.Millisecond,
+		Factor:   1.0,
+		Jitter:   0.1,
+	}
 	// wait until the important status fields we just set have become committed/consistent
-	updateWaitErr := wait.ExponentialBackoff(util.DefaultUpdateRetry, func() (done bool, err error) {
+	updateWaitErr := wait.ExponentialBackoff(b, func() (done bool, err error) {
 		if err := r.Update(ctx, instance); err != nil {
 			return false, nil
 		}
