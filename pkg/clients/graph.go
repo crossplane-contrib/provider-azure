@@ -19,6 +19,7 @@ package azure
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -83,7 +84,7 @@ func (c *ApplicationClient) CreateApplication(ctx context.Context, appParams App
 		return &app, err
 	}
 
-	location := util.ToLowerRemoveSpaces(appParams.Location)
+	location := strings.ToLower(strings.Replace(appParams.Location, " ", "", -1))
 	salt, err := util.GenerateHex(urlSaltDataLen)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate url salt: %+v", err)
