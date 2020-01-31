@@ -18,9 +18,7 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis/redisapi"
 	"github.com/pkg/errors"
@@ -30,6 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
@@ -54,24 +54,18 @@ const (
 	errDeleteFailed         = "cannot delete the Redis instance"
 )
 
-// RedisController is responsible for adding the MySQLServer controller and its
-// corresponding reconciler to the manager with any runtime configuration.
-type RedisController struct{}
-
-// SetupWithManager creates a new MySQLServer RedisController and adds it to the
-// Manager with default RBAC. The Manager will set fields on the RedisController and
-// start it when the Manager is Started.
-func (c *RedisController) SetupWithManager(mgr ctrl.Manager) error {
-	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1beta1.RedisGroupVersionKind),
-		managed.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}))
-
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1beta1.RedisKind, v1beta1.Group))
+// SetupRedis adds a controller that reconciles Redis resources.
+func SetupRedis(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1beta1.RedisKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&v1beta1.Redis{}).
-		Complete(r)
+		Complete(managed.NewReconciler(mgr,
+			resource.ManagedKind(v1beta1.RedisGroupVersionKind),
+			managed.WithExternalConnecter(&connector{kube: mgr.GetClient(), newClientFn: redis.NewClient}),
+			managed.WithLogger(l.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connector struct {

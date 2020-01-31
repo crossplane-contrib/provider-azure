@@ -19,7 +19,6 @@ package mysqlserver
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -28,6 +27,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
@@ -57,24 +58,18 @@ const (
 	errFetchLastOperation   = "cannot fetch last operation"
 )
 
-// Controller is responsible for adding the MySQLServer controller and its
-// corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
-
-// SetupWithManager creates a new MySQLServer Controller and adds it to the
-// Manager with default RBAC. The Manager will set fields on the Controller and
-// start it when the Manager is Started.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1beta1.MySQLServerGroupVersionKind),
-		managed.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}))
-
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1beta1.MySQLServerKind, v1beta1.Group))
+// Setup adds a controller that reconciles MySQLServers.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1beta1.MySQLServerKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&v1beta1.MySQLServer{}).
-		Complete(r)
+		Complete(managed.NewReconciler(mgr,
+			resource.ManagedKind(v1beta1.MySQLServerGroupVersionKind),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}),
+			managed.WithLogger(l.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 func newClient(credentials []byte) (database.MySQLServerAPI, error) {

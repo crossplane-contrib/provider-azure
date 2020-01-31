@@ -24,26 +24,30 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crossplaneio/stack-azure/apis"
-
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
-	localtest "github.com/crossplaneio/stack-azure/pkg/test"
-
+	"github.com/crossplaneio/stack-azure/apis"
 	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 	computev1alpha1 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
+	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplaneio/stack-azure/pkg/clients/compute"
+	localtest "github.com/crossplaneio/stack-azure/pkg/test"
 )
 
 const (
@@ -106,16 +110,29 @@ func TestMain(m *testing.M) {
 	t.StopAndExit(m.Run())
 }
 
-// SetupTestReconcile returns a reconcile.Reconcile implementation that delegates to inner and
-// writes the request to requests after Reconcile is finished.
-func SetupTestReconcile(inner reconcile.Reconciler) (reconcile.Reconciler, chan reconcile.Request) {
+func testController(mgr manager.Manager, f compute.AKSSetupAPIFactory) chan reconcile.Request {
+	r := &Reconciler{
+		Client:             mgr.GetClient(),
+		newClientFn:        func(_ []byte) (*azureclients.Client, error) { return nil, nil },
+		aksSetupAPIFactory: f,
+		publisher:          managed.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme()),
+		resolver:           managed.NewAPIReferenceResolver(mgr.GetClient()),
+		log:                logging.NewNopLogger(),
+	}
+
 	requests := make(chan reconcile.Request)
 	fn := reconcile.Func(func(req reconcile.Request) (reconcile.Result, error) {
-		result, err := inner.Reconcile(req)
+		result, err := r.Reconcile(req)
 		requests <- req
 		return result, err
 	})
-	return fn, requests
+
+	ctrl.NewControllerManagedBy(mgr).
+		Named("test").
+		For(&computev1alpha3.AKSCluster{}).
+		Complete(fn)
+
+	return requests
 }
 
 // StartTestManager adds recFn

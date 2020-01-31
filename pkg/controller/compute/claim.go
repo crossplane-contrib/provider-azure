@@ -19,7 +19,6 @@ package compute
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
@@ -27,6 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimbinding"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimdefaulting"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimscheduling"
@@ -36,18 +37,12 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 )
 
-// A AKSClusterClaimSchedulingController reconciles KubernetesCluster claims
-// that include a class selector but omit their class and resource references by
-// picking a random matching Azure AKSCluster class, if any.
-type AKSClusterClaimSchedulingController struct{}
-
-// SetupWithManager sets up the AKSClusterClaimSchedulingController using the
-// supplied manager.
-func (c *AKSClusterClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
-		computev1alpha1.KubernetesClusterKind,
-		v1alpha3.AKSClusterKind,
-		v1alpha3.Group))
+// SetupAKSClusterClaimScheduling adds a controller that reconciles
+// KubernetesCluster claims that include a class selector but omit their class
+// and resource references by picking a random matching Azure AKSCluster class,
+// if any.
+func SetupAKSClusterClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
+	name := claimscheduling.ControllerName(computev1alpha1.KubernetesClusterKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -60,21 +55,16 @@ func (c *AKSClusterClaimSchedulingController) SetupWithManager(mgr ctrl.Manager)
 		Complete(claimscheduling.NewReconciler(mgr,
 			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 			resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
+			claimscheduling.WithLogger(l.WithValues("controller", name)),
+			claimscheduling.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		))
 }
 
-// A AKSClusterClaimDefaultingController reconciles KubernetesCluster claims
-// that omit their resource ref, class ref, and class selector by choosing a
-// default Azure AKSCluster resource class if one exists.
-type AKSClusterClaimDefaultingController struct{}
-
-// SetupWithManager sets up the AKSClusterClaimDefaultingController using the
-// supplied manager.
-func (c *AKSClusterClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
-		computev1alpha1.KubernetesClusterKind,
-		v1alpha3.AKSClusterKind,
-		v1alpha3.Group))
+// SetupAKSClusterClaimDefaulting adds a controller that reconciles
+// KubernetesCluster claims that omit their resource ref, class ref, and class
+// selector by choosing a default Azure AKSCluster resource class if one exists.
+func SetupAKSClusterClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
+	name := claimdefaulting.ControllerName(computev1alpha1.KubernetesClusterKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -87,20 +77,16 @@ func (c *AKSClusterClaimDefaultingController) SetupWithManager(mgr ctrl.Manager)
 		Complete(claimdefaulting.NewReconciler(mgr,
 			resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 			resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
+			claimdefaulting.WithLogger(l.WithValues("controller", name)),
+			claimdefaulting.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		))
 }
 
-// An AKSClusterClaimController reconciles KubernetesCluster claims with
-// AKSCluster resources, provisioning them if necessary.
-type AKSClusterClaimController struct{}
-
-// SetupWithManager sets up the AKSClusterClaimController using the supplied
-// manager.
-func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
-		computev1alpha1.KubernetesClusterKind,
-		v1alpha3.AKSClusterKind,
-		v1alpha3.Group))
+// SetupAKSClusterClaimBinding adds a controller that reconciles
+// KubernetesCluster claims with AKSCluster resources, provisioning them if
+// necessary.
+func SetupAKSClusterClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
+	name := claimbinding.ControllerName(computev1alpha1.KubernetesClusterKind)
 
 	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
@@ -110,8 +96,9 @@ func (c *AKSClusterClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		claimbinding.WithManagedConfigurators(
 			claimbinding.ManagedConfiguratorFn(ConfigureAKSCluster),
 			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureReclaimPolicy),
-			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureNames),
-		))
+			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureNames)),
+		claimbinding.WithLogger(l.WithValues("controller", name)),
+		claimbinding.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))))
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasClassReferenceKind(resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind)),

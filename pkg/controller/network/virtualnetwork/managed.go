@@ -18,8 +18,6 @@ package virtualnetwork
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -28,6 +26,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
@@ -48,25 +48,19 @@ const (
 	errDeleteVirtualNetwork = "cannot delete VirtualNetwork"
 )
 
-// Controller is responsible for adding the VirtualNetwork
-// controller and its corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
-
-// SetupWithManager creates a new VirtualNetwork Controller and adds it to the
-// Manager with default RBAC. The Manager will set fields on the Controller and
-// start it when the Manager is Started.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1alpha3.VirtualNetworkGroupVersionKind),
-		managed.WithConnectionPublishers(),
-		managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
-
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.VirtualNetworkKind, v1alpha3.Group))
+// Setup adds a controller that reconciles VirtualNetworks.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1alpha3.VirtualNetworkKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&v1alpha3.VirtualNetwork{}).
-		Complete(r)
+		Complete(managed.NewReconciler(mgr,
+			resource.ManagedKind(v1alpha3.VirtualNetworkGroupVersionKind),
+			managed.WithConnectionPublishers(),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
+			managed.WithLogger(l.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connecter struct {

@@ -23,12 +23,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/Azure/go-autorest/autorest/to"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
-)
-
-var (
-	log = logging.Logger.WithName(Group)
 )
 
 // CustomDomain specifies the custom domain assigned to this storage account.
@@ -688,9 +682,11 @@ func NewStorageAccountSpec(a *storage.Account) *StorageAccountSpec {
 // parseStorageAccountSpec from json encoded string
 func parseStorageAccountSpec(s string) *StorageAccountSpec {
 	sas := &StorageAccountSpec{}
-	if err := json.Unmarshal([]byte(s), sas); err != nil {
-		log.Error(err, "error parsing storage account spec")
-	}
+
+	// TODO(negz): Handle this error. It was being logged by a package level
+	// logger before we switched to injecting loggers. This method should be
+	// moved out of the APIs package and altered to return a wrapped error.
+	_ = json.Unmarshal([]byte(s), sas)
 	return sas
 }
 
