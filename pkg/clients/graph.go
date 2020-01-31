@@ -18,6 +18,8 @@ package azure
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -29,8 +31,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 )
 
 const (
@@ -76,6 +76,15 @@ func NewApplicationClient(c *Client) (*ApplicationClient, error) {
 	return &ApplicationClient{appClient}, nil
 }
 
+func generateHex(dataLen int) (string, error) {
+	randData := make([]byte, dataLen)
+	if _, err := rand.Read(randData); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(randData), nil
+}
+
 // CreateApplication creates a new AD application with the given parameters
 func (c *ApplicationClient) CreateApplication(ctx context.Context, appParams ApplicationParameters) (*graphrbac.Application, error) {
 	if appParams.ObjectID != "" {
@@ -85,7 +94,7 @@ func (c *ApplicationClient) CreateApplication(ctx context.Context, appParams App
 	}
 
 	location := strings.ToLower(strings.Replace(appParams.Location, " ", "", -1))
-	salt, err := util.GenerateHex(urlSaltDataLen)
+	salt, err := generateHex(urlSaltDataLen)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate url salt: %+v", err)
 	}
