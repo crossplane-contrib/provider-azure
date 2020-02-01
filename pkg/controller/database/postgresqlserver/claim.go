@@ -18,9 +18,9 @@ package postgresqlserver
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -35,18 +35,11 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 )
 
-// A ClaimSchedulingController reconciles PostgreSQLInstance claims that include
-// a class selector but omit their class and resource references by picking a
-// random matching Azure SQLServer class, if any.
-type ClaimSchedulingController struct{}
-
-// SetupWithManager sets up the ClaimSchedulingController using the supplied
-// manager.
-func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("scheduler.%s.%s.%s",
-		databasev1alpha1.PostgreSQLInstanceKind,
-		v1beta1.PostgreSQLServerKind,
-		v1beta1.Group))
+// SetupClaimScheduling adds a controller that reconciles PostgreSQLInstance
+// claims that include a class selector but omit their class and resource
+// references by picking a random matching Azure SQLServer class, if any.
+func SetupClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
+	name := claimscheduling.ControllerName(databasev1alpha1.PostgreSQLInstanceKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -59,21 +52,16 @@ func (c *ClaimSchedulingController) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(claimscheduling.NewReconciler(mgr,
 			resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
 			resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind),
+			claimscheduling.WithLogger(l.WithValues("controller", name)),
+			claimscheduling.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		))
 }
 
-// A ClaimDefaultingController reconciles PostgreSQLInstance claims that omit
-// their resource ref, class ref, and class selector by choosing a default Azure
-// SQLServer resource class if one exists.
-type ClaimDefaultingController struct{}
-
-// SetupWithManager sets up the ClaimDefaultingController using the supplied
-// manager.
-func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("defaulter.%s.%s.%s",
-		databasev1alpha1.PostgreSQLInstanceKind,
-		v1beta1.PostgreSQLServerKind,
-		v1beta1.Group))
+// SetupClaimDefaulting adds a controller that reconciles PostgreSQLInstance
+// claims that omit their resource ref, class ref, and class selector by
+// choosing a default Azure SQLServer resource class if one exists.
+func SetupClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
+	name := claimdefaulting.ControllerName(databasev1alpha1.PostgreSQLInstanceKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -86,19 +74,16 @@ func (c *ClaimDefaultingController) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(claimdefaulting.NewReconciler(mgr,
 			resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
 			resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind),
+			claimdefaulting.WithLogger(l.WithValues("controller", name)),
+			claimdefaulting.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
 		))
 }
 
-// A ClaimController reconciles PostgreSQLInstance claims with Azure
-// PostgreSQLServer resources, dynamically provisioning them if needed.
-type ClaimController struct{}
-
-// SetupWithManager sets up the ClaimController using the supplied manager.
-func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
-	name := strings.ToLower(fmt.Sprintf("%s.%s.%s",
-		databasev1alpha1.PostgreSQLInstanceKind,
-		v1beta1.PostgreSQLServerKind,
-		v1beta1.Group))
+// SetupClaimBinding adds a controller that reconciles PostgreSQLInstance claims
+// with Azure PostgreSQLServer resources, dynamically provisioning them if
+// needed.
+func SetupClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
+	name := claimbinding.ControllerName(databasev1alpha1.PostgreSQLInstanceKind)
 
 	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.PostgreSQLInstanceGroupVersionKind),
@@ -107,8 +92,9 @@ func (c *ClaimController) SetupWithManager(mgr ctrl.Manager) error {
 		claimbinding.WithManagedConfigurators(
 			claimbinding.ManagedConfiguratorFn(ConfigurePostgreSQLServer),
 			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureReclaimPolicy),
-			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureNames),
-		))
+			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureNames)),
+		claimbinding.WithLogger(l.WithValues("controller", name)),
+		claimbinding.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))))
 
 	p := resource.NewPredicates(resource.AnyOf(
 		resource.HasClassReferenceKind(resource.ClassKind(v1beta1.SQLServerClassGroupVersionKind)),

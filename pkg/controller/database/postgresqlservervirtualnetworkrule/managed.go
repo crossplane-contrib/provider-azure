@@ -18,9 +18,9 @@ package postgresqlservervirtualnetworkrule
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,25 +48,19 @@ const (
 	errDeletePostgreSQLServerVirtualNetworkRule = "cannot delete PostgreSQLServerVirtualNetworkRule"
 )
 
-// Controller is responsible for adding the PostgreSQLServerVirtualNetworkRule
-// Controller and its corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
-
-// SetupWithManager creates a new PostgreSQLServerVirtualNetworkRule Controller and adds it to the
-// Manager with default RBAC. The Manager will set fields on the Controller and
-// start it when the Manager is Started.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1alpha3.PostgreSQLServerVirtualNetworkRuleGroupVersionKind),
-		managed.WithConnectionPublishers(),
-		managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
-
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.PostgreSQLServerVirtualNetworkRuleKind, v1alpha3.Group))
+// Setup adds a controller that reconciles PostgreSQLServerVirtualNetworkRules.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1alpha3.PostgreSQLServerVirtualNetworkRuleKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&v1alpha3.PostgreSQLServerVirtualNetworkRule{}).
-		Complete(r)
+		Complete(managed.NewReconciler(mgr,
+			resource.ManagedKind(v1alpha3.PostgreSQLServerVirtualNetworkRuleGroupVersionKind),
+			managed.WithConnectionPublishers(),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
+			managed.WithLogger(l.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connecter struct {

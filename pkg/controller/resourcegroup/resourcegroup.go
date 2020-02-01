@@ -56,8 +56,6 @@ const (
 	errUpdateManagedStatus = "cannot update managed resource status"
 )
 
-var log = logging.Logger.WithName("controller." + controllerName)
-
 var errDeleted = errors.New("resource has been deleted on Azure")
 
 // A creator can create resources in an external store - e.g. the Azure API.
@@ -181,31 +179,31 @@ func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.ResourceGro
 type Reconciler struct {
 	connecter
 	kube client.Client
-
 	managed.ReferenceResolver
+
+	log logging.Logger
 }
 
-// Controller is responsible for adding the ResourceGroup controller and its
-// corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
+// Setup adds a controller that reconciles VirtualNetworks.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1alpha3.ResourceGroupKind)
 
-// SetupWithManager creates a Controller that reconciles ResourceGroup resources.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
 		connecter:         &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},
 		kube:              mgr.GetClient(),
 		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
+		log:               l.WithValues("controller", name),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(controllerName).
+		Named(name).
 		For(&v1alpha3.ResourceGroup{}).
 		Complete(r)
 }
 
 // Reconcile Azure Resource Group resources with the Azure API.
 func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha3.ResourceGroupKindAPIVersion, "request", req)
+	r.log.Debug("Reconciling", "request", req)
 
 	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
 	defer cancel()

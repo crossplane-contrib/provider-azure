@@ -18,8 +18,6 @@ package subnet
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -27,15 +25,17 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
+	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
+	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+
 	"github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azureclients "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/network"
-
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 )
 
 // Error strings.
@@ -48,25 +48,19 @@ const (
 	errDeleteSubnet = "cannot delete Subnet"
 )
 
-// Controller is responsible for adding the Subnet
-// controller and its corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
-
-// SetupWithManager creates a new Subnet Controller and adds it to the
-// Manager with default RBAC. The Manager will set fields on the Controller and
-// start it when the Manager is Started.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	r := managed.NewReconciler(mgr,
-		resource.ManagedKind(v1alpha3.SubnetGroupVersionKind),
-		managed.WithConnectionPublishers(),
-		managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}))
-
-	name := strings.ToLower(fmt.Sprintf("%s.%s", v1alpha3.SubnetKind, v1alpha3.Group))
+// Setup adds a controller that reconciles Subnets.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1alpha3.SubnetKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		For(&v1alpha3.Subnet{}).
-		Complete(r)
+		Complete(managed.NewReconciler(mgr,
+			resource.ManagedKind(v1alpha3.SubnetGroupVersionKind),
+			managed.WithConnectionPublishers(),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
+			managed.WithLogger(l.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connecter struct {

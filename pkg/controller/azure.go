@@ -19,7 +19,8 @@ package controller
 import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	computeclients "github.com/crossplaneio/stack-azure/pkg/clients/compute"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
+
 	"github.com/crossplaneio/stack-azure/pkg/controller/cache"
 	"github.com/crossplaneio/stack-azure/pkg/controller/compute"
 	"github.com/crossplaneio/stack-azure/pkg/controller/database/mysqlserver"
@@ -33,49 +34,41 @@ import (
 	"github.com/crossplaneio/stack-azure/pkg/controller/storage/container"
 )
 
-// Controllers passes down config and adds individual controllers to the manager.
-type Controllers struct{}
-
-// SetupWithManager adds all Azure controllers to the manager.
-func (c *Controllers) SetupWithManager(mgr ctrl.Manager) error {
-	aksReconciler := compute.NewAKSClusterReconciler(mgr, &computeclients.AKSSetupClientFactory{})
-
-	controllers := []interface {
-		SetupWithManager(ctrl.Manager) error
-	}{
-		&cache.RedisClaimSchedulingController{},
-		&cache.RedisClaimDefaultingController{},
-		&cache.RedisClaimController{},
-		&cache.RedisController{},
-		&compute.AKSClusterClaimSchedulingController{},
-		&compute.AKSClusterClaimDefaultingController{},
-		&compute.AKSClusterClaimController{},
-		&compute.AKSClusterTargetController{},
-		&compute.AKSClusterController{Reconciler: aksReconciler},
-		&mysqlserver.ClaimSchedulingController{},
-		&mysqlserver.ClaimDefaultingController{},
-		&mysqlserver.ClaimController{},
-		&mysqlserver.Controller{},
-		&mysqlservervirtualnetworkrule.Controller{},
-		&postgresqlserver.ClaimSchedulingController{},
-		&postgresqlserver.ClaimDefaultingController{},
-		&postgresqlserver.ClaimController{},
-		&postgresqlserver.Controller{},
-		&postgresqlservervirtualnetworkrule.Controller{},
-		&virtualnetwork.Controller{},
-		&subnet.Controller{},
-		&resourcegroup.Controller{},
-		&account.ClaimSchedulingController{},
-		&account.ClaimDefaultingController{},
-		&account.ClaimController{},
-		&account.Controller{},
-		&container.ClaimDefaultingController{},
-		&container.ClaimSchedulingController{},
-		&container.ClaimController{},
-		&container.Controller{},
-	}
-	for _, c := range controllers {
-		if err := c.SetupWithManager(mgr); err != nil {
+// Setup Azure controllers.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	for _, setup := range []func(ctrl.Manager, logging.Logger) error{
+		cache.SetupRedisClaimScheduling,
+		cache.SetupRedisClaimDefaulting,
+		cache.SetupRedisClaimBinding,
+		cache.SetupRedis,
+		compute.SetupAKSClusterClaimScheduling,
+		compute.SetupAKSClusterClaimDefaulting,
+		compute.SetupAKSClusterClaimBinding,
+		compute.SetupAKSClusterTarget,
+		compute.SetupAKSCluster,
+		mysqlserver.SetupClaimScheduling,
+		mysqlserver.SetupClaimDefaulting,
+		mysqlserver.SetupClaimBinding,
+		mysqlserver.Setup,
+		mysqlservervirtualnetworkrule.Setup,
+		postgresqlserver.SetupClaimScheduling,
+		postgresqlserver.SetupClaimDefaulting,
+		postgresqlserver.SetupClaimBinding,
+		postgresqlserver.Setup,
+		postgresqlservervirtualnetworkrule.Setup,
+		virtualnetwork.Setup,
+		subnet.Setup,
+		resourcegroup.Setup,
+		account.SetupClaimScheduling,
+		account.SetupClaimDefaulting,
+		account.SetupClaimBinding,
+		account.Setup,
+		container.SetupClaimDefaulting,
+		container.SetupClaimScheduling,
+		container.SetupClaimBinding,
+		container.Setup,
+	} {
+		if err := setup(mgr, l); err != nil {
 			return err
 		}
 	}

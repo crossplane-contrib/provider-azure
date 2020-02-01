@@ -42,6 +42,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
@@ -312,6 +313,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Client:            tt.fields.client,
 				syncdeleterMaker:  tt.fields.maker,
 				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
+				log:               logging.NewNopLogger(),
 			}
 			got, err := r.Reconcile(req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {

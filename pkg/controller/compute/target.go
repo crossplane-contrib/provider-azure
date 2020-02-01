@@ -17,11 +17,10 @@ limitations under the License.
 package compute
 
 import (
-	"fmt"
-	"strings"
-
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"github.com/crossplaneio/crossplane-runtime/pkg/event"
+	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/target"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane/apis/workload/v1alpha1"
@@ -29,22 +28,19 @@ import (
 	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
 )
 
-// AKSClusterTargetController is responsible for adding the AKSCluster target
+// SetupAKSClusterTarget is responsible for adding the AKSCluster target
 // controller and its corresponding reconciler to the manager with any runtime configuration.
-type AKSClusterTargetController struct{}
+func SetupAKSClusterTarget(mgr ctrl.Manager, l logging.Logger) error {
+	name := target.ControllerName(v1alpha3.AKSClusterKind)
 
-// SetupWithManager adds a controller that propagates AKSCluster connection
-// secrets to the connection secrets of their targets.
-func (c *AKSClusterTargetController) SetupWithManager(mgr ctrl.Manager) error {
 	p := resource.NewPredicates(resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind)))
-
-	r := target.NewReconciler(mgr,
-		resource.TargetKind(v1alpha1.KubernetesTargetGroupVersionKind),
-		resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind))
-
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(strings.ToLower(fmt.Sprintf("kubernetestarget.%s.%s", v1alpha3.AKSClusterKind, v1alpha3.Group))).
+		Named(name).
 		For(&v1alpha1.KubernetesTarget{}).
 		WithEventFilter(p).
-		Complete(r)
+		Complete(target.NewReconciler(mgr,
+			resource.TargetKind(v1alpha1.KubernetesTargetGroupVersionKind),
+			resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind),
+			target.WithLogger(l.WithValues("controller", name)),
+			target.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }

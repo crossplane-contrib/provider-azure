@@ -191,13 +191,7 @@ func TestReconcile(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c := mgr.GetClient()
 
-	r := NewAKSClusterReconciler(mgr, mockAKSSetupClientFactory)
-	r.newClientFn = func(_ []byte) (*azureclients.Client, error) { return nil, nil }
-	recFn, requests := SetupTestReconcile(r)
-	controller := &AKSClusterController{
-		Reconciler: recFn,
-	}
-	g.Expect(controller.SetupWithManager(mgr)).NotTo(gomega.HaveOccurred())
+	requests := testController(mgr, mockAKSSetupClientFactory)
 	defer close(StartTestManager(mgr, g))
 
 	// create the provider object and defer its cleanup
@@ -241,7 +235,7 @@ func TestReconcile(t *testing.T) {
 		Namespace: instance.Spec.WriteServicePrincipalSecretTo.Namespace,
 		Name:      instance.Spec.WriteServicePrincipalSecretTo.Name,
 	}
-	err = r.Get(ctx, n, spSecret)
+	err = c.Get(ctx, n, spSecret)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	spSecretValue, ok := spSecret.Data[spSecretKey]
 	g.Expect(ok).To(gomega.BeTrue())
@@ -325,13 +319,7 @@ func TestReconcileInSubnet(t *testing.T) {
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	c := mgr.GetClient()
 
-	r := NewAKSClusterReconciler(mgr, mockAKSSetupClientFactory)
-	r.newClientFn = func(_ []byte) (*azureclients.Client, error) { return nil, nil }
-	recFn, requests := SetupTestReconcile(r)
-	controller := &AKSClusterController{
-		Reconciler: recFn,
-	}
-	g.Expect(controller.SetupWithManager(mgr)).NotTo(gomega.HaveOccurred())
+	requests := testController(mgr, mockAKSSetupClientFactory)
 	defer close(StartTestManager(mgr, g))
 
 	// create the provider object and defer its cleanup
@@ -375,7 +363,7 @@ func TestReconcileInSubnet(t *testing.T) {
 		Namespace: instance.Spec.WriteServicePrincipalSecretTo.Namespace,
 		Name:      instance.Spec.WriteServicePrincipalSecretTo.Name,
 	}
-	err = r.Get(ctx, n, spSecret)
+	err = c.Get(ctx, n, spSecret)
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 	spSecretValue, ok := spSecret.Data[spSecretKey]
 	g.Expect(ok).To(gomega.BeTrue())

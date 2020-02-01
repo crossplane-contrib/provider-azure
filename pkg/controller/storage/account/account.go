@@ -66,8 +66,6 @@ var (
 	resultRequeue    = reconcile.Result{Requeue: true}
 	requeueOnSuccess = reconcile.Result{RequeueAfter: requeueAfterOnSuccess}
 	requeueOnWait    = reconcile.Result{RequeueAfter: requeueAfterOnWait}
-
-	log = logging.Logger.WithName("controller." + controllerName)
 )
 
 // Reconciler reconciles an Azure storage account
@@ -75,23 +73,23 @@ type Reconciler struct {
 	client.Client
 	syncdeleterMaker
 	managed.ReferenceResolver
+
+	log logging.Logger
 }
 
-// Controller is responsible for adding the Account controller and its
-// corresponding reconciler to the manager with any runtime configuration.
-type Controller struct{}
+// Setup adds a controller that reconciles Accounts.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1alpha3.AccountKind)
 
-// SetupWithManager creates a newSyncDeleter Controller and adds it to the Manager with default RBAC.
-// The Manager will set fields on the Controller and Start it when the Manager is Started.
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 	r := &Reconciler{
 		Client:            mgr.GetClient(),
 		syncdeleterMaker:  &accountSyncdeleterMaker{mgr.GetClient()},
 		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
+		log:               l.WithValues("controller", name),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		Named(controllerName).
+		Named(name).
 		For(&v1alpha3.Account{}).
 		Owns(&corev1.Secret{}).
 		Complete(r)
@@ -100,7 +98,7 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 // Reconcile reads that state of the cluster for a Provider acct and makes changes based on the state read
 // and what is in the Provider.Spec
 func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	log.V(logging.Debug).Info("reconciling", "kind", v1alpha3.AccountKindAPIVersion, "request", request)
+	r.log.Debug("Reconciling", "request", request)
 
 	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
 	defer cancel()
