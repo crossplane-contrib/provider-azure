@@ -381,7 +381,7 @@ func TestCreate(t *testing.T) {
 		},
 		"ErrGeneratePassword": {
 			e: &external{
-				newPasswordFn: func(int) (string, error) { return "", errBoom },
+				newPasswordFn: func() (string, error) { return "", errBoom },
 			},
 			args: args{
 				ctx: context.Background(),
@@ -396,7 +396,7 @@ func TestCreate(t *testing.T) {
 				client: &MockPostgreSQLServerAPI{
 					MockCreateServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer, _ string) error { return errBoom },
 				},
-				newPasswordFn: func(int) (string, error) { return password, nil },
+				newPasswordFn: func() (string, error) { return password, nil },
 			},
 			args: args{
 				ctx: context.Background(),
@@ -416,7 +416,7 @@ func TestCreate(t *testing.T) {
 						})
 					},
 				},
-				newPasswordFn: func(int) (string, error) { return password, nil },
+				newPasswordFn: func() (string, error) { return password, nil },
 			},
 			args: args{
 				ctx: context.Background(),
