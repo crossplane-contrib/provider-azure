@@ -17,12 +17,14 @@ limitations under the License.
 package v1alpha3
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 )
 
 // AccountParameters define the desired state of an Azure Blob Storage Account.
@@ -276,7 +278,13 @@ func (c *Container) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 //   4. NameFormat = "foo-%s", ContainerName = "foo-test-uid"
 //   5. NameFormat = "foo-%s-bar-%s", ContainerName = "foo-test-uid-bar-%!s(MISSING)"
 func (c *Container) GetContainerName() string {
-	return util.ConditionalStringFormat(c.Spec.NameFormat, string(c.GetUID()))
+	if c.Spec.NameFormat == "" {
+		return string(c.GetUID())
+	}
+	if strings.Contains(c.Spec.NameFormat, "%s") {
+		return fmt.Sprintf(c.Spec.NameFormat, string(c.GetUID()))
+	}
+	return c.Spec.NameFormat
 }
 
 // +kubebuilder:object:root=true
