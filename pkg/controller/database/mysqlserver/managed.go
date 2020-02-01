@@ -30,17 +30,15 @@ import (
 	"github.com/crossplaneio/crossplane-runtime/pkg/event"
 	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
 	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/password"
 	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane-runtime/pkg/util"
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
 	azure "github.com/crossplaneio/stack-azure/pkg/clients"
 	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 )
-
-const passwordDataLen = 20
 
 // Error strings.
 const (
@@ -103,13 +101,13 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, errors.Wrap(err, errGetProviderSecret)
 	}
 	sqlClient, err := c.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{kube: c.client, client: sqlClient, newPasswordFn: util.GeneratePassword}, errors.Wrap(err, errNewClient)
+	return &external{kube: c.client, client: sqlClient, newPasswordFn: password.Generate}, errors.Wrap(err, errNewClient)
 }
 
 type external struct {
 	kube          client.Client
 	client        database.MySQLServerAPI
-	newPasswordFn func(len int) (password string, err error)
+	newPasswordFn func() (password string, err error)
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
@@ -173,7 +171,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	}
 
 	cr.SetConditions(runtimev1alpha1.Creating())
-	pw, err := e.newPasswordFn(passwordDataLen)
+	pw, err := e.newPasswordFn()
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
 	}
