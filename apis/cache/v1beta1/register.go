@@ -40,6 +40,7 @@ var (
 // Redis type metadata.
 var (
 	RedisKind             = reflect.TypeOf(Redis{}).Name()
+	RedisGroupKind        = schema.GroupKind{Group: Group, Kind: RedisKind}.String()
 	RedisKindAPIVersion   = RedisKind + "." + SchemeGroupVersion.String()
 	RedisGroupVersionKind = SchemeGroupVersion.WithKind(RedisKind)
 )
@@ -47,6 +48,7 @@ var (
 // RedisClass type metadata.
 var (
 	RedisClassKind             = reflect.TypeOf(RedisClass{}).Name()
+	RedisClassGroupKind        = schema.GroupKind{Group: Group, Kind: RedisKind}.String()
 	RedisClassKindAPIVersion   = RedisClassKind + "." + SchemeGroupVersion.String()
 	RedisClassGroupVersionKind = SchemeGroupVersion.WithKind(RedisClassKind)
 )

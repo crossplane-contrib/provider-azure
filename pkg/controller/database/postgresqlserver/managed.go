@@ -58,7 +58,7 @@ const (
 
 // Setup adds a controller that reconciles PostgreSQLInstances.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1beta1.PostgreSQLServerKind)
+	name := managed.ControllerName(v1beta1.PostgreSQLServerGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

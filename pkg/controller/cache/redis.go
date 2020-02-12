@@ -56,7 +56,7 @@ const (
 
 // SetupRedis adds a controller that reconciles Redis resources.
 func SetupRedis(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1beta1.RedisKind)
+	name := managed.ControllerName(v1beta1.RedisGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

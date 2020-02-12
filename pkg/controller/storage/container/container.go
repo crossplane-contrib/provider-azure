@@ -77,7 +77,7 @@ type Reconciler struct {
 
 // Setup adds a controller that reconciles Containers.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.ContainerKind)
+	name := managed.ControllerName(v1alpha3.ContainerGroupKind)
 
 	r := &Reconciler{
 		Client:            mgr.GetClient(),

@@ -40,6 +40,7 @@ var (
 // AKSCluster type metadata.
 var (
 	AKSClusterKind             = reflect.TypeOf(AKSCluster{}).Name()
+	AKSClusterGroupKind        = schema.GroupKind{Group: Group, Kind: AKSClusterKind}.String()
 	AKSClusterKindAPIVersion   = AKSClusterKind + "." + SchemeGroupVersion.String()
 	AKSClusterGroupVersionKind = SchemeGroupVersion.WithKind(AKSClusterKind)
 )
@@ -47,6 +48,7 @@ var (
 // AKSClusterClass type metadata.
 var (
 	AKSClusterClassKind             = reflect.TypeOf(AKSClusterClass{}).Name()
+	AKSClusterClassGroupKind        = schema.GroupKind{Group: Group, Kind: AKSClusterClassKind}.String()
 	AKSClusterClassKindAPIVersion   = AKSClusterClassKind + "." + SchemeGroupVersion.String()
 	AKSClusterClassGroupVersionKind = SchemeGroupVersion.WithKind(AKSClusterClassKind)
 )

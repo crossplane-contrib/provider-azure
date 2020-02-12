@@ -40,6 +40,7 @@ var (
 // Account type metadata.
 var (
 	AccountKind             = reflect.TypeOf(Account{}).Name()
+	AccountGroupKind        = schema.GroupKind{Group: Group, Kind: AccountKind}.String()
 	AccountKindAPIVersion   = AccountKind + "." + SchemeGroupVersion.String()
 	AccountGroupVersionKind = SchemeGroupVersion.WithKind(AccountKind)
 )
@@ -47,6 +48,7 @@ var (
 // AccountClass type metadata.
 var (
 	AccountClassKind             = reflect.TypeOf(AccountClass{}).Name()
+	AccountClassGroupKind        = schema.GroupKind{Group: Group, Kind: AccountClassKind}.String()
 	AccountClassKindAPIVersion   = AccountClassKind + "." + SchemeGroupVersion.String()
 	AccountClassGroupVersionKind = SchemeGroupVersion.WithKind(AccountClassKind)
 )
@@ -54,6 +56,7 @@ var (
 // Container type metadata.
 var (
 	ContainerKind             = reflect.TypeOf(Container{}).Name()
+	ContainerGroupKind        = schema.GroupKind{Group: Group, Kind: ContainerKind}.String()
 	ContainerKindAPIVersion   = ContainerKind + "." + SchemeGroupVersion.String()
 	ContainerGroupVersionKind = SchemeGroupVersion.WithKind(ContainerKind)
 )
@@ -61,6 +64,7 @@ var (
 // ContainerClass type metadata.
 var (
 	ContainerClassKind             = reflect.TypeOf(ContainerClass{}).Name()
+	ContainerClassGroupKind        = schema.GroupKind{Group: Group, Kind: ContainerClassKind}.String()
 	ContainerClassKindAPIVersion   = ContainerClassKind + "." + SchemeGroupVersion.String()
 	ContainerClassGroupVersionKind = SchemeGroupVersion.WithKind(ContainerClassKind)
 )

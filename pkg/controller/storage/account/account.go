@@ -79,7 +79,7 @@ type Reconciler struct {
 
 // Setup adds a controller that reconciles Accounts.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.AccountKind)
+	name := managed.ControllerName(v1alpha3.AccountGroupKind)
 
 	r := &Reconciler{
 		Client:            mgr.GetClient(),

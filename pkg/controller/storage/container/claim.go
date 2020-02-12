@@ -42,7 +42,7 @@ import (
 // include a class selector but omit their class and resource references by
 // picking a random matching Azure Container class, if any.
 func SetupClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimscheduling.ControllerName(storagev1alpha1.BucketKind)
+	name := claimscheduling.ControllerName(storagev1alpha1.BucketGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -64,7 +64,7 @@ func SetupClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
 // omit their resource ref, class ref, and class selector by choosing a default
 // Azure Container resource class if one exists.
 func SetupClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimdefaulting.ControllerName(storagev1alpha1.BucketKind)
+	name := claimdefaulting.ControllerName(storagev1alpha1.BucketGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -85,7 +85,7 @@ func SetupClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
 // SetupClaimBinding adds a controller that reconciles Bucket claims with Azure
 // Account resources, dynamically provisioning them if needed.
 func SetupClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimbinding.ControllerName(storagev1alpha1.BucketKind)
+	name := claimbinding.ControllerName(storagev1alpha1.BucketGroupKind)
 
 	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(storagev1alpha1.BucketGroupVersionKind),

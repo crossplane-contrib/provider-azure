@@ -81,7 +81,7 @@ type Reconciler struct {
 
 // SetupAKSCluster adds a controller that reconciles AKS clusters.
 func SetupAKSCluster(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(computev1alpha3.AKSClusterKind)
+	name := managed.ControllerName(computev1alpha3.AKSClusterGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

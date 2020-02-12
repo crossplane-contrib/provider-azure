@@ -39,7 +39,7 @@ import (
 // claims that include a class selector but omit their class and resource
 // references by picking a random matching Azure Redis class, if any.
 func SetupRedisClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimscheduling.ControllerName(cachev1alpha1.RedisClusterKind)
+	name := claimscheduling.ControllerName(cachev1alpha1.RedisClusterGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -61,7 +61,7 @@ func SetupRedisClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
 // claims that omit their resource ref, class ref, and class selector by
 // choosing a default Azure Redis resource class if one exists.
 func SetupRedisClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimdefaulting.ControllerName(cachev1alpha1.RedisClusterKind)
+	name := claimdefaulting.ControllerName(cachev1alpha1.RedisClusterGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -82,7 +82,7 @@ func SetupRedisClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
 // SetupRedisClaimBinding adds a controller that reconciles RedisCluster claims
 // with Azure Redis resources, dynamically provisioning them if needed.
 func SetupRedisClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimbinding.ControllerName(cachev1alpha1.RedisClusterKind)
+	name := claimbinding.ControllerName(cachev1alpha1.RedisClusterGroupKind)
 
 	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(cachev1alpha1.RedisClusterGroupVersionKind),

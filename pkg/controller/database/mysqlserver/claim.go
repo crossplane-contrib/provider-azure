@@ -39,7 +39,7 @@ import (
 // that include a class selector but omit their class and resource references by
 // picking a random matching Azure SQLServer class, if any.
 func SetupClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimscheduling.ControllerName(databasev1alpha1.MySQLInstanceKind)
+	name := claimscheduling.ControllerName(databasev1alpha1.MySQLInstanceGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -61,7 +61,7 @@ func SetupClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
 // that omit their resource ref, class ref, and class selector by choosing a
 // default Azure SQLServer resource class if one exists.
 func SetupClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimdefaulting.ControllerName(databasev1alpha1.MySQLInstanceKind)
+	name := claimdefaulting.ControllerName(databasev1alpha1.MySQLInstanceGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -82,7 +82,7 @@ func SetupClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
 // SetupClaimBinding adds a controller that reconciles MySQLInstance claims with
 // Azure MySQLServer resources, dynamically provisioning them if needed.
 func SetupClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimbinding.ControllerName(databasev1alpha1.MySQLInstanceKind)
+	name := claimbinding.ControllerName(databasev1alpha1.MySQLInstanceGroupKind)
 
 	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(databasev1alpha1.MySQLInstanceGroupVersionKind),

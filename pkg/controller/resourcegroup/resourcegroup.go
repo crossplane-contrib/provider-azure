@@ -186,7 +186,7 @@ type Reconciler struct {
 
 // Setup adds a controller that reconciles VirtualNetworks.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.ResourceGroupKind)
+	name := managed.ControllerName(v1alpha3.ResourceGroupGroupKind)
 
 	r := &Reconciler{
 		connecter:         &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},

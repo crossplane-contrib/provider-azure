@@ -42,7 +42,7 @@ import (
 // and resource references by picking a random matching Azure AKSCluster class,
 // if any.
 func SetupAKSClusterClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimscheduling.ControllerName(computev1alpha1.KubernetesClusterKind)
+	name := claimscheduling.ControllerName(computev1alpha1.KubernetesClusterGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -64,7 +64,7 @@ func SetupAKSClusterClaimScheduling(mgr ctrl.Manager, l logging.Logger) error {
 // KubernetesCluster claims that omit their resource ref, class ref, and class
 // selector by choosing a default Azure AKSCluster resource class if one exists.
 func SetupAKSClusterClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimdefaulting.ControllerName(computev1alpha1.KubernetesClusterKind)
+	name := claimdefaulting.ControllerName(computev1alpha1.KubernetesClusterGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -86,7 +86,7 @@ func SetupAKSClusterClaimDefaulting(mgr ctrl.Manager, l logging.Logger) error {
 // KubernetesCluster claims with AKSCluster resources, provisioning them if
 // necessary.
 func SetupAKSClusterClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
-	name := claimbinding.ControllerName(computev1alpha1.KubernetesClusterKind)
+	name := claimbinding.ControllerName(computev1alpha1.KubernetesClusterGroupKind)
 
 	r := claimbinding.NewReconciler(mgr,
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
