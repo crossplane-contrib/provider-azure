@@ -50,7 +50,7 @@ const (
 
 // Setup adds a controller that reconciles MySQLServerVirtualNetworkRules.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.MySQLServerVirtualNetworkRuleKind)
+	name := managed.ControllerName(v1alpha3.MySQLServerVirtualNetworkRuleGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

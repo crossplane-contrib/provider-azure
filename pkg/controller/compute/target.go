@@ -31,7 +31,7 @@ import (
 // SetupAKSClusterTarget is responsible for adding the AKSCluster target
 // controller and its corresponding reconciler to the manager with any runtime configuration.
 func SetupAKSClusterTarget(mgr ctrl.Manager, l logging.Logger) error {
-	name := target.ControllerName(v1alpha3.AKSClusterKind)
+	name := target.ControllerName(v1alpha3.AKSClusterGroupKind)
 
 	p := resource.NewPredicates(resource.HasManagedResourceReferenceKind(resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind)))
 	return ctrl.NewControllerManagedBy(mgr).

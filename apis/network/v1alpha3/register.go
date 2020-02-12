@@ -40,6 +40,7 @@ var (
 // VirtualNetwork type metadata.
 var (
 	VirtualNetworkKind             = reflect.TypeOf(VirtualNetwork{}).Name()
+	VirtualNetworkGroupKind        = schema.GroupKind{Group: Group, Kind: VirtualNetworkKind}.String()
 	VirtualNetworkKindAPIVersion   = VirtualNetworkKind + "." + SchemeGroupVersion.String()
 	VirtualNetworkGroupVersionKind = SchemeGroupVersion.WithKind(VirtualNetworkKind)
 )
@@ -47,6 +48,7 @@ var (
 // Subnet type metadata.
 var (
 	SubnetKind             = reflect.TypeOf(Subnet{}).Name()
+	SubnetGroupKind        = schema.GroupKind{Group: Group, Kind: SubnetKind}.String()
 	SubnetKindAPIVersion   = SubnetKind + "." + SchemeGroupVersion.String()
 	SubnetGroupVersionKind = SchemeGroupVersion.WithKind(SubnetKind)
 )

@@ -50,7 +50,7 @@ const (
 
 // Setup adds a controller that reconciles Subnets.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.SubnetKind)
+	name := managed.ControllerName(v1alpha3.SubnetGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

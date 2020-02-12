@@ -50,7 +50,7 @@ const (
 
 // Setup adds a controller that reconciles VirtualNetworks.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.VirtualNetworkKind)
+	name := managed.ControllerName(v1alpha3.VirtualNetworkGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

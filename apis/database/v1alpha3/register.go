@@ -40,6 +40,7 @@ var (
 // MySQLServerVirtualNetworkRule type metadata.
 var (
 	MySQLServerVirtualNetworkRuleKind             = reflect.TypeOf(MySQLServerVirtualNetworkRule{}).Name()
+	MySQLServerVirtualNetworkRuleGroupKind        = schema.GroupKind{Group: Group, Kind: MySQLServerVirtualNetworkRuleKind}.String()
 	MySQLServerVirtualNetworkRuleKindAPIVersion   = MySQLServerVirtualNetworkRuleKind + "." + SchemeGroupVersion.String()
 	MySQLServerVirtualNetworkRuleGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerVirtualNetworkRuleKind)
 )
@@ -47,6 +48,7 @@ var (
 // PostgreSQLServerVirtualNetworkRule type metadata.
 var (
 	PostgreSQLServerVirtualNetworkRuleKind             = reflect.TypeOf(PostgreSQLServerVirtualNetworkRule{}).Name()
+	PostgreSQLServerVirtualNetworkRuleGroupKind        = schema.GroupKind{Group: Group, Kind: PostgreSQLServerVirtualNetworkRuleKind}.String()
 	PostgreSQLServerVirtualNetworkRuleKindAPIVersion   = PostgreSQLServerVirtualNetworkRuleKind + "." + SchemeGroupVersion.String()
 	PostgreSQLServerVirtualNetworkRuleGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerVirtualNetworkRuleKind)
 )

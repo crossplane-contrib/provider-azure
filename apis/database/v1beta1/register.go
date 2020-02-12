@@ -40,6 +40,7 @@ var (
 // MySQLServer type metadata.
 var (
 	MySQLServerKind             = reflect.TypeOf(MySQLServer{}).Name()
+	MySQLServerGroupKind        = schema.GroupKind{Group: Group, Kind: MySQLServerKind}.String()
 	MySQLServerKindAPIVersion   = MySQLServerKind + "." + SchemeGroupVersion.String()
 	MySQLServerGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerKind)
 )
@@ -47,6 +48,7 @@ var (
 // PostgreSQLServer type metadata.
 var (
 	PostgreSQLServerKind             = reflect.TypeOf(PostgreSQLServer{}).Name()
+	PostgreSQLServerGroupKind        = schema.GroupKind{Group: Group, Kind: PostgreSQLServerKind}.String()
 	PostgreSQLServerKindAPIVersion   = PostgreSQLServerKind + "." + SchemeGroupVersion.String()
 	PostgreSQLServerGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerKind)
 )
@@ -54,6 +56,7 @@ var (
 // SQLServerClass type metadata.
 var (
 	SQLServerClassKind             = reflect.TypeOf(SQLServerClass{}).Name()
+	SQLServerClassGroupKind        = schema.GroupKind{Group: Group, Kind: SQLServerClassKind}.String()
 	SQLServerClassKindAPIVersion   = SQLServerClassKind + "." + SchemeGroupVersion.String()
 	SQLServerClassGroupVersionKind = SchemeGroupVersion.WithKind(SQLServerClassKind)
 )

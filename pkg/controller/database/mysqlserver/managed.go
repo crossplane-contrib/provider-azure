@@ -58,7 +58,7 @@ const (
 
 // Setup adds a controller that reconciles MySQLServers.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1beta1.MySQLServerKind)
+	name := managed.ControllerName(v1beta1.MySQLServerGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).

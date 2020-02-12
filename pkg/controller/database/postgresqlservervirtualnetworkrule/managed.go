@@ -50,7 +50,7 @@ const (
 
 // Setup adds a controller that reconciles PostgreSQLServerVirtualNetworkRules.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.PostgreSQLServerVirtualNetworkRuleKind)
+	name := managed.ControllerName(v1alpha3.PostgreSQLServerVirtualNetworkRuleGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
