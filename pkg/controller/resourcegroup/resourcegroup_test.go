@@ -65,7 +65,7 @@ var (
 		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha3.ProviderSpec{
 			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: runtimev1alpha1.SecretKeySelector{
+				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
 					SecretReference: runtimev1alpha1.SecretReference{
 						Namespace: namespace,
 						Name:      providerSecretName,
@@ -433,7 +433,28 @@ func TestConnect(t *testing.T) {
 			wantErr: errors.WithStack(errors.Errorf("cannot get provider secret %s/%s:  \"%s\" not found", namespace, providerSecretName, providerSecretName)),
 		},
 		{
-			name: "FailedToCreateAzureCacheClient",
+			name: "ProviderSecretNil",
+			conn: &providerConnecter{
+				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+					switch key {
+					case client.ObjectKey{Name: providerName}:
+						nilSecretProvider := provider
+						nilSecretProvider.SetCredentialsSecretReference(nil)
+						*obj.(*azurev1alpha3.Provider) = nilSecretProvider
+					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
+					}
+					return nil
+				}},
+				newClient: func(_ []byte) (resourcegroup.GroupsClient, error) {
+					return &fakerg.MockClient{}, nil
+				},
+			},
+			i:       resourceGrp(),
+			wantErr: errors.New(errProviderSecretNil),
+		},
+		{
+			name: "FailedToCreateAzureGroupsClient",
 			conn: &providerConnecter{
 				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
 					switch key {

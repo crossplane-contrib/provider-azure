@@ -371,6 +371,22 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			},
 		},
 		{
+			name: "AccountReferenceSecretNil",
+			fields: fields{
+				Client: fake.NewFakeClient(
+					v1alpha3test.NewMockAccount(testAccountName).Account,
+					newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).Container),
+			},
+			args: args{
+				ctx: ctx,
+				c: newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).
+					Container,
+			},
+			want: want{
+				err: errors.New(errAcctSecretNil),
+			},
+		},
+		{
 			name: "FailedToCreateContainerHandle",
 			fields: fields{
 				Client: fake.NewFakeClient(

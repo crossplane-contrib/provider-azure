@@ -59,8 +59,6 @@ spec:
               - name
               - namespace
               type: object
-          required:
-          - credentialsSecretRef
           type: object
       required:
       - spec

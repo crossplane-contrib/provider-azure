@@ -45,6 +45,7 @@ const (
 	errNewClient                 = "cannot create new PostgreSQLServer client"
 	errGetProvider               = "cannot get Azure provider"
 	errGetProviderSecret         = "cannot get Azure provider Secret"
+	errProviderSecretNil         = "Azure provider does not have a secret reference"
 	errUpdateCR                  = "cannot update PostgreSQL custom resource"
 	errGenPassword               = "cannot generate admin password"
 	errNotPostgreSQLServer       = "managed resource is not a PostgreSQLServer"
@@ -93,6 +94,10 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	p := &azurev1alpha3.Provider{}
 	if err := c.client.Get(ctx, meta.NamespacedNameOf(v.Spec.ProviderReference), p); err != nil {
 		return nil, errors.Wrap(err, errGetProvider)
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	s := &corev1.Secret{}

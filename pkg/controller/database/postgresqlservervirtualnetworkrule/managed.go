@@ -41,6 +41,7 @@ import (
 // Error strings.
 const (
 	errNewClient                                = "cannot create new PostgreSQLServerVirtualNetworkRule"
+	errProviderSecretNil                        = "provider does not have a secret reference"
 	errNotPostgreSQLServerVirtualNetworkRule    = "managed resource is not an PostgreSQLServerVirtualNetworkRule"
 	errCreatePostgreSQLServerVirtualNetworkRule = "cannot create PostgreSQLServerVirtualNetworkRule"
 	errUpdatePostgreSQLServerVirtualNetworkRule = "cannot update PostgreSQLServerVirtualNetworkRule"
@@ -78,6 +79,10 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	n := meta.NamespacedNameOf(v.Spec.ProviderReference)
 	if err := c.client.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	s := &corev1.Secret{}

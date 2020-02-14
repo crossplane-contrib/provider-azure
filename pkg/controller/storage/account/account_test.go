@@ -196,7 +196,7 @@ func newProvider(name string) *provider {
 }
 
 func (p *provider) withSecret(namespace, name, key string) *provider {
-	p.Spec.CredentialsSecretRef = runtimev1alpha1.SecretKeySelector{
+	p.Spec.CredentialsSecretRef = &runtimev1alpha1.SecretKeySelector{
 		SecretReference: runtimev1alpha1.SecretReference{
 			Namespace: namespace,
 			Name:      name,
@@ -381,6 +381,12 @@ func Test_accountHandleMaker_newHandler(t *testing.T) {
 			acct: v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
 			wantErr: errors.WithStack(
 				errors.Errorf("cannot get provider's secret %s/%s: secrets \"%s\" not found", ns, secretName, secretName)),
+		},
+		{
+			name:    "ProviderSecretIsNil",
+			kube:    fake.NewFakeClient(newProvider(providerName).Provider),
+			acct:    v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
+			wantErr: errors.New(errProviderSecretNil),
 		},
 		{
 			name: "InvalidCredentials",

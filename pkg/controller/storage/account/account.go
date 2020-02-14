@@ -60,6 +60,7 @@ const (
 // Error strings
 const (
 	errUpdateManagedStatus = "cannot update managed resource status"
+	errProviderSecretNil   = "provider does not have a secret reference"
 )
 
 var (
@@ -153,6 +154,10 @@ func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha
 	n := meta.NamespacedNameOf(b.Spec.ProviderReference)
 	if err := m.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	s := &corev1.Secret{}

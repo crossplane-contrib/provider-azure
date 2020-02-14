@@ -59,6 +59,7 @@ const (
 // Error strings
 const (
 	errUpdateManagedStatus = "cannot update managed resource status"
+	errAcctSecretNil       = "account does not have a connection secret"
 )
 
 var (
@@ -158,6 +159,10 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 			}
 		}
 		return nil, errors.Wrapf(err, "failed to retrieve storage account reference: %s", c.Spec.AccountReference.Name)
+	}
+
+	if acct.GetWriteConnectionSecretToReference() == nil {
+		return nil, errors.New(errAcctSecretNil)
 	}
 
 	// Retrieve storage account secret
