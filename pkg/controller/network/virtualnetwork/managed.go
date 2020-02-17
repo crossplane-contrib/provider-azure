@@ -40,6 +40,7 @@ import (
 
 // Error strings.
 const (
+	errProviderSecretNil    = "provider does not have a secret reference"
 	errNewClient            = "cannot create new VirtualNetworks client"
 	errNotVirtualNetwork    = "managed resource is not an VirtualNetwork"
 	errCreateVirtualNetwork = "cannot create VirtualNetwork"
@@ -78,6 +79,10 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	n := meta.NamespacedNameOf(g.Spec.ProviderReference)
 	if err := c.client.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	s := &corev1.Secret{}

@@ -45,6 +45,7 @@ const (
 	errUpdateRedisCRFailed     = "cannot update Redis custom resource instance"
 	errGetProviderFailed       = "cannot get provider"
 	errGetProviderSecretFailed = "cannot get provider secret"
+	errProviderSecretNil       = "provider does not have a secret reference"
 
 	errConnectFailed        = "cannot connect to Azure API"
 	errGetFailed            = "cannot get Redis instance from Azure API"
@@ -81,6 +82,10 @@ func (c connector) Connect(ctx context.Context, mg resource.Managed) (managed.Ex
 	p := &azurev1alpha3.Provider{}
 	if err := c.kube.Get(ctx, meta.NamespacedNameOf(cr.Spec.ProviderReference), p); err != nil {
 		return nil, errors.Wrap(err, errGetProviderFailed)
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	s := &corev1.Secret{}

@@ -80,7 +80,7 @@ var (
 		ObjectMeta: metav1.ObjectMeta{Name: providerName},
 		Spec: azurev1alpha3.ProviderSpec{
 			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: runtimev1alpha1.SecretKeySelector{
+				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
 					SecretReference: runtimev1alpha1.SecretReference{
 						Namespace: namespace,
 						Name:      providerSecretName,
@@ -240,6 +240,30 @@ func TestConnect(t *testing.T) {
 			},
 			want: want{
 				err: errors.Wrap(errorBoom, errGetProviderSecretFailed),
+			},
+		},
+		"ProviderSecretGetNilFailed": {
+			args: args{
+				cr: instance(),
+				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
+					return &fake.MockClient{}, nil
+				},
+				kube: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							nilSecretProvider := provider
+							nilSecretProvider.SetCredentialsSecretReference(nil)
+							*obj.(*azurev1alpha3.Provider) = nilSecretProvider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							return errorBoom
+						}
+						return nil
+					},
+				},
+			},
+			want: want{
+				err: errors.New(errProviderSecretNil),
 			},
 		},
 		"ClientFnFailed": {

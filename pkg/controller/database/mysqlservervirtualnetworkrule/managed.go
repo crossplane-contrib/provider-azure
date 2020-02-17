@@ -41,6 +41,7 @@ import (
 // Error strings.
 const (
 	errNewClient                           = "cannot create new MySQLServerVirtualNetworkRule"
+	errProviderSecretNil                   = "provider does not have a secret reference"
 	errNotMySQLServerVirtualNetworkRule    = "managed resource is not an MySQLServerVirtualNetworkRule"
 	errCreateMySQLServerVirtualNetworkRule = "cannot create MySQLServerVirtualNetworkRule"
 	errUpdateMySQLServerVirtualNetworkRule = "cannot update MySQLServerVirtualNetworkRule"
@@ -78,6 +79,10 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	n := meta.NamespacedNameOf(v.Spec.ProviderReference)
 	if err := c.client.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	s := &corev1.Secret{}

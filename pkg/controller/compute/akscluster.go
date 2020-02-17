@@ -60,6 +60,7 @@ const (
 // Error strings
 const (
 	errUpdateManagedStatus = "cannot update managed resource status"
+	errProviderSecretNil   = "provider does not have a secret reference"
 )
 
 var (
@@ -176,6 +177,10 @@ func (r *Reconciler) connect(instance *computev1alpha3.AKSCluster) (*compute.AKS
 	n := types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
 	if err := r.Get(ctx, n, s); err != nil {
 		return nil, errors.Wrap(err, "failed to get provider secret")
+	}
+
+	if p.GetCredentialsSecretReference() == nil {
+		return nil, errors.New(errProviderSecretNil)
 	}
 
 	c, err := r.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])

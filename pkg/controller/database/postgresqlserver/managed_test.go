@@ -22,24 +22,24 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/crossplaneio/stack-azure/pkg/clients/database"
-
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
-
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
+	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
 	"github.com/crossplaneio/crossplane-runtime/pkg/test"
 
 	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	"github.com/crossplaneio/stack-azure/pkg/clients/database"
 )
 
 var (
@@ -109,6 +109,34 @@ func postgresqlserver(m ...modifier) *v1beta1.PostgreSQLServer {
 	return p
 }
 
+var (
+	namespace          = "coolNamespace"
+	providerName       = "cool-aws"
+	providerSecretName = "cool-aws-secret"
+	providerSecretKey  = "credentials"
+	providerSecretData = "definitelyini"
+
+	provider = azurev1alpha3.Provider{
+		ObjectMeta: metav1.ObjectMeta{Name: providerName},
+		Spec: azurev1alpha3.ProviderSpec{
+			ProviderSpec: runtimev1alpha1.ProviderSpec{
+				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
+					SecretReference: runtimev1alpha1.SecretReference{
+						Namespace: namespace,
+						Name:      providerSecretName,
+					},
+					Key: providerSecretKey,
+				},
+			},
+		},
+	}
+
+	providerSecret = corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerSecretName},
+		Data:       map[string][]byte{providerSecretKey: []byte(providerSecretData)},
+	}
+)
+
 func TestConnect(t *testing.T) {
 	errBoom := errors.New("boom")
 
@@ -147,34 +175,66 @@ func TestConnect(t *testing.T) {
 			},
 			want: errors.Wrap(errBoom, errGetProvider),
 		},
-		"ErrGetProviderSecret": {
+		"GetProviderSecretFailed": {
 			ec: &connecter{
-				client: &test.MockClient{MockGet: test.NewMockGetFn(nil, func(obj runtime.Object) error {
-					switch obj.(type) {
-					case *azurev1alpha3.Provider:
+				client: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							*obj.(*azurev1alpha3.Provider) = provider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							return errBoom
+						}
 						return nil
-					case *corev1.Secret:
-						return errBoom
-					default:
-						return errors.New("unexpected type")
-					}
-				})},
-				newClientFn: func(credentials []byte) (database.PostgreSQLServerAPI, error) { return nil, nil },
+					},
+				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{})),
+				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{Name: providerName})),
 			},
-			want: errors.Wrap(errBoom, errGetProviderSecret),
+			want: errors.Wrapf(errBoom, errGetProviderSecret),
+		},
+		"GetProviderSecretNil": {
+			ec: &connecter{
+				client: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							nilSecretProvider := provider
+							nilSecretProvider.SetCredentialsSecretReference(nil)
+							*obj.(*azurev1alpha3.Provider) = nilSecretProvider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							return errBoom
+						}
+						return nil
+					},
+				},
+			},
+			args: args{
+				ctx: context.Background(),
+				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			},
+			want: errors.New(errProviderSecretNil),
 		},
 		"Successful": {
 			ec: &connecter{
-				client:      &test.MockClient{MockGet: test.NewMockGetFn(nil)},
+				client: &test.MockClient{
+					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+						switch key {
+						case client.ObjectKey{Name: providerName}:
+							*obj.(*azurev1alpha3.Provider) = provider
+						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
+							*obj.(*corev1.Secret) = providerSecret
+						}
+						return nil
+					},
+				},
 				newClientFn: func(credentials []byte) (database.PostgreSQLServerAPI, error) { return nil, nil },
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{})),
+				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{Name: providerName})),
 			},
 			want: nil,
 		},
