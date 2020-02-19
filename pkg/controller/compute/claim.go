@@ -25,16 +25,16 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/event"
-	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimbinding"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimdefaulting"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/claimscheduling"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	computev1alpha1 "github.com/crossplaneio/crossplane/apis/compute/v1alpha1"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/event"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/claimbinding"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/claimdefaulting"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/claimscheduling"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	computev1alpha1 "github.com/crossplane/crossplane/apis/compute/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
+	"github.com/crossplane/stack-azure/apis/compute/v1alpha3"
 )
 
 // SetupAKSClusterClaimScheduling adds a controller that reconciles

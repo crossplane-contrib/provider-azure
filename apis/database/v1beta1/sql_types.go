@@ -19,11 +19,11 @@ package v1beta1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/pkg/errors"
 
-	apisv1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	apisv1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
 )
 
 // Possible state strings for SQL types.

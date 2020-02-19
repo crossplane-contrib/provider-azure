@@ -24,7 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 )
 
 // AccountParameters define the desired state of an Azure Blob Storage Account.
@@ -156,14 +156,14 @@ type ContainerSpec struct {
 	// ClaimReference specifies the resource claim to which this managed
 	// resource will be bound. ClaimReference is set automatically during
 	// dynamic provisioning. Crossplane does not currently support setting this
-	// field manually, per https://github.com/crossplaneio/crossplane-runtime/issues/19
+	// field manually, per https://github.com/crossplane/crossplane-runtime/issues/19
 	// +optional
 	ClaimReference *corev1.ObjectReference `json:"claimRef,omitempty"`
 
 	// ClassReference specifies the non-portable resource class that was used to
 	// dynamically provision this managed resource, if any. Crossplane does not
 	// currently support setting this field manually, per
-	// https://github.com/crossplaneio/crossplane-runtime/issues/20
+	// https://github.com/crossplane/crossplane-runtime/issues/20
 	// +optional
 	ClassReference *corev1.ObjectReference `json:"classRef,omitempty"`
 
@@ -172,7 +172,7 @@ type ContainerSpec struct {
 	// deletes the external resource, while "Retain" (the default) does not.
 	// Note this behaviour is subtly different from other uses of the
 	// ReclaimPolicy concept within the Kubernetes ecosystem per
-	// https://github.com/crossplaneio/crossplane-runtime/issues/21
+	// https://github.com/crossplane/crossplane-runtime/issues/21
 	// +optional
 	ReclaimPolicy runtimev1alpha1.ReclaimPolicy `json:"reclaimPolicy,omitempty"`
 }

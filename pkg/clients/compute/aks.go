@@ -23,9 +23,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
 	"github.com/Azure/go-autorest/autorest/to"
 
-	computev1alpha3 "github.com/crossplaneio/stack-azure/apis/compute/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-	"github.com/crossplaneio/stack-azure/pkg/clients/authorization"
+	computev1alpha3 "github.com/crossplane/stack-azure/apis/compute/v1alpha3"
+	azure "github.com/crossplane/stack-azure/pkg/clients"
+	"github.com/crossplane/stack-azure/pkg/clients/authorization"
 )
 
 const (

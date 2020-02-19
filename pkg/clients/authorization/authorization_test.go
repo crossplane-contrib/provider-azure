@@ -24,9 +24,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/pkg/clients/authorization/fake"
+	"github.com/crossplane/stack-azure/pkg/clients/authorization/fake"
 )
 
 const (

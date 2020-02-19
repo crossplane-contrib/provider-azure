@@ -31,15 +31,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
-	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+	"github.com/crossplane/stack-azure/apis/database/v1beta1"
+	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
+	"github.com/crossplane/stack-azure/pkg/clients/database"
 )
 
 var (
