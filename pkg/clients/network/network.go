@@ -26,8 +26,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/stack-azure/apis/network/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplane/stack-azure/apis/network/v1alpha3"
+	azure "github.com/crossplane/stack-azure/pkg/clients"
 )
 
 // A VirtualNetworksClient handles CRUD operations for Azure Virtual Networks.

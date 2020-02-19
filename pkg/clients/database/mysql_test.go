@@ -26,10 +26,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplane/stack-azure/apis/database/v1alpha3"
+	azure "github.com/crossplane/stack-azure/pkg/clients"
 )
 
 const (

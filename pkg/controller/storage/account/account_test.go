@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/crossplaneio/stack-azure/apis"
+	"github.com/crossplane/stack-azure/apis"
 
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 	"github.com/Azure/go-autorest/autorest"
@@ -41,16 +41,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/apis/storage/v1alpha3"
-	v1alpha3test "github.com/crossplaneio/stack-azure/apis/storage/v1alpha3/test"
-	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azurestorage "github.com/crossplaneio/stack-azure/pkg/clients/storage"
-	azurestoragefake "github.com/crossplaneio/stack-azure/pkg/clients/storage/fake"
+	"github.com/crossplane/stack-azure/apis/storage/v1alpha3"
+	v1alpha3test "github.com/crossplane/stack-azure/apis/storage/v1alpha3/test"
+	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
+	azurestorage "github.com/crossplane/stack-azure/pkg/clients/storage"
+	azurestoragefake "github.com/crossplane/stack-azure/pkg/clients/storage/fake"
 )
 
 func init() {

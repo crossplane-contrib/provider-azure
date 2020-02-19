@@ -26,8 +26,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/stack-azure/apis/cache/v1beta1"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	"github.com/crossplane/stack-azure/apis/cache/v1beta1"
+	azure "github.com/crossplane/stack-azure/pkg/clients"
 )
 
 // Resource states

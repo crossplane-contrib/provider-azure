@@ -28,7 +28,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 
-	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	"github.com/crossplane/stack-azure/apis/v1alpha3"
 )
 
 const (

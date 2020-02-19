@@ -29,9 +29,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/onsi/gomega"
 
-	"github.com/crossplaneio/crossplane-runtime/pkg/test"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplaneio/stack-azure/apis/v1alpha3"
+	"github.com/crossplane/stack-azure/apis/v1alpha3"
 )
 
 const (

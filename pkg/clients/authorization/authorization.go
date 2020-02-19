@@ -23,7 +23,7 @@ import (
 	authorizationmgmt "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization/authorizationapi"
 
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
+	azure "github.com/crossplane/stack-azure/pkg/clients"
 )
 
 const (

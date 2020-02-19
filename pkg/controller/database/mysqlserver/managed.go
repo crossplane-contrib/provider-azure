@@ -26,18 +26,18 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplaneio/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplaneio/crossplane-runtime/pkg/event"
-	"github.com/crossplaneio/crossplane-runtime/pkg/logging"
-	"github.com/crossplaneio/crossplane-runtime/pkg/meta"
-	"github.com/crossplaneio/crossplane-runtime/pkg/password"
-	"github.com/crossplaneio/crossplane-runtime/pkg/reconciler/managed"
-	"github.com/crossplaneio/crossplane-runtime/pkg/resource"
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/event"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+	"github.com/crossplane/crossplane-runtime/pkg/password"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplaneio/stack-azure/apis/database/v1beta1"
-	azurev1alpha3 "github.com/crossplaneio/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplaneio/stack-azure/pkg/clients"
-	"github.com/crossplaneio/stack-azure/pkg/clients/database"
+	"github.com/crossplane/stack-azure/apis/database/v1beta1"
+	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
+	azure "github.com/crossplane/stack-azure/pkg/clients"
+	"github.com/crossplane/stack-azure/pkg/clients/database"
 )
 
 // Error strings.
