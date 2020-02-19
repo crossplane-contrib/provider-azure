@@ -8,4 +8,4 @@ overview: |
 readme: |
  Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides a storage account, which is satisfied by [Azure Blob Storage Accounts](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-overview).
 
- Full documentation can be found in the Crossplane [API Reference docs](https://crossplane.io/docs/master/api/crossplaneio/stack-azure/storage-azure-crossplane-io-v1alpha3.html#AccountClass).
+ Full documentation can be found in the Crossplane [API Reference docs](https://crossplane.io/docs/master/api/crossplane/stack-azure/storage-azure-crossplane-io-v1alpha3.html#AccountClass).
