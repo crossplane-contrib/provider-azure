@@ -40,9 +40,9 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
-	"github.com/crossplane/stack-azure/pkg/clients/resourcegroup"
-	fakerg "github.com/crossplane/stack-azure/pkg/clients/resourcegroup/fake"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/pkg/clients/resourcegroup"
+	fakerg "github.com/crossplane/provider-azure/pkg/clients/resourcegroup/fake"
 )
 
 const (

@@ -23,7 +23,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/pkg/errors"
 
-	apisv1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
+	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 // Possible state strings for SQL types.

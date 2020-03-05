@@ -21,17 +21,17 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
-	"github.com/crossplane/stack-azure/pkg/controller/cache"
-	"github.com/crossplane/stack-azure/pkg/controller/compute"
-	"github.com/crossplane/stack-azure/pkg/controller/database/mysqlserver"
-	"github.com/crossplane/stack-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
-	"github.com/crossplane/stack-azure/pkg/controller/database/postgresqlserver"
-	"github.com/crossplane/stack-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
-	"github.com/crossplane/stack-azure/pkg/controller/network/subnet"
-	"github.com/crossplane/stack-azure/pkg/controller/network/virtualnetwork"
-	"github.com/crossplane/stack-azure/pkg/controller/resourcegroup"
-	"github.com/crossplane/stack-azure/pkg/controller/storage/account"
-	"github.com/crossplane/stack-azure/pkg/controller/storage/container"
+	"github.com/crossplane/provider-azure/pkg/controller/cache"
+	"github.com/crossplane/provider-azure/pkg/controller/compute"
+	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserver"
+	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
+	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
+	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
+	"github.com/crossplane/provider-azure/pkg/controller/resourcegroup"
+	"github.com/crossplane/provider-azure/pkg/controller/storage/account"
+	"github.com/crossplane/provider-azure/pkg/controller/storage/container"
 )
 
 // Setup Azure controllers.

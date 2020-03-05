@@ -32,7 +32,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	cachev1alpha1 "github.com/crossplane/crossplane/apis/cache/v1alpha1"
 
-	"github.com/crossplane/stack-azure/apis/cache/v1beta1"
+	"github.com/crossplane/provider-azure/apis/cache/v1beta1"
 )
 
 const (

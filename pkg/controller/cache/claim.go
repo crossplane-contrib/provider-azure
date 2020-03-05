@@ -32,7 +32,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	cachev1alpha1 "github.com/crossplane/crossplane/apis/cache/v1alpha1"
 
-	"github.com/crossplane/stack-azure/apis/cache/v1beta1"
+	"github.com/crossplane/provider-azure/apis/cache/v1beta1"
 )
 
 // SetupRedisClaimScheduling adds a controller that reconciles RedisCluster

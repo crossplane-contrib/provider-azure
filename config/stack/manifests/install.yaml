@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: stack-azure
+  name: provider-azure
   labels:
-    core.crossplane.io/name: "stack-azure"
+    core.crossplane.io/name: "provider-azure"
 spec:
   selector:
     matchLabels:
-      core.crossplane.io/name: "stack-azure"
+      core.crossplane.io/name: "provider-azure"
   replicas: 1
   template:
     metadata:
-      name: "stack-azure-controller"
+      name: "provider-azure-controller"
       labels:
-        core.crossplane.io/name: "stack-azure"
+        core.crossplane.io/name: "provider-azure"
     spec:
       containers:
-      - name: "stack-azure-controller"
-        image: "crossplane/stack-azure:master"
+      - name: "provider-azure-controller"
+        image: "crossplane/provider-azure:master"
         env:
         - name: POD_NAME
           valueFrom:

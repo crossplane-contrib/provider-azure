@@ -31,7 +31,7 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane/stack-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 const (

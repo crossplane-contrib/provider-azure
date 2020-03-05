@@ -35,8 +35,8 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane/stack-azure/apis/v1alpha3"
-	"github.com/crossplane/stack-azure/pkg/clients/resourcegroup"
+	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/pkg/clients/resourcegroup"
 )
 
 const (

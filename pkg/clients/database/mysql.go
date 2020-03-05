@@ -32,10 +32,10 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	azuredbv1alpha3 "github.com/crossplane/stack-azure/apis/database/v1alpha3"
-	azuredbv1beta1 "github.com/crossplane/stack-azure/apis/database/v1beta1"
-	"github.com/crossplane/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplane/stack-azure/pkg/clients"
+	azuredbv1alpha3 "github.com/crossplane/provider-azure/apis/database/v1alpha3"
+	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/database/v1beta1"
+	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 // NOTE: postgresql and mysql structs and functions live in their respective

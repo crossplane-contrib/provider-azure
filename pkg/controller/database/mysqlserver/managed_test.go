@@ -37,9 +37,9 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crossplane/stack-azure/apis/database/v1beta1"
-	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
-	"github.com/crossplane/stack-azure/pkg/clients/database"
+	"github.com/crossplane/provider-azure/apis/database/v1beta1"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/pkg/clients/database"
 )
 
 var (

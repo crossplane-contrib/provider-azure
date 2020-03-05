@@ -38,9 +38,9 @@ import (
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	computev1alpha3 "github.com/crossplane/stack-azure/apis/compute/v1alpha3"
-	azureclients "github.com/crossplane/stack-azure/pkg/clients"
-	"github.com/crossplane/stack-azure/pkg/clients/compute"
+	computev1alpha3 "github.com/crossplane/provider-azure/apis/compute/v1alpha3"
+	azureclients "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane/provider-azure/pkg/clients/compute"
 )
 
 var _ reconcile.Reconciler = &Reconciler{}

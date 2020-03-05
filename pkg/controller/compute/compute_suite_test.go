@@ -40,14 +40,14 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane/stack-azure/apis"
-	"github.com/crossplane/stack-azure/apis/compute/v1alpha3"
-	computev1alpha1 "github.com/crossplane/stack-azure/apis/compute/v1alpha3"
-	computev1alpha3 "github.com/crossplane/stack-azure/apis/compute/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
-	azureclients "github.com/crossplane/stack-azure/pkg/clients"
-	"github.com/crossplane/stack-azure/pkg/clients/compute"
-	localtest "github.com/crossplane/stack-azure/pkg/test"
+	"github.com/crossplane/provider-azure/apis"
+	"github.com/crossplane/provider-azure/apis/compute/v1alpha3"
+	computev1alpha1 "github.com/crossplane/provider-azure/apis/compute/v1alpha3"
+	computev1alpha3 "github.com/crossplane/provider-azure/apis/compute/v1alpha3"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	azureclients "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane/provider-azure/pkg/clients/compute"
+	localtest "github.com/crossplane/provider-azure/pkg/test"
 )
 
 const (
