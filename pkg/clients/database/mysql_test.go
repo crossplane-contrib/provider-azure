@@ -28,8 +28,8 @@ import (
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 
-	"github.com/crossplane/stack-azure/apis/database/v1alpha3"
-	azure "github.com/crossplane/stack-azure/pkg/clients"
+	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 const (

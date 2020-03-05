@@ -37,10 +37,10 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane/stack-azure/apis/storage/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplane/stack-azure/pkg/clients"
-	azurestorage "github.com/crossplane/stack-azure/pkg/clients/storage"
+	"github.com/crossplane/provider-azure/apis/storage/v1alpha3"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
+	azurestorage "github.com/crossplane/provider-azure/pkg/clients/storage"
 )
 
 const (

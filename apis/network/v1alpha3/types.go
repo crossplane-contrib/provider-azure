@@ -23,7 +23,7 @@ import (
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	apisv1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
+	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 // Error strings

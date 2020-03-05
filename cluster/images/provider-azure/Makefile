@@ -6,7 +6,7 @@ include ../../../build/makelib/common.mk
 
 # ====================================================================================
 #  Options
-IMAGE = $(BUILD_REGISTRY)/stack-azure-$(ARCH)
+IMAGE = $(BUILD_REGISTRY)/provider-azure-$(ARCH)
 include ../../../build/makelib/image.mk
 
 # ====================================================================================

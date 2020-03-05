@@ -21,7 +21,7 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"github.com/crossplane/stack-azure/apis/database/v1beta1"
+	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 

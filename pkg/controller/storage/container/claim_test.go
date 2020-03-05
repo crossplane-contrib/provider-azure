@@ -32,7 +32,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	storagev1alpha1 "github.com/crossplane/crossplane/apis/storage/v1alpha1"
 
-	"github.com/crossplane/stack-azure/apis/storage/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 )
 
 var _ claimbinding.ManagedConfigurator = claimbinding.ManagedConfiguratorFn(ConfigureContainer)

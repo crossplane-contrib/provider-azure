@@ -21,7 +21,7 @@ import (
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 
-	storagev1alpha3 "github.com/crossplane/stack-azure/apis/storage/v1alpha3"
+	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	corev1 "k8s.io/api/core/v1"

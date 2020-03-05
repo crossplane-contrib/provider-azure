@@ -24,9 +24,9 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	azure "github.com/crossplane/stack-azure/pkg/clients"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 
-	"github.com/crossplane/stack-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 // A GroupsClient handles CRUD operations for Azure Resource Group resources.

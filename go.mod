@@ -1,4 +1,4 @@
-module github.com/crossplane/stack-azure
+module github.com/crossplane/provider-azure
 
 go 1.13
 

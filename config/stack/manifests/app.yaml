@@ -9,7 +9,7 @@ overview: |-
 
 # Markdown description of this entry
 readme: |
- This `stack-azure` repository is the implementation of a Crossplane infrastructure
+ This `provider-azure` repository is the implementation of a Crossplane infrastructure
  [stack](https://github.com/crossplane/crossplane/blob/master/design/design-doc-stacks.md) for
  [Microsoft Azure](https://azure.microsoft.com/).
  The stack that is built from the source code in this repository can be installed into a Crossplane control plane and adds the following new functionality:
@@ -45,7 +45,7 @@ keywords:
 
 # Links to more information about the application (about page, source code, etc.)
 website: "https://crossplane.io"
-source: "https://github.com/crossplane/stack-azure"
+source: "https://github.com/crossplane/provider-azure"
 
 # RBAC ClusterRoles will be generated permitting this stack to use all verbs on all
 # resources in the groups listed below.

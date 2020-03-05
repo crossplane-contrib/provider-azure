@@ -33,11 +33,11 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	"github.com/Azure/go-autorest/autorest"
 
-	"github.com/crossplane/stack-azure/apis/network/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/stack-azure/apis/v1alpha3"
-	azure "github.com/crossplane/stack-azure/pkg/clients"
-	networkclient "github.com/crossplane/stack-azure/pkg/clients/network"
-	"github.com/crossplane/stack-azure/pkg/clients/network/fake"
+	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
+	networkclient "github.com/crossplane/provider-azure/pkg/clients/network"
+	"github.com/crossplane/provider-azure/pkg/clients/network/fake"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
