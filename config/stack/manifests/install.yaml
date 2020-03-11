@@ -17,7 +17,6 @@ spec:
     spec:
       containers:
       - name: "provider-azure-controller"
-        image: "crossplane/provider-azure:master"
         env:
         - name: POD_NAME
           valueFrom:
