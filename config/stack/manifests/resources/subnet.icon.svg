@@ -1,15 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 17.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 height="50px" width="50px" viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
-<path fill="#3999C6" d="M49.7,25.7c0.5-0.5,0.4-1.3,0-1.8l-2.4-2.4L36.5,11c-0.5-0.5-1.2-0.5-1.7,0l0,0c-0.5,0.5-0.6,1.3,0,1.8
-	l11.3,11.1c0.5,0.5,0.5,1.3,0,1.8L34.6,37.2c-0.5,0.5-0.5,1.3,0,1.8l0,0c0.5,0.5,1.3,0.4,1.7,0l10.7-10.6c0,0,0,0,0.1-0.1L49.7,25.7
-	z"/>
-<path fill="#3999C6" d="M0.3,25.7c-0.5-0.5-0.4-1.3,0-1.8l2.4-2.4L13.5,11c0.5-0.5,1.2-0.5,1.7,0l0,0c0.5,0.5,0.6,1.3,0,1.8
-	L4.1,23.9c-0.5,0.5-0.5,1.3,0,1.8l11.3,11.5c0.5,0.5,0.5,1.3,0,1.8l0,0c-0.5,0.5-1.3,0.4-1.7,0L2.8,28.5c0,0,0,0-0.1-0.1L0.3,25.7z"
-	/>
-<path fill="#7FBA00" d="M18.2,24.8c0,1.9-1.6,3.3-3.3,3.3s-3.5-1.6-3.5-3.3s1.4-3.3,3.5-3.3C16.9,21.5,18.2,23.1,18.2,24.8z"/>
-<path fill="#7FBA00" d="M28.3,24.8c0,1.9-1.6,3.3-3.3,3.3s-3.5-1.6-3.5-3.3s1.6-3.3,3.5-3.3S28.3,23.1,28.3,24.8z"/>
-<circle fill="#7FBA00" cx="35.2" cy="24.8" r="3.3"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="65px" height="65px" viewBox="0 0 65 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Azure/subnet.icon</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Azure/subnet.icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle-Copy-14" fill="#106EBE" fill-rule="nonzero" transform="translate(32.500000, 32.500000) scale(-1, 1) translate(-32.500000, -32.500000) " x="0" y="0" width="65" height="65" rx="16"></rect>
+        <g id="Group-12" transform="translate(15.000000, 28.000000)" fill="#FFFFFF">
+            <path d="M12.6608,4.84615 C12.6608,5.87315 11.8288,6.70615 10.8018,6.70615 C9.7738,6.70615 8.9408,5.87315 8.9408,4.84615 C8.9408,3.81915 9.7738,2.98715 10.8018,2.98715 C11.8288,2.98715 12.6608,3.81915 12.6608,4.84615" id="Fill-1"></path>
+            <path d="M19.817,4.84615 C19.817,5.87315 18.984,6.70615 17.957,6.70615 C16.929,6.70615 16.096,5.87315 16.096,4.84615 C16.096,3.81915 16.929,2.98715 17.957,2.98715 C18.984,2.98715 19.817,3.81915 19.817,4.84615" id="Fill-3"></path>
+            <path d="M26.9733,4.84615 C26.9733,5.87315 26.1403,6.70615 25.1133,6.70615 C24.0853,6.70615 23.2523,5.87315 23.2523,4.84615 C23.2523,3.81915 24.0853,2.98715 25.1133,2.98715 C26.1403,2.98715 26.9733,3.81915 26.9733,4.84615" id="Fill-5"></path>
+            <polygon id="Fill-9" points="4.8463 9.69185 -0.0007 4.84585 4.8463 0.00085 6.5893 1.74385 3.4883 4.84585 6.5893 7.94885"></polygon>
+            <polygon id="Fill-7" points="31.1539 9.69185 29.4099 7.94885 32.5119 4.84585 29.4099 1.74385 31.1539 0.00085 35.9999 4.84585"></polygon>
+        </g>
+    </g>
 </svg>

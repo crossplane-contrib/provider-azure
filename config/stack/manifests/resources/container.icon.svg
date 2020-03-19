@@ -1,23 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 23.0.3, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="50px" height="50px" viewBox="0 0 50 50" enable-background="new 0 0 50 50" xml:space="preserve">
-<path fill="#3E3E3E" d="M44,50H6c-3.314,0-6-2.686-6-6V4h50v40C50,47.314,47.314,50,44,50z"/>
-<rect x="4" y="34" fill="#804998" width="23" height="12"/>
-<rect x="4" y="4" fill="#804998" width="7" height="12"/>
-<rect x="4" y="4" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="7" height="2"/>
-<rect x="14" y="4" fill="#E5E5E5" width="11" height="12"/>
-<rect x="14" y="4" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="11" height="2"/>
-<rect x="28" y="4" fill="#804998" width="4" height="12"/>
-<rect x="28" y="4" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="4" height="2"/>
-<rect x="35" y="4" fill="#59B4D9" width="11" height="12"/>
-<rect x="35" y="4" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="11" height="2"/>
-<rect x="4" y="34" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="23" height="2"/>
-<rect x="30" y="34" fill="#59B4D9" width="16" height="12"/>
-<rect x="30" y="34" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="16" height="2"/>
-<rect x="23" y="19" fill="#E5E5E5" width="23" height="12"/>
-<rect x="23" y="19" transform="matrix(-1 -4.484203e-11 4.484203e-11 -1 69 40)" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="23" height="2"/>
-<rect x="4" y="19" fill="#59B4D9" width="16" height="12"/>
-<rect x="4" y="19" transform="matrix(-1 -4.502011e-11 4.502011e-11 -1 24 40)" opacity="0.2" fill="#FFFFFF" enable-background="new    " width="16" height="2"/>
-<path opacity="0.15" fill="#FFFFFF" enable-background="new    " d="M6,50h2.696L40.081,4H0v40C0,47.314,2.686,50,6,50z"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="65px" height="65px" viewBox="0 0 65 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Azure/container.icon</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Azure/container.icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect id="Rectangle-Copy-13" fill="#106EBE" fill-rule="nonzero" transform="translate(32.500000, 32.500000) scale(-1, 1) translate(-32.500000, -32.500000) " x="0" y="0" width="65" height="65" rx="16"></rect>
+        <g id="Group-7" transform="translate(16.000000, 13.000000)" fill="#FFFFFF">
+            <path d="M16.6905,-0.0004 L-0.0005,9.6356 L-0.0005,28.9076 L16.6905,38.5426 L33.3805,28.9076 L33.3805,9.6356 L16.6905,-0.0004 Z M2.2035,27.6356 L2.2035,10.9076 L16.6905,2.5426 L31.1765,10.9076 L31.1765,27.6356 L16.6905,35.9996 L2.2035,27.6356 Z" id="Fill-1"></path>
+            <polygon id="Fill-2" points="15.589 37.272 17.792 37.272 17.792 19.272 15.589 19.272"></polygon>
+            <polygon id="Fill-3" points="16.6905 17.9996 1.6525 9.3176 0.5505 11.2256 16.6905 20.5426 32.8295 11.2256 31.7275 9.3176"></polygon>
+            <polygon id="Fill-4" points="6.2197 27.8545 6.2197 17.4645 4.0197 16.2045 4.0197 26.5945"></polygon>
+            <polygon id="Fill-5" points="9.3691 19.2744 9.3691 29.6644 7.1591 28.3944 7.1591 18.0044"></polygon>
+            <polygon id="Fill-6" points="12.5098 21.084 12.5098 31.465 12.4988 31.465 10.3098 30.204 10.3098 19.814"></polygon>
+        </g>
+    </g>
 </svg>
