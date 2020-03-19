@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="65px" height="65px" viewBox="0 0 65 65" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
-    <title>Application Icons/Azure/65x65</title>
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>icon</title>
     <desc>Created with Sketch.</desc>
-    <g id="Application-Icons/Azure/65x65" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <g id="icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
         <rect id="Rectangle-Copy-13" fill="#1A1A1F" fill-rule="nonzero" x="0" y="0" width="65" height="65" rx="16"></rect>
         <g id="Group" transform="translate(18.000000, 18.000000)" fill-rule="nonzero" stroke-width="0.5">
             <path d="M0.00314163745,0.44519229 C0.00314163745,0.302421701 0.00314163745,0.151252842 0.0115431131,0 C4.67436208,0.00848225266 9.33718104,0 14,0.00848225266 L14,13.9916017 C9.33718104,14.0083983 4.67436208,13.9916017 0.0115431131,14 C-0.0136613138,9.48173076 0.0115431131,4.96346153 0.00314163745,0.44519229 Z" id="Path" stroke="#F25022" fill="#F25022"></path>
