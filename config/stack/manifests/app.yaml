@@ -1,5 +1,5 @@
 # Human readable title of application.
-title: Crossplane Azure Provider
+title: Azure Provider
 
 overviewShort: The Azure Crossplane provider enables infrastructure management with the Microsft Azure Cloud Platform.
 overview: |-
