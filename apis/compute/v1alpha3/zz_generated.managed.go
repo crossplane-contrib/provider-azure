@@ -43,6 +43,11 @@ func (mg *AKSCluster) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1al
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this AKSCluster.
+func (mg *AKSCluster) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this AKSCluster.
 func (mg *AKSCluster) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -71,6 +76,11 @@ func (mg *AKSCluster) SetClassReference(r *corev1.ObjectReference) {
 // SetConditions of this AKSCluster.
 func (mg *AKSCluster) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this AKSCluster.
+func (mg *AKSCluster) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this AKSCluster.

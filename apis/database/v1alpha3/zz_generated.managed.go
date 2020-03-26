@@ -43,6 +43,11 @@ func (mg *MySQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.Conditi
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this MySQLServerVirtualNetworkRule.
 func (mg *MySQLServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -71,6 +76,11 @@ func (mg *MySQLServerVirtualNetworkRule) SetClassReference(r *corev1.ObjectRefer
 // SetConditions of this MySQLServerVirtualNetworkRule.
 func (mg *MySQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this MySQLServerVirtualNetworkRule.
@@ -103,6 +113,11 @@ func (mg *PostgreSQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.Co
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this PostgreSQLServerVirtualNetworkRule.
 func (mg *PostgreSQLServerVirtualNetworkRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -131,6 +146,11 @@ func (mg *PostgreSQLServerVirtualNetworkRule) SetClassReference(r *corev1.Object
 // SetConditions of this PostgreSQLServerVirtualNetworkRule.
 func (mg *PostgreSQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this PostgreSQLServerVirtualNetworkRule.
