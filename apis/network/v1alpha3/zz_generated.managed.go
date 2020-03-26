@@ -43,6 +43,11 @@ func (mg *Subnet) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this Subnet.
+func (mg *Subnet) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this Subnet.
 func (mg *Subnet) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -71,6 +76,11 @@ func (mg *Subnet) SetClassReference(r *corev1.ObjectReference) {
 // SetConditions of this Subnet.
 func (mg *Subnet) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this Subnet.
+func (mg *Subnet) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this Subnet.
@@ -103,6 +113,11 @@ func (mg *VirtualNetwork) GetCondition(ct runtimev1alpha1.ConditionType) runtime
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this VirtualNetwork.
+func (mg *VirtualNetwork) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this VirtualNetwork.
 func (mg *VirtualNetwork) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -131,6 +146,11 @@ func (mg *VirtualNetwork) SetClassReference(r *corev1.ObjectReference) {
 // SetConditions of this VirtualNetwork.
 func (mg *VirtualNetwork) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this VirtualNetwork.
+func (mg *VirtualNetwork) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this VirtualNetwork.

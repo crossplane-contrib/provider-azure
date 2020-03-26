@@ -43,6 +43,11 @@ func (mg *Account) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this Account.
+func (mg *Account) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this Account.
 func (mg *Account) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -71,6 +76,11 @@ func (mg *Account) SetClassReference(r *corev1.ObjectReference) {
 // SetConditions of this Account.
 func (mg *Account) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this Account.
+func (mg *Account) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this Account.

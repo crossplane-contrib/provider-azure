@@ -43,6 +43,11 @@ func (mg *MySQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1a
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this MySQLServer.
+func (mg *MySQLServer) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this MySQLServer.
 func (mg *MySQLServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -71,6 +76,11 @@ func (mg *MySQLServer) SetClassReference(r *corev1.ObjectReference) {
 // SetConditions of this MySQLServer.
 func (mg *MySQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this MySQLServer.
+func (mg *MySQLServer) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this MySQLServer.
@@ -103,6 +113,11 @@ func (mg *PostgreSQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runti
 	return mg.Status.GetCondition(ct)
 }
 
+// GetProviderReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
 // GetReclaimPolicy of this PostgreSQLServer.
 func (mg *PostgreSQLServer) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return mg.Spec.ReclaimPolicy
@@ -131,6 +146,11 @@ func (mg *PostgreSQLServer) SetClassReference(r *corev1.ObjectReference) {
 // SetConditions of this PostgreSQLServer.
 func (mg *PostgreSQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
 }
 
 // SetReclaimPolicy of this PostgreSQLServer.

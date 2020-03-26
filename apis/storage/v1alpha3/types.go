@@ -263,6 +263,21 @@ func (c *Container) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
 	c.Spec.ReclaimPolicy = p
 }
 
+// GetProviderReference of this Container.
+func (c *Container) GetProviderReference() *corev1.ObjectReference {
+	return &corev1.ObjectReference{
+		Name:      c.Spec.AccountReference.Name,
+		Namespace: c.GetNamespace(),
+	}
+}
+
+// SetProviderReference of this Container.
+func (c *Container) SetProviderReference(r *corev1.ObjectReference) {
+	c.Spec.AccountReference = corev1.LocalObjectReference{
+		Name: r.Name,
+	}
+}
+
 // GetContainerName based on the NameFormat spec value,
 // If name format is not provided, container name defaults to UID
 // If name format provided with '%s' value, container name will result in formatted string + UID,
