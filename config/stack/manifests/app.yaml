@@ -12,7 +12,7 @@ readme: |
 
  * Custom Resource Definitions (CRDs) that model Azure infrastructure and services (e.g. [Azure Database for MySQL](https://azure.microsoft.com/en-us/services/mysql/), [AKS clusters](https://azure.microsoft.com/en-us/services/kubernetes-service/), etc.)
  * Controllers to provision these resources in Azure based on the users desired state captured in CRDs they create
- * Implementations of Crossplane's [portable resource abstractions](https://crossplane.io/docs/master/concepts.html), enabling Azure resources to fulfill a user's general need for cloud services
+ * Implementations of Crossplane's portable resource abstractions, enabling Azure resources to fulfill a user's general need for cloud services
 
 # Maintainer names and emails.
 maintainers:
