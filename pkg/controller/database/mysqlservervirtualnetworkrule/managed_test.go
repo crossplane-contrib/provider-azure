@@ -231,7 +231,7 @@ func TestObserve(t *testing.T) {
 						VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 							VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
 							IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(true),
-							State:                            mysql.Ready,
+							State:                            mysql.VirtualNetworkRuleStateReady,
 						},
 					}, nil
 				},

@@ -230,7 +230,7 @@ func TestObserve(t *testing.T) {
 						VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 							VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
 							IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(true),
-							State:                            postgresql.Ready,
+							State:                            postgresql.VirtualNetworkRuleStateReady,
 						},
 					}, nil
 				},

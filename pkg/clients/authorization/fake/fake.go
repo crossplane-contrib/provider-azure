@@ -27,16 +27,20 @@ var _ authorizationapi.RoleAssignmentsClientAPI = &MockRoleAssignmentsClient{}
 
 // MockRoleAssignmentsClient is a fake implementation of network.RoleAssignmentsClient.
 type MockRoleAssignmentsClient struct {
-	MockCreate               func(ctx context.Context, scope string, roleAssignmentName string, parameters authorizationmgmt.RoleAssignmentCreateParameters) (result authorizationmgmt.RoleAssignment, err error)
-	MockCreateByID           func(ctx context.Context, roleAssignmentID string, parameters authorizationmgmt.RoleAssignmentCreateParameters) (result authorizationmgmt.RoleAssignment, err error)
-	MockDelete               func(ctx context.Context, scope string, roleAssignmentName string) (result authorizationmgmt.RoleAssignment, err error)
-	MockDeleteByID           func(ctx context.Context, roleAssignmentID string) (result authorizationmgmt.RoleAssignment, err error)
-	MockGet                  func(ctx context.Context, scope string, roleAssignmentName string) (result authorizationmgmt.RoleAssignment, err error)
-	MockGetByID              func(ctx context.Context, roleAssignmentID string) (result authorizationmgmt.RoleAssignment, err error)
-	MockList                 func(ctx context.Context, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
-	MockListForResource      func(ctx context.Context, resourceGroupName string, resourceProviderNamespace string, parentResourcePath string, resourceType string, resourceName string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
-	MockListForResourceGroup func(ctx context.Context, resourceGroupName string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
-	MockListForScope         func(ctx context.Context, scope string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
+	MockCreate                       func(ctx context.Context, scope string, roleAssignmentName string, parameters authorizationmgmt.RoleAssignmentCreateParameters) (result authorizationmgmt.RoleAssignment, err error)
+	MockCreateByID                   func(ctx context.Context, roleAssignmentID string, parameters authorizationmgmt.RoleAssignmentCreateParameters) (result authorizationmgmt.RoleAssignment, err error)
+	MockDelete                       func(ctx context.Context, scope string, roleAssignmentName string) (result authorizationmgmt.RoleAssignment, err error)
+	MockDeleteByID                   func(ctx context.Context, roleAssignmentID string) (result authorizationmgmt.RoleAssignment, err error)
+	MockGet                          func(ctx context.Context, scope string, roleAssignmentName string) (result authorizationmgmt.RoleAssignment, err error)
+	MockGetByID                      func(ctx context.Context, roleAssignmentID string) (result authorizationmgmt.RoleAssignment, err error)
+	MockList                         func(ctx context.Context, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
+	MockListComplete                 func(ctx context.Context, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error)
+	MockListForResource              func(ctx context.Context, resourceGroupName string, resourceProviderNamespace string, parentResourcePath string, resourceType string, resourceName string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
+	MockListForResourceComplete      func(ctx context.Context, resourceGroupName string, resourceProviderNamespace string, parentResourcePath string, resourceType string, resourceName string, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error)
+	MockListForResourceGroup         func(ctx context.Context, resourceGroupName string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
+	MockListForResourceGroupComplete func(ctx context.Context, resourceGroupName string, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error)
+	MockListForScope                 func(ctx context.Context, scope string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error)
+	MockListForScopeComplete         func(ctx context.Context, scope string, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error)
 }
 
 // Create calls the MockRoleAssignmentsClient's MockCreate method.
@@ -74,9 +78,19 @@ func (c *MockRoleAssignmentsClient) List(ctx context.Context, filter string) (re
 	return c.MockList(ctx, filter)
 }
 
+// ListComplete calls the MockRoleAssignmentsClient's MockListComplete method.
+func (c *MockRoleAssignmentsClient) ListComplete(ctx context.Context, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error) {
+	return c.MockListComplete(ctx, filter)
+}
+
 // ListForResource calls the MockRoleAssignmentsClient's MockListForResource method.
 func (c *MockRoleAssignmentsClient) ListForResource(ctx context.Context, resourceGroupName string, resourceProviderNamespace string, parentResourcePath string, resourceType string, resourceName string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error) {
 	return c.MockListForResource(ctx, resourceGroupName, resourceProviderNamespace, parentResourcePath, resourceType, resourceName, filter)
+}
+
+// ListForResourceComplete calls the MockRoleAssignmentsClient's MockListForResourceComplete method.
+func (c *MockRoleAssignmentsClient) ListForResourceComplete(ctx context.Context, resourceGroupName string, resourceProviderNamespace string, parentResourcePath string, resourceType string, resourceName string, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error) {
+	return c.MockListForResourceComplete(ctx, resourceGroupName, resourceProviderNamespace, parentResourcePath, resourceType, resourceName, filter)
 }
 
 // ListForResourceGroup calls the MockRoleAssignmentsClient's MockListForResourceGroup method.
@@ -84,7 +98,17 @@ func (c *MockRoleAssignmentsClient) ListForResourceGroup(ctx context.Context, re
 	return c.MockListForResourceGroup(ctx, resourceGroupName, filter)
 }
 
+// ListForResourceGroupComplete calls the MockRoleAssignmentsClient's MockListForResourceGroupComplete method.
+func (c *MockRoleAssignmentsClient) ListForResourceGroupComplete(ctx context.Context, resourceGroupName string, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error) {
+	return c.MockListForResourceGroupComplete(ctx, resourceGroupName, filter)
+}
+
 // ListForScope calls the MockRoleAssignmentsClient's MockListForScope method.
 func (c *MockRoleAssignmentsClient) ListForScope(ctx context.Context, scope string, filter string) (result authorizationmgmt.RoleAssignmentListResultPage, err error) {
 	return c.MockListForScope(ctx, scope, filter)
+}
+
+// ListForScopeComplete calls the MockRoleAssignmentsClient's MockListForScopeComplete method.
+func (c *MockRoleAssignmentsClient) ListForScopeComplete(ctx context.Context, scope string, filter string) (result authorizationmgmt.RoleAssignmentListResultIterator, err error) {
+	return c.MockListForScopeComplete(ctx, scope, filter)
 }

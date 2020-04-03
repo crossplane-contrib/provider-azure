@@ -263,7 +263,7 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
-					State:                            mysql.Ready,
+					State:                            mysql.VirtualNetworkRuleStateReady,
 				},
 			},
 			want: v1alpha3.VirtualNetworkRuleStatus{
@@ -280,7 +280,7 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
-					State:                            mysql.Ready,
+					State:                            mysql.VirtualNetworkRuleStateReady,
 				},
 			},
 			want: v1alpha3.VirtualNetworkRuleStatus{
