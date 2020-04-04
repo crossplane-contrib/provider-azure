@@ -225,6 +225,14 @@ func ToStringPtrMap(m map[string]string) map[string]*string {
 	return *(to.StringMapPtr(m))
 }
 
+// ToStringMap converts the supplied map from the Azure Go SDK to internal representation.
+func ToStringMap(m map[string]*string) map[string]string {
+	if m == nil {
+		return nil
+	}
+	return to.StringMap(m)
+}
+
 // ToStringArrayPtr converts []string to *[]string which is expected by Azure API.
 func ToStringArrayPtr(m []string) *[]string {
 	if m == nil {

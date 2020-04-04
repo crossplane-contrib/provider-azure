@@ -164,3 +164,68 @@ func TestIsNotFound(t *testing.T) {
 		g.Expect(actual).To(gomega.Equal(tt.expected))
 	}
 }
+
+func TestStringHelpers(t *testing.T) {
+	t.Run("ToStringMap", func(t *testing.T) {
+		original := make(map[string]*string)
+
+		original["a"] = nil
+		original["b"] = ToStringPtr("hello")
+		original["c"] = ToStringPtr("")
+
+		result := ToStringMap(original)
+
+		if diff := cmp.Diff("", result["a"], test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringMap(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff("hello", result["b"], test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringMap(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff("", result["c"], test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringMap(...): -want error, +got error:\n%s", diff)
+		}
+	})
+
+	t.Run("ToStringPtrMap", func(t *testing.T) {
+		original := make(map[string]string)
+
+		original["a"] = ""
+		original["b"] = "hello"
+
+		result := ToStringPtrMap(original)
+
+		if diff := cmp.Diff("", *result["a"], test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringPtrMap(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff("hello", *result["b"], test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringPtrMap(...): -want error, +got error:\n%s", diff)
+		}
+	})
+
+	t.Run("ToString", func(t *testing.T) {
+		hello := "hello"
+		empty := ""
+
+		if diff := cmp.Diff("", ToString(nil), test.EquateErrors()); diff != "" {
+			t.Errorf("ToString(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff("hello", ToString(&hello), test.EquateErrors()); diff != "" {
+			t.Errorf("ToString(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff("", ToString(&empty), test.EquateErrors()); diff != "" {
+			t.Errorf("ToString(...): -want error, +got error:\n%s", diff)
+		}
+	})
+
+	t.Run("ToStringPtr", func(t *testing.T) {
+		if diff := cmp.Diff("", *ToStringPtr("", FieldRequired), test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringPtr(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff("hello", *ToStringPtr("hello"), test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringPtr(...): -want error, +got error:\n%s", diff)
+		}
+		if diff := cmp.Diff((*string)(nil), ToStringPtr(""), test.EquateErrors()); diff != "" {
+			t.Errorf("ToStringPtr(...): -want error, +got error:\n%s", diff)
+		}
+	})
+}

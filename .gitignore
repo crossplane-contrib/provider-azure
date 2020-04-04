@@ -7,3 +7,4 @@ cover.out
 .vscode
 
 /stack-package
+.DS_Store

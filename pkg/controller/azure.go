@@ -23,6 +23,7 @@ import (
 
 	"github.com/crossplane/provider-azure/pkg/controller/cache"
 	"github.com/crossplane/provider-azure/pkg/controller/compute"
+	"github.com/crossplane/provider-azure/pkg/controller/database/cosmosdb"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserver"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
@@ -56,6 +57,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		postgresqlserver.SetupClaimBinding,
 		postgresqlserver.Setup,
 		postgresqlservervirtualnetworkrule.Setup,
+		cosmosdb.Setup,
 		virtualnetwork.Setup,
 		subnet.Setup,
 		resourcegroup.Setup,
