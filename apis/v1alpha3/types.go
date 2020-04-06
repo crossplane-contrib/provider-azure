@@ -53,9 +53,6 @@ type ProviderList struct {
 type ResourceGroupSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
-	// Name of the resource group.
-	Name string `json:"name,omitempty"`
-
 	// Location of the resource group. See the  official list of valid regions -
 	// https://azure.microsoft.com/en-us/global-infrastructure/regions/
 	Location string `json:"location,omitempty"`
@@ -64,14 +61,10 @@ type ResourceGroupSpec struct {
 // A ResourceGroupStatus represents the observed status of a ResourceGroup.
 type ResourceGroupStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
-
-	// TODO(negz): Do we really need the name in both spec and status?
-
-	// Name of the resource group.
-	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster
 
 // A ResourceGroup is a managed resource that represents an Azure Resource

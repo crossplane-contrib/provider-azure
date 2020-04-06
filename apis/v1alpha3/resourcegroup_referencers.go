@@ -19,6 +19,7 @@ package v1alpha3
 import (
 	"context"
 
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -56,11 +57,7 @@ func (v *ResourceGroupNameReferencer) GetStatus(ctx context.Context, _ resource.
 
 // Build retrieves and builds the name
 func (v *ResourceGroupNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
-	rg := ResourceGroup{}
-	nn := types.NamespacedName{Name: v.Name}
-	if err := reader.Get(ctx, nn, &rg); err != nil {
-		return "", err
-	}
-
-	return rg.Spec.Name, nil
+	rg := &ResourceGroup{}
+	err := reader.Get(ctx, types.NamespacedName{Name: v.Name}, rg)
+	return meta.GetExternalName(rg), err
 }

@@ -22,9 +22,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/google/go-cmp/cmp"
 
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 const (
@@ -40,12 +41,15 @@ func TestNewParameters(t *testing.T) {
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha3.ResourceGroup{
-				Spec: v1alpha3.ResourceGroupSpec{
-					Name:     name,
-					Location: location,
-				},
-			},
+			r: func() *v1alpha3.ResourceGroup {
+				r := &v1alpha3.ResourceGroup{
+					Spec: v1alpha3.ResourceGroupSpec{
+						Location: location,
+					},
+				}
+				meta.SetExternalName(r, name)
+				return r
+			}(),
 			want: resources.Group{
 				Name:     azure.ToStringPtr(name),
 				Location: azure.ToStringPtr(location),

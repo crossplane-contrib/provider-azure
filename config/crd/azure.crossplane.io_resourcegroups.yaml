@@ -15,6 +15,8 @@ spec:
     plural: resourcegroups
     singular: resourcegroup
   scope: Cluster
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: A ResourceGroup is a managed resource that represents an Azure
@@ -115,9 +117,6 @@ spec:
             location:
               description: Location of the resource group. See the  official list
                 of valid regions - https://azure.microsoft.com/en-us/global-infrastructure/regions/
-              type: string
-            name:
-              description: Name of the resource group.
               type: string
             providerRef:
               description: ProviderReference specifies the provider that will be used
@@ -239,9 +238,6 @@ spec:
                 - type
                 type: object
               type: array
-            name:
-              description: Name of the resource group.
-              type: string
           type: object
       required:
       - spec

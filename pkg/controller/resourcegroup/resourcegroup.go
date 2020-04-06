@@ -19,17 +19,15 @@ package resourcegroup
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
@@ -39,126 +37,41 @@ import (
 	"github.com/crossplane/provider-azure/pkg/clients/resourcegroup"
 )
 
-const (
-	controllerName = "azure.resourcegroup"
-	finalizer      = "finalizer." + controllerName
-
-	reconcileTimeout = 1 * time.Minute
-)
-
-// Amounts of time we wait before requeuing a reconcile.
-const (
-	aLongWait = 60 * time.Second
-)
-
 // Error strings
 const (
-	errUpdateManagedStatus = "cannot update managed resource status"
 	errProviderSecretNil   = "provider does not have a secret reference"
+	errNotResourceGroup    = "managed resource is not an ResourceGroup"
+	errCreateResourceGroup = "cannot create ResourceGroup"
+	errGetResourceGroup    = "cannot get ResourceGroup"
+	errDeleteResourceGroup = "cannot delete ResourceGroup"
 )
 
-var errDeleted = errors.New("resource has been deleted on Azure")
+// Setup adds a controller that reconciles ResourceGroups.
+func Setup(mgr ctrl.Manager, l logging.Logger) error {
+	name := managed.ControllerName(v1alpha3.ResourceGroupGroupKind)
 
-// A creator can create resources in an external store - e.g. the Azure API.
-type creator interface {
-	// Create the supplied resource in the external store. Returns true if the
-	// resource requires further reconciliation.
-	Create(ctx context.Context, r *v1alpha3.ResourceGroup) (requeue bool)
+	return ctrl.NewControllerManagedBy(mgr).
+		Named(name).
+		For(&v1alpha3.ResourceGroup{}).
+		Complete(managed.NewReconciler(mgr,
+			resource.ManagedKind(v1alpha3.ResourceGroupGroupVersionKind),
+			managed.WithConnectionPublishers(),
+			managed.WithExternalConnecter(&connecter{kube: mgr.GetClient(), newClientFn: resourcegroup.NewClient}),
+			managed.WithLogger(l.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
-// A syncer can sync resources with an external store - e.g. the Azure API.
-type syncer interface {
-	// Sync the supplied resource with the external store. Returns true if the
-	// resource requires further reconciliation.
-	Sync(ctx context.Context, r *v1alpha3.ResourceGroup) (requeue bool)
+type connecter struct {
+	kube        client.Client
+	newClientFn func(creds []byte) (resourcegroup.GroupsClient, error)
 }
 
-// A deleter can delete resources from an external store - e.g. the Azure API.
-type deleter interface {
-	// Delete the supplied resource from the external store. Returns true if the
-	// resource requires further reconciliation.
-	Delete(ctx context.Context, r *v1alpha3.ResourceGroup) (requeue bool)
-}
-
-// A createsyncdeleter can create, sync, and delete resources in an external
-// store - e.g. the Azure API.
-type createsyncdeleter interface {
-	creator
-	syncer
-	deleter
-}
-
-// azureResourceGroup is a createsyncdeleter using the Azure Groups API.
-type azureResourceGroup struct {
-	client resourcegroup.GroupsClient
-}
-
-func (a *azureResourceGroup) Create(ctx context.Context, r *v1alpha3.ResourceGroup) bool {
-	r.Status.SetConditions(runtimev1alpha1.Creating())
-	if _, err := a.client.CreateOrUpdate(ctx, r.Spec.Name, resourcegroup.NewParameters(r)); err != nil {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return true
+func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
+	r, ok := mg.(*v1alpha3.ResourceGroup)
+	if !ok {
+		return nil, errors.New(errNotResourceGroup)
 	}
 
-	r.Status.Name = r.Spec.Name
-	meta.AddFinalizer(r, finalizer)
-	r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-
-	return true
-}
-
-func (a *azureResourceGroup) Sync(ctx context.Context, r *v1alpha3.ResourceGroup) bool {
-	res, err := a.client.CheckExistence(ctx, r.Spec.Name)
-	if err != nil {
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return true
-	}
-
-	switch res.Response.StatusCode {
-	case http.StatusNoContent:
-		r.Status.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
-		return false
-	case http.StatusNotFound:
-		// Custom error passed to SetFailed due to Azure API returning 404 instead of error
-		r.Status.SetConditions(runtimev1alpha1.ReconcileError(errDeleted))
-		return true
-	}
-
-	r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-	return true
-}
-
-func (a *azureResourceGroup) Delete(ctx context.Context, r *v1alpha3.ResourceGroup) bool {
-	r.Status.SetConditions(runtimev1alpha1.Deleting())
-	if r.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
-		if _, err := a.client.Delete(ctx, r.Spec.Name); err != nil {
-			r.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-			return true
-		}
-	}
-	meta.RemoveFinalizer(r, finalizer)
-	r.Status.SetConditions(runtimev1alpha1.ReconcileSuccess())
-
-	return false
-}
-
-// A connecter returns a createsyncdeleter that can create, sync, and delete
-// Azure Resource Group resources with an external store - for example the Azure API.
-type connecter interface {
-	Connect(context.Context, *v1alpha3.ResourceGroup) (createsyncdeleter, error)
-}
-
-// providerConnecter is a connecter that returns a createsyncdeleter
-// authenticated using credentials read from a Crossplane Provider resource.
-type providerConnecter struct {
-	kube      client.Client
-	newClient func(creds []byte) (resourcegroup.GroupsClient, error)
-}
-
-// Connect returns a createsyncdeleter backed by the Azure API. Azure
-// credentials are read from the Crossplane Provider referenced by the supplied
-// Resource Group.
-func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.ResourceGroup) (createsyncdeleter, error) {
 	p := &v1alpha3.Provider{}
 	n := meta.NamespacedNameOf(r.Spec.ProviderReference)
 	if err := c.kube.Get(ctx, n, p); err != nil {
@@ -175,83 +88,57 @@ func (c *providerConnecter) Connect(ctx context.Context, r *v1alpha3.ResourceGro
 		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
 	}
 
-	client, err := c.newClient(s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &azureResourceGroup{client: client}, errors.Wrap(err, "cannot create new Azure Resource Group client")
+	client, err := c.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])
+	return &external{client: client}, errors.Wrap(err, "cannot create new Azure Resource Group client")
 }
 
-// Reconciler reconciles Resource Group read from the Kubernetes API
-// with an external store, typically the Azure API.
-type Reconciler struct {
-	connecter
-	kube client.Client
-	managed.ReferenceResolver
-
-	log logging.Logger
+// external is a createsyncdeleter using the Azure Groups API.
+type external struct {
+	client resourcegroup.GroupsClient
 }
 
-// Setup adds a controller that reconciles VirtualNetworks.
-func Setup(mgr ctrl.Manager, l logging.Logger) error {
-	name := managed.ControllerName(v1alpha3.ResourceGroupGroupKind)
-
-	r := &Reconciler{
-		connecter:         &providerConnecter{kube: mgr.GetClient(), newClient: resourcegroup.NewClient},
-		kube:              mgr.GetClient(),
-		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
-		log:               l.WithValues("controller", name),
+func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
+	r, ok := mg.(*v1alpha3.ResourceGroup)
+	if !ok {
+		return managed.ExternalObservation{}, errors.New(errNotResourceGroup)
 	}
 
-	return ctrl.NewControllerManagedBy(mgr).
-		Named(name).
-		For(&v1alpha3.ResourceGroup{}).
-		Complete(r)
-}
-
-// Reconcile Azure Resource Group resources with the Azure API.
-func (r *Reconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
-	r.log.Debug("Reconciling", "request", req)
-
-	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
-	defer cancel()
-
-	rg := &v1alpha3.ResourceGroup{}
-	if err := r.kube.Get(ctx, req.NamespacedName, rg); err != nil {
-		if kerrors.IsNotFound(err) {
-			return reconcile.Result{Requeue: false}, nil
-		}
-		return reconcile.Result{Requeue: false}, errors.Wrapf(err, "cannot get resource %s", req.NamespacedName)
-	}
-
-	client, err := r.Connect(ctx, rg)
+	res, err := e.client.CheckExistence(ctx, meta.GetExternalName(r))
 	if err != nil {
-		rg.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return reconcile.Result{Requeue: true}, errors.Wrapf(r.kube.Update(ctx, rg), "cannot update resource %s", req.NamespacedName)
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetResourceGroup)
 	}
 
-	if !resource.IsConditionTrue(rg.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
-		if err := r.ResolveReferences(ctx, rg); err != nil {
-			condition := runtimev1alpha1.ReconcileError(err)
-			if managed.IsReferencesAccessError(err) {
-				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
-			}
-
-			rg.Status.SetConditions(condition)
-			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.kube.Update(ctx, rg), errUpdateManagedStatus)
-		}
-
-		// Add ReferenceResolutionSuccess to the conditions
-		rg.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
+	if res.Response.StatusCode == http.StatusNotFound {
+		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 
-	// The resource has been deleted from the API server. Delete from Azure.
-	if rg.DeletionTimestamp != nil {
-		return reconcile.Result{Requeue: client.Delete(ctx, rg)}, errors.Wrapf(r.kube.Update(ctx, rg), "cannot update resource %s", req.NamespacedName)
+	r.SetConditions(runtimev1alpha1.Available())
+	return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true}, nil
+}
+
+func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
+	r, ok := mg.(*v1alpha3.ResourceGroup)
+	if !ok {
+		return managed.ExternalCreation{}, errors.New(errNotResourceGroup)
 	}
 
-	// The resource is unnamed. Assume it has not been created in Azure.
-	if rg.Status.Name == "" {
-		return reconcile.Result{Requeue: client.Create(ctx, rg)}, errors.Wrapf(r.kube.Update(ctx, rg), "cannot update resource %s", req.NamespacedName)
+	r.Status.SetConditions(runtimev1alpha1.Creating())
+	_, err := e.client.CreateOrUpdate(ctx, meta.GetExternalName(r), resourcegroup.NewParameters(r))
+	return managed.ExternalCreation{}, errors.Wrap(err, errCreateResourceGroup)
+}
+
+func (e *external) Update(_ context.Context, _ resource.Managed) (managed.ExternalUpdate, error) {
+	// TODO(negz): Support updates, if applicable.
+	return managed.ExternalUpdate{}, nil
+}
+
+func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
+	r, ok := mg.(*v1alpha3.ResourceGroup)
+	if !ok {
+		return errors.New(errNotResourceGroup)
 	}
 
-	// The resource exists in the API server and Azure. Sync it.
-	return reconcile.Result{Requeue: client.Sync(ctx, rg)}, errors.Wrapf(r.kube.Update(ctx, rg), "cannot update resource %s", req.NamespacedName)
+	r.Status.SetConditions(runtimev1alpha1.Deleting())
+	_, err := e.client.Delete(ctx, meta.GetExternalName(r))
+	return errors.Wrap(err, errDeleteResourceGroup)
 }

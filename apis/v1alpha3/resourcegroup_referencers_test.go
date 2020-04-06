@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 )
@@ -55,13 +56,8 @@ func TestResourceGroupNameReferencerGetStatus(t *testing.T) {
 
 	errResourceNotFound := &kerrors.StatusError{ErrStatus: metav1.Status{Reason: metav1.StatusReasonNotFound}}
 
-	readyResource := ResourceGroup{
-		Spec: ResourceGroupSpec{
-			Name: mockResourceGroupName,
-		},
-	}
-
-	readyResource.Status.SetConditions(runtimev1alpha1.Available())
+	readyResource := ResourceGroup{}
+	readyResource.SetConditions(runtimev1alpha1.Available())
 
 	type input struct {
 		readerFn func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error
@@ -164,8 +160,7 @@ func TestResourceGroupNameReferencerBuild(t *testing.T) {
 		"ReferenceRetrieved_ReturnsExpected": {
 			input: input{
 				readerFn: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
-					p := obj.(*ResourceGroup)
-					p.Spec.Name = mockResourceGroupName
+					meta.SetExternalName(obj.(metav1.Object), mockResourceGroupName)
 					return nil
 				},
 			},

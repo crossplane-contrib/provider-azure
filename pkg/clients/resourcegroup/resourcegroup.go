@@ -24,9 +24,10 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 // A GroupsClient handles CRUD operations for Azure Resource Group resources.
@@ -64,7 +65,7 @@ func NewClient(credentials []byte) (GroupsClient, error) {
 // use with the Azure API.
 func NewParameters(r *v1alpha3.ResourceGroup) resources.Group {
 	return resources.Group{
-		Name:     azure.ToStringPtr(r.Spec.Name),
+		Name:     azure.ToStringPtr(meta.GetExternalName(r)),
 		Location: azure.ToStringPtr(r.Spec.Location),
 	}
 }
