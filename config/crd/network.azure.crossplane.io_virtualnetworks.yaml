@@ -133,9 +133,6 @@ spec:
             location:
               description: Location - Resource location.
               type: string
-            name:
-              description: Name - Name of the Virtual Network.
-              type: string
             properties:
               description: VirtualNetworkPropertiesFormat - Properties of the virtual
                 network.
@@ -252,7 +249,6 @@ spec:
               type: object
           required:
           - location
-          - name
           - properties
           - providerRef
           type: object

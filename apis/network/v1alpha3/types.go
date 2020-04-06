@@ -79,9 +79,6 @@ type VirtualNetworkPropertiesFormat struct {
 type VirtualNetworkSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
-	// Name - Name of the Virtual Network.
-	Name string `json:"name"`
-
 	// ResourceGroupName - Name of the Virtual Network's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
@@ -211,10 +208,6 @@ type SubnetPropertiesFormat struct {
 // A SubnetSpec defines the desired state of a Subnet.
 type SubnetSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
-
-	// Name - The name of the resource that is unique within a resource group.
-	// This name can be used to access the resource.
-	Name string `json:"name"`
 
 	// VirtualNetworkName - Name of the Subnet's virtual network.
 	VirtualNetworkName string `json:"virtualNetworkName,omitempty"`

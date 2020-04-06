@@ -34,6 +34,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -118,7 +119,6 @@ func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha3.VirtualNetwork {
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
-			Name:              name,
 			ResourceGroupName: resourceGroupName,
 			VirtualNetworkPropertiesFormat: v1alpha3.VirtualNetworkPropertiesFormat{
 				AddressSpace: v1alpha3.AddressSpace{
@@ -132,6 +132,7 @@ func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha3.VirtualNetwork {
 		},
 		Status: v1alpha3.VirtualNetworkStatus{},
 	}
+	meta.SetExternalName(r, name)
 
 	for _, m := range vm {
 		m(r)

@@ -106,7 +106,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotSubnet)
 	}
 
-	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, s.Spec.Name, "")
+	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), "")
 	if azureclients.IsNotFound(err) {
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
@@ -134,7 +134,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	s.Status.SetConditions(runtimev1alpha1.Creating())
 
 	snet := network.NewSubnetParameters(s)
-	if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, s.Spec.Name, snet); err != nil {
+	if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), snet); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateSubnet)
 	}
 
@@ -147,14 +147,14 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.New(errNotSubnet)
 	}
 
-	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, s.Spec.Name, "")
+	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), "")
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetSubnet)
 	}
 
 	if network.SubnetNeedsUpdate(s, az) {
 		snet := network.NewSubnetParameters(s)
-		if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, s.Spec.Name, snet); err != nil {
+		if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), snet); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateSubnet)
 		}
 	}
@@ -169,6 +169,6 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	mg.SetConditions(runtimev1alpha1.Deleting())
 
-	_, err := e.client.Delete(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, s.Spec.Name)
+	_, err := e.client.Delete(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s))
 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteSubnet)
 }
