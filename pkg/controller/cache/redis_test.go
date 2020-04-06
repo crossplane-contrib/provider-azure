@@ -121,11 +121,6 @@ func withPort(p int) redisResourceModifier {
 
 func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 	r := &v1beta1.Redis{
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: map[string]string{
-				meta.ExternalNameAnnotationKey: name,
-			},
-		},
 		Spec: v1beta1.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Name: providerName},
@@ -154,6 +149,8 @@ func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 			},
 		},
 	}
+
+	meta.SetExternalName(r, name)
 
 	for _, m := range rm {
 		m(r)
