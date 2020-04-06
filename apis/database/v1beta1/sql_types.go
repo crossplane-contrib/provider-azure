@@ -211,6 +211,16 @@ type SQLServerParameters struct {
 	// +immutable
 	AdministratorLogin string `json:"administratorLogin"`
 
+	// TODO(hasheddan): support AdministratorLoginPassword
+
+	// TODO(hasheddan): support MinimalTLSVersion
+
+	// TODO(hasheddan): support InfrastructureEncryption
+
+	// TODO(hasheddan): support PublicNetworkAccess
+
+	// TODO(hasheddan): support CreateMode
+
 	// Tags - Application-specific metadata in the form of key-value pairs.
 	// +optional
 	Tags map[string]string `json:"tags,omitempty"`

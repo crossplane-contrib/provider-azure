@@ -104,6 +104,8 @@ type RedisParameters struct {
 	// +optional
 	SubnetID *string `json:"subnetId,omitempty"`
 
+	// TODO(hasheddan): support SubnetIDRef
+
 	// StaticIP address. Required when deploying a Redis cache inside an
 	// existing Azure Virtual Network.
 	// +immutable

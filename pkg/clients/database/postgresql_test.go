@@ -233,7 +233,7 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
-					State:                            postgresql.Ready,
+					State:                            postgresql.VirtualNetworkRuleStateReady,
 				},
 			},
 			want: v1alpha3.VirtualNetworkRuleStatus{
@@ -250,7 +250,7 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 					VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
 					IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(ignoreMissing),
-					State:                            postgresql.Ready,
+					State:                            postgresql.VirtualNetworkRuleStateReady,
 				},
 			},
 			want: v1alpha3.VirtualNetworkRuleStatus{
