@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 )
@@ -34,9 +35,11 @@ type MockAccount struct {
 
 // NewMockAccount creates new account wrapper
 func NewMockAccount(name string) *MockAccount {
-	return &MockAccount{Account: &storagev1alpha3.Account{
+	a := &MockAccount{Account: &storagev1alpha3.Account{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 	}}
+	meta.SetExternalName(a, name)
+	return a
 }
 
 // WithTypeMeta sets TypeMeta value
@@ -96,12 +99,6 @@ func (ta *MockAccount) WithSpecProvider(name string) *MockAccount {
 // WithSpecReclaimPolicy sets resource reclaim policy
 func (ta *MockAccount) WithSpecReclaimPolicy(policy runtimev1alpha1.ReclaimPolicy) *MockAccount {
 	ta.Spec.ReclaimPolicy = policy
-	return ta
-}
-
-// WithSpecStorageAccountName sets spec value
-func (ta *MockAccount) WithSpecStorageAccountName(name string) *MockAccount {
-	ta.Spec.StorageAccountName = name
 	return ta
 }
 

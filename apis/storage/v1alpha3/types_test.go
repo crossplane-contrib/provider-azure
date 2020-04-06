@@ -21,85 +21,11 @@ import (
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/google/go-cmp/cmp"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 )
 
 var _ resource.Managed = &Container{}
-
-func TestContainer_GetContainerName(t *testing.T) {
-	om := metav1.ObjectMeta{
-		Namespace: "foo",
-		Name:      "bar",
-		UID:       "test-uid",
-	}
-	type fields struct {
-		ObjectMeta metav1.ObjectMeta
-		Spec       ContainerSpec
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		{
-			name: "no name format",
-			fields: fields{
-				ObjectMeta: om,
-				Spec:       ContainerSpec{},
-			},
-			want: "test-uid",
-		},
-		{
-			name: "format string",
-			fields: fields{
-				ObjectMeta: om,
-				Spec: ContainerSpec{
-					ContainerParameters: ContainerParameters{
-						NameFormat: "foo-%s",
-					},
-				},
-			},
-			want: "foo-test-uid",
-		},
-		{
-			name: "constant string",
-			fields: fields{
-				ObjectMeta: om,
-				Spec: ContainerSpec{
-					ContainerParameters: ContainerParameters{
-						NameFormat: "foo-bar",
-					},
-				},
-			},
-			want: "foo-bar",
-		},
-		{
-			name: "invalid: multiple substitutions",
-			fields: fields{
-				ObjectMeta: om,
-				Spec: ContainerSpec{
-					ContainerParameters: ContainerParameters{
-						NameFormat: "foo-%s-bar-%s",
-					},
-				},
-			},
-			want: "foo-test-uid-bar-%!s(MISSING)",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Container{
-				ObjectMeta: tt.fields.ObjectMeta,
-				Spec:       tt.fields.Spec,
-			}
-			if got := c.GetContainerName(); got != tt.want {
-				t.Errorf("Container.GetContainerName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func Test_parsePublicAccessType(t *testing.T) {
 	type args struct {

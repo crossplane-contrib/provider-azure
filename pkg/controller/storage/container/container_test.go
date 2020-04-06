@@ -257,6 +257,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Client:            tt.fields.Client,
 				syncdeleterMaker:  tt.fields.syncdeleterMaker,
 				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
+				Initializer:       managed.NewNameAsExternalName(tt.fields.Client),
 				log:               logging.NewNopLogger(),
 			}
 			got, err := r.Reconcile(req)
@@ -403,7 +404,6 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 				ctx: ctx,
 				c: newCont().WithSpecAccountRef(testAccountName).
 					WithFinalizer(finalizer).
-					WithSpecNameFormat(testContainerName).
 					Container,
 			},
 			want: want{
@@ -428,7 +428,6 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 				ctx: ctx,
 				c: newCont().WithSpecAccountRef(testAccountName).
 					WithFinalizer(finalizer).
-					WithSpecNameFormat(testContainerName).
 					Container,
 			},
 			want: want{

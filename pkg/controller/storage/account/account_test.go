@@ -313,6 +313,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Client:            tt.fields.client,
 				syncdeleterMaker:  tt.fields.maker,
 				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
+				Initializer:       managed.NewNameAsExternalName(tt.fields.client),
 				log:               logging.NewNopLogger(),
 			}
 			got, err := r.Reconcile(req)

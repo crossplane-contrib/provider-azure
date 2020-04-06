@@ -126,10 +126,6 @@ func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.Class, m
 		return errors.Errorf("expected managed resource %s to be %s", mg.GetName(), v1alpha3.AccountGroupVersionKind)
 	}
 
-	if b.Spec.Name == "" {
-		return errors.Errorf("invalid account claim: %s spec, name property is required", b.GetName())
-	}
-
 	spec := &v1alpha3.AccountSpec{
 		ResourceSpec: runtimev1alpha1.ResourceSpec{
 			ReclaimPolicy: runtimev1alpha1.ReclaimRetain,
@@ -141,8 +137,6 @@ func ConfigureAccount(_ context.Context, cm resource.Claim, cs resource.Class, m
 	if spec.StorageAccountSpec == nil {
 		spec.StorageAccountSpec = &v1alpha3.StorageAccountSpec{}
 	}
-
-	spec.StorageAccountName = b.Spec.Name
 
 	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
 		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,

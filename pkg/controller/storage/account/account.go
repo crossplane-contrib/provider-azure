@@ -74,6 +74,7 @@ type Reconciler struct {
 	client.Client
 	syncdeleterMaker
 	managed.ReferenceResolver
+	managed.Initializer
 
 	log logging.Logger
 }
@@ -86,6 +87,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		Client:            mgr.GetClient(),
 		syncdeleterMaker:  &accountSyncdeleterMaker{mgr.GetClient()},
 		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
+		Initializer:       managed.NewNameAsExternalName(mgr.GetClient()),
 		log:               l.WithValues("controller", name),
 	}
 
@@ -109,6 +111,9 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
+		return reconcile.Result{}, err
+	}
+	if err := r.Initialize(ctx, b); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -172,7 +177,7 @@ func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha
 	}
 
 	return newAccountSyncDeleter(
-		azurestorage.NewAccountHandle(storageClient, b.Spec.ResourceGroupName, b.Spec.StorageAccountName),
+		azurestorage.NewAccountHandle(storageClient, b.Spec.ResourceGroupName, meta.GetExternalName(b)),
 		m.Client, b), nil
 }
 
@@ -399,7 +404,7 @@ func (asu *accountSecretUpdater) updatesecret(ctx context.Context, acct *storage
 		return errors.New("account keys are empty")
 	}
 
-	secret.Data[runtimev1alpha1.ResourceCredentialsSecretUserKey] = []byte(asu.acct.Spec.StorageAccountName)
+	secret.Data[runtimev1alpha1.ResourceCredentialsSecretUserKey] = []byte(meta.GetExternalName(asu.acct))
 	secret.Data[runtimev1alpha1.ResourceCredentialsSecretPasswordKey] = []byte(to.String(keys[0].Value))
 
 	if err := asu.kube.Create(ctx, secret); err != nil {

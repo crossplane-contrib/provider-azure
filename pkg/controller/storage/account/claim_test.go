@@ -53,7 +53,6 @@ func TestConfigureAccount(t *testing.T) {
 	claimUID := types.UID("definitely-a-uuid")
 	classNamespace := "coolns"
 	providerName := "coolprovider"
-	bucketName := "coolbucket"
 	bucketPrivate := storagev1alpha1.ACLPrivate
 
 	cases := map[string]struct {
@@ -65,7 +64,6 @@ func TestConfigureAccount(t *testing.T) {
 				cm: &storagev1alpha1.Bucket{
 					ObjectMeta: metav1.ObjectMeta{Name: claimName, UID: claimUID},
 					Spec: storagev1alpha1.BucketSpec{
-						Name:          bucketName,
 						PredefinedACL: &bucketPrivate,
 					},
 				},
@@ -93,7 +91,6 @@ func TestConfigureAccount(t *testing.T) {
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
 						AccountParameters: v1alpha3.AccountParameters{
-							StorageAccountName: bucketName,
 							StorageAccountSpec: &v1alpha3.StorageAccountSpec{},
 						},
 					},

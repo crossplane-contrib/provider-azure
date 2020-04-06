@@ -17,9 +17,6 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,10 +28,6 @@ import (
 type AccountParameters struct {
 	// ResourceGroupName specifies the resource group for this Account.
 	ResourceGroupName string `json:"resourceGroupName"`
-
-	// StorageAccountName specifies the name for this Account.
-	// +kubebuilder:validation:MaxLength=24
-	StorageAccountName string `json:"storageAccountName"`
 
 	// StorageAccountSpec specifies the desired state of this Account.
 	StorageAccountSpec *StorageAccountSpec `json:"storageAccountSpec"`
@@ -116,11 +109,6 @@ type AccountClassList struct {
 // ContainerParameters define the desired state of an Azure Blob Storage
 // Container.
 type ContainerParameters struct {
-	// NameFormat specifies the name of the external Container. The first
-	// instance of the string '%s' will be replaced with the Kubernetes
-	// UID of this Container.
-	NameFormat string `json:"nameFormat"`
-
 	// Metadata for this Container.
 	// +optional
 	Metadata azblob.Metadata `json:"metadata,omitempty"`
@@ -180,9 +168,6 @@ type ContainerSpec struct {
 // A ContainerStatus represents the observed status of a Container.
 type ContainerStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
-
-	// Name of this Container.
-	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -276,30 +261,6 @@ func (c *Container) SetProviderReference(r *corev1.ObjectReference) {
 	c.Spec.AccountReference = corev1.LocalObjectReference{
 		Name: r.Name,
 	}
-}
-
-// GetContainerName based on the NameFormat spec value,
-// If name format is not provided, container name defaults to UID
-// If name format provided with '%s' value, container name will result in formatted string + UID,
-//   NOTE: only single %s substitution is supported
-// If name format does not contain '%s' substitution, i.e. a constant string, the
-// constant string value is returned back
-//
-// Examples:
-//   For all examples assume "UID" = "test-uid"
-//   1. NameFormat = "", ContainerName = "test-uid"
-//   2. NameFormat = "%s", ContainerName = "test-uid"
-//   3. NameFormat = "foo", ContainerName = "foo"
-//   4. NameFormat = "foo-%s", ContainerName = "foo-test-uid"
-//   5. NameFormat = "foo-%s-bar-%s", ContainerName = "foo-test-uid-bar-%!s(MISSING)"
-func (c *Container) GetContainerName() string {
-	if c.Spec.NameFormat == "" {
-		return string(c.GetUID())
-	}
-	if strings.Contains(c.Spec.NameFormat, "%s") {
-		return fmt.Sprintf(c.Spec.NameFormat, string(c.GetUID()))
-	}
-	return c.Spec.NameFormat
 }
 
 // +kubebuilder:object:root=true

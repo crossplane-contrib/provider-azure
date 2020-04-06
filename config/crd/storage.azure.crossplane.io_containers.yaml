@@ -145,11 +145,6 @@ spec:
                 type: string
               description: Metadata for this Container.
               type: object
-            nameFormat:
-              description: NameFormat specifies the name of the external Container.
-                The first instance of the string '%s' will be replaced with the Kubernetes
-                UID of this Container.
-              type: string
             publicAccessType:
               description: PublicAccessType for this container; either "blob" or "container".
               type: string
@@ -180,7 +175,6 @@ spec:
               type: object
           required:
           - accountReference
-          - nameFormat
           type: object
         status:
           description: A ContainerStatus represents the observed status of a Container.
@@ -230,9 +224,6 @@ spec:
                 - type
                 type: object
               type: array
-            name:
-              description: Name of this Container.
-              type: string
           type: object
       required:
       - spec

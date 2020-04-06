@@ -8,7 +8,6 @@ metadata:
     kind: "account"
 specTemplate:
   writeConnectionSecretsToNamespace: crossplane-system
-  storageAccountName: example-storage
   resourceGroupName: group-westus-1
   storageAccountSpec:
     kind: Storage

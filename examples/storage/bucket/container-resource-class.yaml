@@ -15,4 +15,3 @@ specTemplate:
   providerRef:
     name: storageaccount
   reclaimPolicy: Delete
-  nameFormat: example-%s

@@ -72,6 +72,7 @@ type Reconciler struct {
 	client.Client
 	syncdeleterMaker
 	managed.ReferenceResolver
+	managed.Initializer
 
 	log logging.Logger
 }
@@ -84,6 +85,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		Client:            mgr.GetClient(),
 		syncdeleterMaker:  &containerSyncdeleterMaker{mgr.GetClient()},
 		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
+		Initializer:       managed.NewNameAsExternalName(mgr.GetClient()),
 		log:               l.WithValues("controller", name),
 	}
 
@@ -103,9 +105,9 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	c := &v1alpha3.Container{}
 	if err := r.Get(ctx, request.NamespacedName, c); err != nil {
-		if kerrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
+		return reconcile.Result{}, resource.Ignore(kerrors.IsNotFound, err)
+	}
+	if err := r.Initialize(ctx, c); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -177,7 +179,7 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 
 	accountName := string(s.Data[runtimev1alpha1.ResourceCredentialsSecretUserKey])
 	accountPassword := string(s.Data[runtimev1alpha1.ResourceCredentialsSecretPasswordKey])
-	containerName := c.GetContainerName()
+	containerName := meta.GetExternalName(c)
 
 	ch, err := storage.NewContainerHandle(accountName, accountPassword, containerName)
 	if err != nil {

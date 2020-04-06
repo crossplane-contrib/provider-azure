@@ -107,10 +107,6 @@ spec:
               description: ResourceGroupName specifies the resource group for this
                 Account.
               type: string
-            storageAccountName:
-              description: StorageAccountName specifies the name for this Account.
-              maxLength: 24
-              type: string
             storageAccountSpec:
               description: StorageAccountSpec specifies the desired state of this
                 Account.
@@ -367,7 +363,6 @@ spec:
           required:
           - providerRef
           - resourceGroupName
-          - storageAccountName
           - storageAccountSpec
           - writeConnectionSecretsToNamespace
           type: object
