@@ -221,7 +221,7 @@ func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []b
 // NewPostgreSQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
 	return postgresql.VirtualNetworkRule{
-		Name: azure.ToStringPtr(v.Spec.Name),
+		Name: azure.ToStringPtr(meta.GetExternalName(v)),
 		VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
 			VirtualNetworkSubnetID:           azure.ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
 			IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, azure.FieldRequired),

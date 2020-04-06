@@ -23,17 +23,15 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 const (
-	uid           = types.UID("definitely-a-uuid")
 	vnetRuleName  = "myvnetrule"
 	serverName    = "myserver"
 	rgName        = "myrg"
@@ -58,6 +56,37 @@ const (
 var (
 	ctx = context.Background()
 )
+
+type mySQLVirtualNetworkRuleModifier func(*v1alpha3.MySQLServerVirtualNetworkRule)
+
+func mySQLWithSubnetID(id string) mySQLVirtualNetworkRuleModifier {
+	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) {
+		r.Spec.VirtualNetworkSubnetID = id
+	}
+}
+
+func mySQLWithIgnoreMissing(ignore bool) mySQLVirtualNetworkRuleModifier {
+	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) {
+		r.Spec.IgnoreMissingVnetServiceEndpoint = ignore
+	}
+}
+
+func mySQLVirtualNetworkRule(sm ...mySQLVirtualNetworkRuleModifier) *v1alpha3.MySQLServerVirtualNetworkRule {
+	r := &v1alpha3.MySQLServerVirtualNetworkRule{
+		Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
+			ServerName:        serverName,
+			ResourceGroupName: rgName,
+		},
+	}
+
+	meta.SetExternalName(r, vnetRuleName)
+
+	for _, m := range sm {
+		m(r)
+	}
+
+	return r
+}
 
 func TestNewMySQLVirtualNetworkRulesClient(t *testing.T) {
 	cases := []struct {
@@ -99,18 +128,10 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha3.MySQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			r: mySQLVirtualNetworkRule(
+				mySQLWithSubnetID(vnetSubnetID),
+				mySQLWithIgnoreMissing(ignoreMissing),
+			),
 			want: mysql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
@@ -121,17 +142,9 @@ func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &v1alpha3.MySQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID: vnetSubnetID,
-					},
-				},
-			},
+			r: mySQLVirtualNetworkRule(
+				mySQLWithSubnetID(vnetSubnetID),
+			),
 			want: mysql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
@@ -161,18 +174,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 	}{
 		{
 			name: "NoUpdateNeeded",
-			kube: &v1alpha3.MySQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			kube: mySQLVirtualNetworkRule(
+				mySQLWithSubnetID(vnetSubnetID),
+				mySQLWithIgnoreMissing(ignoreMissing),
+			),
 			az: mysql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
@@ -184,18 +189,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededVirtualNetworkSubnetID",
-			kube: &v1alpha3.MySQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			kube: mySQLVirtualNetworkRule(
+				mySQLWithSubnetID(vnetSubnetID),
+				mySQLWithIgnoreMissing(ignoreMissing),
+			),
 			az: mysql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
@@ -207,18 +204,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededIgnoreMissingVnetServiceEndpoint",
-			kube: &v1alpha3.MySQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			kube: mySQLVirtualNetworkRule(
+				mySQLWithSubnetID(vnetSubnetID),
+				mySQLWithIgnoreMissing(ignoreMissing),
+			),
 			az: mysql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{

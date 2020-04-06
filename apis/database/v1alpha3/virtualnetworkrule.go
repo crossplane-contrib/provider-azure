@@ -156,9 +156,6 @@ type VirtualNetworkRuleStatus struct {
 type PostgreSQLVirtualNetworkRuleSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
 
-	// Name - Name of the Virtual Network Rule.
-	Name string `json:"name"`
-
 	// ServerName - Name of the Virtual Network Rule's PostgreSQLServer.
 	ServerName string `json:"serverName,omitempty"`
 
@@ -205,9 +202,6 @@ type PostgreSQLServerVirtualNetworkRuleList struct {
 // A MySQLVirtualNetworkRuleSpec defines the desired state of a MySQLVirtualNetworkRule.
 type MySQLVirtualNetworkRuleSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
-
-	// Name - Name of the Virtual Network Rule.
-	Name string `json:"name"`
 
 	// ServerName - Name of the Virtual Network Rule's server.
 	ServerName string `json:"serverName,omitempty"`

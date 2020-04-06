@@ -22,13 +22,44 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
+
+type postgreSQLVirtualNetworkRuleModifier func(*v1alpha3.PostgreSQLServerVirtualNetworkRule)
+
+func postgreSQLWithSubnetID(id string) postgreSQLVirtualNetworkRuleModifier {
+	return func(r *v1alpha3.PostgreSQLServerVirtualNetworkRule) {
+		r.Spec.VirtualNetworkSubnetID = id
+	}
+}
+
+func postgreSQLWithIgnoreMissing(ignore bool) postgreSQLVirtualNetworkRuleModifier {
+	return func(r *v1alpha3.PostgreSQLServerVirtualNetworkRule) {
+		r.Spec.IgnoreMissingVnetServiceEndpoint = ignore
+	}
+}
+
+func postgreSQLVirtualNetworkRule(sm ...postgreSQLVirtualNetworkRuleModifier) *v1alpha3.PostgreSQLServerVirtualNetworkRule {
+	r := &v1alpha3.PostgreSQLServerVirtualNetworkRule{
+		Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
+			ServerName:        serverName,
+			ResourceGroupName: rgName,
+		},
+	}
+
+	meta.SetExternalName(r, vnetRuleName)
+
+	for _, m := range sm {
+		m(r)
+	}
+
+	return r
+}
 
 func TestNewPostgreSQLVirtualNetworkRulesClient(t *testing.T) {
 	cases := []struct {
@@ -70,18 +101,10 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 	}{
 		{
 			name: "Successful",
-			r: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			r: postgreSQLVirtualNetworkRule(
+				postgreSQLWithSubnetID(vnetSubnetID),
+				postgreSQLWithIgnoreMissing(ignoreMissing),
+			),
 			want: postgresql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
@@ -92,17 +115,9 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 		},
 		{
 			name: "SuccessfulPartial",
-			r: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID: vnetSubnetID,
-					},
-				},
-			},
+			r: postgreSQLVirtualNetworkRule(
+				postgreSQLWithSubnetID(vnetSubnetID),
+			),
 			want: postgresql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
@@ -132,18 +147,10 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 	}{
 		{
 			name: "NoUpdateNeeded",
-			kube: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			kube: postgreSQLVirtualNetworkRule(
+				postgreSQLWithSubnetID(vnetSubnetID),
+				postgreSQLWithIgnoreMissing(ignoreMissing),
+			),
 			az: postgresql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
@@ -155,18 +162,10 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededVirtualNetworkSubnetID",
-			kube: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			kube: postgreSQLVirtualNetworkRule(
+				postgreSQLWithSubnetID(vnetSubnetID),
+				postgreSQLWithIgnoreMissing(ignoreMissing),
+			),
 			az: postgresql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
@@ -178,18 +177,10 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		},
 		{
 			name: "UpdateNeededIgnoreMissingVnetServiceEndpoint",
-			kube: &v1alpha3.PostgreSQLServerVirtualNetworkRule{
-				ObjectMeta: metav1.ObjectMeta{UID: uid},
-				Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
-					Name:              vnetRuleName,
-					ServerName:        serverName,
-					ResourceGroupName: rgName,
-					VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
-						VirtualNetworkSubnetID:           vnetSubnetID,
-						IgnoreMissingVnetServiceEndpoint: ignoreMissing,
-					},
-				},
-			},
+			kube: postgreSQLVirtualNetworkRule(
+				postgreSQLWithSubnetID(vnetSubnetID),
+				postgreSQLWithIgnoreMissing(ignoreMissing),
+			),
 			az: postgresql.VirtualNetworkRule{
 				Name: azure.ToStringPtr(vnetRuleName),
 				VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{

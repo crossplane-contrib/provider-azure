@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -127,7 +128,6 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.MySQLServerV
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
-			Name:              name,
 			ServerName:        serverName,
 			ResourceGroupName: resourceGroupName,
 			VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
@@ -137,6 +137,8 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.MySQLServerV
 		},
 		Status: v1alpha3.VirtualNetworkRuleStatus{},
 	}
+
+	meta.SetExternalName(r, name)
 
 	for _, m := range sm {
 		m(r)

@@ -125,9 +125,6 @@ spec:
                   description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                   type: string
               type: object
-            name:
-              description: Name - Name of the Virtual Network Rule.
-              type: string
             properties:
               description: VirtualNetworkRuleProperties - Resource properties.
               properties:
@@ -244,7 +241,6 @@ spec:
               - namespace
               type: object
           required:
-          - name
           - properties
           - providerRef
           type: object
