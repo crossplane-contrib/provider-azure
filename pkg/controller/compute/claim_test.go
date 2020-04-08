@@ -18,7 +18,6 @@ package compute
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -80,8 +79,7 @@ func TestConfigureAKSCluster(t *testing.T) {
 							ProviderReference:                &corev1.ObjectReference{Name: providerName},
 						},
 						AKSClusterParameters: v1alpha3.AKSClusterParameters{
-							NodeCount:                     &nodeCount,
-							WriteServicePrincipalSecretTo: runtimev1alpha1.SecretReference{Name: fmt.Sprintf("principal-%s", claimUID)},
+							NodeCount: &nodeCount,
 						},
 					},
 				},
