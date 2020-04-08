@@ -18,7 +18,6 @@ package v1alpha3
 
 import (
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
@@ -73,39 +72,6 @@ type AccountList struct {
 	Items           []Account `json:"items"`
 }
 
-// An AccountClassSpecTemplate is a template for the spec of a dynamically
-// provisioned Account.
-type AccountClassSpecTemplate struct {
-	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	AccountParameters                 `json:",inline"`
-}
-
-// +kubebuilder:object:root=true
-
-// An AccountClass is a non-portable resource class. It defines the desired spec
-// of resource claims that use it to dynamically provision a managed resource.
-// +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
-// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:resource:scope=Cluster
-type AccountClass struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// SpecTemplate is a template for the spec of a dynamically provisioned
-	// Account.
-	SpecTemplate AccountClassSpecTemplate `json:"specTemplate"`
-}
-
-// +kubebuilder:object:root=true
-
-// AccountClassList contains a list of AccountClass.
-type AccountClassList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AccountClass `json:"items"`
-}
-
 // ContainerParameters define the desired state of an Azure Blob Storage
 // Container.
 type ContainerParameters struct {
@@ -116,53 +82,12 @@ type ContainerParameters struct {
 	// PublicAccessType for this container; either "blob" or "container".
 	// +optional
 	PublicAccessType azblob.PublicAccessType `json:"publicAccessType,omitempty"`
-
-	// AccountReference to the Azure Blob Storage Account this Container will
-	// reside within.
-	AccountReference corev1.LocalObjectReference `json:"accountReference"`
 }
 
 // A ContainerSpec defines the desired state of a Container.
 type ContainerSpec struct {
-	ContainerParameters `json:",inline"`
-
-	// NOTE(negz): Container is the only Crossplane type that does not use a
-	// Provider (it reads credentials from its associated Account instead). This
-	// means we can't embed a coreruntimev1alpha1.ResourceSpec, as doing so would
-	// require a redundant providerRef be specified. Instead we duplicate
-	// most of that struct here; the below values should be kept in sync with
-	// coreruntimev1alpha1.ResourceSpec.
-
-	// WriteConnectionSecretToReference specifies the name of a Secret, in the
-	// same namespace as this managed resource, to which any connection details
-	// for this managed resource should be written. Connection details
-	// frequently include the endpoint, username, and password required to
-	// connect to the managed resource.
-	// +optional
-	WriteConnectionSecretToReference *runtimev1alpha1.SecretReference `json:"writeConnectionSecretToRef,omitempty"`
-
-	// ClaimReference specifies the resource claim to which this managed
-	// resource will be bound. ClaimReference is set automatically during
-	// dynamic provisioning. Crossplane does not currently support setting this
-	// field manually, per https://github.com/crossplane/crossplane-runtime/issues/19
-	// +optional
-	ClaimReference *corev1.ObjectReference `json:"claimRef,omitempty"`
-
-	// ClassReference specifies the non-portable resource class that was used to
-	// dynamically provision this managed resource, if any. Crossplane does not
-	// currently support setting this field manually, per
-	// https://github.com/crossplane/crossplane-runtime/issues/20
-	// +optional
-	ClassReference *corev1.ObjectReference `json:"classRef,omitempty"`
-
-	// ReclaimPolicy specifies what will happen to the external resource this
-	// managed resource manages when the managed resource is deleted. "Delete"
-	// deletes the external resource, while "Retain" (the default) does not.
-	// Note this behaviour is subtly different from other uses of the
-	// ReclaimPolicy concept within the Kubernetes ecosystem per
-	// https://github.com/crossplane/crossplane-runtime/issues/21
-	// +optional
-	ReclaimPolicy runtimev1alpha1.ReclaimPolicy `json:"reclaimPolicy,omitempty"`
+	runtimev1alpha1.ResourceSpec `json:",inline"`
+	ContainerParameters          `json:",inline"`
 }
 
 // A ContainerStatus represents the observed status of a Container.
@@ -186,81 +111,6 @@ type Container struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	Spec              ContainerSpec   `json:"spec"`
 	Status            ContainerStatus `json:"status,omitempty"`
-}
-
-// SetBindingPhase of this Container.
-func (c *Container) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	c.Status.SetBindingPhase(p)
-}
-
-// GetBindingPhase of this Container.
-func (c *Container) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return c.Status.GetBindingPhase()
-}
-
-// SetConditions of this Container.
-func (c *Container) SetConditions(cd ...runtimev1alpha1.Condition) {
-	c.Status.SetConditions(cd...)
-}
-
-// GetCondition of this Container.
-func (c *Container) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
-	return c.Status.GetCondition(ct)
-}
-
-// SetClaimReference of this Container.
-func (c *Container) SetClaimReference(r *corev1.ObjectReference) {
-	c.Spec.ClaimReference = r
-}
-
-// GetClaimReference of this Container.
-func (c *Container) GetClaimReference() *corev1.ObjectReference {
-	return c.Spec.ClaimReference
-}
-
-// SetClassReference of this Container.
-func (c *Container) SetClassReference(r *corev1.ObjectReference) {
-	c.Spec.ClassReference = r
-}
-
-// GetClassReference of this Container.
-func (c *Container) GetClassReference() *corev1.ObjectReference {
-	return c.Spec.ClassReference
-}
-
-// SetWriteConnectionSecretToReference of this Container.
-func (c *Container) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
-	c.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetWriteConnectionSecretToReference of this Container.
-func (c *Container) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
-	return c.Spec.WriteConnectionSecretToReference
-}
-
-// GetReclaimPolicy of this Container.
-func (c *Container) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return c.Spec.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this Container.
-func (c *Container) SetReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) {
-	c.Spec.ReclaimPolicy = p
-}
-
-// GetProviderReference of this Container.
-func (c *Container) GetProviderReference() *corev1.ObjectReference {
-	return &corev1.ObjectReference{
-		Name:      c.Spec.AccountReference.Name,
-		Namespace: c.GetNamespace(),
-	}
-}
-
-// SetProviderReference of this Container.
-func (c *Container) SetProviderReference(r *corev1.ObjectReference) {
-	c.Spec.AccountReference = corev1.LocalObjectReference{
-		Name: r.Name,
-	}
 }
 
 // +kubebuilder:object:root=true

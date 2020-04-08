@@ -94,9 +94,9 @@ func (tc *MockContainer) WithSpecClaimRef(ref *corev1.ObjectReference) *MockCont
 	return tc
 }
 
-// WithSpecAccountRef sets spec account reference value
-func (tc *MockContainer) WithSpecAccountRef(name string) *MockContainer {
-	tc.Container.Spec.AccountReference = corev1.LocalObjectReference{Name: name}
+// WithSpecProviderRef sets spec account reference value
+func (tc *MockContainer) WithSpecProviderRef(name string) *MockContainer {
+	tc.Container.Spec.ProviderReference = &corev1.ObjectReference{Name: name}
 	return tc
 }
 

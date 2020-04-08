@@ -79,11 +79,12 @@ func TestConfigureContainer(t *testing.T) {
 			want: want{
 				mg: &v1alpha3.Container{
 					Spec: v1alpha3.ContainerSpec{
-						ContainerParameters: v1alpha3.ContainerParameters{
-							AccountReference: corev1.LocalObjectReference{Name: providerName},
-							Metadata:         azblob.Metadata{},
+						ResourceSpec: runtimev1alpha1.ResourceSpec{
+							ProviderReference: &corev1.ObjectReference{Name: providerName},
 						},
-						ReclaimPolicy: runtimev1alpha1.ReclaimDelete,
+						ContainerParameters: v1alpha3.ContainerParameters{
+							Metadata: azblob.Metadata{},
+						},
 					},
 				},
 				err: nil,

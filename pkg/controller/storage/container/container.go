@@ -149,9 +149,10 @@ type containerSyncdeleterMaker struct {
 }
 
 func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
-	// Retrieve storage account reference object
+	// Storage containers use a storage account as their 'provider', not a
+	// typical Azure provider.
 	acct := &v1alpha3.Account{}
-	if err := m.Get(ctx, types.NamespacedName{Name: c.Spec.AccountReference.Name}, acct); err != nil {
+	if err := m.Get(ctx, types.NamespacedName{Name: c.Spec.ProviderReference.Name}, acct); err != nil {
 		// For storage account not found errors - check if we are on deletion path
 		// if so - remove finalizer from this container object
 		if kerrors.IsNotFound(err) && c.DeletionTimestamp != nil {
@@ -160,7 +161,7 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 				return nil, errors.Wrapf(err, "failed to update after removing finalizer")
 			}
 		}
-		return nil, errors.Wrapf(err, "failed to retrieve storage account reference: %s", c.Spec.AccountReference.Name)
+		return nil, errors.Wrapf(err, "failed to retrieve storage account: %s", c.Spec.ProviderReference.Name)
 	}
 
 	if acct.GetWriteConnectionSecretToReference() == nil {

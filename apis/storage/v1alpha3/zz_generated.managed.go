@@ -92,3 +92,73 @@ func (mg *Account) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
 func (mg *Account) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
+
+// GetBindingPhase of this Container.
+func (mg *Container) GetBindingPhase() runtimev1alpha1.BindingPhase {
+	return mg.Status.GetBindingPhase()
+}
+
+// GetClaimReference of this Container.
+func (mg *Container) GetClaimReference() *corev1.ObjectReference {
+	return mg.Spec.ClaimReference
+}
+
+// GetClassReference of this Container.
+func (mg *Container) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
+}
+
+// GetCondition of this Container.
+func (mg *Container) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetProviderReference of this Container.
+func (mg *Container) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
+// GetReclaimPolicy of this Container.
+func (mg *Container) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+	return mg.Spec.ReclaimPolicy
+}
+
+// GetWriteConnectionSecretToReference of this Container.
+func (mg *Container) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetBindingPhase of this Container.
+func (mg *Container) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+	mg.Status.SetBindingPhase(p)
+}
+
+// SetClaimReference of this Container.
+func (mg *Container) SetClaimReference(r *corev1.ObjectReference) {
+	mg.Spec.ClaimReference = r
+}
+
+// SetClassReference of this Container.
+func (mg *Container) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
+// SetConditions of this Container.
+func (mg *Container) SetConditions(c ...runtimev1alpha1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this Container.
+func (mg *Container) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetReclaimPolicy of this Container.
+func (mg *Container) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+	mg.Spec.ReclaimPolicy = r
+}
+
+// SetWriteConnectionSecretToReference of this Container.
+func (mg *Container) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}

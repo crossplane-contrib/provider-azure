@@ -20,16 +20,6 @@ package v1alpha3
 
 import runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 
-// GetReclaimPolicy of this AccountClass.
-func (cs *AccountClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return cs.SpecTemplate.ReclaimPolicy
-}
-
-// SetReclaimPolicy of this AccountClass.
-func (cs *AccountClass) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
-	cs.SpecTemplate.ReclaimPolicy = r
-}
-
 // GetReclaimPolicy of this ContainerClass.
 func (cs *ContainerClass) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
 	return cs.SpecTemplate.ReclaimPolicy

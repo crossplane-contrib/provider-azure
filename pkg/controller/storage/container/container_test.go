@@ -327,29 +327,29 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				c:   newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).Container,
+				c:   newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 			},
 			want: want{
 				err: errors.Wrapf(newAccountNotFoundError(testAccountName),
-					"failed to retrieve storage account reference: %s", testAccountName),
+					"failed to retrieve storage account: %s", testAccountName),
 			},
 		},
 		{
 			name: "FailedToGetAccountNotFoundYesDelete",
 			fields: fields{
-				Client: fake.NewFakeClient(newCont().WithSpecAccountRef(testAccountName).
+				Client: fake.NewFakeClient(newCont().WithSpecProviderRef(testAccountName).
 					WithFinalizer(finalizer).
 					Container),
 			},
 			args: args{
 				ctx: ctx,
-				c: newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).
+				c: newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).
 					WithDeleteTimestamp(time.Now()).
 					Container,
 			},
 			want: want{
 				err: errors.Wrapf(newAccountNotFoundError(testAccountName),
-					"failed to retrieve storage account reference: %s", testAccountName),
+					"failed to retrieve storage account: %s", testAccountName),
 			},
 		},
 		{
@@ -359,11 +359,11 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 					v1alpha3test.NewMockAccount(testAccountName).
 						WithSpecWriteConnectionSecretToReference(testNamespace, testAccountName).
 						Account,
-					newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).Container),
+					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container),
 			},
 			args: args{
 				ctx: ctx,
-				c: newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).
+				c: newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).
 					Container,
 			},
 			want: want{
@@ -376,11 +376,11 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			fields: fields{
 				Client: fake.NewFakeClient(
 					v1alpha3test.NewMockAccount(testAccountName).Account,
-					newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).Container),
+					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container),
 			},
 			args: args{
 				ctx: ctx,
-				c: newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).
+				c: newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).
 					Container,
 			},
 			want: want{
@@ -391,7 +391,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			name: "FailedToCreateContainerHandle",
 			fields: fields{
 				Client: fake.NewFakeClient(
-					newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).Container,
+					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 					newSecret(testNamespace, testAccountName, map[string][]byte{
 						runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
 						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte("test-key"),
@@ -402,7 +402,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				c: newCont().WithSpecAccountRef(testAccountName).
+				c: newCont().WithSpecProviderRef(testAccountName).
 					WithFinalizer(finalizer).
 					Container,
 			},
@@ -415,7 +415,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			name: "Success",
 			fields: fields{
 				Client: fake.NewFakeClient(
-					newCont().WithSpecAccountRef(testAccountName).WithFinalizer(finalizer).Container,
+					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 					newSecret(testNamespace, testAccountName, map[string][]byte{
 						runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
 						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte("dGVzdC1rZXkK"),
@@ -426,7 +426,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				c: newCont().WithSpecAccountRef(testAccountName).
+				c: newCont().WithSpecProviderRef(testAccountName).
 					WithFinalizer(finalizer).
 					Container,
 			},
