@@ -242,8 +242,6 @@ func (asd *accountSyncDeleter) delete(ctx context.Context) (reconcile.Result, er
 	return reconcile.Result{}, asd.kube.Update(ctx, asd.acct)
 }
 
-const uidTag = "UID"
-
 // sync - synchronizes the state of the storage account resource with the state of the
 // account Kubernetes acct
 func (asd *accountSyncDeleter) sync(ctx context.Context) (reconcile.Result, error) {
@@ -255,13 +253,6 @@ func (asd *accountSyncDeleter) sync(ctx context.Context) (reconcile.Result, erro
 
 	if account == nil {
 		return asd.create(ctx)
-	}
-
-	// for existing account check UID tag
-	if uid := to.String(account.Tags[uidTag]); uid != "" && uid != string(asd.acct.GetUID()) {
-		err := errors.Errorf("storage account: %s already exists and owned by: %s", to.String(account.Name), uid)
-		asd.acct.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return reconcile.Result{}, asd.kube.Status().Update(ctx, asd.acct)
 	}
 
 	return asd.update(ctx, account)
@@ -296,13 +287,6 @@ func newAccountCreateUpdater(ao azurestorage.AccountOperations, kube client.Clie
 func (acu *accountCreateUpdater) create(ctx context.Context) (reconcile.Result, error) {
 	acu.acct.Status.SetConditions(runtimev1alpha1.Creating())
 	meta.AddFinalizer(acu.acct, finalizer)
-
-	// Set UID to the account storage spec
-	// TODO(illya) - this eventually needs to be in Defaulter Mutating web hook
-	if tags := acu.acct.Spec.StorageAccountSpec.Tags; tags == nil {
-		acu.acct.Spec.StorageAccountSpec.Tags = make(map[string]string)
-	}
-	acu.acct.Spec.StorageAccountSpec.Tags[uidTag] = string(acu.acct.GetUID())
 
 	accountSpec := v1alpha3.ToStorageAccountCreate(acu.acct.Spec.StorageAccountSpec)
 
