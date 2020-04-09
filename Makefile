@@ -14,7 +14,6 @@ PLATFORMS ?= linux_amd64 linux_arm64
 # ====================================================================================
 # Setup Output
 
-S3_BUCKET ?= crossplane.releases
 -include build/makelib/output.mk
 
 # ====================================================================================
@@ -187,4 +186,3 @@ $(KUBEBUILDER):
 	@mv $(TOOLS_HOST_DIR)/tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOHOSTOS)_$(GOHOSTARCH)/bin $(KUBEBUILDER) || $(FAIL)
 	@rm -fr $(TOOLS_HOST_DIR)/tmp
 	@$(OK) installing kubebuilder $(KUBEBUILDER_VERSION)
-
