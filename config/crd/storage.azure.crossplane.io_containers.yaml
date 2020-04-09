@@ -53,15 +53,6 @@ spec:
         spec:
           description: A ContainerSpec defines the desired state of a Container.
           properties:
-            accountReference:
-              description: AccountReference to the Azure Blob Storage Account this
-                Container will reside within.
-              properties:
-                name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
-                  type: string
-              type: object
             claimRef:
               description: ClaimReference specifies the resource claim to which this
                 managed resource will be bound. ClaimReference is set automatically
@@ -102,10 +93,9 @@ spec:
                   type: string
               type: object
             classRef:
-              description: ClassReference specifies the non-portable resource class
-                that was used to dynamically provision this managed resource, if any.
-                Crossplane does not currently support setting this field manually,
-                per https://github.com/crossplane/crossplane-runtime/issues/20
+              description: ClassReference specifies the resource class that was used
+                to dynamically provision this managed resource, if any. Crossplane
+                does not currently support setting this field manually, per https://github.com/crossplane/crossplane-runtime/issues/20
               properties:
                 apiVersion:
                   description: API version of the referent.
@@ -145,28 +135,67 @@ spec:
                 type: string
               description: Metadata for this Container.
               type: object
-            nameFormat:
-              description: NameFormat specifies the name of the external Container.
-                The first instance of the string '%s' will be replaced with the Kubernetes
-                UID of this Container.
-              type: string
+            providerRef:
+              description: ProviderReference specifies the provider that will be used
+                to create, observe, update, and delete this managed resource.
+              properties:
+                apiVersion:
+                  description: API version of the referent.
+                  type: string
+                fieldPath:
+                  description: 'If referring to a piece of an object instead of an
+                    entire object, this string should contain a valid JSON/Go field
+                    access statement, such as desiredState.manifest.containers[2].
+                    For example, if the object reference is to a container within
+                    a pod, this would take on a value like: "spec.containers{name}"
+                    (where "name" refers to the name of the container that triggered
+                    the event) or if no container name is specified "spec.containers[2]"
+                    (container with index 2 in this pod). This syntax is chosen only
+                    to have some well-defined way of referencing a part of an object.
+                    TODO: this design is not final and this field is subject to change
+                    in the future.'
+                  type: string
+                kind:
+                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                  type: string
+                name:
+                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                  type: string
+                namespace:
+                  description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                  type: string
+                resourceVersion:
+                  description: 'Specific resourceVersion to which this reference is
+                    made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                  type: string
+                uid:
+                  description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                  type: string
+              type: object
             publicAccessType:
               description: PublicAccessType for this container; either "blob" or "container".
               type: string
             reclaimPolicy:
-              description: ReclaimPolicy specifies what will happen to the external
-                resource this managed resource manages when the managed resource is
-                deleted. "Delete" deletes the external resource, while "Retain" (the
-                default) does not. Note this behaviour is subtly different from other
-                uses of the ReclaimPolicy concept within the Kubernetes ecosystem
-                per https://github.com/crossplane/crossplane-runtime/issues/21
+              description: ReclaimPolicy specifies what will happen to this managed
+                resource when its resource claim is deleted, and what will happen
+                to the underlying external resource when the managed resource is deleted.
+                The "Delete" policy causes the managed resource to be deleted when
+                its bound resource claim is deleted, and in turn causes the external
+                resource to be deleted when its managed resource is deleted. The "Retain"
+                policy causes the managed resource to be retained, in binding phase
+                "Released", when its resource claim is deleted, and in turn causes
+                the external resource to be retained when its managed resource is
+                deleted. The "Retain" policy is used when no policy is specified.
+              enum:
+              - Retain
+              - Delete
               type: string
             writeConnectionSecretToRef:
-              description: WriteConnectionSecretToReference specifies the name of
-                a Secret, in the same namespace as this managed resource, to which
-                any connection details for this managed resource should be written.
-                Connection details frequently include the endpoint, username, and
-                password required to connect to the managed resource.
+              description: WriteConnectionSecretToReference specifies the namespace
+                and name of a Secret to which any connection details for this managed
+                resource should be written. Connection details frequently include
+                the endpoint, username, and password required to connect to the managed
+                resource.
               properties:
                 name:
                   description: Name of the secret.
@@ -179,8 +208,7 @@ spec:
               - namespace
               type: object
           required:
-          - accountReference
-          - nameFormat
+          - providerRef
           type: object
         status:
           description: A ContainerStatus represents the observed status of a Container.
@@ -230,9 +258,6 @@ spec:
                 - type
                 type: object
               type: array
-            name:
-              description: Name of this Container.
-              type: string
           type: object
       required:
       - spec

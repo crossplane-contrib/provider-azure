@@ -106,7 +106,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotVirtualNetwork)
 	}
 
-	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.Name, "")
+	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), "")
 	if azureclients.IsNotFound(err) {
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
@@ -135,7 +135,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	v.Status.SetConditions(runtimev1alpha1.Creating())
 
 	vnet := network.NewVirtualNetworkParameters(v)
-	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.Name, vnet); err != nil {
+	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), vnet); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateVirtualNetwork)
 	}
 
@@ -148,14 +148,14 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.New(errNotVirtualNetwork)
 	}
 
-	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.Name, "")
+	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), "")
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetVirtualNetwork)
 	}
 
 	if network.VirtualNetworkNeedsUpdate(v, az) {
 		vnet := network.NewVirtualNetworkParameters(v)
-		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.Name, vnet); err != nil {
+		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), vnet); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateVirtualNetwork)
 		}
 	}
@@ -170,6 +170,6 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	mg.SetConditions(runtimev1alpha1.Deleting())
 
-	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, v.Spec.Name)
+	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v))
 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteVirtualNetwork)
 }

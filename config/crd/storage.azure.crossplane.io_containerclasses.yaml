@@ -48,25 +48,11 @@ spec:
           description: SpecTemplate is a template for the spec of a dynamically provisioned
             Container.
           properties:
-            accountReference:
-              description: AccountReference to the Azure Blob Storage Account this
-                Container will reside within.
-              properties:
-                name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
-                  type: string
-              type: object
             metadata:
               additionalProperties:
                 type: string
               description: Metadata for this Container.
               type: object
-            nameFormat:
-              description: NameFormat specifies the name of the external Container.
-                The first instance of the string '%s' will be replaced with the Kubernetes
-                UID of this Container.
-              type: string
             providerRef:
               description: ProviderReference specifies the provider that will be used
                 to create, observe, update, and delete managed resources that are
@@ -131,8 +117,6 @@ spec:
                 using this claim will be created.
               type: string
           required:
-          - accountReference
-          - nameFormat
           - providerRef
           - writeConnectionSecretsToNamespace
           type: object

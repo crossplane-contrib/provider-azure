@@ -313,6 +313,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Client:            tt.fields.client,
 				syncdeleterMaker:  tt.fields.maker,
 				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
+				Initializer:       managed.NewNameAsExternalName(tt.fields.client),
 				log:               logging.NewNopLogger(),
 			}
 			got, err := r.Reconcile(req)
@@ -703,17 +704,11 @@ func Test_createupdater_create(t *testing.T) {
 					},
 				},
 				acct: v1alpha3test.NewMockAccount(name).
-					WithSpecStorageAccountSpec(&v1alpha3.StorageAccountSpec{
-						Tags: map[string]string{},
-					}).
 					Account,
 			},
 			want: want{
 				res: resultRequeue,
 				obj: v1alpha3test.NewMockAccount(name).
-					WithSpecStorageAccountSpec(&v1alpha3.StorageAccountSpec{
-						Tags: map[string]string{uidTag: ""},
-					}).
 					WithStatusConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileError(errBoom)).
 					WithFinalizer(finalizer).
 					Account,
@@ -731,9 +726,6 @@ func Test_createupdater_create(t *testing.T) {
 				kube: test.NewMockClient(),
 				acct: v1alpha3test.NewMockAccount(name).
 					WithUID("test-uid").
-					WithSpecStorageAccountSpec(&v1alpha3.StorageAccountSpec{
-						Tags: map[string]string{},
-					}).
 					Account,
 			},
 			want: want{
@@ -741,9 +733,6 @@ func Test_createupdater_create(t *testing.T) {
 				res: resultRequeue,
 				obj: v1alpha3test.NewMockAccount(name).
 					WithUID("test-uid").
-					WithSpecStorageAccountSpec(&v1alpha3.StorageAccountSpec{
-						Tags: map[string]string{uidTag: "test-uid"},
-					}).
 					WithFinalizer(finalizer).
 					WithStatusConditions(runtimev1alpha1.Creating()).
 					Account,

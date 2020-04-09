@@ -56,12 +56,7 @@ const (
 // Client struct that represents the information needed to connect to the Azure services as a client
 type Client struct {
 	autorest.Authorizer
-	SubscriptionID                 string
-	clientID                       string
-	clientSecret                   string
-	tenantID                       string
-	activeDirectoryEndpointURL     string
-	activeDirectoryGraphResourceID string
+	Credentials
 }
 
 // Credentials represents the contents of a JSON encoded Azure credentials file.
@@ -96,13 +91,15 @@ func NewClient(credentials []byte) (*Client, error) {
 	}
 
 	return &Client{
-		Authorizer:                     authorizer,
-		SubscriptionID:                 creds.SubscriptionID,
-		clientID:                       creds.ClientID,
-		clientSecret:                   creds.ClientSecret,
-		tenantID:                       creds.TenantID,
-		activeDirectoryEndpointURL:     creds.ActiveDirectoryEndpointURL,
-		activeDirectoryGraphResourceID: creds.ActiveDirectoryGraphResourceID,
+		Authorizer: authorizer,
+		Credentials: Credentials{
+			SubscriptionID:                 creds.SubscriptionID,
+			ClientID:                       creds.ClientID,
+			ClientSecret:                   creds.ClientSecret,
+			TenantID:                       creds.TenantID,
+			ActiveDirectoryEndpointURL:     creds.ActiveDirectoryEndpointURL,
+			ActiveDirectoryGraphResourceID: creds.ActiveDirectoryGraphResourceID,
+		},
 	}, nil
 }
 

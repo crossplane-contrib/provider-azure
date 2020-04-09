@@ -40,6 +40,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/clients/network/fake"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -117,7 +118,6 @@ func subnet(sm ...subnetModifier) *v1alpha3.Subnet {
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
 				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
 			},
-			Name:               name,
 			VirtualNetworkName: virtualNetworkName,
 			ResourceGroupName:  resourceGroupName,
 			SubnetPropertiesFormat: v1alpha3.SubnetPropertiesFormat{
@@ -126,6 +126,8 @@ func subnet(sm ...subnetModifier) *v1alpha3.Subnet {
 		},
 		Status: v1alpha3.SubnetStatus{},
 	}
+
+	meta.SetExternalName(r, name)
 
 	for _, m := range sm {
 		m(r)

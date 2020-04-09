@@ -229,7 +229,7 @@ func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) 
 // NewMySQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule) mysql.VirtualNetworkRule {
 	return mysql.VirtualNetworkRule{
-		Name: azure.ToStringPtr(v.Spec.Name),
+		Name: azure.ToStringPtr(meta.GetExternalName(v)),
 		VirtualNetworkRuleProperties: &mysql.VirtualNetworkRuleProperties{
 			VirtualNetworkSubnetID:           azure.ToStringPtr(v.Spec.VirtualNetworkRuleProperties.VirtualNetworkSubnetID),
 			IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(v.Spec.VirtualNetworkRuleProperties.IgnoreMissingVnetServiceEndpoint, azure.FieldRequired),

@@ -22,11 +22,9 @@ import (
 	"github.com/Azure/azure-storage-blob-go/azblob"
 
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/claimbinding"
@@ -130,7 +128,6 @@ func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.Class,
 	}
 
 	spec := &v1alpha3.ContainerSpec{
-		ReclaimPolicy:       runtimev1alpha1.ReclaimRetain,
 		ContainerParameters: rs.SpecTemplate.ContainerParameters,
 	}
 
@@ -139,13 +136,7 @@ func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.Class,
 		spec.Metadata = azblob.Metadata{}
 	}
 
-	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
-
-	// Azure storage containers read credentials via an Account resource, not an
-	// Azure Crossplane provider. We reuse the 'provider' reference field of the
-	// resource class.
-	spec.AccountReference = corev1.LocalObjectReference{Name: rs.SpecTemplate.ProviderReference.Name}
-
+	spec.ProviderReference = rs.SpecTemplate.ProviderReference
 	a.Spec = *spec
 
 	return nil

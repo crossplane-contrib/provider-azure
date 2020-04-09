@@ -124,11 +124,6 @@ type AKSClusterParameters struct {
 	// cluster.
 	// +optional
 	DisableRBAC bool `json:"disableRBAC,omitempty"`
-
-	// WriteServicePrincipalSecretTo the specified Secret. The service principal
-	// is automatically generated and used by the AKS cluster to interact with
-	// other Azure resources.
-	WriteServicePrincipalSecretTo runtimev1alpha1.SecretReference `json:"writeServicePrincipalTo"`
 }
 
 // An AKSClusterSpec defines the desired state of a AKSCluster.
@@ -141,10 +136,6 @@ type AKSClusterSpec struct {
 type AKSClusterStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
 
-	// ClusterName is the name of the cluster as registered with the cloud
-	// provider.
-	ClusterName string `json:"clusterName,omitempty"`
-
 	// State is the current state of the cluster.
 	State string `json:"state,omitempty"`
 
@@ -154,18 +145,6 @@ type AKSClusterStatus struct {
 
 	// Endpoint is the endpoint where the cluster can be reached
 	Endpoint string `json:"endpoint"`
-
-	// ApplicationObjectID is the object ID of the AD application the cluster
-	// uses for Azure APIs.
-	ApplicationObjectID string `json:"appObjectID,omitempty"`
-
-	// ServicePrincipalID is the ID of the service principal the AD application
-	// uses.
-	ServicePrincipalID string `json:"servicePrincipalID,omitempty"`
-
-	// RunningOperation stores any current long running operation for this
-	// instance across reconciliation attempts.
-	RunningOperation string `json:"runningOperation,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -173,14 +152,13 @@ type AKSClusterStatus struct {
 // An AKSCluster is a managed resource that represents an Azure Kubernetes
 // Engine cluster.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
-// +kubebuilder:printcolumn:name="CLUSTER-NAME",type="string",JSONPath=".status.clusterName"
 // +kubebuilder:printcolumn:name="ENDPOINT",type="string",JSONPath=".status.endpoint"
 // +kubebuilder:printcolumn:name="CLUSTER-CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster
+// +kubebuilder:subresource:status
 type AKSCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

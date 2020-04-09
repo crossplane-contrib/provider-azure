@@ -74,6 +74,7 @@ type Reconciler struct {
 	client.Client
 	syncdeleterMaker
 	managed.ReferenceResolver
+	managed.Initializer
 
 	log logging.Logger
 }
@@ -86,6 +87,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		Client:            mgr.GetClient(),
 		syncdeleterMaker:  &accountSyncdeleterMaker{mgr.GetClient()},
 		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
+		Initializer:       managed.NewNameAsExternalName(mgr.GetClient()),
 		log:               l.WithValues("controller", name),
 	}
 
@@ -109,6 +111,9 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
+		return reconcile.Result{}, err
+	}
+	if err := r.Initialize(ctx, b); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -172,7 +177,7 @@ func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha
 	}
 
 	return newAccountSyncDeleter(
-		azurestorage.NewAccountHandle(storageClient, b.Spec.ResourceGroupName, b.Spec.StorageAccountName),
+		azurestorage.NewAccountHandle(storageClient, b.Spec.ResourceGroupName, meta.GetExternalName(b)),
 		m.Client, b), nil
 }
 
@@ -237,8 +242,6 @@ func (asd *accountSyncDeleter) delete(ctx context.Context) (reconcile.Result, er
 	return reconcile.Result{}, asd.kube.Update(ctx, asd.acct)
 }
 
-const uidTag = "UID"
-
 // sync - synchronizes the state of the storage account resource with the state of the
 // account Kubernetes acct
 func (asd *accountSyncDeleter) sync(ctx context.Context) (reconcile.Result, error) {
@@ -250,13 +253,6 @@ func (asd *accountSyncDeleter) sync(ctx context.Context) (reconcile.Result, erro
 
 	if account == nil {
 		return asd.create(ctx)
-	}
-
-	// for existing account check UID tag
-	if uid := to.String(account.Tags[uidTag]); uid != "" && uid != string(asd.acct.GetUID()) {
-		err := errors.Errorf("storage account: %s already exists and owned by: %s", to.String(account.Name), uid)
-		asd.acct.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
-		return reconcile.Result{}, asd.kube.Status().Update(ctx, asd.acct)
 	}
 
 	return asd.update(ctx, account)
@@ -291,13 +287,6 @@ func newAccountCreateUpdater(ao azurestorage.AccountOperations, kube client.Clie
 func (acu *accountCreateUpdater) create(ctx context.Context) (reconcile.Result, error) {
 	acu.acct.Status.SetConditions(runtimev1alpha1.Creating())
 	meta.AddFinalizer(acu.acct, finalizer)
-
-	// Set UID to the account storage spec
-	// TODO(illya) - this eventually needs to be in Defaulter Mutating web hook
-	if tags := acu.acct.Spec.StorageAccountSpec.Tags; tags == nil {
-		acu.acct.Spec.StorageAccountSpec.Tags = make(map[string]string)
-	}
-	acu.acct.Spec.StorageAccountSpec.Tags[uidTag] = string(acu.acct.GetUID())
 
 	accountSpec := v1alpha3.ToStorageAccountCreate(acu.acct.Spec.StorageAccountSpec)
 
@@ -399,7 +388,7 @@ func (asu *accountSecretUpdater) updatesecret(ctx context.Context, acct *storage
 		return errors.New("account keys are empty")
 	}
 
-	secret.Data[runtimev1alpha1.ResourceCredentialsSecretUserKey] = []byte(asu.acct.Spec.StorageAccountName)
+	secret.Data[runtimev1alpha1.ResourceCredentialsSecretUserKey] = []byte(meta.GetExternalName(asu.acct))
 	secret.Data[runtimev1alpha1.ResourceCredentialsSecretPasswordKey] = []byte(to.String(keys[0].Value))
 
 	if err := asu.kube.Create(ctx, secret); err != nil {

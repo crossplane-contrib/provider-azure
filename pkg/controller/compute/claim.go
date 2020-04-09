@@ -18,7 +18,6 @@ package compute
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
@@ -92,7 +91,6 @@ func SetupAKSClusterClaimBinding(mgr ctrl.Manager, l logging.Logger) error {
 		resource.ClaimKind(computev1alpha1.KubernetesClusterGroupVersionKind),
 		resource.ClassKind(v1alpha3.AKSClusterClassGroupVersionKind),
 		resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind),
-		claimbinding.WithBinder(claimbinding.NewAPIBinder(mgr.GetClient(), mgr.GetScheme())),
 		claimbinding.WithManagedConfigurators(
 			claimbinding.ManagedConfiguratorFn(ConfigureAKSCluster),
 			claimbinding.ManagedConfiguratorFn(claimbinding.ConfigureReclaimPolicy),
@@ -144,10 +142,6 @@ func ConfigureAKSCluster(_ context.Context, cm resource.Claim, cs resource.Class
 		spec.NodeCount = to.IntPtr(v1alpha3.DefaultNodeCount)
 	}
 
-	spec.WriteServicePrincipalSecretTo = runtimev1alpha1.SecretReference{
-		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
-		Name:      fmt.Sprintf("principal-%s", cm.GetUID()),
-	}
 	spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
 		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
 		Name:      string(cm.GetUID()),

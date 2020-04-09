@@ -12,12 +12,6 @@ spec:
   - JSONPath: .status.bindingPhase
     name: STATUS
     type: string
-  - JSONPath: .status.state
-    name: STATE
-    type: string
-  - JSONPath: .status.clusterName
-    name: CLUSTER-NAME
-    type: string
   - JSONPath: .status.endpoint
     name: ENDPOINT
     type: string
@@ -40,7 +34,8 @@ spec:
     plural: aksclusters
     singular: akscluster
   scope: Cluster
-  subresources: {}
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       description: An AKSCluster is a managed resource that represents an Azure Kubernetes
@@ -261,34 +256,14 @@ spec:
               - name
               - namespace
               type: object
-            writeServicePrincipalTo:
-              description: WriteServicePrincipalSecretTo the specified Secret. The
-                service principal is automatically generated and used by the AKS cluster
-                to interact with other Azure resources.
-              properties:
-                name:
-                  description: Name of the secret.
-                  type: string
-                namespace:
-                  description: Namespace of the secret.
-                  type: string
-              required:
-              - name
-              - namespace
-              type: object
           required:
           - location
           - providerRef
           - version
-          - writeServicePrincipalTo
           type: object
         status:
           description: An AKSClusterStatus represents the observed state of an AKSCluster.
           properties:
-            appObjectID:
-              description: ApplicationObjectID is the object ID of the AD application
-                the cluster uses for Azure APIs.
-              type: string
             bindingPhase:
               description: Phase represents the binding phase of a managed resource
                 or claim. Unbindable resources cannot be bound, typically because
@@ -300,10 +275,6 @@ spec:
               - Unbound
               - Bound
               - Released
-              type: string
-            clusterName:
-              description: ClusterName is the name of the cluster as registered with
-                the cloud provider.
               type: string
             conditions:
               description: Conditions of the resource.
@@ -344,14 +315,6 @@ spec:
             providerID:
               description: ProviderID is the external ID to identify this resource
                 in the cloud provider.
-              type: string
-            runningOperation:
-              description: RunningOperation stores any current long running operation
-                for this instance across reconciliation attempts.
-              type: string
-            servicePrincipalID:
-              description: ServicePrincipalID is the ID of the service principal the
-                AD application uses.
               type: string
             state:
               description: State is the current state of the cluster.

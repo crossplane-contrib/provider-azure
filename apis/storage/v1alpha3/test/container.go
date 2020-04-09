@@ -20,6 +20,7 @@ import (
 	"time"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 
@@ -36,11 +37,13 @@ type MockContainer struct {
 
 // NewMockContainer new container builcer
 func NewMockContainer(name string) *MockContainer {
-	return &MockContainer{
+	c := &MockContainer{
 		Container: &storagev1alpha3.Container{
 			ObjectMeta: metav1.ObjectMeta{Name: name},
 		},
 	}
+	meta.SetExternalName(c, name)
+	return c
 }
 
 // WithTypeMeta sets TypeMeta value
@@ -91,15 +94,9 @@ func (tc *MockContainer) WithSpecClaimRef(ref *corev1.ObjectReference) *MockCont
 	return tc
 }
 
-// WithSpecAccountRef sets spec account reference value
-func (tc *MockContainer) WithSpecAccountRef(name string) *MockContainer {
-	tc.Container.Spec.AccountReference = corev1.LocalObjectReference{Name: name}
-	return tc
-}
-
-// WithSpecNameFormat sets spec name format
-func (tc *MockContainer) WithSpecNameFormat(f string) *MockContainer {
-	tc.Container.Spec.NameFormat = f
+// WithSpecProviderRef sets spec account reference value
+func (tc *MockContainer) WithSpecProviderRef(name string) *MockContainer {
+	tc.Container.Spec.ProviderReference = &corev1.ObjectReference{Name: name}
 	return tc
 }
 

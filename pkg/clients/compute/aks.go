@@ -10,7 +10,7 @@ You may obtain a copy of the License at
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
+See the License for the c.Specific language governing permissions and
 limitations under the License.
 */
 
@@ -18,14 +18,25 @@ package compute
 
 import (
 	"context"
-	"strings"
+	"fmt"
+	"time"
 
+	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
+	authorizationmgmt "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 
-	computev1alpha3 "github.com/crossplane/provider-azure/apis/compute/v1alpha3"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
+
+	"github.com/crossplane/provider-azure/apis/compute/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
-	"github.com/crossplane/provider-azure/pkg/clients/authorization"
 )
 
 const (
@@ -33,182 +44,285 @@ const (
 	// created cluster agent pool profile
 	AgentPoolProfileName = "agentpool"
 
-	maxClusterNameLen = 31
+	// NetworkContributorRoleID lets the AKS cluster managed networks, but not
+	// access them.
+	NetworkContributorRoleID = "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+
+	appCredsValidYears = 5
 )
 
-// AKSSetupClient is a type that implements all of the AKS setup interface
-type AKSSetupClient struct {
-	AKSClusterAPI
-	azure.ApplicationAPI
-	azure.ServicePrincipalAPI
-	authorization.RoleAssignmentsAPI
+// An AKSClient can create, read, and delete AKS clusters and the various other
+// resources they require.
+type AKSClient interface {
+	GetManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error)
+	EnsureManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster, secret string) error
+	DeleteManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) error
+	GetKubeConfig(ctx context.Context, ac *v1alpha3.AKSCluster) ([]byte, error)
 }
 
-// AKSSetupAPIFactory is an interface that can create instances of the AKSSetupClient
-type AKSSetupAPIFactory interface {
-	CreateSetupClient(c *azure.Client) (*AKSSetupClient, error)
+// An AggregateClient aggregates the various clients used by the AKS controller.
+type AggregateClient struct {
+	ManagedClusters   containerservice.ManagedClustersClient
+	Applications      graphrbac.ApplicationsClient
+	ServicePrincipals graphrbac.ServicePrincipalsClient
+	RoleAssignments   authorization.RoleAssignmentsClient
 }
 
-// AKSSetupClientFactory implements the AKSSetupAPIFactory interface by returning real clients that talk to Azure APIs
-type AKSSetupClientFactory struct {
-}
-
-// CreateSetupClient creates and returns an AKS setup client that is ready to talk to Azure APIs
-func (f *AKSSetupClientFactory) CreateSetupClient(c *azure.Client) (*AKSSetupClient, error) {
-	aksClusterClient, err := NewAKSClusterClient(c)
+// NewAggregateClient produces the various clients used by the AKS controller.
+func NewAggregateClient(credentials []byte) (AKSClient, error) {
+	c, err := azure.NewClient(credentials)
 	if err != nil {
-		return nil, err
+		return AggregateClient{}, errors.Wrap(err, "cannot create Azure client")
 	}
 
-	appClient, err := azure.NewApplicationClient(c)
+	ta, err := NewTokenAuthorizer(c)
 	if err != nil {
-		return nil, err
+		return AggregateClient{}, errors.Wrap(err, "cannot create Azure bearer token authorizer")
 	}
 
-	spClient, err := azure.NewServicePrincipalClient(c)
-	if err != nil {
-		return nil, err
-	}
+	mcc := containerservice.NewManagedClustersClient(c.SubscriptionID)
+	mcc.Authorizer = c.Authorizer
+	mcc.AddToUserAgent(azure.UserAgent)
 
-	raClient, err := authorization.NewRoleAssignmentsClient(c)
-	if err != nil {
-		return nil, err
-	}
+	rac := authorization.NewRoleAssignmentsClient(c.SubscriptionID)
+	rac.Authorizer = c.Authorizer
+	rac.AddToUserAgent(azure.UserAgent)
 
-	return &AKSSetupClient{
-		AKSClusterAPI:       aksClusterClient,
-		ApplicationAPI:      appClient,
-		ServicePrincipalAPI: spClient,
-		RoleAssignmentsAPI:  raClient,
+	ac := graphrbac.NewApplicationsClient(c.TenantID)
+	ac.Authorizer = ta
+	ac.AddToUserAgent(azure.UserAgent)
+
+	spc := graphrbac.NewServicePrincipalsClient(c.TenantID)
+	spc.Authorizer = ta
+	spc.AddToUserAgent(azure.UserAgent)
+
+	return AggregateClient{
+		ManagedClusters:   mcc,
+		Applications:      ac,
+		ServicePrincipals: spc,
+		RoleAssignments:   rac,
 	}, nil
 }
 
-// AKSClusterAPI represents the API interface for a AKS Cluster client
-type AKSClusterAPI interface {
-	Get(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error)
-	CreateOrUpdateBegin(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error)
-	CreateOrUpdateEnd(op []byte) (bool, error)
-	Delete(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error)
-	ListClusterAdminCredentials(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error)
-}
-
-// AKSClusterClient is the concreate implementation of the AKSClusterAPI interface that calls Azure API.
-type AKSClusterClient struct {
-	containerservice.ManagedClustersClient
-}
-
-// NewAKSClusterClient creates and initializes a AKSClusterClient instance.
-func NewAKSClusterClient(c *azure.Client) (*AKSClusterClient, error) {
-	aksClustersClient := containerservice.NewManagedClustersClient(c.SubscriptionID)
-	aksClustersClient.Authorizer = c.Authorizer
-	aksClustersClient.AddToUserAgent(azure.UserAgent)
-
-	return &AKSClusterClient{aksClustersClient}, nil
-}
-
-// Get returns the AKS cluster details for the given instance
-func (c *AKSClusterClient) Get(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
-	return c.ManagedClustersClient.Get(ctx, instance.Spec.ResourceGroupName, instance.Status.ClusterName)
-}
-
-// CreateOrUpdateBegin begins the create/update operation for a AKS Cluster with the given properties
-func (c *AKSClusterClient) CreateOrUpdateBegin(ctx context.Context, instance computev1alpha3.AKSCluster, clusterName, appID, spSecret string) ([]byte, error) {
-	spec := instance.Spec
-
-	enableRBAC := !spec.DisableRBAC
-
-	nodeCount := int32(computev1alpha3.DefaultNodeCount)
-	if spec.NodeCount != nil {
-		nodeCount = int32(*spec.NodeCount)
+// NewTokenAuthorizer produces a service principal token based authorizer, which
+// is required by the graph API clients.
+func NewTokenAuthorizer(c *azure.Client) (autorest.Authorizer, error) {
+	cfg, err := adal.NewOAuthConfig(c.ActiveDirectoryEndpointURL, c.TenantID)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot create OAuth configuration")
 	}
 
-	createParams := containerservice.ManagedCluster{
-		Name:     &clusterName,
-		Location: &spec.Location,
+	token, err := adal.NewServicePrincipalToken(*cfg, c.ClientID, c.ClientSecret, c.ActiveDirectoryGraphResourceID)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot create service principal token")
+	}
+	if err := token.Refresh(); err != nil {
+		return nil, errors.Wrap(err, "cannot refresh service principal token")
+	}
+
+	return autorest.NewBearerAuthorizer(token), nil
+}
+
+// GetManagedCluster returns the requested Azure managed cluster.
+func (c AggregateClient) GetManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
+	return c.ManagedClusters.Get(ctx, ac.Spec.ResourceGroupName, meta.GetExternalName(ac))
+}
+
+// EnsureManagedCluster ensures the supplied AKS cluster exists, including
+// ensuring any required service principals and role assignments exist.
+func (c AggregateClient) EnsureManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster, secret string) error {
+	app, err := c.ensureApplication(ctx, meta.GetExternalName(ac), secret)
+	if err != nil {
+		return err
+	}
+
+	sp, err := c.ensureServicePrincipal(ctx, to.String(app.AppID))
+	if err != nil {
+		return err
+	}
+
+	if err := c.ensureRoleAssignment(ctx, to.String(sp.ObjectID), NetworkContributorRoleID, ac.Spec.VnetSubnetID); err != nil {
+		return err
+	}
+
+	mc := newManagedCluster(ac, to.String(app.AppID), secret)
+	_, err = c.ManagedClusters.CreateOrUpdate(ctx, ac.Spec.ResourceGroupName, meta.GetExternalName(ac), mc)
+	return err
+}
+
+// DeleteManagedCluster deletes the supplied AKS cluster, including its service
+// principals and any role assignments.
+func (c AggregateClient) DeleteManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) error {
+	if err := c.deleteApplication(ctx, meta.GetExternalName(ac)); err != nil {
+		return err
+	}
+	_, err := c.ManagedClusters.Delete(ctx, ac.Spec.ResourceGroupName, meta.GetExternalName(ac))
+	return err
+}
+
+// GetKubeConfig produces a kubeconfig file that configures access to the
+// supplied AKS cluster.
+func (c AggregateClient) GetKubeConfig(ctx context.Context, ac *v1alpha3.AKSCluster) ([]byte, error) {
+	creds, err := c.ManagedClusters.ListClusterAdminCredentials(ctx, ac.Spec.ResourceGroupName, meta.GetExternalName(ac))
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO(negz): It's not clear in what case this would contain more than one kubeconfig file.
+	// https://docs.microsoft.com/en-us/rest/api/aks/managedclusters/listclusteradmincredentials#credentialresults
+	if creds.Kubeconfigs == nil || len(*creds.Kubeconfigs) == 0 || (*creds.Kubeconfigs)[0].Value == nil {
+		return nil, errors.Errorf("zero kubeconfig credentials returned")
+	}
+	// Azure's generated Godoc claims Value is a 'base64 encoded kubeconfig'.
+	// This is true on the wire, but not true in the actual struct because
+	// encoding/json automatically base64 encodes and decodes byte slices.
+	return *((*creds.Kubeconfigs)[0].Value), nil
+}
+
+func (c AggregateClient) ensureApplication(ctx context.Context, name, secret string) (graphrbac.Application, error) {
+	pc, err := newPasswordCredential(secret)
+	if err != nil {
+		return graphrbac.Application{}, err
+	}
+
+	filter := fmt.Sprintf("displayName eq '%s'", name)
+	for l, err := c.Applications.ListComplete(ctx, filter); l.NotDone(); err = l.NextWithContext(ctx) {
+		if err != nil {
+			return graphrbac.Application{}, err
+		}
+		p := graphrbac.PasswordCredentialsUpdateParameters{Value: &[]graphrbac.PasswordCredential{pc}}
+		if _, err := c.Applications.UpdatePasswordCredentials(ctx, to.String(l.Value().ObjectID), p); err != nil {
+			return graphrbac.Application{}, err
+		}
+
+		// We really do want to stop here if we found an app with our desired
+		// display name. We presume it's one we created earlier.
+		return l.Value(), nil // nolint:staticcheck
+	}
+
+	url := fmt.Sprintf("https://%s.aks.crossplane.io", name)
+	p := graphrbac.ApplicationCreateParameters{
+		AvailableToOtherTenants: to.BoolPtr(false),
+		DisplayName:             to.StringPtr(name),
+		Homepage:                to.StringPtr(url),
+		IdentifierUris:          &[]string{url},
+		PasswordCredentials:     &[]graphrbac.PasswordCredential{pc},
+	}
+	if err != nil {
+		return graphrbac.Application{}, err
+	}
+
+	return c.Applications.Create(ctx, p)
+}
+
+func (c AggregateClient) ensureServicePrincipal(ctx context.Context, appID string) (graphrbac.ServicePrincipal, error) {
+	r, err := c.Applications.GetServicePrincipalsIDByAppID(ctx, appID)
+	if azure.IsNotFound(err) {
+		// Create it.
+		p := graphrbac.ServicePrincipalCreateParameters{AppID: to.StringPtr(appID), AccountEnabled: to.BoolPtr(true)}
+		return c.ServicePrincipals.Create(ctx, p)
+	}
+	if err != nil {
+		return graphrbac.ServicePrincipal{}, err
+	}
+
+	return c.ServicePrincipals.Get(ctx, to.String(r.Value))
+}
+
+func (c AggregateClient) ensureRoleAssignment(ctx context.Context, principalID, roleID, scope string) error {
+	// If scope was the empty string we probably needed a role assignment for
+	// an optional scope, for example a subnetwork.
+	if scope == "" {
+		return nil
+	}
+
+	name, err := uuid.NewRandom()
+	if err != nil {
+		return err
+	}
+
+	filter := fmt.Sprintf("principalId eq '%s'", principalID)
+	for l, err := c.RoleAssignments.ListForScopeComplete(ctx, scope, filter); l.NotDone(); err = l.NextWithContext(ctx) {
+		if err != nil {
+			return err
+		}
+
+		// We really do want to stop here if our principal already has a role
+		// definition for this scope; we presume it's one we created earlier.
+		return nil // nolint:staticcheck
+	}
+
+	p := authorizationmgmt.RoleAssignmentCreateParameters{Properties: &authorizationmgmt.RoleAssignmentProperties{
+		RoleDefinitionID: azure.ToStringPtr(fmt.Sprintf("/subscriptions/%s%s", c.RoleAssignments.SubscriptionID, roleID)),
+		PrincipalID:      azure.ToStringPtr(principalID),
+	}}
+	_, err = c.RoleAssignments.Create(ctx, scope, name.String(), p)
+	return err
+}
+
+func (c AggregateClient) deleteApplication(ctx context.Context, name string) error {
+	filter := fmt.Sprintf("displayName eq '%s'", name)
+	for l, err := c.Applications.ListComplete(ctx, filter); l.NotDone(); err = l.NextWithContext(ctx) {
+		if err != nil {
+			return err
+		}
+
+		// We really do want to delete the first matching application we find.
+		_, err := c.Applications.Delete(ctx, to.String(l.Value().ObjectID))
+		return resource.Ignore(azure.IsNotFound, err) // nolint:staticcheck
+	}
+
+	return nil
+}
+
+func newManagedCluster(c *v1alpha3.AKSCluster, appID, secret string) containerservice.ManagedCluster {
+	nodeCount := int32(v1alpha3.DefaultNodeCount)
+	if c.Spec.NodeCount != nil {
+		nodeCount = int32(*c.Spec.NodeCount)
+	}
+
+	p := containerservice.ManagedCluster{
+		Name:     to.StringPtr(meta.GetExternalName(c)),
+		Location: to.StringPtr(c.Spec.Location),
 		ManagedClusterProperties: &containerservice.ManagedClusterProperties{
-			KubernetesVersion: &spec.Version,
-			DNSPrefix:         &spec.DNSNamePrefix,
+			KubernetesVersion: to.StringPtr(c.Spec.Version),
+			DNSPrefix:         to.StringPtr(c.Spec.DNSNamePrefix),
 			AgentPoolProfiles: &[]containerservice.ManagedClusterAgentPoolProfile{
 				{
 					Name:   to.StringPtr(AgentPoolProfileName),
 					Count:  &nodeCount,
-					VMSize: containerservice.VMSizeTypes(spec.NodeVMSize),
+					VMSize: containerservice.VMSizeTypes(c.Spec.NodeVMSize),
 				},
 			},
 			ServicePrincipalProfile: &containerservice.ManagedClusterServicePrincipalProfile{
 				ClientID: to.StringPtr(appID),
-				Secret:   to.StringPtr(spSecret),
+				Secret:   to.StringPtr(secret),
 			},
-			EnableRBAC: &enableRBAC,
+			EnableRBAC: to.BoolPtr(!c.Spec.DisableRBAC),
 		},
 	}
 
-	if spec.VnetSubnetID != "" {
-		createParams.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfile{
-			NetworkPlugin: containerservice.Azure,
-		}
-
-		createParams.ManagedClusterProperties.AgentPoolProfiles = &[]containerservice.ManagedClusterAgentPoolProfile{
+	if c.Spec.VnetSubnetID != "" {
+		p.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfile{NetworkPlugin: containerservice.Azure}
+		p.ManagedClusterProperties.AgentPoolProfiles = &[]containerservice.ManagedClusterAgentPoolProfile{
 			{
 				Name:         to.StringPtr(AgentPoolProfileName),
 				Count:        &nodeCount,
-				VMSize:       containerservice.VMSizeTypes(spec.NodeVMSize),
-				VnetSubnetID: to.StringPtr(spec.VnetSubnetID),
+				VMSize:       containerservice.VMSizeTypes(c.Spec.NodeVMSize),
+				VnetSubnetID: to.StringPtr(c.Spec.VnetSubnetID),
 			},
 		}
 	}
 
-	createFuture, err := c.CreateOrUpdate(ctx, instance.Spec.ResourceGroupName, clusterName, createParams)
-	if err != nil {
-		return nil, err
-	}
-
-	// serialize the create operation
-	createFutureJSON, err := createFuture.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	return createFutureJSON, nil
+	return p
 }
 
-// CreateOrUpdateEnd checks to see if the given create/update operation is completed and if any error has occurred.
-func (c *AKSClusterClient) CreateOrUpdateEnd(op []byte) (done bool, err error) {
-	// unmarshal the given create complete data into a future object
-	future := &containerservice.ManagedClustersCreateOrUpdateFuture{}
-	if err = future.UnmarshalJSON(op); err != nil {
-		return false, err
-	}
-
-	// check if the operation is done yet
-	done, err = future.DoneWithContext(context.Background(), c.Client)
-	if !done {
-		return false, err
-	}
-
-	// check the result of the completed operation
-	if _, err = future.Result(c.ManagedClustersClient); err != nil {
-		return true, err
-	}
-
-	return true, nil
-}
-
-// Delete begins the deletion operator for the given AKS cluster instance
-func (c *AKSClusterClient) Delete(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.ManagedClustersDeleteFuture, error) {
-	return c.ManagedClustersClient.Delete(ctx, instance.Spec.ResourceGroupName, instance.Status.ClusterName)
-}
-
-// ListClusterAdminCredentials will return the admin credentials used to connect to the given AKS cluster
-func (c *AKSClusterClient) ListClusterAdminCredentials(ctx context.Context, instance computev1alpha3.AKSCluster) (containerservice.CredentialResults, error) {
-	return c.ManagedClustersClient.ListClusterAdminCredentials(ctx, instance.Spec.ResourceGroupName, instance.Status.ClusterName)
-}
-
-// SanitizeClusterName sanitizes the given AKS cluster name
-func SanitizeClusterName(name string) string {
-	if len(name) > maxClusterNameLen {
-		name = name[:maxClusterNameLen]
-	}
-
-	return strings.TrimSuffix(name, "-")
+func newPasswordCredential(secret string) (graphrbac.PasswordCredential, error) {
+	keyID, err := uuid.NewRandom()
+	return graphrbac.PasswordCredential{
+		StartDate: &date.Time{Time: time.Now()},
+		EndDate:   &date.Time{Time: time.Now().AddDate(appCredsValidYears, 0, 0)},
+		KeyID:     to.StringPtr(keyID.String()),
+		Value:     to.StringPtr(secret),
+	}, err
 }

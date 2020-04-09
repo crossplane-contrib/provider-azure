@@ -6,20 +6,17 @@ metadata:
   labels:
     example: "true"
 specTemplate:
-  writeConnectionSecretsToNamespace: crossplane-system
-  resourceGroupName: group-westus-1
+  resourceGroupNameRef:
+    name: aks-example
+  vnetSubnetIDRef:
+    name: aks-example
   location: West US 2
-  version: "1.12.8"
+  version: "1.15.10"
   nodeCount: 1
   nodeVMSize: Standard_B2s
   dnsNamePrefix: crossplane-aks
   disableRBAC: false
-  # It is a bug that this field is required by Azure cluster classes; it is not
-  # used. Service principal secrets for dynamically provisioned claims are
-  # written to writeConnectionSecretsToNamespace.
-  writeServicePrincipalTo:
-    name: unused
-    namespace: unused
   providerRef:
     name: example
   reclaimPolicy: Delete
+  writeConnectionSecretsToNamespace: crossplane-system

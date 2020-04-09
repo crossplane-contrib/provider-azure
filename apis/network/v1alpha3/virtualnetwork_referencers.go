@@ -19,6 +19,7 @@ package v1alpha3
 import (
 	"context"
 
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -56,11 +57,7 @@ func (v *VirtualNetworkNameReferencer) GetStatus(ctx context.Context, _ resource
 
 // Build retrieves and builds the NetworkName
 func (v *VirtualNetworkNameReferencer) Build(ctx context.Context, _ resource.CanReference, reader client.Reader) (string, error) {
-	network := VirtualNetwork{}
-	nn := types.NamespacedName{Name: v.Name}
-	if err := reader.Get(ctx, nn, &network); err != nil {
-		return "", err
-	}
-
-	return network.Spec.Name, nil
+	network := &VirtualNetwork{}
+	err := reader.Get(ctx, types.NamespacedName{Name: v.Name}, network)
+	return meta.GetExternalName(network), err
 }

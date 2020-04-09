@@ -108,7 +108,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
-	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
+	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v))
 	if azure.IsNotFound(err) {
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
@@ -137,7 +137,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	v.SetConditions(runtimev1alpha1.Creating())
 
 	vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
-	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
+	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v), vnet); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServerVirtualNetworkRule)
 	}
 
@@ -150,14 +150,14 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
-	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
+	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v))
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetPostgreSQLServerVirtualNetworkRule)
 	}
 
 	if database.PostgreSQLServerVirtualNetworkRuleNeedsUpdate(v, az) {
 		vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
-		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name, vnet); err != nil {
+		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v), vnet); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServerVirtualNetworkRule)
 		}
 	}
@@ -172,7 +172,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	v.SetConditions(runtimev1alpha1.Deleting())
 
-	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, v.Spec.Name)
+	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v))
 
 	return errors.Wrap(resource.Ignore(azure.IsNotFound, err), errDeletePostgreSQLServerVirtualNetworkRule)
 }

@@ -52,7 +52,6 @@ func TestConfigureContainer(t *testing.T) {
 
 	claimUID := types.UID("definitely-a-uuid")
 	providerName := "coolprovider"
-	bucketName := "coolbucket"
 	bucketPrivate := storagev1alpha1.ACLPrivate
 
 	cases := map[string]struct {
@@ -64,7 +63,6 @@ func TestConfigureContainer(t *testing.T) {
 				cm: &storagev1alpha1.Bucket{
 					ObjectMeta: metav1.ObjectMeta{UID: claimUID},
 					Spec: storagev1alpha1.BucketSpec{
-						Name:          bucketName,
 						PredefinedACL: &bucketPrivate,
 					},
 				},
@@ -81,11 +79,12 @@ func TestConfigureContainer(t *testing.T) {
 			want: want{
 				mg: &v1alpha3.Container{
 					Spec: v1alpha3.ContainerSpec{
-						ContainerParameters: v1alpha3.ContainerParameters{
-							AccountReference: corev1.LocalObjectReference{Name: providerName},
-							Metadata:         azblob.Metadata{},
+						ResourceSpec: runtimev1alpha1.ResourceSpec{
+							ProviderReference: &corev1.ObjectReference{Name: providerName},
 						},
-						ReclaimPolicy: runtimev1alpha1.ReclaimDelete,
+						ContainerParameters: v1alpha3.ContainerParameters{
+							Metadata: azblob.Metadata{},
+						},
 					},
 				},
 				err: nil,

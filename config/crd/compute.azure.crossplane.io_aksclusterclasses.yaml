@@ -162,27 +162,11 @@ spec:
                 in which the connection secrets of managed resources dynamically provisioned
                 using this claim will be created.
               type: string
-            writeServicePrincipalTo:
-              description: WriteServicePrincipalSecretTo the specified Secret. The
-                service principal is automatically generated and used by the AKS cluster
-                to interact with other Azure resources.
-              properties:
-                name:
-                  description: Name of the secret.
-                  type: string
-                namespace:
-                  description: Namespace of the secret.
-                  type: string
-              required:
-              - name
-              - namespace
-              type: object
           required:
           - location
           - providerRef
           - version
           - writeConnectionSecretsToNamespace
-          - writeServicePrincipalTo
           type: object
       required:
       - specTemplate
