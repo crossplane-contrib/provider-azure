@@ -2,7 +2,9 @@
 apiVersion: database.crossplane.io/v1alpha1
 kind: PostgreSQLInstance
 metadata:
-  name: app-postgresql
+  name: postgres-example
+  annotations:
+    crossplane.io/external-name: postgres-example
 spec:
   classSelector:
     matchLabels:
@@ -10,3 +12,22 @@ spec:
   writeConnectionSecretToRef:
     name: postgresqlconn
   engineVersion: "9.6"
+---
+# This is not a claim, but it is required to actually access the dynamically
+# provisioned managed resource.
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: PostgreSQLServerVirtualNetworkRule
+metadata:
+  name: postgres-example
+spec:
+  # Note that this serverName relies on the external-name annotation of the
+  # claim above being set.
+  serverName: postgres-example
+  resourceGroupNameRef:
+    name: postgres-example
+  properties:
+    virtualNetworkSubnetIdRef:
+      name: postgres-example
+  reclaimPolicy: Delete
+  providerRef:
+    name: example
