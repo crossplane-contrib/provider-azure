@@ -5,4 +5,4 @@ metadata:
   name: provider-azure
   namespace: azure
 spec:
-  package: "crossplane/provider-azure"
+  package: "crossplane/provider-azure:v0.8.0"
