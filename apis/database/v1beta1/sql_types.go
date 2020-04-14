@@ -62,7 +62,7 @@ func (v *ResourceGroupNameReferencerForSQLServer) Assign(res resource.CanReferen
 // A MySQLServer is a managed resource that represents an Azure MySQL Database
 // Server.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.userVisibleState"
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
@@ -90,7 +90,7 @@ type MySQLServerList struct {
 // A PostgreSQLServer is a managed resource that represents an Azure PostgreSQL
 // Database Server.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.userVisibleState"
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
 // +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"

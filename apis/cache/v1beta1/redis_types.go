@@ -197,9 +197,9 @@ type RedisStatus struct {
 
 // A Redis is a managed resource that represents an Azure Redis cluster.
 // +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.provisioningState"
 // +kubebuilder:printcolumn:name="CLASS",type="string",JSONPath=".spec.classRef.name"
-// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".status.redisVersion"
+// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".status.atProvider.redisVersion"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster

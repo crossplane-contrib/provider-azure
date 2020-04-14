@@ -12,7 +12,7 @@ spec:
   - JSONPath: .status.bindingPhase
     name: STATUS
     type: string
-  - JSONPath: .status.state
+  - JSONPath: .status.atProvider.userVisibleState
     name: STATE
     type: string
   - JSONPath: .spec.classRef.name
