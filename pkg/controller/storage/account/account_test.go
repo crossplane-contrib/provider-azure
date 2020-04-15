@@ -282,7 +282,6 @@ func TestReconciler_Reconcile(t *testing.T) {
 				res: resultRequeue,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithStatusConditions(
-						runtimev1alpha1.ReferenceResolutionSuccess(),
 						runtimev1alpha1.ReconcileError(errBoom),
 					).
 					WithFinalizer("foo.bar").Account,
@@ -310,11 +309,10 @@ func TestReconciler_Reconcile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				Client:            tt.fields.client,
-				syncdeleterMaker:  tt.fields.maker,
-				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
-				Initializer:       managed.NewNameAsExternalName(tt.fields.client),
-				log:               logging.NewNopLogger(),
+				Client:           tt.fields.client,
+				syncdeleterMaker: tt.fields.maker,
+				Initializer:      managed.NewNameAsExternalName(tt.fields.client),
+				log:              logging.NewNopLogger(),
 			}
 			got, err := r.Reconcile(req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {

@@ -51,15 +51,9 @@ const (
 	requeueAfterOnSuccess = 1 * time.Minute
 )
 
-// Amounts of time we wait before requeuing a reconcile.
-const (
-	aLongWait = 60 * time.Second
-)
-
 // Error strings
 const (
-	errUpdateManagedStatus = "cannot update managed resource status"
-	errAcctSecretNil       = "account does not have a connection secret"
+	errAcctSecretNil = "account does not have a connection secret"
 )
 
 var (
@@ -82,11 +76,10 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 	name := managed.ControllerName(v1alpha3.ContainerGroupKind)
 
 	r := &Reconciler{
-		Client:            mgr.GetClient(),
-		syncdeleterMaker:  &containerSyncdeleterMaker{mgr.GetClient()},
-		ReferenceResolver: managed.NewAPIReferenceResolver(mgr.GetClient()),
-		Initializer:       managed.NewNameAsExternalName(mgr.GetClient()),
-		log:               l.WithValues("controller", name),
+		Client:           mgr.GetClient(),
+		syncdeleterMaker: &containerSyncdeleterMaker{mgr.GetClient()},
+		Initializer:      managed.NewNameAsExternalName(mgr.GetClient()),
+		log:              l.WithValues("controller", name),
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -109,21 +102,6 @@ func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	if err := r.Initialize(ctx, c); err != nil {
 		return reconcile.Result{}, err
-	}
-
-	if !resource.IsConditionTrue(c.GetCondition(runtimev1alpha1.TypeReferencesResolved)) {
-		if err := r.ResolveReferences(ctx, c); err != nil {
-			condition := runtimev1alpha1.ReconcileError(err)
-			if managed.IsReferencesAccessError(err) {
-				condition = runtimev1alpha1.ReferenceResolutionBlocked(err)
-			}
-
-			c.Status.SetConditions(condition)
-			return reconcile.Result{RequeueAfter: aLongWait}, errors.Wrap(r.Update(ctx, c), errUpdateManagedStatus)
-		}
-
-		// Add ReferenceResolutionSuccess to the conditions
-		c.Status.SetConditions(runtimev1alpha1.ReferenceResolutionSuccess())
 	}
 
 	sd, err := r.newSyncdeleter(ctx, c)
