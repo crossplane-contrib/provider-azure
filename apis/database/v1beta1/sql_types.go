@@ -20,8 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	"github.com/pkg/errors"
 
 	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
@@ -32,30 +30,6 @@ const (
 	StateDropping = "Dropping"
 	StateReady    = "Ready"
 )
-
-// Error strings
-const (
-	errResourceIsNotSQLServer = "the managed resource is not a MySQLServer or PostgreSQLServer"
-)
-
-// ResourceGroupNameReferencerForSQLServer is an attribute referencer that
-// resolves the name of a the ResourceGroup.
-type ResourceGroupNameReferencerForSQLServer struct {
-	apisv1alpha3.ResourceGroupNameReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved group name to the managed resource
-func (v *ResourceGroupNameReferencerForSQLServer) Assign(res resource.CanReference, value string) error {
-	switch sql := res.(type) {
-	case *MySQLServer:
-		sql.Spec.ForProvider.ResourceGroupName = value
-	case *PostgreSQLServer:
-		sql.Spec.ForProvider.ResourceGroupName = value
-	default:
-		return errors.New(errResourceIsNotSQLServer)
-	}
-	return nil
-}
 
 // +kubebuilder:object:root=true
 
@@ -198,7 +172,12 @@ type SQLServerParameters struct {
 	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
 	// its name
 	// +immutable
-	ResourceGroupNameRef *ResourceGroupNameReferencerForSQLServer `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - A selector for a ResourceGroup object to
+	// retrieve its name
+	// +immutable
+	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// SKU is the billing information related properties of the server.
 	SKU SKU `json:"sku"`

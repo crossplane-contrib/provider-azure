@@ -17,36 +17,10 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
-
-	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
-
-// Error strings
-const (
-	errResourceIsNotVirtualNetwork = "the managed resource is not a VirtualNetwork"
-	errResourceIsNotSubnet         = "the managed resource is not a Subnet"
-)
-
-// ResourceGroupNameReferencerForVirtualNetwork is an attribute referencer that resolves name from a referenced ResourceGroup
-type ResourceGroupNameReferencerForVirtualNetwork struct {
-	apisv1alpha3.ResourceGroupNameReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved group name to the managed resource
-func (v *ResourceGroupNameReferencerForVirtualNetwork) Assign(res resource.CanReference, value string) error {
-	vn, ok := res.(*VirtualNetwork)
-	if !ok {
-		return errors.Errorf(errResourceIsNotVirtualNetwork)
-	}
-
-	vn.Spec.ResourceGroupName = value
-	return nil
-}
 
 // AddressSpace contains an array of IP address ranges that can be used by
 // subnets of the virtual network.
@@ -82,8 +56,13 @@ type VirtualNetworkSpec struct {
 	// ResourceGroupName - Name of the Virtual Network's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
-	// ResourceGroupNameRef - A reference to the the Virtual Network's resource group.
-	ResourceGroupNameRef *ResourceGroupNameReferencerForVirtualNetwork `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
+	// ResourceGroupNameRef - A reference to the the Virtual Network's resource
+	// group.
+	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Select a reference to the the Virtual
+	// Network's resource group.
+	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// VirtualNetworkPropertiesFormat - Properties of the virtual network.
 	VirtualNetworkPropertiesFormat `json:"properties"`
@@ -149,38 +128,6 @@ type VirtualNetworkList struct {
 	Items           []VirtualNetwork `json:"items"`
 }
 
-// VirtualNetworkNameReferencerForSubnet is an attribute referencer that resolves name from a referenced Network
-type VirtualNetworkNameReferencerForSubnet struct {
-	VirtualNetworkNameReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved network name to the managed resource
-func (v *VirtualNetworkNameReferencerForSubnet) Assign(res resource.CanReference, value string) error {
-	subnet, ok := res.(*Subnet)
-	if !ok {
-		return errors.Errorf(errResourceIsNotSubnet)
-	}
-
-	subnet.Spec.VirtualNetworkName = value
-	return nil
-}
-
-// ResourceGroupNameReferencerForSubnet is an attribute referencer that resolves name from a referenced ResourceGroup
-type ResourceGroupNameReferencerForSubnet struct {
-	apisv1alpha3.ResourceGroupNameReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved group name to the managed resource
-func (v *ResourceGroupNameReferencerForSubnet) Assign(res resource.CanReference, value string) error {
-	subnet, ok := res.(*Subnet)
-	if !ok {
-		return errors.Errorf(errResourceIsNotSubnet)
-	}
-
-	subnet.Spec.ResourceGroupName = value
-	return nil
-}
-
 // ServiceEndpointPropertiesFormat defines properties of a service endpoint.
 type ServiceEndpointPropertiesFormat struct {
 	// Service - The type of the endpoint service.
@@ -213,13 +160,21 @@ type SubnetSpec struct {
 	VirtualNetworkName string `json:"virtualNetworkName,omitempty"`
 
 	// VirtualNetworkNameRef references to a VirtualNetwork to retrieve its name
-	VirtualNetworkNameRef *VirtualNetworkNameReferencerForSubnet `json:"virtualNetworkNameRef,omitempty" resource:"attributereferencer"`
+	VirtualNetworkNameRef *runtimev1alpha1.Reference `json:"virtualNetworkNameRef,omitempty"`
+
+	// VirtualNetworkNameSelector selects a reference to a VirtualNetwork to
+	// retrieve its name
+	VirtualNetworkNameSelector *runtimev1alpha1.Selector `json:"virtualNetworkNameSelector,omitempty"`
 
 	// ResourceGroupName - Name of the Subnet's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to the the Subnets's resource group.
-	ResourceGroupNameRef *ResourceGroupNameReferencerForSubnet `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
+	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Selects a reference to the the Subnets's
+	// resource group.
+	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// SubnetPropertiesFormat - Properties of the subnet.
 	SubnetPropertiesFormat `json:"properties"`

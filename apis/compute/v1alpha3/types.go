@@ -17,15 +17,9 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"github.com/pkg/errors"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
-
-	networkv1alpha3 "github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 const (
@@ -40,43 +34,6 @@ const (
 	DefaultNodeCount = 1
 )
 
-// Error strings
-const (
-	errResourceIsNotAKSCluster = "the managed resource is not an AKSCluster"
-)
-
-// ResourceGroupNameReferencerForAKSCluster is an attribute referencer that resolves name from a referenced ResourceGroup
-type ResourceGroupNameReferencerForAKSCluster struct {
-	apisv1alpha3.ResourceGroupNameReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved group name to the managed resource
-func (v *ResourceGroupNameReferencerForAKSCluster) Assign(res resource.CanReference, value string) error {
-	aks, ok := res.(*AKSCluster)
-	if !ok {
-		return errors.Errorf(errResourceIsNotAKSCluster)
-	}
-
-	aks.Spec.ResourceGroupName = value
-	return nil
-}
-
-// SubnetIDReferencerForAKSCluster is an attribute referencer that resolves name from a referenced ResourceGroup
-type SubnetIDReferencerForAKSCluster struct {
-	networkv1alpha3.SubnetIDReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved group name to the managed resource
-func (v *SubnetIDReferencerForAKSCluster) Assign(res resource.CanReference, value string) error {
-	aks, ok := res.(*AKSCluster)
-	if !ok {
-		return errors.Errorf(errResourceIsNotAKSCluster)
-	}
-
-	aks.Spec.VnetSubnetID = value
-	return nil
-}
-
 // AKSClusterParameters define the desired state of an Azure Kubernetes Engine
 // cluster.
 type AKSClusterParameters struct {
@@ -84,9 +41,13 @@ type AKSClusterParameters struct {
 	// be created in
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
-	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
-	// its name
-	ResourceGroupNameRef *ResourceGroupNameReferencerForAKSCluster `json:"resourceGroupNameRef,omitempty" resource:"attributereferencer"`
+	// ResourceGroupNameRef - A reference to a ResourceGroup to retrieve its
+	// name
+	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Select a reference to a ResourceGroup to
+	// retrieve its name
+	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// Location is the Azure location that the cluster will be created in
 	Location string `json:"location"`
@@ -98,9 +59,12 @@ type AKSClusterParameters struct {
 	// +optional
 	VnetSubnetID string `json:"vnetSubnetID,omitempty"`
 
-	// ResourceGroupNameRef - A reference to a VnetSubnet object to retrieve
+	// ResourceGroupNameRef - A reference to a Subnet to retrieve its ID
+	VnetSubnetIDRef *runtimev1alpha1.Reference `json:"vnetSubnetIDRef,omitempty"`
+
+	// ResourceGroupNameSelector - Select a reference to a Subnet to retrieve
 	// its ID
-	VnetSubnetIDRef *SubnetIDReferencerForAKSCluster `json:"vnetSubnetIDRef,omitempty" resource:"attributereferencer"`
+	VnetSubnetIDSelector *runtimev1alpha1.Selector `json:"vnetSubnetIDSelector,omitempty"`
 
 	// NodeCount is the number of nodes that the cluster will initially be
 	// created with.  This can be scaled over time and defaults to 1.

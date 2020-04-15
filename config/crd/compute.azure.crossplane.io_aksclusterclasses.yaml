@@ -132,13 +132,29 @@ spec:
                 the cluster will be created in
               type: string
             resourceGroupNameRef:
-              description: ResourceGroupNameRef - A reference to a ResourceGroup object
-                to retrieve its name
+              description: ResourceGroupNameRef - A reference to a ResourceGroup to
+                retrieve its name
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the referenced object.
                   type: string
+              required:
+              - name
+              type: object
+            resourceGroupNameSelector:
+              description: ResourceGroupNameSelector - Select a reference to a ResourceGroup
+                to retrieve its name
+              properties:
+                matchControllerRef:
+                  description: MatchControllerRef ensures an object with the same
+                    controller reference as the selecting object is selected.
+                  type: boolean
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  description: MatchLabels ensures an object with matching labels
+                    is selected.
+                  type: object
               type: object
             version:
               description: Version is the Kubernetes version that will be deployed
@@ -149,13 +165,29 @@ spec:
                 deployed.
               type: string
             vnetSubnetIDRef:
-              description: ResourceGroupNameRef - A reference to a VnetSubnet object
-                to retrieve its ID
+              description: ResourceGroupNameRef - A reference to a Subnet to retrieve
+                its ID
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the referenced object.
                   type: string
+              required:
+              - name
+              type: object
+            vnetSubnetIDSelector:
+              description: ResourceGroupNameSelector - Select a reference to a Subnet
+                to retrieve its ID
+              properties:
+                matchControllerRef:
+                  description: MatchControllerRef ensures an object with the same
+                    controller reference as the selecting object is selected.
+                  type: boolean
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  description: MatchLabels ensures an object with matching labels
+                    is selected.
+                  type: object
               type: object
             writeConnectionSecretsToNamespace:
               description: WriteConnectionSecretsToNamespace specifies the namespace

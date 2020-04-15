@@ -141,9 +141,25 @@ spec:
                     to retrieve its ID
                   properties:
                     name:
-                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      description: Name of the referenced object.
                       type: string
+                  required:
+                  - name
+                  type: object
+                virtualNetworkSubnetIdSelector:
+                  description: VirtualNetworkSubnetIDRef - A selector for a Subnet
+                    to retrieve its ID
+                  properties:
+                    matchControllerRef:
+                      description: MatchControllerRef ensures an object with the same
+                        controller reference as the selecting object is selected.
+                      type: boolean
+                    matchLabels:
+                      additionalProperties:
+                        type: string
+                      description: MatchLabels ensures an object with matching labels
+                        is selected.
+                      type: object
                   type: object
               type: object
             providerRef:
@@ -207,9 +223,25 @@ spec:
                 to retrieve its name
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the referenced object.
                   type: string
+              required:
+              - name
+              type: object
+            resourceGroupNameSelector:
+              description: ResourceGroupNameSelector - A selector for a ResourceGroup
+                object to retrieve its name
+              properties:
+                matchControllerRef:
+                  description: MatchControllerRef ensures an object with the same
+                    controller reference as the selecting object is selected.
+                  type: boolean
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  description: MatchLabels ensures an object with matching labels
+                    is selected.
+                  type: object
               type: object
             serverName:
               description: ServerName - Name of the Virtual Network Rule's PostgreSQLServer.
@@ -219,9 +251,25 @@ spec:
                 PostgreSQLServer.
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the referenced object.
                   type: string
+              required:
+              - name
+              type: object
+            serverNameSelector:
+              description: ServerNameSelector - A selector of the Virtual Network
+                Rule's PostgreSQLServer.
+              properties:
+                matchControllerRef:
+                  description: MatchControllerRef ensures an object with the same
+                    controller reference as the selecting object is selected.
+                  type: boolean
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  description: MatchLabels ensures an object with matching labels
+                    is selected.
+                  type: object
               type: object
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the namespace
