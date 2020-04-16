@@ -8,8 +8,9 @@ metadata:
 specTemplate:
   writeConnectionSecretsToNamespace: crossplane-system
   forProvider:
-    resourceGroupName: group-westus-1
-    location: West US
+    resourceGroupNameRef:
+      name: redis-example
+    location: West US 2
     sku:
       name: Basic
       family: C
