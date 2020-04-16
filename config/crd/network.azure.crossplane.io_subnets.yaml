@@ -218,9 +218,25 @@ spec:
                 resource group.
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the referenced object.
                   type: string
+              required:
+              - name
+              type: object
+            resourceGroupNameSelector:
+              description: ResourceGroupNameSelector - Selects a reference to the
+                the Subnets's resource group.
+              properties:
+                matchControllerRef:
+                  description: MatchControllerRef ensures an object with the same
+                    controller reference as the selecting object is selected.
+                  type: boolean
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  description: MatchLabels ensures an object with matching labels
+                    is selected.
+                  type: object
               type: object
             virtualNetworkName:
               description: VirtualNetworkName - Name of the Subnet's virtual network.
@@ -230,9 +246,25 @@ spec:
                 retrieve its name
               properties:
                 name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                    TODO: Add other useful fields. apiVersion, kind, uid?'
+                  description: Name of the referenced object.
                   type: string
+              required:
+              - name
+              type: object
+            virtualNetworkNameSelector:
+              description: VirtualNetworkNameSelector selects a reference to a VirtualNetwork
+                to retrieve its name
+              properties:
+                matchControllerRef:
+                  description: MatchControllerRef ensures an object with the same
+                    controller reference as the selecting object is selected.
+                  type: boolean
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  description: MatchLabels ensures an object with matching labels
+                    is selected.
+                  type: object
               type: object
             writeConnectionSecretToRef:
               description: WriteConnectionSecretToReference specifies the namespace

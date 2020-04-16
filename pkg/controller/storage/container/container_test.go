@@ -207,7 +207,6 @@ func TestReconciler_Reconcile(t *testing.T) {
 				con: v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer("foo.bar").
 					WithStatusConditions(
-						runtimev1alpha1.ReferenceResolutionSuccess(),
 						runtimev1alpha1.ReconcileError(errBoom),
 					).
 					Container,
@@ -254,11 +253,10 @@ func TestReconciler_Reconcile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Reconciler{
-				Client:            tt.fields.Client,
-				syncdeleterMaker:  tt.fields.syncdeleterMaker,
-				ReferenceResolver: managed.NewAPIReferenceResolver(struct{ client.Client }{}),
-				Initializer:       managed.NewNameAsExternalName(tt.fields.Client),
-				log:               logging.NewNopLogger(),
+				Client:           tt.fields.Client,
+				syncdeleterMaker: tt.fields.syncdeleterMaker,
+				Initializer:      managed.NewNameAsExternalName(tt.fields.Client),
+				log:              logging.NewNopLogger(),
 			}
 			got, err := r.Reconcile(req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {

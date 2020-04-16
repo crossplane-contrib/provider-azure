@@ -17,13 +17,9 @@ limitations under the License.
 package v1beta1
 
 import (
-	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
-
-	"github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 const (
@@ -31,25 +27,7 @@ const (
 	// supported by Azure Cache for Redis. The version cannot be specified at
 	// creation time.
 	SupportedRedisVersion = "3.2"
-
-	errNotRedis = "the given resource is not a Redis custom resource instance"
 )
-
-// ResourceGroupNameReferencerForRedis is an attribute referencer that
-// resolves the name of a the ResourceGroup.
-type ResourceGroupNameReferencerForRedis struct {
-	v1alpha3.ResourceGroupNameReferencer `json:",inline"`
-}
-
-// Assign assigns the retrieved group name to the managed resource
-func (v *ResourceGroupNameReferencerForRedis) Assign(res resource.CanReference, value string) error {
-	cr, ok := res.(*Redis)
-	if !ok {
-		return errors.New(errNotRedis)
-	}
-	cr.Spec.ForProvider.ResourceGroupName = value
-	return nil
-}
 
 // An SKU represents the performance and cost oriented properties of a
 // Redis.
@@ -88,7 +66,11 @@ type RedisParameters struct {
 
 	// ResourceGroupNameRef to fetch resource group name.
 	// +immutable
-	ResourceGroupNameRef *ResourceGroupNameReferencerForRedis `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector to select a reference to a resource group.
+	// +immutable
+	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// Sku - The SKU of the Redis cache to deploy.
 	SKU SKU `json:"sku"`
