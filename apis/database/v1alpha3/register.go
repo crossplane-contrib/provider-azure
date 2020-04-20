@@ -53,7 +53,16 @@ var (
 	PostgreSQLServerVirtualNetworkRuleGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerVirtualNetworkRuleKind)
 )
 
+// CosmosDBAccount type metadata.
+var (
+	CosmosDBAccountKind             = reflect.TypeOf(CosmosDBAccount{}).Name()
+	CosmosDBAccountGroupKind        = schema.GroupKind{Group: Group, Kind: CosmosDBAccountKind}.String()
+	CosmosDBAccountKindAPIVersion   = CosmosDBAccountKind + "." + SchemeGroupVersion.String()
+	CosmosDBAccountGroupVersionKind = SchemeGroupVersion.WithKind(CosmosDBAccountKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&MySQLServerVirtualNetworkRule{}, &MySQLServerVirtualNetworkRuleList{})
 	SchemeBuilder.Register(&PostgreSQLServerVirtualNetworkRule{}, &PostgreSQLServerVirtualNetworkRuleList{})
+	SchemeBuilder.Register(&CosmosDBAccount{}, &CosmosDBAccountList{})
 }

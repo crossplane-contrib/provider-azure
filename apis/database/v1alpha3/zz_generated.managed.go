@@ -23,6 +23,76 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// GetBindingPhase of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetBindingPhase() runtimev1alpha1.BindingPhase {
+	return mg.Status.GetBindingPhase()
+}
+
+// GetClaimReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetClaimReference() *corev1.ObjectReference {
+	return mg.Spec.ClaimReference
+}
+
+// GetClassReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
+}
+
+// GetCondition of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetProviderReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
+// GetReclaimPolicy of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+	return mg.Spec.ReclaimPolicy
+}
+
+// GetWriteConnectionSecretToReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetBindingPhase of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+	mg.Status.SetBindingPhase(p)
+}
+
+// SetClaimReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetClaimReference(r *corev1.ObjectReference) {
+	mg.Spec.ClaimReference = r
+}
+
+// SetClassReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
+// SetConditions of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetConditions(c ...runtimev1alpha1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetReclaimPolicy of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+	mg.Spec.ReclaimPolicy = r
+}
+
+// SetWriteConnectionSecretToReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetBindingPhase of this MySQLServerVirtualNetworkRule.
 func (mg *MySQLServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
 	return mg.Status.GetBindingPhase()
