@@ -23,6 +23,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -60,6 +61,10 @@ type resourceGroupModifier func(*v1alpha3.ResourceGroup)
 
 func withConditions(c ...runtimev1alpha1.Condition) resourceGroupModifier {
 	return func(r *v1alpha3.ResourceGroup) { r.Status.ConditionedStatus.Conditions = c }
+}
+
+func withProvisioningstate(s v1alpha3.ProvisioningState) resourceGroupModifier {
+	return func(r *v1alpha3.ResourceGroup) { r.Status.ProvisioningState = s }
 }
 
 func resourceGrp(rm ...resourceGroupModifier) *v1alpha3.ResourceGroup {
@@ -297,7 +302,7 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				mg:  resourceGrp(),
-				err: errors.Wrap(errBoom, errGetResourceGroup),
+				err: errors.Wrap(errBoom, errCheckResourceGroup),
 			},
 		},
 		"ResourceGroupNotFound": {
@@ -316,11 +321,36 @@ func TestObserve(t *testing.T) {
 				mg: resourceGrp(),
 			},
 		},
+		"GetError": {
+			e: &external{
+				client: &fakerg.MockClient{
+					MockCheckExistence: func(_ context.Context, _ string) (result autorest.Response, err error) {
+						return autorest.Response{Response: &http.Response{StatusCode: http.StatusOK}}, nil
+					},
+					MockGet: func(_ context.Context, _ string) (result resources.Group, err error) {
+						return resources.Group{}, errBoom
+					},
+				},
+			},
+			args: args{
+				mg: resourceGrp(),
+			},
+			want: want{
+				mg:  resourceGrp(),
+				err: errors.Wrap(errBoom, errGetResourceGroup),
+			},
+		},
+
 		"Success": {
 			e: &external{
 				client: &fakerg.MockClient{
 					MockCheckExistence: func(_ context.Context, _ string) (result autorest.Response, err error) {
 						return autorest.Response{Response: &http.Response{StatusCode: http.StatusOK}}, nil
+					},
+					MockGet: func(_ context.Context, _ string) (result resources.Group, err error) {
+						return resources.Group{Properties: &resources.GroupProperties{
+							ProvisioningState: to.StringPtr(string(v1alpha3.ProvisioningStateSucceeded)),
+						}}, nil
 					},
 				},
 			},
@@ -332,7 +362,10 @@ func TestObserve(t *testing.T) {
 					ResourceExists:   true,
 					ResourceUpToDate: true,
 				},
-				mg: resourceGrp(withConditions(runtimev1alpha1.Available())),
+				mg: resourceGrp(
+					withProvisioningstate(v1alpha3.ProvisioningStateSucceeded),
+					withConditions(runtimev1alpha1.Available()),
+				),
 			},
 		},
 	}
@@ -447,6 +480,21 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				err: errors.New(errNotResourceGroup),
+			},
+		},
+		"AlreadyDeleting": {
+			e: &external{},
+			args: args{
+				mg: resourceGrp(
+					withProvisioningstate(v1alpha3.ProvisioningStateDeleting),
+					withConditions(runtimev1alpha1.Deleting()),
+				),
+			},
+			want: want{
+				mg: resourceGrp(
+					withProvisioningstate(v1alpha3.ProvisioningStateDeleting),
+					withConditions(runtimev1alpha1.Deleting()),
+				),
 			},
 		},
 		"DeleteError": {

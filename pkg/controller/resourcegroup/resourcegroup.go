@@ -20,6 +20,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -42,6 +43,7 @@ const (
 	errProviderSecretNil   = "provider does not have a secret reference"
 	errNotResourceGroup    = "managed resource is not an ResourceGroup"
 	errCreateResourceGroup = "cannot create ResourceGroup"
+	errCheckResourceGroup  = "cannot check existence of ResourceGroup"
 	errGetResourceGroup    = "cannot get ResourceGroup"
 	errDeleteResourceGroup = "cannot delete ResourceGroup"
 )
@@ -105,11 +107,19 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	res, err := e.client.CheckExistence(ctx, meta.GetExternalName(r))
 	if err != nil {
-		return managed.ExternalObservation{}, errors.Wrap(err, errGetResourceGroup)
+		return managed.ExternalObservation{}, errors.Wrap(err, errCheckResourceGroup)
 	}
 
 	if res.Response.StatusCode == http.StatusNotFound {
 		return managed.ExternalObservation{ResourceExists: false}, nil
+	}
+
+	g, err := e.client.Get(ctx, meta.GetExternalName(r))
+	if err != nil {
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetResourceGroup)
+	}
+	if g.Properties != nil {
+		r.Status.ProvisioningState = v1alpha3.ProvisioningState(to.String(g.Properties.ProvisioningState))
 	}
 
 	r.SetConditions(runtimev1alpha1.Available())
@@ -136,6 +146,13 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	r, ok := mg.(*v1alpha3.ResourceGroup)
 	if !ok {
 		return errors.New(errNotResourceGroup)
+	}
+
+	// Calling delete on a resource group that is already deleting will succeed,
+	// but seems to prolong the deletion process, potentially resulting in a
+	// resource group that never actually gets deleted.
+	if r.Status.ProvisioningState == v1alpha3.ProvisioningStateDeleting {
+		return nil
 	}
 
 	r.Status.SetConditions(runtimev1alpha1.Deleting())

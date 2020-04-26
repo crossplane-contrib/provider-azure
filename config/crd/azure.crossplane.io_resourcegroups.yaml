@@ -238,6 +238,10 @@ spec:
                 - type
                 type: object
               type: array
+            provisioningState:
+              description: ProvisioningState - The provisioning state of the resource
+                group.
+              type: string
           type: object
       required:
       - spec

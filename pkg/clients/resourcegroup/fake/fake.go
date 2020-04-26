@@ -33,6 +33,7 @@ type MockClient struct {
 	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, parameters resources.Group) (result resources.Group, err error)
 	MockCheckExistence func(ctx context.Context, resourceGroupName string) (result autorest.Response, err error)
 	MockDelete         func(ctx context.Context, resourceGroupName string) (result resources.GroupsDeleteFuture, err error)
+	MockGet            func(ctx context.Context, resourceGroupName string) (result resources.Group, err error)
 }
 
 // CreateOrUpdate calls the underlying MockCreateOrUpdate method.
@@ -48,4 +49,9 @@ func (m *MockClient) CheckExistence(ctx context.Context, resourceGroupName strin
 // Delete calls the underlying MockDeleteGroup method.
 func (m *MockClient) Delete(ctx context.Context, resourceGroupName string) (result resources.GroupsDeleteFuture, err error) {
 	return m.MockDelete(ctx, resourceGroupName)
+}
+
+// Get calls the underlying MockGet method.
+func (m *MockClient) Get(ctx context.Context, resourceGroupName string) (result resources.Group, err error) {
+	return m.MockGet(ctx, resourceGroupName)
 }
