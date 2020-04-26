@@ -22,6 +22,15 @@ import (
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 )
 
+// A ProvisioningState of a resource group.
+type ProvisioningState string
+
+// Provisioning states.
+const (
+	ProvisioningStateSucceeded ProvisioningState = "Succeeded"
+	ProvisioningStateDeleting  ProvisioningState = "Deleting"
+)
+
 // A ProviderSpec defines the desired state of a Provider.
 type ProviderSpec struct {
 	runtimev1alpha1.ProviderSpec `json:",inline"`
@@ -61,6 +70,9 @@ type ResourceGroupSpec struct {
 // A ResourceGroupStatus represents the observed status of a ResourceGroup.
 type ResourceGroupStatus struct {
 	runtimev1alpha1.ResourceStatus `json:",inline"`
+
+	// ProvisioningState - The provisioning state of the resource group.
+	ProvisioningState ProvisioningState `json:"provisioningState,omitempty"`
 }
 
 // +kubebuilder:object:root=true
