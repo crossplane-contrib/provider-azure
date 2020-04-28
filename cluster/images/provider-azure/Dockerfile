@@ -9,4 +9,5 @@ ADD provider /usr/local/bin/crossplane-azure-provider
 COPY stack-package /
 
 EXPOSE 8080
+USER 1001
 ENTRYPOINT ["crossplane-azure-provider"]
