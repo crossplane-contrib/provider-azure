@@ -20,6 +20,10 @@ spec:
     type: date
   group: database.azure.crossplane.io
   names:
+    categories:
+    - crossplane
+    - managed
+    - azure
     kind: MySQLServerVirtualNetworkRule
     listKind: MySQLServerVirtualNetworkRuleList
     plural: mysqlservervirtualnetworkrules

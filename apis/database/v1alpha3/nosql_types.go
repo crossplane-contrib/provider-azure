@@ -32,7 +32,7 @@ import (
 // +kubebuilder:printcolumn:name="KIND",type="string",JSONPath=".spec.forProvider.kind"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
 type CosmosDBAccount struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
