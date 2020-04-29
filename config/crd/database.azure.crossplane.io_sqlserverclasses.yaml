@@ -20,6 +20,10 @@ spec:
     type: date
   group: database.azure.crossplane.io
   names:
+    categories:
+    - crossplane
+    - class
+    - azure
     kind: SQLServerClass
     listKind: SQLServerClassList
     plural: sqlserverclasses

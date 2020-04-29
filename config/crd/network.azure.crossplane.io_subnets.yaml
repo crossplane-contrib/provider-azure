@@ -26,6 +26,10 @@ spec:
     type: date
   group: network.azure.crossplane.io
   names:
+    categories:
+    - crossplane
+    - managed
+    - azure
     kind: Subnet
     listKind: SubnetList
     plural: subnets

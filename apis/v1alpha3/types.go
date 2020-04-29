@@ -41,7 +41,7 @@ type ProviderSpec struct {
 // A Provider configures an Azure 'provider', i.e. a connection to a particular
 // Azure account using a particular Azure Service Principal.
 // +kubebuilder:printcolumn:name="SECRET-NAME",type="string",JSONPath=".spec.credentialsSecretRef.name",priority=1
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,provider,azure}
 type Provider struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -77,7 +77,7 @@ type ResourceGroupStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
 
 // A ResourceGroup is a managed resource that represents an Azure Resource
 // Group.
