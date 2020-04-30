@@ -8,4 +8,4 @@ overview: |
 readme: |
  Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides a managed Kubernetes cluster, which is satisfied by [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/).
 
- Full documentation can be found in the Crossplane [API Reference docs](https://doc.crds.dev/github.com/crossplane/provider-azure/compute.azure.crossplane.io_aksclusterclasses.yaml).
+ Full documentation can be found in the Crossplane [API Reference docs](https://doc.crds.dev/github.com/crossplane/provider-azure/config/crd/compute.azure.crossplane.io_aksclusterclasses.yaml@v0.9.0).
