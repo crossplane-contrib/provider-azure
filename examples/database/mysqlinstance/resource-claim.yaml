@@ -31,3 +31,23 @@ spec:
   reclaimPolicy: Delete
   providerRef:
     name: example
+---
+# This is not a claim, but it is required to actually access the dynamically
+# provisioned managed resource.
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: MySQLServerFirewallRule
+metadata:
+  name: mysql-example
+spec:
+  forProvider:
+    # Note that this serverName relies on the external-name annotation of the
+    # claim above being set.
+    serverName: mysql-example
+    resourceGroupNameRef:
+      name: mysql-example
+    properties:
+      startIpAddress: 127.0.0.1
+      endIpAddress: 127.0.0.2
+  reclaimPolicy: Delete
+  providerRef:
+    name: example
