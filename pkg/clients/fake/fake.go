@@ -34,7 +34,6 @@ type MockMySQLVirtualNetworkRulesClient struct {
 	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, serverName string, virtualNetworkRuleName string, parameters mysql.VirtualNetworkRule) (result mysql.VirtualNetworkRulesCreateOrUpdateFuture, err error)
 	MockDelete         func(ctx context.Context, resourceGroupName string, serverName string, virtualNetworkRuleName string) (result mysql.VirtualNetworkRulesDeleteFuture, err error)
 	MockGet            func(ctx context.Context, resourceGroupName string, serverName string, virtualNetworkRuleName string) (result mysql.VirtualNetworkRule, err error)
-	MockListByServer   func(ctx context.Context, resourceGroupName string, serverName string) (result mysql.VirtualNetworkRuleListResultPage, err error)
 }
 
 // CreateOrUpdate calls the MockMySQLVirtualNetworkRulesClient's MockCreateOrUpdate method.
@@ -52,11 +51,6 @@ func (c *MockMySQLVirtualNetworkRulesClient) Get(ctx context.Context, resourceGr
 	return c.MockGet(ctx, resourceGroupName, serverName, virtualNetworkRuleName)
 }
 
-// ListByServer calls the MockMySQLVirtualNetworkRulesClient's MockListByServer method.
-func (c *MockMySQLVirtualNetworkRulesClient) ListByServer(ctx context.Context, resourceGroupName string, serverName string) (result mysql.VirtualNetworkRuleListResultPage, err error) {
-	return c.MockListByServer(ctx, resourceGroupName, serverName)
-}
-
 var _ postgresqlapi.VirtualNetworkRulesClientAPI = &MockPostgreSQLVirtualNetworkRulesClient{}
 
 // MockPostgreSQLVirtualNetworkRulesClient is a fake implementation of postgresql.VirtualNetworkRulesClient.
@@ -66,7 +60,6 @@ type MockPostgreSQLVirtualNetworkRulesClient struct {
 	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, serverName string, virtualNetworkRuleName string, parameters postgresql.VirtualNetworkRule) (result postgresql.VirtualNetworkRulesCreateOrUpdateFuture, err error)
 	MockDelete         func(ctx context.Context, resourceGroupName string, serverName string, virtualNetworkRuleName string) (result postgresql.VirtualNetworkRulesDeleteFuture, err error)
 	MockGet            func(ctx context.Context, resourceGroupName string, serverName string, virtualNetworkRuleName string) (result postgresql.VirtualNetworkRule, err error)
-	MockListByServer   func(ctx context.Context, resourceGroupName string, serverName string) (result postgresql.VirtualNetworkRuleListResultPage, err error)
 }
 
 // CreateOrUpdate calls the MockPostgreSQLVirtualNetworkRulesClient's MockCreateOrUpdate method.
@@ -84,7 +77,54 @@ func (c *MockPostgreSQLVirtualNetworkRulesClient) Get(ctx context.Context, resou
 	return c.MockGet(ctx, resourceGroupName, serverName, virtualNetworkRuleName)
 }
 
-// ListByServer calls the MockPostgreSQLVirtualNetworkRulesClient's MockListByServer method.
-func (c *MockPostgreSQLVirtualNetworkRulesClient) ListByServer(ctx context.Context, resourceGroupName string, serverName string) (result postgresql.VirtualNetworkRuleListResultPage, err error) {
-	return c.MockListByServer(ctx, resourceGroupName, serverName)
+var _ mysqlapi.FirewallRulesClientAPI = &MockMySQLFirewallRulesClient{}
+
+// MockMySQLFirewallRulesClient is a fake implementation of mysql.FirewallRulesClient.
+type MockMySQLFirewallRulesClient struct {
+	mysqlapi.FirewallRulesClientAPI
+
+	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string, parameters mysql.FirewallRule) (result mysql.FirewallRulesCreateOrUpdateFuture, err error)
+	MockDelete         func(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result mysql.FirewallRulesDeleteFuture, err error)
+	MockGet            func(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result mysql.FirewallRule, err error)
+}
+
+// CreateOrUpdate calls the MockMySQLFirewallRulesClient's MockCreateOrUpdate method.
+func (c *MockMySQLFirewallRulesClient) CreateOrUpdate(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string, parameters mysql.FirewallRule) (result mysql.FirewallRulesCreateOrUpdateFuture, err error) {
+	return c.MockCreateOrUpdate(ctx, resourceGroupName, serverName, firewallRuleName, parameters)
+}
+
+// Delete calls the MockMySQLFirewallRulesClient's MockDelete method.
+func (c *MockMySQLFirewallRulesClient) Delete(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result mysql.FirewallRulesDeleteFuture, err error) {
+	return c.MockDelete(ctx, resourceGroupName, serverName, firewallRuleName)
+}
+
+// Get calls the MockMySQLFirewallRulesClient's MockGet method.
+func (c *MockMySQLFirewallRulesClient) Get(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result mysql.FirewallRule, err error) {
+	return c.MockGet(ctx, resourceGroupName, serverName, firewallRuleName)
+}
+
+var _ postgresqlapi.FirewallRulesClientAPI = &MockPostgreSQLFirewallRulesClient{}
+
+// MockPostgreSQLFirewallRulesClient is a fake implementation of postgresql.FirewallRulesClient.
+type MockPostgreSQLFirewallRulesClient struct {
+	postgresqlapi.FirewallRulesClientAPI
+
+	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string, parameters postgresql.FirewallRule) (result postgresql.FirewallRulesCreateOrUpdateFuture, err error)
+	MockDelete         func(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result postgresql.FirewallRulesDeleteFuture, err error)
+	MockGet            func(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result postgresql.FirewallRule, err error)
+}
+
+// CreateOrUpdate calls the MockPostgreSQLFirewallRulesClient's MockCreateOrUpdate method.
+func (c *MockPostgreSQLFirewallRulesClient) CreateOrUpdate(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string, parameters postgresql.FirewallRule) (result postgresql.FirewallRulesCreateOrUpdateFuture, err error) {
+	return c.MockCreateOrUpdate(ctx, resourceGroupName, serverName, firewallRuleName, parameters)
+}
+
+// Delete calls the MockPostgreSQLFirewallRulesClient's MockDelete method.
+func (c *MockPostgreSQLFirewallRulesClient) Delete(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result postgresql.FirewallRulesDeleteFuture, err error) {
+	return c.MockDelete(ctx, resourceGroupName, serverName, firewallRuleName)
+}
+
+// Get calls the MockPostgreSQLFirewallRulesClient's MockGet method.
+func (c *MockPostgreSQLFirewallRulesClient) Get(ctx context.Context, resourceGroupName string, serverName string, firewallRuleName string) (result postgresql.FirewallRule, err error) {
+	return c.MockGet(ctx, resourceGroupName, serverName, firewallRuleName)
 }

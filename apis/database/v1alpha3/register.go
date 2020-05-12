@@ -53,6 +53,22 @@ var (
 	PostgreSQLServerVirtualNetworkRuleGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerVirtualNetworkRuleKind)
 )
 
+// MySQLServerFirewallRule type metadata.
+var (
+	MySQLServerFirewallRuleKind             = reflect.TypeOf(MySQLServerFirewallRule{}).Name()
+	MySQLServerFirewallRuleGroupKind        = schema.GroupKind{Group: Group, Kind: MySQLServerFirewallRuleKind}.String()
+	MySQLServerFirewallRuleKindAPIVersion   = MySQLServerFirewallRuleKind + "." + SchemeGroupVersion.String()
+	MySQLServerFirewallRuleGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerFirewallRuleKind)
+)
+
+// PostgreSQLServerFirewallRule type metadata.
+var (
+	PostgreSQLServerFirewallRuleKind             = reflect.TypeOf(PostgreSQLServerFirewallRule{}).Name()
+	PostgreSQLServerFirewallRuleGroupKind        = schema.GroupKind{Group: Group, Kind: PostgreSQLServerFirewallRuleKind}.String()
+	PostgreSQLServerFirewallRuleKindAPIVersion   = PostgreSQLServerFirewallRuleKind + "." + SchemeGroupVersion.String()
+	PostgreSQLServerFirewallRuleGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerFirewallRuleKind)
+)
+
 // CosmosDBAccount type metadata.
 var (
 	CosmosDBAccountKind             = reflect.TypeOf(CosmosDBAccount{}).Name()
@@ -64,5 +80,7 @@ var (
 func init() {
 	SchemeBuilder.Register(&MySQLServerVirtualNetworkRule{}, &MySQLServerVirtualNetworkRuleList{})
 	SchemeBuilder.Register(&PostgreSQLServerVirtualNetworkRule{}, &PostgreSQLServerVirtualNetworkRuleList{})
+	SchemeBuilder.Register(&MySQLServerFirewallRule{}, &MySQLServerFirewallRuleList{})
+	SchemeBuilder.Register(&PostgreSQLServerFirewallRule{}, &PostgreSQLServerFirewallRuleList{})
 	SchemeBuilder.Register(&CosmosDBAccount{}, &CosmosDBAccountList{})
 }

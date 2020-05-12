@@ -126,6 +126,76 @@ func (mg *PostgreSQLServerVirtualNetworkRule) ResolveReferences(ctx context.Cont
 	return nil
 }
 
+// ResolveReferences of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) ResolveReferences(ctx context.Context, c client.Reader) error {
+	r := reference.NewAPIResolver(c, mg)
+
+	// Resolve spec.resourceGroupName
+	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
+		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
+		Selector:     mg.Spec.ForProvider.ResourceGroupNameSelector,
+		To:           reference.To{Managed: &v1alpha3.ResourceGroup{}, List: &v1alpha3.ResourceGroupList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return err
+	}
+	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
+
+	// Resolve spec.serverName.
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ServerName,
+		Reference:    mg.Spec.ForProvider.ServerNameRef,
+		Selector:     mg.Spec.ForProvider.ServerNameSelector,
+		To:           reference.To{Managed: &v1beta1.MySQLServer{}, List: &v1beta1.MySQLServerList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return err
+	}
+	mg.Spec.ForProvider.ServerName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ServerNameRef = rsp.ResolvedReference
+
+	return nil
+}
+
+// ResolveReferences of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) ResolveReferences(ctx context.Context, c client.Reader) error {
+	r := reference.NewAPIResolver(c, mg)
+
+	// Resolve spec.resourceGroupName
+	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
+		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
+		Selector:     mg.Spec.ForProvider.ResourceGroupNameSelector,
+		To:           reference.To{Managed: &v1alpha3.ResourceGroup{}, List: &v1alpha3.ResourceGroupList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return err
+	}
+	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
+
+	// Resolve spec.serverName.
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ServerName,
+		Reference:    mg.Spec.ForProvider.ServerNameRef,
+		Selector:     mg.Spec.ForProvider.ServerNameSelector,
+		To:           reference.To{Managed: &v1beta1.PostgreSQLServer{}, List: &v1beta1.PostgreSQLServerList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return err
+	}
+	mg.Spec.ForProvider.ServerName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ServerNameRef = rsp.ResolvedReference
+
+	return nil
+}
+
 // ResolveReferences of this CosmosDBAccount.
 func (mg *CosmosDBAccount) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)

@@ -29,8 +29,26 @@ func (l *CosmosDBAccountList) GetItems() []resource.Managed {
 	return items
 }
 
+// GetItems of this MySQLServerFirewallRuleList.
+func (l *MySQLServerFirewallRuleList) GetItems() []resource.Managed {
+	items := make([]resource.Managed, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
+}
+
 // GetItems of this MySQLServerVirtualNetworkRuleList.
 func (l *MySQLServerVirtualNetworkRuleList) GetItems() []resource.Managed {
+	items := make([]resource.Managed, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
+}
+
+// GetItems of this PostgreSQLServerFirewallRuleList.
+func (l *PostgreSQLServerFirewallRuleList) GetItems() []resource.Managed {
 	items := make([]resource.Managed, len(l.Items))
 	for i := range l.Items {
 		items[i] = &l.Items[i]

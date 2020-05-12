@@ -93,6 +93,76 @@ func (mg *CosmosDBAccount) SetWriteConnectionSecretToReference(r *runtimev1alpha
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
+// GetBindingPhase of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
+	return mg.Status.GetBindingPhase()
+}
+
+// GetClaimReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetClaimReference() *corev1.ObjectReference {
+	return mg.Spec.ClaimReference
+}
+
+// GetClassReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
+}
+
+// GetCondition of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetProviderReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
+// GetReclaimPolicy of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+	return mg.Spec.ReclaimPolicy
+}
+
+// GetWriteConnectionSecretToReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetBindingPhase of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+	mg.Status.SetBindingPhase(p)
+}
+
+// SetClaimReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetClaimReference(r *corev1.ObjectReference) {
+	mg.Spec.ClaimReference = r
+}
+
+// SetClassReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
+// SetConditions of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetConditions(c ...runtimev1alpha1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetReclaimPolicy of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+	mg.Spec.ReclaimPolicy = r
+}
+
+// SetWriteConnectionSecretToReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetBindingPhase of this MySQLServerVirtualNetworkRule.
 func (mg *MySQLServerVirtualNetworkRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
 	return mg.Status.GetBindingPhase()
@@ -160,6 +230,76 @@ func (mg *MySQLServerVirtualNetworkRule) SetReclaimPolicy(r runtimev1alpha1.Recl
 
 // SetWriteConnectionSecretToReference of this MySQLServerVirtualNetworkRule.
 func (mg *MySQLServerVirtualNetworkRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
+// GetBindingPhase of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetBindingPhase() runtimev1alpha1.BindingPhase {
+	return mg.Status.GetBindingPhase()
+}
+
+// GetClaimReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetClaimReference() *corev1.ObjectReference {
+	return mg.Spec.ClaimReference
+}
+
+// GetClassReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetClassReference() *corev1.ObjectReference {
+	return mg.Spec.ClassReference
+}
+
+// GetCondition of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetProviderReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetProviderReference() *corev1.ObjectReference {
+	return mg.Spec.ProviderReference
+}
+
+// GetReclaimPolicy of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
+	return mg.Spec.ReclaimPolicy
+}
+
+// GetWriteConnectionSecretToReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetBindingPhase of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
+	mg.Status.SetBindingPhase(p)
+}
+
+// SetClaimReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetClaimReference(r *corev1.ObjectReference) {
+	mg.Spec.ClaimReference = r
+}
+
+// SetClassReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetClassReference(r *corev1.ObjectReference) {
+	mg.Spec.ClassReference = r
+}
+
+// SetConditions of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetConditions(c ...runtimev1alpha1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetProviderReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetProviderReference(r *corev1.ObjectReference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetReclaimPolicy of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
+	mg.Spec.ReclaimPolicy = r
+}
+
+// SetWriteConnectionSecretToReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
