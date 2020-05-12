@@ -17,14 +17,17 @@ limitations under the License.
 package database
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -132,7 +135,7 @@ func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := NewPostgreSQLVirtualNetworkRuleParameters(tc.r)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("MySQLVirtualNetworkRuleStatusFromAzure(...): -want, +got\n%s", diff)
+				t.Errorf("PostgreSQLVirtualNetworkRuleStatusFromAzure(...): -want, +got\n%s", diff)
 			}
 		})
 	}
@@ -196,7 +199,7 @@ func TestPostgreSQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := PostgreSQLServerVirtualNetworkRuleNeedsUpdate(tc.kube, tc.az)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("MySQLServerVirtualNetworkRuleNeedsUpdate(...): -want, +got\n%s", diff)
+				t.Errorf("PostgreSQLServerVirtualNetworkRuleNeedsUpdate(...): -want, +got\n%s", diff)
 			}
 		})
 	}
@@ -270,6 +273,141 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 			tc.want.ResourceStatus = resourceStatus
 			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
 				t.Errorf("UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+func TestNewPostgreSQLFirewallRulesClient(t *testing.T) {
+	type args struct {
+		ctx         context.Context
+		credentials []byte
+	}
+
+	cases := map[string]struct {
+		args args
+		want error
+	}{
+		"UnmarshalError": {
+			args: args{
+				credentials: []byte("invalid"),
+			},
+			want: errors.Wrap(errors.New("invalid character 'i' looking for beginning of value"), "cannot unmarshal Azure client secret data"),
+		},
+		"Successful": {
+			args: args{
+				credentials: []byte(credentials),
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			_, err := NewPostgreSQLFirewallRulesClient(tc.args.ctx, tc.args.credentials)
+			if diff := cmp.Diff(tc.want, err, test.EquateErrors()); diff != "" {
+				t.Errorf("NewPostgreSQLFirewallRulesClient(...) -want error, +got error:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestNewPostgreSQLFirewallRuleParameters(t *testing.T) {
+	name := "coolrule"
+	start := "127.0.0.1."
+	end := "It was just a dream Bender - there's no such thing as two."
+
+	cases := map[string]struct {
+		r    *v1alpha3.PostgreSQLServerFirewallRule
+		want postgresql.FirewallRule
+	}{
+		"Successful": {
+			r: func() *v1alpha3.PostgreSQLServerFirewallRule {
+				r := &v1alpha3.PostgreSQLServerFirewallRule{
+					Spec: v1alpha3.FirewallRuleSpec{
+						ForProvider: v1alpha3.FirewallRuleParameters{
+							FirewallRuleProperties: v1alpha3.FirewallRuleProperties{
+								StartIPAddress: start,
+								EndIPAddress:   end,
+							},
+						},
+					},
+				}
+				meta.SetExternalName(r, name)
+				return r
+			}(),
+			want: postgresql.FirewallRule{
+				Name: azure.ToStringPtr(name),
+				FirewallRuleProperties: &postgresql.FirewallRuleProperties{
+					StartIPAddress: azure.ToStringPtr(start),
+					EndIPAddress:   azure.ToStringPtr(end),
+				},
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got := NewPostgreSQLFirewallRuleParameters(tc.r)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("NewPostgreSQLFirewallRuleParameters(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestPostgreSQLServerFirewallRuleIsUpToDate(t *testing.T) {
+	start := "127.0.0.1."
+	end := "256"
+
+	cases := map[string]struct {
+		kube *v1alpha3.PostgreSQLServerFirewallRule
+		az   postgresql.FirewallRule
+		want bool
+	}{
+		"UpToDate": {
+			kube: &v1alpha3.PostgreSQLServerFirewallRule{},
+			az: postgresql.FirewallRule{
+				Name:                   azure.ToStringPtr(vnetRuleName),
+				FirewallRuleProperties: &postgresql.FirewallRuleProperties{},
+			},
+			want: true,
+		},
+		"StartNeedsUpdate": {
+			kube: &v1alpha3.PostgreSQLServerFirewallRule{
+				Spec: v1alpha3.FirewallRuleSpec{ForProvider: v1alpha3.FirewallRuleParameters{FirewallRuleProperties: v1alpha3.FirewallRuleProperties{
+					StartIPAddress: start,
+					EndIPAddress:   end,
+				}}},
+			},
+			az: postgresql.FirewallRule{
+				FirewallRuleProperties: &postgresql.FirewallRuleProperties{
+					StartIPAddress: azure.ToStringPtr("255.255.255.254"),
+					EndIPAddress:   azure.ToStringPtr(end),
+				},
+			},
+			want: false,
+		},
+		"EndNeedsUpdate": {
+			kube: &v1alpha3.PostgreSQLServerFirewallRule{
+				Spec: v1alpha3.FirewallRuleSpec{ForProvider: v1alpha3.FirewallRuleParameters{FirewallRuleProperties: v1alpha3.FirewallRuleProperties{
+					StartIPAddress: start,
+					EndIPAddress:   end,
+				}}},
+			},
+			az: postgresql.FirewallRule{
+				FirewallRuleProperties: &postgresql.FirewallRuleProperties{
+					StartIPAddress: azure.ToStringPtr(start),
+					EndIPAddress:   azure.ToStringPtr("192.168.0.1"),
+				},
+			},
+			want: false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got := PostgreSQLServerFirewallRuleIsUpToDate(tc.kube, tc.az)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("PostgreSQLServerFirewallRuleIsUpToDate(...): -want, +got\n%s", diff)
 			}
 		})
 	}

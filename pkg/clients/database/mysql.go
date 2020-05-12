@@ -28,6 +28,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
+	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -257,6 +258,57 @@ func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServer
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Type = azure.ToString(az.Type)
+}
+
+// A MySQLFirewallRulesClient handles CRUD operations for Azure Firewall Rules.
+type MySQLFirewallRulesClient mysqlapi.FirewallRulesClientAPI
+
+// NewMySQLFirewallRulesClient returns a new Azure Firewall Rules client.
+// Credentials must be passed as JSON encoded data.
+func NewMySQLFirewallRulesClient(ctx context.Context, credentials []byte) (MySQLFirewallRulesClient, error) {
+	c := azure.Credentials{}
+	if err := json.Unmarshal(credentials, &c); err != nil {
+		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
+	}
+
+	client := mysql.NewFirewallRulesClient(c.SubscriptionID)
+
+	cfg := auth.ClientCredentialsConfig{
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
+		TenantID:     c.TenantID,
+		AADEndpoint:  c.ActiveDirectoryEndpointURL,
+		Resource:     c.ResourceManagerEndpointURL,
+	}
+	a, err := cfg.Authorizer()
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
+	}
+	client.Authorizer = a
+	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
+		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
+	}
+
+	return client, nil
+}
+
+// NewMySQLFirewallRuleParameters returns an Azure FirewallRule object from a
+// firewall spec.
+func NewMySQLFirewallRuleParameters(r *azuredbv1alpha3.MySQLServerFirewallRule) mysql.FirewallRule {
+	return mysql.FirewallRule{
+		Name: azure.ToStringPtr(meta.GetExternalName(r)),
+		FirewallRuleProperties: &mysql.FirewallRuleProperties{
+			StartIPAddress: azure.ToStringPtr(r.Spec.ForProvider.StartIPAddress),
+			EndIPAddress:   azure.ToStringPtr(r.Spec.ForProvider.EndIPAddress),
+		},
+	}
+}
+
+// MySQLServerFirewallRuleIsUpToDate returns true if the supplied FirewallRule
+// appears to be up to date with the supplied MySQLServerFirewallRule.
+func MySQLServerFirewallRuleIsUpToDate(kube *azuredbv1alpha3.MySQLServerFirewallRule, az mysql.FirewallRule) bool {
+	up := NewMySQLFirewallRuleParameters(kube)
+	return cmp.Equal(up.FirewallRuleProperties, az.FirewallRuleProperties)
 }
 
 // The name must match the specification of the SKU, so, we don't allow user

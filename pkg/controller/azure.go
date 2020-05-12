@@ -25,8 +25,10 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/compute"
 	"github.com/crossplane/provider-azure/pkg/controller/database/cosmosdb"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserver"
+	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
+	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
@@ -51,11 +53,13 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		mysqlserver.SetupClaimDefaulting,
 		mysqlserver.SetupClaimBinding,
 		mysqlserver.Setup,
+		mysqlserverfirewallrule.Setup,
 		mysqlservervirtualnetworkrule.Setup,
 		postgresqlserver.SetupClaimScheduling,
 		postgresqlserver.SetupClaimDefaulting,
 		postgresqlserver.SetupClaimBinding,
 		postgresqlserver.Setup,
+		postgresqlserverfirewallrule.Setup,
 		postgresqlservervirtualnetworkrule.Setup,
 		cosmosdb.Setup,
 		virtualnetwork.Setup,
