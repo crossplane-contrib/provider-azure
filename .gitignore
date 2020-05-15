@@ -6,5 +6,7 @@ cover.out
 /.vendor-new
 .vscode
 
+/package
+# Legacy package directory is still ignored in case it is still sticking around locally
 /stack-package
 .DS_Store
