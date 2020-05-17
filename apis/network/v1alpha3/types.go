@@ -104,7 +104,8 @@ type VirtualNetworkStatus struct {
 
 // A VirtualNetwork is a managed resource that represents an Azure Virtual
 // Network.
-// +kubebuilder:printcolumn:name="STATUS",type="string",JSONPath=".status.bindingPhase"
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
 // +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
