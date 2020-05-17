@@ -64,7 +64,7 @@ type ResourceGroupSpec struct {
 
 	// Location of the resource group. See the  official list of valid regions -
 	// https://azure.microsoft.com/en-us/global-infrastructure/regions/
-	Location string `json:"location,omitempty"`
+	Location string `json:"location"`
 }
 
 // A ResourceGroupStatus represents the observed status of a ResourceGroup.
