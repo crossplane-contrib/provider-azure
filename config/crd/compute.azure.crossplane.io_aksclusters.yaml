@@ -18,9 +18,6 @@ spec:
   - JSONPath: .status.endpoint
     name: ENDPOINT
     type: string
-  - JSONPath: .spec.classRef.name
-    name: CLUSTER-CLASS
-    type: string
   - JSONPath: .spec.location
     name: LOCATION
     type: string

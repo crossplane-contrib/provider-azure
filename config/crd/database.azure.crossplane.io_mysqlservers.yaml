@@ -18,9 +18,6 @@ spec:
   - JSONPath: .status.atProvider.userVisibleState
     name: STATE
     type: string
-  - JSONPath: .spec.classRef.name
-    name: CLASS
-    type: string
   - JSONPath: .spec.version
     name: VERSION
     type: string
