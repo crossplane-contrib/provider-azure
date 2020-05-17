@@ -75,12 +75,13 @@ type ResourceGroupStatus struct {
 	ProvisioningState ProvisioningState `json:"provisioningState,omitempty"`
 }
 
+// A ResourceGroup is a managed resource that represents an Azure Resource
+// Group.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
-
-// A ResourceGroup is a managed resource that represents an Azure Resource
-// Group.
 type ResourceGroup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
