@@ -8,6 +8,13 @@ metadata:
   creationTimestamp: null
   name: resourcegroups.azure.crossplane.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.conditions[?(@.type=='Ready')].status
+    name: READY
+    type: string
+  - JSONPath: .status.conditions[?(@.type=='Synced')].status
+    name: SYNCED
+    type: string
   group: azure.crossplane.io
   names:
     categories:
@@ -192,6 +199,7 @@ spec:
               - namespace
               type: object
           required:
+          - location
           - providerRef
           type: object
         status:
