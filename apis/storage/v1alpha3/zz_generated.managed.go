@@ -44,7 +44,7 @@ func (mg *Account) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha
 }
 
 // GetProviderReference of this Account.
-func (mg *Account) GetProviderReference() *corev1.ObjectReference {
+func (mg *Account) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *Account) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this Account.
-func (mg *Account) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *Account) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -114,7 +114,7 @@ func (mg *Container) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alp
 }
 
 // GetProviderReference of this Container.
-func (mg *Container) GetProviderReference() *corev1.ObjectReference {
+func (mg *Container) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -149,7 +149,7 @@ func (mg *Container) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this Container.
-func (mg *Container) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *Container) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

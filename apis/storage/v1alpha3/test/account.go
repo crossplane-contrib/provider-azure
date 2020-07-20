@@ -92,7 +92,7 @@ func (ta *MockAccount) WithSpecClaimRef(ref *corev1.ObjectReference) *MockAccoun
 
 // WithSpecProvider set a provider
 func (ta *MockAccount) WithSpecProvider(name string) *MockAccount {
-	ta.Spec.ProviderReference = &corev1.ObjectReference{Name: name}
+	ta.Spec.ProviderReference = runtimev1alpha1.Reference{Name: name}
 	return ta
 }
 

@@ -123,7 +123,7 @@ func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 	r := &v1beta1.Redis{
 		Spec: v1beta1.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
 					Namespace: namespace,
 					Name:      connectionSecretName,

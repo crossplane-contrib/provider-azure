@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -66,7 +65,7 @@ func TestConfigurePostgreSQLServer(t *testing.T) {
 				cs: &v1beta1.SQLServerClass{
 					SpecTemplate: v1beta1.SQLServerClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
+							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
@@ -81,7 +80,7 @@ func TestConfigurePostgreSQLServer(t *testing.T) {
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
 								Name: string(claimUID),
 							},
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
+							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 						},
 						ForProvider: v1beta1.SQLServerParameters{
 							Version: version,

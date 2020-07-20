@@ -44,7 +44,7 @@ func (mg *CosmosDBAccount) GetCondition(ct runtimev1alpha1.ConditionType) runtim
 }
 
 // GetProviderReference of this CosmosDBAccount.
-func (mg *CosmosDBAccount) GetProviderReference() *corev1.ObjectReference {
+func (mg *CosmosDBAccount) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *CosmosDBAccount) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this CosmosDBAccount.
-func (mg *CosmosDBAccount) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *CosmosDBAccount) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -114,7 +114,7 @@ func (mg *MySQLServerFirewallRule) GetCondition(ct runtimev1alpha1.ConditionType
 }
 
 // GetProviderReference of this MySQLServerFirewallRule.
-func (mg *MySQLServerFirewallRule) GetProviderReference() *corev1.ObjectReference {
+func (mg *MySQLServerFirewallRule) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -149,7 +149,7 @@ func (mg *MySQLServerFirewallRule) SetConditions(c ...runtimev1alpha1.Condition)
 }
 
 // SetProviderReference of this MySQLServerFirewallRule.
-func (mg *MySQLServerFirewallRule) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *MySQLServerFirewallRule) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -184,7 +184,7 @@ func (mg *MySQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.Conditi
 }
 
 // GetProviderReference of this MySQLServerVirtualNetworkRule.
-func (mg *MySQLServerVirtualNetworkRule) GetProviderReference() *corev1.ObjectReference {
+func (mg *MySQLServerVirtualNetworkRule) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -219,7 +219,7 @@ func (mg *MySQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Cond
 }
 
 // SetProviderReference of this MySQLServerVirtualNetworkRule.
-func (mg *MySQLServerVirtualNetworkRule) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *MySQLServerVirtualNetworkRule) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -254,7 +254,7 @@ func (mg *PostgreSQLServerFirewallRule) GetCondition(ct runtimev1alpha1.Conditio
 }
 
 // GetProviderReference of this PostgreSQLServerFirewallRule.
-func (mg *PostgreSQLServerFirewallRule) GetProviderReference() *corev1.ObjectReference {
+func (mg *PostgreSQLServerFirewallRule) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -289,7 +289,7 @@ func (mg *PostgreSQLServerFirewallRule) SetConditions(c ...runtimev1alpha1.Condi
 }
 
 // SetProviderReference of this PostgreSQLServerFirewallRule.
-func (mg *PostgreSQLServerFirewallRule) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *PostgreSQLServerFirewallRule) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -324,7 +324,7 @@ func (mg *PostgreSQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.Co
 }
 
 // GetProviderReference of this PostgreSQLServerVirtualNetworkRule.
-func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderReference() *corev1.ObjectReference {
+func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -359,7 +359,7 @@ func (mg *PostgreSQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1
 }
 
 // SetProviderReference of this PostgreSQLServerVirtualNetworkRule.
-func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

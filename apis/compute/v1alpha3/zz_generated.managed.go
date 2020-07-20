@@ -44,7 +44,7 @@ func (mg *AKSCluster) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1al
 }
 
 // GetProviderReference of this AKSCluster.
-func (mg *AKSCluster) GetProviderReference() *corev1.ObjectReference {
+func (mg *AKSCluster) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *AKSCluster) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this AKSCluster.
-func (mg *AKSCluster) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *AKSCluster) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

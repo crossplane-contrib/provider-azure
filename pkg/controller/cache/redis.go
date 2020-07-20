@@ -81,7 +81,7 @@ func (c connector) Connect(ctx context.Context, mg resource.Managed) (managed.Ex
 		return nil, errors.New(errNotRedis)
 	}
 	p := &azurev1alpha3.Provider{}
-	if err := c.kube.Get(ctx, meta.NamespacedNameOf(cr.Spec.ProviderReference), p); err != nil {
+	if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.Spec.ProviderReference.Name}, p); err != nil {
 		return nil, errors.Wrap(err, errGetProviderFailed)
 	}
 

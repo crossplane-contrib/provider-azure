@@ -88,7 +88,7 @@ func withExternalName(name string) modifier {
 	}
 }
 
-func withProviderRef(r *corev1.ObjectReference) modifier {
+func withProviderRef(r runtimev1alpha1.Reference) modifier {
 	return func(p *v1beta1.PostgreSQLServer) {
 		p.Spec.ProviderReference = r
 	}
@@ -171,7 +171,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{})),
+				mg:  postgresqlserver(withProviderRef(runtimev1alpha1.Reference{})),
 			},
 			want: errors.Wrap(errBoom, errGetProvider),
 		},
@@ -191,7 +191,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg:  postgresqlserver(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: errors.Wrapf(errBoom, errGetProviderSecret),
 		},
@@ -213,7 +213,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg:  postgresqlserver(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: errors.New(errProviderSecretNil),
 		},
@@ -234,7 +234,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg:  postgresqlserver(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: nil,
 		},

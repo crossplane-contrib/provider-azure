@@ -103,7 +103,7 @@ func withState(s string) subnetModifier {
 	return func(r *v1alpha3.Subnet) { r.Status.State = s }
 }
 
-func withProviderRef(p *corev1.ObjectReference) subnetModifier {
+func withProviderRef(p runtimev1alpha1.Reference) subnetModifier {
 	return func(r *v1alpha3.Subnet) { r.Spec.ProviderReference = p }
 }
 
@@ -116,7 +116,7 @@ func subnet(sm ...subnetModifier) *v1alpha3.Subnet {
 		},
 		Spec: v1alpha3.SubnetSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 			},
 			VirtualNetworkName: virtualNetworkName,
 			ResourceGroupName:  resourceGroupName,
@@ -450,7 +450,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockSubnetsClient{}, nil
 				},
 			},
-			i:       subnet(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:       subnet(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			wantErr: errors.Wrapf(errorBoom, "cannot get provider secret %s", fmt.Sprintf("%s/%s", namespace, providerSecretName)),
 		},
 		{
@@ -473,7 +473,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockSubnetsClient{}, nil
 				},
 			},
-			i:       subnet(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:       subnet(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			wantErr: errors.New(errProviderSecretNil),
 		},
 		{
@@ -494,7 +494,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockSubnetsClient{}, nil
 				},
 			},
-			i:    subnet(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:    subnet(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			want: &external{client: &fake.MockSubnetsClient{}},
 		},
 	}

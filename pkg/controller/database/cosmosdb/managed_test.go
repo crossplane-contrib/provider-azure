@@ -125,7 +125,7 @@ func cosmosDBAccount(rm ...cosmosDBAccountModifier) *v1alpha3.CosmosDBAccount {
 				},
 			},
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 			},
 		},
 		Status: v1alpha3.CosmosDBAccountStatus{

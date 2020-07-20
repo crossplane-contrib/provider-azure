@@ -22,7 +22,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -71,7 +70,7 @@ func TestConfigureRedis(t *testing.T) {
 				cs: &v1beta1.RedisClass{
 					SpecTemplate: v1beta1.RedisClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
+							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
@@ -84,7 +83,7 @@ func TestConfigureRedis(t *testing.T) {
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
-							ProviderReference:                &corev1.ObjectReference{Name: providerName},
+							ProviderReference:                runtimev1alpha1.Reference{Name: providerName},
 						},
 					},
 				},

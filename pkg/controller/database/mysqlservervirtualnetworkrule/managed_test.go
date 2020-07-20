@@ -113,7 +113,7 @@ func withState(s string) virtualNetworkRuleModifier {
 	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Status.State = s }
 }
 
-func withProviderRef(p *corev1.ObjectReference) virtualNetworkRuleModifier {
+func withProviderRef(p runtimev1alpha1.Reference) virtualNetworkRuleModifier {
 	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Spec.ProviderReference = p }
 }
 
@@ -126,7 +126,7 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.MySQLServerV
 		},
 		Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 			},
 			ServerName:        serverName,
 			ResourceGroupName: resourceGroupName,
@@ -466,7 +466,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
 				},
 			},
-			i:    virtualNetworkRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:    virtualNetworkRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			want: &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
 		},
 		{
@@ -487,7 +487,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
 				},
 			},
-			i:       virtualNetworkRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:       virtualNetworkRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			wantErr: errors.Wrapf(errorBoom, "cannot get provider secret %s", fmt.Sprintf("%s/%s", namespace, providerSecretName)),
 		},
 		{
@@ -510,7 +510,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
 				},
 			},
-			i:       virtualNetworkRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:       virtualNetworkRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			wantErr: errors.New(errProviderSecretNil),
 		},
 	}

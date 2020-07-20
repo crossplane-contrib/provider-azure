@@ -134,7 +134,7 @@ type accountSyncdeleterMaker struct {
 
 func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account) (syncdeleter, error) {
 	p := &azurev1alpha3.Provider{}
-	n := meta.NamespacedNameOf(b.Spec.ProviderReference)
+	n := types.NamespacedName{Name: b.Spec.ProviderReference.Name}
 	if err := m.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
 	}

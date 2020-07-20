@@ -44,7 +44,7 @@ func (mg *Redis) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.
 }
 
 // GetProviderReference of this Redis.
-func (mg *Redis) GetProviderReference() *corev1.ObjectReference {
+func (mg *Redis) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *Redis) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this Redis.
-func (mg *Redis) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *Redis) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
