@@ -8,4 +8,4 @@ overview: |
 readme: |
  Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides object storage buckets, which are satisfied by [Azure Blob Storage](https://docs.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction).
 
- Full documentation can be found in the Crossplane [API Reference docs](https://doc.crds.dev/github.com/crossplane/provider-azure/storage.azure.crossplane.io/ContainerClass/v1alpha3).
+ Full documentation can be found in the Crossplane [API Reference docs](https://doc.crds.dev/github.com/crossplane/provider-azure/storage.azure.crossplane.io/ContainerClass/v1alpha3@v0.11.0).
