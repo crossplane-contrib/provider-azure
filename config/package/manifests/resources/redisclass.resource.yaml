@@ -8,4 +8,4 @@ overview: |
 readme: |
  Cloud-specific resource classes are used to define a reusable configuration for a specific managed service. This class provides Redis caches, which are satisfied by [Azure Cache for Redis](https://azure.microsoft.com/en-us/services/cache/).
 
- Full documentation can be found in the Crossplane [API Reference docs](https://doc.crds.dev/github.com/crossplane/provider-azure/cache.azure.crossplane.io/RedisClass/v1beta1).
+ Full documentation can be found in the Crossplane [API Reference docs](https://doc.crds.dev/github.com/crossplane/provider-azure/cache.azure.crossplane.io/RedisClass/v1beta1@v0.11.0).
