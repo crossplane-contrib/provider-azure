@@ -1,0 +1,15 @@
+id: mysqlserverfirewallrule
+title: MySQL Server Firewall Rule
+titlePlural: MySQL Server Firewall Rules
+category: Networking
+overviewShort: "A MysqlServerFirewallRule is a managed resource that represents an Azure MySQL Database firewall rule."
+overview: |
+ A MysqlServerFirewallRule is a managed resource that represents an Azure MySQL Database firewall rule.
+readme: |
+ ## Azure Database for MySQL: Firewall Rule
+
+ Firewalls prevent all access to your database server until you specify which computers have permission. The firewall grants access to the server based on the originating IP address of each request.
+
+ ---
+ 
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/mysql/concepts-firewall-rules), you can learn more at <https://azure.microsoft.com/en-us/services/mysql/>.

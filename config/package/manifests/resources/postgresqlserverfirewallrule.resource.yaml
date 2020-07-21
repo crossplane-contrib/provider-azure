@@ -1,0 +1,15 @@
+id: postgresqlserverfirewallrule
+title: PostgreSQL Server Firewall Rule
+titlePlural: PostgreSQL Server Firewall Rules
+category: Networking
+overviewShort: "A PostgresqlServerFirewallRule is a managed resource that represents an Azure PostgreSQL Database firewall rule."
+overview: |
+ A PostgresqlServerFirewallRule is a managed resource that represents an Azure PostgreSQL Database firewall rule.
+readme: |
+ ## Azure Database for PostgreSQL: Firewall Rule
+
+ Firewalls prevent all access to your database server until you specify which computers have permission. The firewall grants access to the server based on the originating IP address of each request.
+
+ ---
+ 
+ This content is from the [Azure Documentation](https://docs.microsoft.com/en-us/azure/postgresql/concepts-firewall-rules), you can learn more at <https://azure.microsoft.com/en-us/services/postgresql/>.
