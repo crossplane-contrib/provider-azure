@@ -1,0 +1,15 @@
+id: cosmosdbaccount
+title: Azure Cosmos DB Account
+titlePlural: Azure Cosmos DB Accounts
+category: Database
+overviewShort: "A CosmosDBAccount is a managed resource that represents an Azure Cosmos DB Account."
+overview: |
+ A CosmosDBAccount is a managed resource that represents an Azure Cosmos DB Account.
+readme: |
+ ## Azure Cosmos DB
+
+ Azure Cosmos DB is a fully managed NoSQL database service for modern app development with guaranteed single-digit millisecond response times and 99.999-percent availability backed by SLAs, automatic and instant scalability, and open source APIs for MongoDB and Cassandra. Enjoy fast writes and reads anywhere in the world with turnkey multi-master global distribution.
+
+ ---
+
+ This content is from the [Azure Documentation](https://azure.microsoft.com/en-us/services/cosmos-db/#documentation), you can learn more at <https://azure.microsoft.com/en-us/services/cosmos-db/>.
