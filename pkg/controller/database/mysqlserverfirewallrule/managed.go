@@ -77,7 +77,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 
 	p := &azurev1alpha3.Provider{}
-	n := meta.NamespacedNameOf(v.Spec.ProviderReference)
+	n := types.NamespacedName{Name: v.Spec.ProviderReference.Name}
 	if err := c.client.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", v.Spec.ProviderReference.Name)
 	}

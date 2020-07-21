@@ -93,7 +93,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 
 	p := &azurev1alpha3.Provider{}
-	if err := c.client.Get(ctx, meta.NamespacedNameOf(v.Spec.ProviderReference), p); err != nil {
+	if err := c.client.Get(ctx, types.NamespacedName{Name: v.Spec.ProviderReference.Name}, p); err != nil {
 		return nil, errors.Wrap(err, errGetProvider)
 	}
 

@@ -44,7 +44,7 @@ func (mg *ResourceGroup) GetCondition(ct runtimev1alpha1.ConditionType) runtimev
 }
 
 // GetProviderReference of this ResourceGroup.
-func (mg *ResourceGroup) GetProviderReference() *corev1.ObjectReference {
+func (mg *ResourceGroup) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *ResourceGroup) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this ResourceGroup.
-func (mg *ResourceGroup) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *ResourceGroup) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

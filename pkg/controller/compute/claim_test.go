@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -63,7 +62,7 @@ func TestConfigureAKSCluster(t *testing.T) {
 				cs: &v1alpha3.AKSClusterClass{
 					SpecTemplate: v1alpha3.AKSClusterClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
+							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
@@ -76,7 +75,7 @@ func TestConfigureAKSCluster(t *testing.T) {
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
 							ReclaimPolicy:                    runtimev1alpha1.ReclaimDelete,
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{Name: string(claimUID)},
-							ProviderReference:                &corev1.ObjectReference{Name: providerName},
+							ProviderReference:                runtimev1alpha1.Reference{Name: providerName},
 						},
 						AKSClusterParameters: v1alpha3.AKSClusterParameters{
 							NodeCount: &nodeCount,

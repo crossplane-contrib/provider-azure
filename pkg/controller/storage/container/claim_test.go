@@ -22,7 +22,6 @@ import (
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/google/go-cmp/cmp"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -69,7 +68,7 @@ func TestConfigureContainer(t *testing.T) {
 				cs: &v1alpha3.ContainerClass{
 					SpecTemplate: v1alpha3.ContainerClassSpecTemplate{
 						ClassSpecTemplate: runtimev1alpha1.ClassSpecTemplate{
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
+							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 							ReclaimPolicy:     runtimev1alpha1.ReclaimDelete,
 						},
 					},
@@ -80,7 +79,7 @@ func TestConfigureContainer(t *testing.T) {
 				mg: &v1alpha3.Container{
 					Spec: v1alpha3.ContainerSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
-							ProviderReference: &corev1.ObjectReference{Name: providerName},
+							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 						},
 						ContainerParameters: v1alpha3.ContainerParameters{
 							Metadata: azblob.Metadata{},

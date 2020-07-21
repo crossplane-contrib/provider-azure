@@ -44,7 +44,7 @@ func (mg *MySQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1a
 }
 
 // GetProviderReference of this MySQLServer.
-func (mg *MySQLServer) GetProviderReference() *corev1.ObjectReference {
+func (mg *MySQLServer) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *MySQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this MySQLServer.
-func (mg *MySQLServer) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *MySQLServer) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -114,7 +114,7 @@ func (mg *PostgreSQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runti
 }
 
 // GetProviderReference of this PostgreSQLServer.
-func (mg *PostgreSQLServer) GetProviderReference() *corev1.ObjectReference {
+func (mg *PostgreSQLServer) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -149,7 +149,7 @@ func (mg *PostgreSQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this PostgreSQLServer.
-func (mg *PostgreSQLServer) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *PostgreSQLServer) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

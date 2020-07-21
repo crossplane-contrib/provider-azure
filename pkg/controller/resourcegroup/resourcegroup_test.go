@@ -77,7 +77,7 @@ func resourceGrp(rm ...resourceGroupModifier) *v1alpha3.ResourceGroup {
 		Spec: v1alpha3.ResourceGroupSpec{
 			Location: location,
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 			},
 		},
 		Status: v1alpha3.ResourceGroupStatus{},

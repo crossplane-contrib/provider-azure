@@ -44,7 +44,7 @@ import (
 
 type modifier func(*v1alpha3.AKSCluster)
 
-func withProviderRef(r *corev1.ObjectReference) modifier {
+func withProviderRef(r runtimev1alpha1.Reference) modifier {
 	return func(c *v1alpha3.AKSCluster) {
 		c.Spec.ProviderReference = r
 	}
@@ -137,7 +137,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(withProviderRef(&corev1.ObjectReference{})),
+				mg:  aksCluster(withProviderRef(runtimev1alpha1.Reference{})),
 			},
 			want: errors.Wrap(errBoom, errGetProvider),
 		},
@@ -158,7 +158,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg:  aksCluster(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: errors.Wrap(errBoom, errGetProviderSecret),
 		},
@@ -181,7 +181,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(withProviderRef(&corev1.ObjectReference{})),
+				mg:  aksCluster(withProviderRef(runtimev1alpha1.Reference{})),
 			},
 			want: errors.New(errProviderSecretNil),
 		},
@@ -202,7 +202,7 @@ func TestConnect(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg:  aksCluster(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: nil,
 		},

@@ -96,7 +96,7 @@ func withID(s string) firewallRuleModifier {
 	return func(r *v1alpha3.PostgreSQLServerFirewallRule) { r.Status.AtProvider.ID = s }
 }
 
-func withProviderRef(p *corev1.ObjectReference) firewallRuleModifier {
+func withProviderRef(p runtimev1alpha1.Reference) firewallRuleModifier {
 	return func(r *v1alpha3.PostgreSQLServerFirewallRule) { r.Spec.ProviderReference = p }
 }
 
@@ -109,7 +109,7 @@ func firewallRule(sm ...firewallRuleModifier) *v1alpha3.PostgreSQLServerFirewall
 		},
 		Spec: v1alpha3.FirewallRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 			},
 			ForProvider: v1alpha3.FirewallRuleParameters{
 				ServerName:        serverName,
@@ -165,7 +165,7 @@ func TestConnect(t *testing.T) {
 				},
 			},
 			args: args{
-				mg: firewallRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: errors.Wrapf(errBoom, "cannot get provider %s", providerName),
 		},
@@ -187,7 +187,7 @@ func TestConnect(t *testing.T) {
 				},
 			},
 			args: args{
-				mg: firewallRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: errors.Wrapf(errBoom, "cannot get provider secret %s", fmt.Sprintf("%s/%s", namespace, providerSecretName)),
 		},
@@ -211,7 +211,7 @@ func TestConnect(t *testing.T) {
 				},
 			},
 			args: args{
-				mg: firewallRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 			want: errors.New(errProviderSecretNil),
 		},
@@ -233,7 +233,7 @@ func TestConnect(t *testing.T) {
 				},
 			},
 			args: args{
-				mg: firewallRule(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			},
 		},
 	}

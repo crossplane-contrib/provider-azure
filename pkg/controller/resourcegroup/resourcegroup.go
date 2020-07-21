@@ -75,7 +75,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 
 	p := &v1alpha3.Provider{}
-	n := meta.NamespacedNameOf(r.Spec.ProviderReference)
+	n := types.NamespacedName{Name: r.Spec.ProviderReference.Name}
 	if err := c.kube.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrapf(err, "cannot get provider %s", n)
 	}

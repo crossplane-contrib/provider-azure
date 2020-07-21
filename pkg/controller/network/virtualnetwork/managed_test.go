@@ -104,7 +104,7 @@ func withState(s string) virtualNetworkModifier {
 	return func(r *v1alpha3.VirtualNetwork) { r.Status.State = s }
 }
 
-func withProviderRef(p *corev1.ObjectReference) virtualNetworkModifier {
+func withProviderRef(p runtimev1alpha1.Reference) virtualNetworkModifier {
 	return func(r *v1alpha3.VirtualNetwork) { r.Spec.ProviderReference = p }
 }
 
@@ -117,7 +117,7 @@ func virtualNetwork(vm ...virtualNetworkModifier) *v1alpha3.VirtualNetwork {
 		},
 		Spec: v1alpha3.VirtualNetworkSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &corev1.ObjectReference{Namespace: namespace, Name: providerName},
+				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
 			},
 			ResourceGroupName: resourceGroupName,
 			VirtualNetworkPropertiesFormat: v1alpha3.VirtualNetworkPropertiesFormat{
@@ -485,7 +485,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockVirtualNetworksClient{}, nil
 				},
 			},
-			i:       virtualNetwork(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:       virtualNetwork(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			wantErr: errors.Wrapf(errorBoom, "cannot get provider secret %s", fmt.Sprintf("%s/%s", namespace, providerSecretName)),
 		},
 		{
@@ -508,7 +508,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockVirtualNetworksClient{}, nil
 				},
 			},
-			i:       virtualNetwork(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:       virtualNetwork(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			wantErr: errors.New(errProviderSecretNil),
 		},
 		{
@@ -529,7 +529,7 @@ func TestConnect(t *testing.T) {
 					return &fake.MockVirtualNetworksClient{}, nil
 				},
 			},
-			i:    virtualNetwork(withProviderRef(&corev1.ObjectReference{Name: providerName})),
+			i:    virtualNetwork(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
 			want: &external{client: &fake.MockVirtualNetworksClient{}},
 		},
 	}

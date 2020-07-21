@@ -44,7 +44,7 @@ func (mg *Subnet) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1
 }
 
 // GetProviderReference of this Subnet.
-func (mg *Subnet) GetProviderReference() *corev1.ObjectReference {
+func (mg *Subnet) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -79,7 +79,7 @@ func (mg *Subnet) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this Subnet.
-func (mg *Subnet) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *Subnet) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -114,7 +114,7 @@ func (mg *VirtualNetwork) GetCondition(ct runtimev1alpha1.ConditionType) runtime
 }
 
 // GetProviderReference of this VirtualNetwork.
-func (mg *VirtualNetwork) GetProviderReference() *corev1.ObjectReference {
+func (mg *VirtualNetwork) GetProviderReference() runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -149,7 +149,7 @@ func (mg *VirtualNetwork) SetConditions(c ...runtimev1alpha1.Condition) {
 }
 
 // SetProviderReference of this VirtualNetwork.
-func (mg *VirtualNetwork) SetProviderReference(r *corev1.ObjectReference) {
+func (mg *VirtualNetwork) SetProviderReference(r runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
