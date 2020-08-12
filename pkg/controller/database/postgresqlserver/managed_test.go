@@ -19,7 +19,9 @@ package postgresqlserver
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
@@ -48,20 +50,15 @@ var (
 )
 
 type MockPostgreSQLServerAPI struct {
-	MockServerNameTaken func(ctx context.Context, s *v1beta1.PostgreSQLServer) (bool, error)
-	MockGetServer       func(ctx context.Context, s *v1beta1.PostgreSQLServer) (postgresql.Server, error)
-	MockCreateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer, adminPassword string) error
-	MockDeleteServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
-	MockUpdateServer    func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
-	MockGetRESTClient   func() autorest.Sender
+	MockGetServer     func(ctx context.Context, s *v1beta1.PostgreSQLServer) (postgresql.Server, error)
+	MockCreateServer  func(ctx context.Context, s *v1beta1.PostgreSQLServer, adminPassword string) error
+	MockDeleteServer  func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
+	MockUpdateServer  func(ctx context.Context, s *v1beta1.PostgreSQLServer) error
+	MockGetRESTClient func() autorest.Sender
 }
 
 func (m *MockPostgreSQLServerAPI) GetRESTClient() autorest.Sender {
 	return m.MockGetRESTClient()
-}
-
-func (m *MockPostgreSQLServerAPI) ServerNameTaken(ctx context.Context, s *v1beta1.PostgreSQLServer) (bool, error) {
-	return m.MockServerNameTaken(ctx, s)
 }
 
 func (m *MockPostgreSQLServerAPI) GetServer(ctx context.Context, s *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
@@ -100,6 +97,12 @@ func withAdminName(name string) modifier {
 	}
 }
 
+func withLastOperation(op azurev1alpha3.AsyncOperation) modifier {
+	return func(p *v1beta1.PostgreSQLServer) {
+		p.Status.AtProvider.LastOperation = op
+	}
+}
+
 func postgresqlserver(m ...modifier) *v1beta1.PostgreSQLServer {
 	p := &v1beta1.PostgreSQLServer{}
 
@@ -108,6 +111,10 @@ func postgresqlserver(m ...modifier) *v1beta1.PostgreSQLServer {
 	}
 	return p
 }
+
+const (
+	inProgressResponse = `{"status": "InProgress"}`
+)
 
 var (
 	namespace          = "coolNamespace"
@@ -295,39 +302,27 @@ func TestObserve(t *testing.T) {
 				err: errors.Wrap(errBoom, errGetPostgreSQLServer),
 			},
 		},
-		"ErrCheckServerName": {
-			e: &external{
-				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
-						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
-					},
-					MockServerNameTaken: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (bool, error) {
-						return false, errBoom
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  postgresqlserver(),
-			},
-			want: want{
-				err: errors.Wrap(errBoom, errCheckPostgreSQLServerName),
-			},
-		},
 		"ServerCreating": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
 					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (bool, error) {
-						return true, nil
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
+							return &http.Response{
+								Request:       req,
+								StatusCode:    http.StatusAccepted,
+								Body:          ioutil.NopCloser(strings.NewReader(inProgressResponse)),
+								ContentLength: int64(len([]byte(inProgressResponse))),
+							}, nil
+						})
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserver(),
+				mg:  postgresqlserver(withLastOperation(azurev1alpha3.AsyncOperation{Method: http.MethodPut, PollingURL: "crossplane.io"})),
 			},
 			want: want{
 				eo: managed.ExternalObservation{
@@ -341,8 +336,8 @@ func TestObserve(t *testing.T) {
 					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
 						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (bool, error) {
-						return false, nil
+					MockGetRESTClient: func() autorest.Sender {
+						return nil
 					},
 				},
 			},
@@ -400,6 +395,8 @@ func TestObserve(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
+			ola := name
+			fmt.Print(ola)
 			eo, err := tc.e.Observe(tc.args.ctx, tc.args.mg)
 
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {

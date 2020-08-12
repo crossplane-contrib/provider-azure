@@ -49,7 +49,6 @@ import (
 
 // PostgreSQLServerAPI represents the API interface for a PostgreSQL Server client
 type PostgreSQLServerAPI interface {
-	ServerNameTaken(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (bool, error)
 	GetServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (postgresql.Server, error)
 	CreateServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer, adminPassword string) error
 	DeleteServer(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) error
@@ -86,15 +85,6 @@ func NewPostgreSQLServerClient(c *azure.Client) (*PostgreSQLServerClient, error)
 // GetRESTClient returns the underlying REST client that the client object uses.
 func (c *PostgreSQLServerClient) GetRESTClient() autorest.Sender {
 	return c.ServersClient.Client
-}
-
-// ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *PostgreSQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1beta1.PostgreSQLServer) (bool, error) {
-	r, err := c.Execute(ctx, postgresql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
-	if err != nil {
-		return false, err
-	}
-	return !azure.ToBool(r.NameAvailable), nil
 }
 
 // GetServer retrieves the requested PostgreSQL Server
