@@ -56,7 +56,6 @@ var (
 
 // MySQLServerAPI represents the API interface for a MySQL Server client
 type MySQLServerAPI interface {
-	ServerNameTaken(ctx context.Context, s *azuredbv1beta1.MySQLServer) (bool, error)
 	GetServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) (mysql.Server, error)
 	CreateServer(ctx context.Context, s *azuredbv1beta1.MySQLServer, adminPassword string) error
 	UpdateServer(ctx context.Context, s *azuredbv1beta1.MySQLServer) error

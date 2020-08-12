@@ -19,7 +19,9 @@ package mysqlserver
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/mysql/mgmt/mysql"
@@ -48,20 +50,15 @@ var (
 )
 
 type MockMySQLServerAPI struct {
-	MockServerNameTaken func(ctx context.Context, s *v1beta1.MySQLServer) (bool, error)
-	MockGetServer       func(ctx context.Context, s *v1beta1.MySQLServer) (mysql.Server, error)
-	MockCreateServer    func(ctx context.Context, s *v1beta1.MySQLServer, adminPassword string) error
-	MockUpdateServer    func(ctx context.Context, s *v1beta1.MySQLServer) error
-	MockDeleteServer    func(ctx context.Context, s *v1beta1.MySQLServer) error
-	MockGetRESTClient   func() autorest.Sender
+	MockGetServer     func(ctx context.Context, s *v1beta1.MySQLServer) (mysql.Server, error)
+	MockCreateServer  func(ctx context.Context, s *v1beta1.MySQLServer, adminPassword string) error
+	MockUpdateServer  func(ctx context.Context, s *v1beta1.MySQLServer) error
+	MockDeleteServer  func(ctx context.Context, s *v1beta1.MySQLServer) error
+	MockGetRESTClient func() autorest.Sender
 }
 
 func (m *MockMySQLServerAPI) GetRESTClient() autorest.Sender {
 	return m.MockGetRESTClient()
-}
-
-func (m *MockMySQLServerAPI) ServerNameTaken(ctx context.Context, s *v1beta1.MySQLServer) (bool, error) {
-	return m.MockServerNameTaken(ctx, s)
 }
 
 func (m *MockMySQLServerAPI) GetServer(ctx context.Context, s *v1beta1.MySQLServer) (mysql.Server, error) {
@@ -100,6 +97,12 @@ func withAdminName(name string) modifier {
 	}
 }
 
+func withLastOperation(op azurev1alpha3.AsyncOperation) modifier {
+	return func(p *v1beta1.MySQLServer) {
+		p.Status.AtProvider.LastOperation = op
+	}
+}
+
 func mysqlserver(m ...modifier) *v1beta1.MySQLServer {
 	p := &v1beta1.MySQLServer{}
 
@@ -108,6 +111,10 @@ func mysqlserver(m ...modifier) *v1beta1.MySQLServer {
 	}
 	return p
 }
+
+const (
+	inProgressResponse = `{"status": "InProgress"}`
+)
 
 var (
 	providerName       = "cool-azure"
@@ -297,39 +304,27 @@ func TestObserve(t *testing.T) {
 				err: errors.Wrap(errBoom, errGetMySQLServer),
 			},
 		},
-		"ErrCheckServerName": {
-			e: &external{
-				client: &MockMySQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1beta1.MySQLServer) (mysql.Server, error) {
-						return mysql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
-					},
-					MockServerNameTaken: func(_ context.Context, _ *v1beta1.MySQLServer) (bool, error) {
-						return false, errBoom
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  mysqlserver(),
-			},
-			want: want{
-				err: errors.Wrap(errBoom, errCheckMySQLServerName),
-			},
-		},
 		"ServerCreating": {
 			e: &external{
 				client: &MockMySQLServerAPI{
 					MockGetServer: func(_ context.Context, _ *v1beta1.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1beta1.MySQLServer) (bool, error) {
-						return true, nil
+					MockGetRESTClient: func() autorest.Sender {
+						return autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
+							return &http.Response{
+								Request:       req,
+								StatusCode:    http.StatusAccepted,
+								Body:          ioutil.NopCloser(strings.NewReader(inProgressResponse)),
+								ContentLength: int64(len([]byte(inProgressResponse))),
+							}, nil
+						})
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  mysqlserver(),
+				mg:  mysqlserver(withLastOperation(azurev1alpha3.AsyncOperation{Method: http.MethodPut, PollingURL: "crossplane.io"})),
 			},
 			want: want{
 				eo: managed.ExternalObservation{
@@ -343,8 +338,8 @@ func TestObserve(t *testing.T) {
 					MockGetServer: func(_ context.Context, _ *v1beta1.MySQLServer) (mysql.Server, error) {
 						return mysql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
-					MockServerNameTaken: func(_ context.Context, _ *v1beta1.MySQLServer) (bool, error) {
-						return false, nil
+					MockGetRESTClient: func() autorest.Sender {
+						return nil
 					},
 				},
 			},
