@@ -42,19 +42,18 @@ import (
 
 // Error strings.
 const (
-	errNewClient            = "cannot create new MySQLServer client"
-	errGetProvider          = "cannot get Azure provider"
-	errGetProviderSecret    = "cannot get Azure provider Secret"
-	errProviderSecretNil    = "Azure provider does not have a secret reference"
-	errUpdateCR             = "cannot update MySQLServer custom resource"
-	errGenPassword          = "cannot generate admin password"
-	errNotMySQLServer       = "managed resource is not a MySQLServer"
-	errCreateMySQLServer    = "cannot create MySQLServer"
-	errUpdateMySQLServer    = "cannot update MySQLServer"
-	errGetMySQLServer       = "cannot get MySQLServer"
-	errDeleteMySQLServer    = "cannot delete MySQLServer"
-	errCheckMySQLServerName = "cannot check MySQLServer name availability"
-	errFetchLastOperation   = "cannot fetch last operation"
+	errNewClient          = "cannot create new MySQLServer client"
+	errGetProvider        = "cannot get Azure provider"
+	errGetProviderSecret  = "cannot get Azure provider Secret"
+	errProviderSecretNil  = "Azure provider does not have a secret reference"
+	errUpdateCR           = "cannot update MySQLServer custom resource"
+	errGenPassword        = "cannot generate admin password"
+	errNotMySQLServer     = "managed resource is not a MySQLServer"
+	errCreateMySQLServer  = "cannot create MySQLServer"
+	errUpdateMySQLServer  = "cannot update MySQLServer"
+	errGetMySQLServer     = "cannot get MySQLServer"
+	errDeleteMySQLServer  = "cannot delete MySQLServer"
+	errFetchLastOperation = "cannot fetch last operation"
 )
 
 // Setup adds a controller that reconciles MySQLServers.
@@ -124,17 +123,15 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	server, err := e.client.GetServer(ctx, cr)
 	if azure.IsNotFound(err) {
-		// Azure SQL servers don't exist according to the Azure API until their
-		// create operation has completed, and Azure will happily let you submit
-		// several subsequent create operations for the same server. Our create
-		// call is not idempotent because it creates a new random password each
-		// time, so we want to ensure it's only called once. Fortunately Azure
-		// exposes an API that reports server names to be taken as soon as their
-		// create operation is accepted.
-		creating, err := e.client.ServerNameTaken(ctx, cr)
-		if err != nil {
-			return managed.ExternalObservation{}, errors.Wrap(err, errCheckMySQLServerName)
+		if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
+			return managed.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 		}
+		// Azure returns NotFound for GET calls until creation is completed
+		// successfully and we cannot return `ResourceExists: false` during creation
+		// since this will cause `Create` to be called again and it's not idempotent.
+		// So, we check whether a creation operation in fact is in motion.
+		creating := cr.Status.AtProvider.LastOperation.Method == "PUT" &&
+			cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress
 		return managed.ExternalObservation{ResourceExists: creating}, nil
 	}
 	if err != nil {
