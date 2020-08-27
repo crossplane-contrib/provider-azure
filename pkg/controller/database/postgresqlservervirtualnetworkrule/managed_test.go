@@ -113,7 +113,7 @@ func withState(s string) virtualNetworkRuleModifier {
 }
 
 func withProviderRef(p runtimev1alpha1.Reference) virtualNetworkRuleModifier {
-	return func(r *v1alpha3.PostgreSQLServerVirtualNetworkRule) { r.Spec.ProviderReference = p }
+	return func(r *v1alpha3.PostgreSQLServerVirtualNetworkRule) { r.Spec.ProviderReference = p.DeepCopy() }
 }
 
 func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.PostgreSQLServerVirtualNetworkRule {
@@ -125,7 +125,7 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.PostgreSQLSe
 		},
 		Spec: v1alpha3.PostgreSQLVirtualNetworkRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
+				ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 			},
 			ServerName:        serverName,
 			ResourceGroupName: resourceGroupName,

@@ -97,7 +97,7 @@ func withID(s string) firewallRuleModifier {
 }
 
 func withProviderRef(p runtimev1alpha1.Reference) firewallRuleModifier {
-	return func(r *v1alpha3.PostgreSQLServerFirewallRule) { r.Spec.ProviderReference = p }
+	return func(r *v1alpha3.PostgreSQLServerFirewallRule) { r.Spec.ProviderReference = p.DeepCopy() }
 }
 
 func firewallRule(sm ...firewallRuleModifier) *v1alpha3.PostgreSQLServerFirewallRule {
@@ -109,7 +109,7 @@ func firewallRule(sm ...firewallRuleModifier) *v1alpha3.PostgreSQLServerFirewall
 		},
 		Spec: v1alpha3.FirewallRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
+				ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 			},
 			ForProvider: v1alpha3.FirewallRuleParameters{
 				ServerName:        serverName,

@@ -97,7 +97,7 @@ func withID(s string) firewallRuleModifier {
 }
 
 func withProviderRef(p runtimev1alpha1.Reference) firewallRuleModifier {
-	return func(r *v1alpha3.MySQLServerFirewallRule) { r.Spec.ProviderReference = p }
+	return func(r *v1alpha3.MySQLServerFirewallRule) { r.Spec.ProviderReference = p.DeepCopy() }
 }
 
 func firewallRule(sm ...firewallRuleModifier) *v1alpha3.MySQLServerFirewallRule {
@@ -109,7 +109,7 @@ func firewallRule(sm ...firewallRuleModifier) *v1alpha3.MySQLServerFirewallRule 
 		},
 		Spec: v1alpha3.FirewallRuleSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
+				ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 			},
 			ForProvider: v1alpha3.FirewallRuleParameters{
 				ServerName:        serverName,

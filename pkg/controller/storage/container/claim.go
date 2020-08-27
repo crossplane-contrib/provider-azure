@@ -136,7 +136,7 @@ func ConfigureContainer(_ context.Context, cm resource.Claim, cs resource.Class,
 		spec.Metadata = azblob.Metadata{}
 	}
 
-	spec.ProviderReference = rs.SpecTemplate.ProviderReference
+	spec.ProviderReference = rs.SpecTemplate.ProviderReference.DeepCopy()
 	a.Spec = *spec
 
 	return nil
