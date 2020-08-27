@@ -87,7 +87,7 @@ func withExternalName(name string) modifier {
 
 func withProviderRef(r runtimev1alpha1.Reference) modifier {
 	return func(p *v1beta1.MySQLServer) {
-		p.Spec.ProviderReference = r
+		p.Spec.ProviderReference = r.DeepCopy()
 	}
 }
 

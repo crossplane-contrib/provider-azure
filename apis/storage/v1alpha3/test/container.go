@@ -96,7 +96,7 @@ func (tc *MockContainer) WithSpecClaimRef(ref *corev1.ObjectReference) *MockCont
 
 // WithSpecProviderRef sets spec account reference value
 func (tc *MockContainer) WithSpecProviderRef(name string) *MockContainer {
-	tc.Container.Spec.ProviderReference = runtimev1alpha1.Reference{Name: name}
+	tc.Container.Spec.ProviderReference = &runtimev1alpha1.Reference{Name: name}
 	return tc
 }
 

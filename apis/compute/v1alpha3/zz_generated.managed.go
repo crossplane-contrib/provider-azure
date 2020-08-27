@@ -43,8 +43,21 @@ func (mg *AKSCluster) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1al
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this AKSCluster.
-func (mg *AKSCluster) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this AKSCluster.
+func (mg *AKSCluster) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this AKSCluster.
+func (mg *AKSCluster) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this AKSCluster.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *AKSCluster) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -78,8 +91,21 @@ func (mg *AKSCluster) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this AKSCluster.
-func (mg *AKSCluster) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this AKSCluster.
+func (mg *AKSCluster) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this AKSCluster.
+func (mg *AKSCluster) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this AKSCluster.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *AKSCluster) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

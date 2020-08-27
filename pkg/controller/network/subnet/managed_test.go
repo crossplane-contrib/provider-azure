@@ -104,7 +104,7 @@ func withState(s string) subnetModifier {
 }
 
 func withProviderRef(p runtimev1alpha1.Reference) subnetModifier {
-	return func(r *v1alpha3.Subnet) { r.Spec.ProviderReference = p }
+	return func(r *v1alpha3.Subnet) { r.Spec.ProviderReference = p.DeepCopy() }
 }
 
 func subnet(sm ...subnetModifier) *v1alpha3.Subnet {
@@ -116,7 +116,7 @@ func subnet(sm ...subnetModifier) *v1alpha3.Subnet {
 		},
 		Spec: v1alpha3.SubnetSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
+				ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 			},
 			VirtualNetworkName: virtualNetworkName,
 			ResourceGroupName:  resourceGroupName,

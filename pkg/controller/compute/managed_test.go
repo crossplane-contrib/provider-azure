@@ -46,7 +46,7 @@ type modifier func(*v1alpha3.AKSCluster)
 
 func withProviderRef(r runtimev1alpha1.Reference) modifier {
 	return func(c *v1alpha3.AKSCluster) {
-		c.Spec.ProviderReference = r
+		c.Spec.ProviderReference = r.DeepCopy()
 	}
 }
 
