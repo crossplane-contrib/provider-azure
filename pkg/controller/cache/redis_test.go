@@ -27,9 +27,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
@@ -38,7 +35,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
 	"github.com/crossplane/provider-azure/apis/cache/v1beta1"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 	redisclient "github.com/crossplane/provider-azure/pkg/clients/redis"
 	"github.com/crossplane/provider-azure/pkg/clients/redis/fake"
@@ -47,11 +43,6 @@ import (
 const (
 	name      = "cool-redis-53scf"
 	namespace = "cool-namespace"
-
-	providerName       = "cool-azure"
-	providerSecretName = "cool-azure-secret"
-	providerSecretKey  = "credentials"
-	providerSecretData = "definitelyjson"
 
 	connectionSecretName = "cool-connection-secret"
 )
@@ -75,26 +66,6 @@ var (
 var (
 	errorBoom          = errors.New("boom")
 	redisConfiguration = map[string]string{"cool": "socool"}
-
-	provider = azurev1alpha3.Provider{
-		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha3.ProviderSpec{
-			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
-					SecretReference: runtimev1alpha1.SecretReference{
-						Namespace: namespace,
-						Name:      providerSecretName,
-					},
-					Key: providerSecretKey,
-				},
-			},
-		},
-	}
-
-	providerSecret = corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerSecretName},
-		Data:       map[string][]byte{providerSecretKey: []byte(providerSecretData)},
-	}
 )
 
 type redisResourceModifier func(*v1beta1.Redis)
@@ -123,7 +94,6 @@ func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 	r := &v1beta1.Redis{
 		Spec: v1beta1.RedisSpec{
 			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
 					Namespace: namespace,
 					Name:      connectionSecretName,
@@ -161,143 +131,6 @@ func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 
 var _ managed.ExternalClient = &external{}
 var _ managed.ExternalConnecter = &connector{}
-
-func TestConnect(t *testing.T) {
-	type args struct {
-		cr          *v1beta1.Redis
-		newClientFn func(ctx context.Context, credentials []byte) (redisapi.ClientAPI, error)
-		kube        client.Client
-	}
-	type want struct {
-		err error
-	}
-
-	cases := map[string]struct {
-		args
-		want
-	}{
-		"Successful": {
-			args: args{
-				cr: instance(),
-				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
-					return &fake.MockClient{}, nil
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-			},
-		},
-		"ProviderGetFailed": {
-			args: args{
-				cr: instance(),
-				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
-					return &fake.MockClient{}, nil
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							return errorBoom
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-			},
-			want: want{
-				err: errors.Wrap(errorBoom, errGetProviderFailed),
-			},
-		},
-		"ProviderSecretGetFailed": {
-			args: args{
-				cr: instance(),
-				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
-					return &fake.MockClient{}, nil
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errorBoom
-						}
-						return nil
-					},
-				},
-			},
-			want: want{
-				err: errors.Wrap(errorBoom, errGetProviderSecretFailed),
-			},
-		},
-		"ProviderSecretGetNilFailed": {
-			args: args{
-				cr: instance(),
-				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
-					return &fake.MockClient{}, nil
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							nilSecretProvider := provider
-							nilSecretProvider.SetCredentialsSecretReference(nil)
-							*obj.(*azurev1alpha3.Provider) = nilSecretProvider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errorBoom
-						}
-						return nil
-					},
-				},
-			},
-			want: want{
-				err: errors.New(errProviderSecretNil),
-			},
-		},
-		"ClientFnFailed": {
-			args: args{
-				cr: instance(),
-				newClientFn: func(_ context.Context, _ []byte) (api redisapi.ClientAPI, e error) {
-					return &fake.MockClient{}, errorBoom
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-			},
-			want: want{
-				err: errors.Wrap(errorBoom, errConnectFailed),
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			c := connector{kube: tc.kube, newClientFn: tc.newClientFn}
-
-			_, err := c.Connect(context.Background(), tc.args.cr)
-			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("Create(...): -want, +got\n%s", diff)
-			}
-		})
-	}
-}
 
 func TestObserve(t *testing.T) {
 	type args struct {

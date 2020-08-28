@@ -17,14 +17,9 @@ limitations under the License.
 package redis
 
 import (
-	"context"
-	"encoding/json"
 	"reflect"
 
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
-	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/pkg/errors"
 
 	"github.com/crossplane/provider-azure/apis/cache/v1beta1"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -37,34 +32,6 @@ const (
 	ProvisioningStateFailed    = string(redis.Failed)
 	ProvisioningStateSucceeded = string(redis.Succeeded)
 )
-
-// NewClient returns a new Azure Cache for Redis client. Credentials must be
-// passed as JSON encoded data.
-func NewClient(_ context.Context, credentials []byte) (redisapi.ClientAPI, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-	client := redis.NewClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
-}
 
 // NewCreateParameters returns Redis resource creation parameters suitable for
 // use with the Azure API.
