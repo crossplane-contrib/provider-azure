@@ -26,7 +26,11 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
 )
@@ -52,6 +56,53 @@ const (
 	// a nil pointer for a zero values, unless FieldRequired is set.
 	FieldRequired FieldOption = iota
 )
+
+// GetAuthInfo figures out how to connect to Azure API and returns the necessary
+// information to be used for controllers to construct their specific clients.
+func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (subscriptionID string, authorizer autorest.Authorizer, err error) { // nolint:gocyclo
+	pc := &v1alpha3.ProviderConfig{}
+	switch {
+	case cr.GetProviderConfigReference() != nil && cr.GetProviderConfigReference().Name != "":
+		nn := types.NamespacedName{Name: cr.GetProviderConfigReference().Name}
+		if err := kube.Get(ctx, nn, pc); err != nil {
+			return "", nil, err
+		}
+	case cr.GetProviderReference() != nil && cr.GetProviderReference().Name != "":
+		p := &v1alpha3.Provider{}
+		nn := types.NamespacedName{Name: cr.GetProviderReference().Name}
+		if err := kube.Get(ctx, nn, p); err != nil {
+			return "", nil, err
+		}
+		p.ObjectMeta.DeepCopyInto(&pc.ObjectMeta)
+		p.Spec.ProviderSpec.CredentialsSecretRef.DeepCopyInto(pc.Spec.ProviderConfigSpec.CredentialsSecretRef)
+	default:
+		return "", nil, errors.New("neither providerConfigRef nor providerRef is given")
+	}
+	if pc.Spec.CredentialsSecretRef == nil {
+		return "", nil, errors.New("credentialsSecretRef is empty")
+	}
+	// NOTE(muvaf): When we implement the workload identity, we will only need to
+	// return a different type of option.ClientOption, which is WithTokenSource().
+
+	s := &corev1.Secret{}
+	nn := types.NamespacedName{Name: pc.Spec.CredentialsSecretRef.Name, Namespace: pc.Spec.CredentialsSecretRef.Namespace}
+	if err := kube.Get(ctx, nn, s); err != nil {
+		return "", nil, err
+	}
+	m := map[string]string{}
+	if err := json.Unmarshal(s.Data[pc.Spec.CredentialsSecretRef.Key], &m); err != nil {
+		return "", nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
+	}
+	cfg := auth.NewClientCredentialsConfig(m["clientId"], m["clientSecret"], m["tenantId"])
+	cfg.AADEndpoint = m["activeDirectoryEndpointUrl"]
+	cfg.Resource = m["resourceManagerEndpointUrl"]
+
+	a, err := cfg.Authorizer()
+	if err != nil {
+		return "", nil, errors.Wrap(err, "cannot get authorizer from client credentials config")
+	}
+	return m["subscriptionId"], a, nil
+}
 
 // Client struct that represents the information needed to connect to the Azure services as a client
 type Client struct {
