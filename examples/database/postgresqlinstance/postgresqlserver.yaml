@@ -1,15 +1,15 @@
 ---
 apiVersion: database.azure.crossplane.io/v1beta1
-kind: SQLServerClass
+kind: PostgreSQLServer
 metadata:
   name: sqlserverpostgresql-standard
   labels:
     example: "true"
-specTemplate:
+spec:
   forProvider:
     administratorLogin: myadmin
     resourceGroupNameRef:
-      name: postgres-example
+      name: example
     location: West US 2
     sslEnforcement: Disabled
     version: "9.6"
@@ -20,7 +20,9 @@ specTemplate:
       family: Gen5
     storageProfile:
       storageMB: 20480
-  writeConnectionSecretsToNamespace: crossplane-system
-  providerRef:
+  writeConnectionSecretsToRef:
+    namespace: crossplane-system
+    name: sqlserverpostgresql-standard-secret
+  providerConfigRef:
     name: example
   reclaimPolicy: Delete

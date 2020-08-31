@@ -22,7 +22,7 @@ spec:
       storageMB: 20480
   writeConnectionSecretsToRef:
     namespace: crossplane-system
-    name: olala
+    name: sqlservermysql-standard-secret
   providerConfigRef:
     name: azure-provider
   reclaimPolicy: Delete
