@@ -59,27 +59,13 @@ type PostgreSQLServerAPI interface {
 // PostgreSQLServerClient is the concreate implementation of the SQLServerAPI interface for PostgreSQL that calls Azure API.
 type PostgreSQLServerClient struct {
 	postgresql.ServersClient
-	postgresql.CheckNameAvailabilityClient
 }
 
 // NewPostgreSQLServerClient creates and initializes a PostgreSQLServerClient instance.
-func NewPostgreSQLServerClient(c *azure.Client) (*PostgreSQLServerClient, error) {
-	postgreSQLServerClient := postgresql.NewServersClient(c.SubscriptionID)
-	postgreSQLServerClient.Authorizer = c.Authorizer
-	if err := postgreSQLServerClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
-	nameClient := postgresql.NewCheckNameAvailabilityClient(c.SubscriptionID)
-	nameClient.Authorizer = c.Authorizer
-	if err := nameClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
+func NewPostgreSQLServerClient(cl postgresql.ServersClient) *PostgreSQLServerClient {
 	return &PostgreSQLServerClient{
-		ServersClient:               postgreSQLServerClient,
-		CheckNameAvailabilityClient: nameClient,
-	}, nil
+		ServersClient: cl,
+	}
 }
 
 // GetRESTClient returns the underlying REST client that the client object uses.
