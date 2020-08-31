@@ -126,11 +126,20 @@ type containerSyncdeleterMaker struct {
 	client.Client
 }
 
-func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
+func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) { // nolint:gocyclo
+	nn := types.NamespacedName{}
+	switch {
+	case c.GetProviderConfigReference() != nil && c.GetProviderConfigReference().Name != "":
+		nn.Name = c.GetProviderConfigReference().Name
+	case c.GetProviderReference() != nil && c.GetProviderReference().Name != "":
+		nn.Name = c.GetProviderReference().Name
+	default:
+		return nil, errors.New("neither providerConfigRef nor providerRef is given")
+	}
 	// Storage containers use a storage account as their 'provider', not a
 	// typical Azure provider.
 	acct := &v1alpha3.Account{}
-	if err := m.Get(ctx, types.NamespacedName{Name: c.Spec.ProviderReference.Name}, acct); err != nil {
+	if err := m.Get(ctx, nn, acct); err != nil {
 		// For storage account not found errors - check if we are on deletion path
 		// if so - remove finalizer from this container object
 		if kerrors.IsNotFound(err) && c.DeletionTimestamp != nil {
