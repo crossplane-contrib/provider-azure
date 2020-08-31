@@ -51,11 +51,6 @@ const (
 	requeueAfterOnWait    = 30 * time.Second
 )
 
-// Error strings
-const (
-	errProviderSecretNil = "provider does not have a secret reference"
-)
-
 var (
 	resultRequeue    = reconcile.Result{Requeue: true}
 	requeueOnSuccess = reconcile.Result{RequeueAfter: requeueAfterOnSuccess}

@@ -29,7 +29,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -180,52 +179,6 @@ func newStorageAccountProperties() *storageAccountProperties {
 func (sap *storageAccountProperties) withProvisioningStage(ps storage.ProvisioningState) *storageAccountProperties {
 	sap.ProvisioningState = ps
 	return sap
-}
-
-type provider struct {
-	*azurev1alpha3.Provider
-}
-
-func newProvider(name string) *provider {
-	return &provider{Provider: &azurev1alpha3.Provider{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-	}}
-}
-
-func (p *provider) withSecret(namespace, name, key string) *provider {
-	p.Spec.CredentialsSecretRef = &runtimev1alpha1.SecretKeySelector{
-		SecretReference: runtimev1alpha1.SecretReference{
-			Namespace: namespace,
-			Name:      name,
-		},
-		Key: key,
-	}
-	return p
-}
-
-type secret struct {
-	*corev1.Secret
-}
-
-func newSecret(ns, name string) *secret {
-	return &secret{
-		&corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: ns,
-				Name:      name,
-			},
-		},
-	}
-}
-
-func (s *secret) withKeyData(key, data string) *secret {
-	if s.Data == nil {
-		s.Data = make(map[string][]byte)
-	}
-	s.Data[key] = []byte(data)
-	return s
 }
 
 const (
