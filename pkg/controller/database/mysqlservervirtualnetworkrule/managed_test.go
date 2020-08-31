@@ -18,36 +18,27 @@ package mysqlservervirtualnetworkrule
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/crossplane/provider-azure/pkg/clients/database"
-
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/fake"
 )
 
 const (
-	namespace         = "coolNamespace"
 	name              = "coolSubnet"
 	uid               = types.UID("definitely-a-uuid")
 	serverName        = "coolVnet"
@@ -55,36 +46,11 @@ const (
 	vnetSubnetID      = "/the/best/subnet/ever"
 	resourceID        = "a-very-cool-id"
 	resourceType      = "cooltype"
-
-	providerName       = "cool-aws"
-	providerSecretName = "cool-aws-secret"
-	providerSecretKey  = "credentials"
-	providerSecretData = "definitelyini"
 )
 
 var (
 	ctx       = context.Background()
 	errorBoom = errors.New("boom")
-
-	provider = azurev1alpha3.Provider{
-		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha3.ProviderSpec{
-			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
-					SecretReference: runtimev1alpha1.SecretReference{
-						Namespace: namespace,
-						Name:      providerSecretName,
-					},
-					Key: providerSecretKey,
-				},
-			},
-		},
-	}
-
-	providerSecret = corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerSecretName},
-		Data:       map[string][]byte{providerSecretKey: []byte(providerSecretData)},
-	}
 )
 
 type testCase struct {
@@ -113,10 +79,6 @@ func withState(s string) virtualNetworkRuleModifier {
 	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Status.State = s }
 }
 
-func withProviderRef(p runtimev1alpha1.Reference) virtualNetworkRuleModifier {
-	return func(r *v1alpha3.MySQLServerVirtualNetworkRule) { r.Spec.ProviderReference = p.DeepCopy() }
-}
-
 func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.MySQLServerVirtualNetworkRule {
 	r := &v1alpha3.MySQLServerVirtualNetworkRule{
 		ObjectMeta: metav1.ObjectMeta{
@@ -125,9 +87,6 @@ func virtualNetworkRule(sm ...virtualNetworkRuleModifier) *v1alpha3.MySQLServerV
 			Finalizers: []string{},
 		},
 		Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
-			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
-			},
 			ServerName:        serverName,
 			ResourceGroupName: resourceGroupName,
 			VirtualNetworkRuleProperties: v1alpha3.VirtualNetworkRuleProperties{
@@ -428,103 +387,6 @@ func TestDelete(t *testing.T) {
 
 			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
 				t.Errorf("r: -want, +got:\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestConnect(t *testing.T) {
-	cases := []struct {
-		name    string
-		conn    *connecter
-		i       resource.Managed
-		want    managed.ExternalClient
-		wantErr error
-	}{
-		{
-			name:    "NotMySQLVirtualNetworkRule",
-			conn:    &connecter{client: &test.MockClient{}},
-			i:       &v1alpha3.PostgreSQLServerVirtualNetworkRule{},
-			want:    nil,
-			wantErr: errors.New(errNotMySQLServerVirtualNetworkRule),
-		},
-		{
-			name: "SuccessfulConnect",
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLVirtualNetworkRulesClient, error) {
-					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
-				},
-			},
-			i:    virtualNetworkRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			want: &external{client: &fake.MockMySQLVirtualNetworkRulesClient{}},
-		},
-		{
-			name: "GetProviderSecretFailed",
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errorBoom
-						}
-						return nil
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLVirtualNetworkRulesClient, error) {
-					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
-				},
-			},
-			i:       virtualNetworkRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			wantErr: errors.Wrapf(errorBoom, "cannot get provider secret %s", fmt.Sprintf("%s/%s", namespace, providerSecretName)),
-		},
-		{
-			name: "GetProviderSecretNil",
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							nilSecretProvider := provider
-							nilSecretProvider.SetCredentialsSecretReference(nil)
-							*obj.(*azurev1alpha3.Provider) = nilSecretProvider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errorBoom
-						}
-						return nil
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLVirtualNetworkRulesClient, error) {
-					return &fake.MockMySQLVirtualNetworkRulesClient{}, nil
-				},
-			},
-			i:       virtualNetworkRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			wantErr: errors.New(errProviderSecretNil),
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, gotErr := tc.conn.Connect(ctx, tc.i)
-
-			if diff := cmp.Diff(tc.wantErr, gotErr, test.EquateErrors()); diff != "" {
-				t.Errorf("tc.conn.Connect(...): want error != got error:\n%s", diff)
-			}
-
-			if diff := cmp.Diff(tc.want, got, test.EquateConditions(), cmp.AllowUnexported(external{})); diff != "" {
-				t.Errorf("tc.conn.Connect(...): -want, +got:\n%s", diff)
 			}
 		})
 	}

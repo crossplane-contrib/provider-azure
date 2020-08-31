@@ -19,9 +19,9 @@ package mysqlservervirtualnetworkrule
 import (
 	"context"
 
+	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
+
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -33,7 +33,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/database"
 )
@@ -41,7 +40,6 @@ import (
 // Error strings.
 const (
 	errNewClient                           = "cannot create new MySQLServerVirtualNetworkRule"
-	errProviderSecretNil                   = "provider does not have a secret reference"
 	errNotMySQLServerVirtualNetworkRule    = "managed resource is not an MySQLServerVirtualNetworkRule"
 	errCreateMySQLServerVirtualNetworkRule = "cannot create MySQLServerVirtualNetworkRule"
 	errUpdateMySQLServerVirtualNetworkRule = "cannot update MySQLServerVirtualNetworkRule"
@@ -66,37 +64,18 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 }
 
 type connecter struct {
-	client      client.Client
-	newClientFn func(ctx context.Context, credentials []byte) (database.MySQLVirtualNetworkRulesClient, error)
+	client client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	v, ok := mg.(*v1alpha3.MySQLServerVirtualNetworkRule)
-	if !ok {
-		return nil, errors.New(errNotMySQLServerVirtualNetworkRule)
+	sid, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	if err != nil {
+		return nil, err
 	}
 
-	p := &azurev1alpha3.Provider{}
-	n := types.NamespacedName{Name: v.Spec.ProviderReference.Name}
-	if err := c.client.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.client.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-	newClientFn := database.NewMySQLVirtualNetworkRulesClient
-	if c.newClientFn != nil {
-		newClientFn = c.newClientFn
-	}
-	client, err := newClientFn(ctx, s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{client: client}, errors.Wrap(err, errNewClient)
+	cl := mysql.NewVirtualNetworkRulesClient(sid)
+	cl.Authorizer = auth
+	return &external{client: cl}, errors.Wrap(err, errNewClient)
 }
 
 type external struct {
