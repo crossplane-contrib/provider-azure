@@ -67,41 +67,18 @@ type MySQLServerAPI interface {
 // interface for MySQL that calls Azure API.
 type MySQLServerClient struct {
 	mysql.ServersClient
-	mysql.CheckNameAvailabilityClient
 }
 
 // NewMySQLServerClient creates and initializes a MySQLServerClient instance.
-func NewMySQLServerClient(c *azure.Client) (*MySQLServerClient, error) {
-	mysqlServersClient := mysql.NewServersClient(c.SubscriptionID)
-	mysqlServersClient.Authorizer = c.Authorizer
-	if err := mysqlServersClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
-	nameClient := mysql.NewCheckNameAvailabilityClient(c.SubscriptionID)
-	nameClient.Authorizer = c.Authorizer
-	if err := nameClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
+func NewMySQLServerClient(cl mysql.ServersClient) *MySQLServerClient {
 	return &MySQLServerClient{
-		ServersClient:               mysqlServersClient,
-		CheckNameAvailabilityClient: nameClient,
-	}, nil
+		ServersClient: cl,
+	}
 }
 
 // GetRESTClient returns the underlying REST client that the client object uses.
 func (c *MySQLServerClient) GetRESTClient() autorest.Sender {
 	return c.ServersClient.Client
-}
-
-// ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1beta1.MySQLServer) (bool, error) {
-	r, err := c.Execute(ctx, mysql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
-	if err != nil {
-		return false, err
-	}
-	return !azure.ToBool(r.NameAvailable), nil
 }
 
 // GetServer retrieves the requested MySQL Server

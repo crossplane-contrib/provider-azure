@@ -20,9 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
+
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -35,17 +35,12 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/database/v1beta1"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/database"
 )
 
 // Error strings.
 const (
-	errNewClient          = "cannot create new MySQLServer client"
-	errGetProvider        = "cannot get Azure provider"
-	errGetProviderSecret  = "cannot get Azure provider Secret"
-	errProviderSecretNil  = "Azure provider does not have a secret reference"
 	errUpdateCR           = "cannot update MySQLServer custom resource"
 	errGenPassword        = "cannot generate admin password"
 	errNotMySQLServer     = "managed resource is not a MySQLServer"
@@ -65,48 +60,24 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		For(&v1beta1.MySQLServer{}).
 		Complete(managed.NewReconciler(mgr,
 			resource.ManagedKind(v1beta1.MySQLServerGroupVersionKind),
-			managed.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: newClient}),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
-func newClient(credentials []byte) (database.MySQLServerAPI, error) {
-	ac, err := azure.NewClient(credentials)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot create Azure client")
-	}
-	mc, err := database.NewMySQLServerClient(ac)
-	return mc, errors.Wrap(err, "cannot create Azure MySQL client")
-}
-
 type connecter struct {
-	client      client.Client
-	newClientFn func(credentials []byte) (database.MySQLServerAPI, error)
+	client client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	v, ok := mg.(*v1beta1.MySQLServer)
-	if !ok {
-		return nil, errors.New(errNotMySQLServer)
+	sid, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	if err != nil {
+		return nil, err
 	}
-
-	p := &azurev1alpha3.Provider{}
-	if err := c.client.Get(ctx, types.NamespacedName{Name: v.Spec.ProviderReference.Name}, p); err != nil {
-		return nil, errors.Wrap(err, errGetProvider)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n := types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.client.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrap(err, errGetProviderSecret)
-	}
-	sqlClient, err := c.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{kube: c.client, client: sqlClient, newPasswordFn: password.Generate}, errors.Wrap(err, errNewClient)
+	cl := mysql.NewServersClient(sid)
+	cl.Authorizer = auth
+	return &external{kube: c.client, client: database.NewMySQLServerClient(cl), newPasswordFn: password.Generate}, nil
 }
 
 type external struct {
