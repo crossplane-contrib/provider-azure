@@ -39,7 +39,6 @@ import (
 
 // Error strings.
 const (
-	errNewClient                           = "cannot create new MySQLServerVirtualNetworkRule"
 	errNotMySQLServerVirtualNetworkRule    = "managed resource is not an MySQLServerVirtualNetworkRule"
 	errCreateMySQLServerVirtualNetworkRule = "cannot create MySQLServerVirtualNetworkRule"
 	errUpdateMySQLServerVirtualNetworkRule = "cannot update MySQLServerVirtualNetworkRule"
@@ -75,7 +74,7 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 
 	cl := mysql.NewVirtualNetworkRulesClient(sid)
 	cl.Authorizer = auth
-	return &external{client: cl}, errors.Wrap(err, errNewClient)
+	return &external{client: cl}, nil
 }
 
 type external struct {

@@ -18,7 +18,6 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -26,11 +25,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
-	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql/postgresqlapi"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
@@ -161,38 +157,6 @@ func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1
 		Method:     http.MethodDelete,
 	}
 	return nil
-}
-
-// A PostgreSQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
-type PostgreSQLVirtualNetworkRulesClient postgresqlapi.VirtualNetworkRulesClientAPI
-
-// NewPostgreSQLVirtualNetworkRulesClient returns a new Azure Virtual Network Rules client. Credentials must be
-// passed as JSON encoded data.
-func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) (PostgreSQLVirtualNetworkRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := postgresql.NewVirtualNetworkRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
 }
 
 // NewPostgreSQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
