@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/crossplane/provider-azure/apis/v1beta1"
+
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -84,7 +86,7 @@ const (
 // GetAuthInfo figures out how to connect to Azure API and returns the necessary
 // information to be used for controllers to construct their specific clients.
 func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) { // nolint:gocyclo
-	pc := &v1alpha3.ProviderConfig{}
+	pc := &v1beta1.ProviderConfig{}
 	switch {
 	case cr.GetProviderConfigReference() != nil && cr.GetProviderConfigReference().Name != "":
 		nn := types.NamespacedName{Name: cr.GetProviderConfigReference().Name}

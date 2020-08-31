@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2020 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1alpha3
+package v1beta1
 
 import (
 	"reflect"
@@ -26,7 +26,7 @@ import (
 // Package type metadata.
 const (
 	Group   = "azure.crossplane.io"
-	Version = "v1alpha3"
+	Version = "v1beta1"
 )
 
 var (
@@ -37,23 +37,14 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-// Provider type metadata.
+// ProviderConfig type metadata.
 var (
-	ProviderKind             = reflect.TypeOf(Provider{}).Name()
-	ProviderGroupKind        = schema.GroupKind{Group: Group, Kind: ProviderKind}.String()
-	ProviderKindAPIVersion   = ProviderKind + "." + SchemeGroupVersion.String()
-	ProviderGroupVersionKind = SchemeGroupVersion.WithKind(ProviderKind)
-)
-
-// ResourceGroup type metadata.
-var (
-	ResourceGroupKind             = reflect.TypeOf(ResourceGroup{}).Name()
-	ResourceGroupGroupKind        = schema.GroupKind{Group: Group, Kind: ResourceGroupKind}.String()
-	ResourceGroupKindAPIVersion   = ResourceGroupKind + "." + SchemeGroupVersion.String()
-	ResourceGroupGroupVersionKind = SchemeGroupVersion.WithKind(ResourceGroupKind)
+	ProviderConfigKind             = reflect.TypeOf(ProviderConfig{}).Name()
+	ProviderConfigGroupKind        = schema.GroupKind{Group: Group, Kind: ProviderConfigKind}.String()
+	ProviderConfigKindAPIVersion   = ProviderConfigKind + "." + SchemeGroupVersion.String()
+	ProviderConfigGroupVersionKind = SchemeGroupVersion.WithKind(ProviderConfigKind)
 )
 
 func init() {
-	SchemeBuilder.Register(&Provider{}, &ProviderList{})
-	SchemeBuilder.Register(&ResourceGroup{}, &ResourceGroupList{})
+	SchemeBuilder.Register(&ProviderConfig{}, &ProviderConfigList{})
 }
