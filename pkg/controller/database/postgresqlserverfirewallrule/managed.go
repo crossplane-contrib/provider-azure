@@ -19,9 +19,9 @@ package postgresqlserverfirewallrule
 import (
 	"context"
 
+	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
+	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql/postgresqlapi"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -33,15 +33,12 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/database"
 )
 
 // Error strings.
 const (
-	errNewClient                          = "cannot create new PostgreSQLServerFirewallRule"
-	errProviderSecretNil                  = "provider does not have a secret reference"
 	errNotPostgreSQLServerFirewallRule    = "managed resource is not an PostgreSQLServerFirewallRule"
 	errCreatePostgreSQLServerFirewallRule = "cannot create PostgreSQLServerFirewallRule"
 	errUpdatePostgreSQLServerFirewallRule = "cannot update PostgreSQLServerFirewallRule"
@@ -59,44 +56,28 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		Complete(managed.NewReconciler(mgr,
 			resource.ManagedKind(v1alpha3.PostgreSQLServerFirewallRuleGroupVersionKind),
 			managed.WithConnectionPublishers(),
-			managed.WithExternalConnecter(&connecter{client: mgr.GetClient(), newClientFn: database.NewPostgreSQLFirewallRulesClient}),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connecter struct {
-	client      client.Client
-	newClientFn func(ctx context.Context, credentials []byte) (database.PostgreSQLFirewallRulesClient, error)
+	client client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	v, ok := mg.(*v1alpha3.PostgreSQLServerFirewallRule)
-	if !ok {
-		return nil, errors.New(errNotPostgreSQLServerFirewallRule)
+	sid, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	if err != nil {
+		return nil, err
 	}
-
-	p := &azurev1alpha3.Provider{}
-	n := types.NamespacedName{Name: v.Spec.ProviderReference.Name}
-	if err := c.client.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", v.Spec.ProviderReference.Name)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.client.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-	client, err := c.newClientFn(ctx, s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{client: client}, errors.Wrap(err, errNewClient)
+	cl := postgresql.NewFirewallRulesClient(sid)
+	cl.Authorizer = auth
+	return &external{client: cl}, nil
 }
 
 type external struct {
-	client database.PostgreSQLFirewallRulesClient
+	client postgresqlapi.FirewallRulesClientAPI
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {

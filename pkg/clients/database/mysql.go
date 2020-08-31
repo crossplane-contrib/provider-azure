@@ -18,18 +18,14 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
-	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
@@ -171,38 +167,6 @@ func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1
 	return nil
 }
 
-// A MySQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
-type MySQLVirtualNetworkRulesClient mysqlapi.VirtualNetworkRulesClientAPI
-
-// NewMySQLVirtualNetworkRulesClient returns a new Azure Virtual Network Rules client. Credentials must be
-// passed as JSON encoded data.
-func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) (MySQLVirtualNetworkRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := mysql.NewVirtualNetworkRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
-}
-
 // NewMySQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule) mysql.VirtualNetworkRule {
 	return mysql.VirtualNetworkRule{
@@ -234,38 +198,6 @@ func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServer
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Type = azure.ToString(az.Type)
-}
-
-// A MySQLFirewallRulesClient handles CRUD operations for Azure Firewall Rules.
-type MySQLFirewallRulesClient mysqlapi.FirewallRulesClientAPI
-
-// NewMySQLFirewallRulesClient returns a new Azure Firewall Rules client.
-// Credentials must be passed as JSON encoded data.
-func NewMySQLFirewallRulesClient(ctx context.Context, credentials []byte) (MySQLFirewallRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := mysql.NewFirewallRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
 }
 
 // NewMySQLFirewallRuleParameters returns an Azure FirewallRule object from a
