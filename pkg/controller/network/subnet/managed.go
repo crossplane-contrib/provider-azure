@@ -19,9 +19,9 @@ package subnet
 import (
 	"context"
 
+	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -33,20 +33,17 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azureclients "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/network"
 )
 
 // Error strings.
 const (
-	errProviderSecretNil = "provider does not have a secret reference"
-	errNewClient         = "cannot create new Subnet"
-	errNotSubnet         = "managed resource is not an Subnet"
-	errCreateSubnet      = "cannot create Subnet"
-	errUpdateSubnet      = "cannot update Subnet"
-	errGetSubnet         = "cannot get Subnet"
-	errDeleteSubnet      = "cannot delete Subnet"
+	errNotSubnet    = "managed resource is not an Subnet"
+	errCreateSubnet = "cannot create Subnet"
+	errUpdateSubnet = "cannot update Subnet"
+	errGetSubnet    = "cannot get Subnet"
+	errDeleteSubnet = "cannot delete Subnet"
 )
 
 // Setup adds a controller that reconciles Subnets.
@@ -66,40 +63,20 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 }
 
 type connecter struct {
-	client      client.Client
-	newClientFn func(ctx context.Context, credentials []byte) (network.SubnetsClient, error)
+	client client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	g, ok := mg.(*v1alpha3.Subnet)
-	if !ok {
-		return nil, errors.New(errNotSubnet)
+	creds, auth, err := azureclients.GetAuthInfo(ctx, c.client, mg)
+	if err != nil {
+		return nil, err
 	}
-
-	p := &azurev1alpha3.Provider{}
-	n := types.NamespacedName{Name: g.Spec.ProviderReference.Name}
-	if err := c.client.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.client.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-	newClientFn := network.NewSubnetsClient
-	if c.newClientFn != nil {
-		newClientFn = c.newClientFn
-	}
-	client, err := newClientFn(ctx, s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{client: client}, errors.Wrap(err, errNewClient)
+	cl := azurenetwork.NewSubnetsClient(creds[azureclients.CredentialsKeySubscriptionID])
+	cl.Authorizer = auth
+	return &external{client: cl}, nil
 }
 
-type external struct{ client network.SubnetsClient }
+type external struct{ client networkapi.SubnetsClientAPI }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	s, ok := mg.(*v1alpha3.Subnet)

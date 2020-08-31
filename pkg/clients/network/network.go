@@ -105,38 +105,6 @@ func UpdateVirtualNetworkStatusFromAzure(v *v1alpha3.VirtualNetwork, az networkm
 	v.Status.Type = azure.ToString(az.Type)
 }
 
-// A SubnetsClient handles CRUD operations for Azure Virtual Networks.
-type SubnetsClient networkapi.SubnetsClientAPI
-
-// NewSubnetsClient returns a new Azure Virtual Networks client. Credentials must be
-// passed as JSON encoded data.
-func NewSubnetsClient(ctx context.Context, credentials []byte) (SubnetsClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := networkmgmt.NewSubnetsClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
-}
-
 // NewSubnetParameters returns an Azure Subnet object from a subnet spec
 func NewSubnetParameters(s *v1alpha3.Subnet) networkmgmt.Subnet {
 	return networkmgmt.Subnet{
