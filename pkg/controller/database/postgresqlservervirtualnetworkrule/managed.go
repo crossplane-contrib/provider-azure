@@ -69,12 +69,12 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	sid, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	creds, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
 	if err != nil {
 		return nil, err
 	}
 
-	cl := postgresql.NewVirtualNetworkRulesClient(sid)
+	cl := postgresql.NewVirtualNetworkRulesClient(creds[azure.CredentialsKeySubscriptionID])
 	cl.Authorizer = auth
 	return &external{client: cl}, nil
 }
