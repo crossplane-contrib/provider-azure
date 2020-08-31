@@ -69,50 +69,24 @@ type AggregateClient struct {
 }
 
 // NewAggregateClient produces the various clients used by the AKS controller.
-func NewAggregateClient(credentials []byte) (AKSClient, error) {
-	c, err := azure.NewClient(credentials)
-	if err != nil {
-		return AggregateClient{}, errors.Wrap(err, "cannot create Azure client")
-	}
+func NewAggregateClient(creds map[string]string, auth autorest.Authorizer) (AKSClient, error) {
+	mcc := containerservice.NewManagedClustersClient(creds[azure.CredentialsKeySubscriptionID])
+	mcc.Authorizer = auth
+	_ = mcc.AddToUserAgent(azure.UserAgent)
 
-	ta, err := NewTokenAuthorizer(c)
-	if err != nil {
-		return AggregateClient{}, errors.Wrap(err, "cannot create Azure bearer token authorizer")
-	}
+	rac := authorization.NewRoleAssignmentsClient(creds[azure.CredentialsKeySubscriptionID])
+	rac.Authorizer = auth
+	_ = rac.AddToUserAgent(azure.UserAgent)
 
-	mcc := containerservice.NewManagedClustersClient(c.SubscriptionID)
-	mcc.Authorizer = c.Authorizer
-	mcc.AddToUserAgent(azure.UserAgent)
-
-	rac := authorization.NewRoleAssignmentsClient(c.SubscriptionID)
-	rac.Authorizer = c.Authorizer
-	rac.AddToUserAgent(azure.UserAgent)
-
-	ac := graphrbac.NewApplicationsClient(c.TenantID)
-	ac.Authorizer = ta
-	ac.AddToUserAgent(azure.UserAgent)
-
-	spc := graphrbac.NewServicePrincipalsClient(c.TenantID)
-	spc.Authorizer = ta
-	spc.AddToUserAgent(azure.UserAgent)
-
-	return AggregateClient{
-		ManagedClusters:   mcc,
-		Applications:      ac,
-		ServicePrincipals: spc,
-		RoleAssignments:   rac,
-	}, nil
-}
-
-// NewTokenAuthorizer produces a service principal token based authorizer, which
-// is required by the graph API clients.
-func NewTokenAuthorizer(c *azure.Client) (autorest.Authorizer, error) {
-	cfg, err := adal.NewOAuthConfig(c.ActiveDirectoryEndpointURL, c.TenantID)
+	cfg, err := adal.NewOAuthConfig(creds[azure.CredentialsKeyActiveDirectoryEndpointURL], creds[azure.CredentialsKeyTenantID])
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create OAuth configuration")
 	}
 
-	token, err := adal.NewServicePrincipalToken(*cfg, c.ClientID, c.ClientSecret, c.ActiveDirectoryGraphResourceID)
+	token, err := adal.NewServicePrincipalToken(*cfg,
+		creds[azure.CredentialsKeyClientID],
+		creds[azure.CredentialsKeyClientSecret],
+		creds[azure.CredentialsKeyActiveDirectoryGraphResourceID])
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create service principal token")
 	}
@@ -120,7 +94,22 @@ func NewTokenAuthorizer(c *azure.Client) (autorest.Authorizer, error) {
 		return nil, errors.Wrap(err, "cannot refresh service principal token")
 	}
 
-	return autorest.NewBearerAuthorizer(token), nil
+	ta := autorest.NewBearerAuthorizer(token)
+
+	ac := graphrbac.NewApplicationsClient(creds[azure.CredentialsKeyTenantID])
+	ac.Authorizer = ta
+	_ = ac.AddToUserAgent(azure.UserAgent)
+
+	spc := graphrbac.NewServicePrincipalsClient(creds[azure.CredentialsKeyTenantID])
+	spc.Authorizer = ta
+	_ = spc.AddToUserAgent(azure.UserAgent)
+
+	return AggregateClient{
+		ManagedClusters:   mcc,
+		Applications:      ac,
+		ServicePrincipals: spc,
+		RoleAssignments:   rac,
+	}, nil
 }
 
 // GetManagedCluster returns the requested Azure managed cluster.

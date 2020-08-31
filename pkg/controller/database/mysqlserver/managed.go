@@ -71,11 +71,11 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	sid, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	creds, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl := mysql.NewServersClient(sid)
+	cl := mysql.NewServersClient(creds[azure.CredentialsKeySubscriptionID])
 	cl.Authorizer = auth
 	return &external{kube: c.client, client: database.NewMySQLServerClient(cl), newPasswordFn: password.Generate}, nil
 }

@@ -61,38 +61,6 @@ func postgreSQLVirtualNetworkRule(sm ...postgreSQLVirtualNetworkRuleModifier) *v
 	return r
 }
 
-func TestNewPostgreSQLVirtualNetworkRulesClient(t *testing.T) {
-	cases := []struct {
-		name       string
-		r          []byte
-		returnsErr bool
-	}{
-		{
-			name: "Successful",
-			r:    []byte(credentials),
-		},
-		{
-			name:       "Unsuccessful",
-			r:          []byte("invalid"),
-			returnsErr: true,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := NewPostgreSQLVirtualNetworkRulesClient(ctx, tc.r)
-
-			if tc.returnsErr != (err != nil) {
-				t.Errorf("NewPostgreSQLVirtualNetworkRulesClient(...) error: want: %t got: %t", tc.returnsErr, err != nil)
-			}
-
-			if _, ok := got.(PostgreSQLVirtualNetworkRulesClient); !ok && !tc.returnsErr {
-				t.Error("NewPostgreSQLVirtualNetworkRulesClient(...): got does not satisfy PostgreSQLVirtualNetworkRulesClient interface")
-			}
-		})
-	}
-}
-
 func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
 	cases := []struct {
 		name string

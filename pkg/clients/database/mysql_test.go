@@ -17,7 +17,6 @@ limitations under the License.
 package database
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
@@ -40,21 +39,6 @@ const (
 
 	id           = "very-cool-id"
 	resourceType = "very-cool-type"
-	credentials  = `
-		{
-			"clientId": "cool-id",
-			"clientSecret": "cool-secret",
-			"tenantId": "cool-tenant",
-			"subscriptionId": "cool-subscription",
-			"activeDirectoryEndpointUrl": "cool-aad-url",
-			"resourceManagerEndpointUrl": "cool-rm-url",
-			"activeDirectoryGraphResourceId": "cool-graph-id"
-		}
-	`
-)
-
-var (
-	ctx = context.Background()
 )
 
 type mySQLVirtualNetworkRuleModifier func(*v1alpha3.MySQLServerVirtualNetworkRule)
