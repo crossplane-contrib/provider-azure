@@ -44,6 +44,16 @@ const (
 	asyncOperationPollingMethod    = "AsyncOperation"
 )
 
+// Error strings.
+const (
+	errGetProviderConfig         = "cannot get referenced ProviderConfig"
+	errGetProvider               = "cannot get referenced Provider"
+	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef is given"
+	errCredSecretRefEmpty        = "credentials secret reference cannot be empty"
+	errUnmarshalCredentialSecret = "cannot unmarshal the data in credentials secret"
+	errGetAuthorizer             = "cannot get authorizer from client credentials config"
+)
+
 // A FieldOption determines how common Go types are translated to the types
 // required by the Azure Go SDK.
 type FieldOption int
@@ -65,21 +75,21 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 	case cr.GetProviderConfigReference() != nil && cr.GetProviderConfigReference().Name != "":
 		nn := types.NamespacedName{Name: cr.GetProviderConfigReference().Name}
 		if err := kube.Get(ctx, nn, pc); err != nil {
-			return "", nil, err
+			return "", nil, errors.Wrap(err, errGetProviderConfig)
 		}
 	case cr.GetProviderReference() != nil && cr.GetProviderReference().Name != "":
 		p := &v1alpha3.Provider{}
 		nn := types.NamespacedName{Name: cr.GetProviderReference().Name}
 		if err := kube.Get(ctx, nn, p); err != nil {
-			return "", nil, err
+			return "", nil, errors.Wrap(err, errGetProvider)
 		}
 		p.ObjectMeta.DeepCopyInto(&pc.ObjectMeta)
 		p.Spec.ProviderSpec.CredentialsSecretRef.DeepCopyInto(pc.Spec.ProviderConfigSpec.CredentialsSecretRef)
 	default:
-		return "", nil, errors.New("neither providerConfigRef nor providerRef is given")
+		return "", nil, errors.New(errNeitherPCNorPGiven)
 	}
 	if pc.Spec.CredentialsSecretRef == nil {
-		return "", nil, errors.New("credentialsSecretRef is empty")
+		return "", nil, errors.New(errCredSecretRefEmpty)
 	}
 	// NOTE(muvaf): When we implement the workload identity, we will only need to
 	// return a different type of option.ClientOption, which is WithTokenSource().
@@ -91,7 +101,7 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 	}
 	m := map[string]string{}
 	if err := json.Unmarshal(s.Data[pc.Spec.CredentialsSecretRef.Key], &m); err != nil {
-		return "", nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
+		return "", nil, errors.Wrap(err, errUnmarshalCredentialSecret)
 	}
 	cfg := auth.NewClientCredentialsConfig(m["clientId"], m["clientSecret"], m["tenantId"])
 	cfg.AADEndpoint = m["activeDirectoryEndpointUrl"]
@@ -99,7 +109,7 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 
 	a, err := cfg.Authorizer()
 	if err != nil {
-		return "", nil, errors.Wrap(err, "cannot get authorizer from client credentials config")
+		return "", nil, errors.Wrap(err, errGetAuthorizer)
 	}
 	return m["subscriptionId"], a, nil
 }
