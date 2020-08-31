@@ -19,9 +19,9 @@ package virtualnetwork
 import (
 	"context"
 
+	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -33,15 +33,12 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azureclients "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/network"
 )
 
 // Error strings.
 const (
-	errProviderSecretNil    = "provider does not have a secret reference"
-	errNewClient            = "cannot create new VirtualNetworks client"
 	errNotVirtualNetwork    = "managed resource is not an VirtualNetwork"
 	errCreateVirtualNetwork = "cannot create VirtualNetwork"
 	errUpdateVirtualNetwork = "cannot update VirtualNetwork"
@@ -66,40 +63,22 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 }
 
 type connecter struct {
-	client      client.Client
-	newClientFn func(ctx context.Context, credentials []byte) (network.VirtualNetworksClient, error)
+	client client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	g, ok := mg.(*v1alpha3.VirtualNetwork)
-	if !ok {
-		return nil, errors.New(errNotVirtualNetwork)
+	creds, auth, err := azureclients.GetAuthInfo(ctx, c.client, mg)
+	if err != nil {
+		return nil, err
 	}
-
-	p := &azurev1alpha3.Provider{}
-	n := types.NamespacedName{Name: g.Spec.ProviderReference.Name}
-	if err := c.client.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.client.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-	newClientFn := network.NewVirtualNetworksClient
-	if c.newClientFn != nil {
-		newClientFn = c.newClientFn
-	}
-	client, err := newClientFn(ctx, s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{client: client}, errors.Wrap(err, errNewClient)
+	cl := azurenetwork.NewVirtualNetworksClient(creds[azureclients.CredentialsKeySubscriptionID])
+	cl.Authorizer = auth
+	return &external{client: cl}, nil
 }
 
-type external struct{ client network.VirtualNetworksClient }
+type external struct {
+	client networkapi.VirtualNetworksClientAPI
+}
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
 	v, ok := mg.(*v1alpha3.VirtualNetwork)

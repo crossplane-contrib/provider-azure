@@ -17,7 +17,6 @@ limitations under the License.
 package network
 
 import (
-	"context"
 	"testing"
 
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
@@ -46,54 +45,7 @@ var (
 	etag         = "a-very-cool-etag"
 	resourceType = "resource-type"
 	purpose      = "cool-purpose"
-	credentials  = `
-		{
-			"clientId": "cool-id",
-			"clientSecret": "cool-secret",
-			"tenantId": "cool-tenant",
-			"subscriptionId": "cool-subscription",
-			"activeDirectoryEndpointUrl": "cool-aad-url",
-			"resourceManagerEndpointUrl": "cool-rm-url",
-			"activeDirectoryGraphResourceId": "cool-graph-id"
-		}
-	`
 )
-
-var (
-	ctx = context.Background()
-)
-
-func TestNewVirtualNetworksClient(t *testing.T) {
-	cases := []struct {
-		name       string
-		r          []byte
-		returnsErr bool
-	}{
-		{
-			name: "Successful",
-			r:    []byte(credentials),
-		},
-		{
-			name:       "Unsuccessful",
-			r:          []byte("invalid"),
-			returnsErr: true,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := NewVirtualNetworksClient(ctx, tc.r)
-
-			if tc.returnsErr != (err != nil) {
-				t.Errorf("NewVirtualNetworksClient(...) error: want: %t got: %t", tc.returnsErr, err != nil)
-			}
-
-			if _, ok := got.(VirtualNetworksClient); !ok && !tc.returnsErr {
-				t.Error("NewVirtualNetworksClient(...): got does not satisfy VirtualNetworksClient interface")
-			}
-		})
-	}
-}
 
 func TestNewVirtualNetworkParameters(t *testing.T) {
 	cases := []struct {

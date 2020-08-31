@@ -28,15 +28,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
-	"github.com/crossplane/provider-azure/pkg/clients/network/fake"
-
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
+
+	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane/provider-azure/pkg/clients/network/fake"
 )
 
 const (
