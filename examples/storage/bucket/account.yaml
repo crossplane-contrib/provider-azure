@@ -5,7 +5,7 @@ metadata:
   name: storage
 spec:
   location: West US 2
-  providerRef:
+  providerConfigRef:
     name: example
   reclaimPolicy: Delete
 ---
@@ -25,7 +25,7 @@ spec:
       tier: Standard
     tags:
       application: crossplane
-  providerRef:
+  providerConfigRef:
     name: example
   reclaimPolicy: Delete
   writeConnectionSecretToRef:

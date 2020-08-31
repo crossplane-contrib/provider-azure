@@ -11,7 +11,7 @@ data:
 ---
 # Azure Provider with service account secret reference - used to provision cache resources
 apiVersion: azure.crossplane.io/v1alpha3
-kind: Provider
+kind: ProviderConfig
 metadata:
   name: example
 spec:

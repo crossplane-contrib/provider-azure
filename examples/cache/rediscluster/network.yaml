@@ -6,5 +6,5 @@ metadata:
 spec:
   location: West US 2
   reclaimPolicy: Delete
-  providerRef:
+  providerConfigRef:
     name: example
