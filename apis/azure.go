@@ -27,12 +27,14 @@ import (
 	networkv1alpha3 "github.com/crossplane/provider-azure/apis/network/v1alpha3"
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	azurev1beta1 "github.com/crossplane/provider-azure/apis/v1beta1"
 )
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
 		azurev1alpha3.SchemeBuilder.AddToScheme,
+		azurev1beta1.SchemeBuilder.AddToScheme,
 		cachev1beta1.SchemeBuilder.AddToScheme,
 		computev1alpha3.SchemeBuilder.AddToScheme,
 		databasev1alpha3.SchemeBuilder.AddToScheme,
