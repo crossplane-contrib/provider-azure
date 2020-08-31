@@ -28,7 +28,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -334,94 +333,6 @@ func TestReconciler_Reconcile(t *testing.T) {
 				if diff := cmp.Diff(tt.want.acct, b, test.EquateConditions()); diff != "" {
 					t.Errorf("Reconciler.Reconcile() account: -want, +got\n%s", diff)
 				}
-			}
-		})
-	}
-}
-
-func Test_accountHandleMaker_newHandler(t *testing.T) {
-	ctx := context.TODO()
-	ns := testNamespace
-	bucketName := testAccountName
-	providerName := "test-provider"
-	secretName := "test-secret"
-	secretKey := "creds"
-	secretData := `{"clientId": "0f32e96b-b9a4-49ce-a857-243a33b20e5c",
-	"clientSecret": "49d8cab5-d47a-4d1a-9133-5c5db29c345d",
-	"subscriptionId": "bf1b0e59-93da-42e0-82c6-5a1d94227911",
-	"tenantId": "302de427-dba9-4452-8583-a4268e46de6b",
-	"activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
-	"resourceManagerEndpointUrl": "https://management.azure.com/",
-	"activeDirectoryGraphResourceId": "https://graph.windows.net/",
-	"sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
-	"galleryEndpointUrl": "https://gallery.azure.com/",
-	"managementEndpointUrl": "https://management.core.windows.net/"}`
-
-	tests := []struct {
-		name    string
-		kube    client.Client
-		acct    *v1alpha3.Account
-		want    syncdeleter
-		wantErr error
-	}{
-		{
-			name: "ErrProviderIsNotFound",
-			kube: fake.NewFakeClient(),
-			acct: v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
-			wantErr: errors.Wrapf(
-				kerrors.NewNotFound(schema.GroupResource{Group: azurev1alpha3.Group, Resource: "providers"}, providerName),
-				"cannot get provider /%s", providerName,
-			),
-		},
-		{
-			name: "ProviderSecretIsNotFound",
-			kube: fake.NewFakeClient(newProvider(providerName).
-				withSecret(ns, secretName, secretKey).Provider),
-			acct: v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
-			wantErr: errors.WithStack(
-				errors.Errorf("cannot get provider's secret %s/%s: secrets \"%s\" not found", ns, secretName, secretName)),
-		},
-		{
-			name:    "ProviderSecretIsNil",
-			kube:    fake.NewFakeClient(newProvider(providerName).Provider),
-			acct:    v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
-			wantErr: errors.New(errProviderSecretNil),
-		},
-		{
-			name: "InvalidCredentials",
-			kube: fake.NewFakeClient(newProvider(providerName).
-				withSecret(ns, secretName, secretKey).Provider,
-				newSecret(ns, secretName).Secret),
-			acct: v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
-			wantErr: errors.WithStack(
-				errors.Errorf("cannot create storageClient from json: cannot unmarshal Azure client secret data: unexpected end of JSON input")),
-		},
-		{
-			name: "KubeCreated",
-			kube: fake.NewFakeClient(newProvider(providerName).
-				withSecret(ns, secretName, secretKey).Provider,
-				newSecret(ns, secretName).withKeyData(secretKey, secretData).Secret),
-			acct: v1alpha3test.NewMockAccount(bucketName).WithSpecProvider(providerName).Account,
-			want: newAccountSyncDeleter(&azurestorage.AccountHandle{}, nil, nil),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &accountSyncdeleterMaker{
-				Client: tt.kube,
-			}
-			got, err := m.newSyncdeleter(ctx, tt.acct)
-			if diff := cmp.Diff(tt.wantErr, err, test.EquateErrors()); diff != "" {
-				t.Errorf("accountSyncdeleterMaker.newSyncdeleter(): -want error, + got error:\n%s", diff)
-			}
-			// BUG(negz): This test is broken. It appears to intend to compare
-			// unexported fields, but does not. This behaviour was maintained
-			// when porting the test from https://github.com/go-test/deep to cmp.
-			if diff := cmp.Diff(tt.want, got,
-				cmpopts.IgnoreUnexported(accountSyncDeleter{}),
-				cmpopts.IgnoreUnexported(azurestorage.AccountHandle{}),
-			); diff != "" {
-				t.Errorf("accountSyncdeleterMaker.newSyncdeleter(): -want, +got:\n%s", diff)
 			}
 		})
 	}

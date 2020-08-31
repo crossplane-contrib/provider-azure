@@ -243,65 +243,8 @@ func TestUpdate(t *testing.T) {
 			wantErr: errors.New(errNotPostgreSQLServerVirtualNetworkRule),
 		},
 		{
-			name: "SuccessfulDoesNotNeedUpdate",
-			e: &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{
-				MockGet: func(_ context.Context, _ string, _ string, _ string) (result postgresql.VirtualNetworkRule, err error) {
-					return postgresql.VirtualNetworkRule{
-						VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-							VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
-							IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(true),
-						},
-					}, nil
-				},
-			}},
-			r:    virtualNetworkRule(),
-			want: virtualNetworkRule(),
-		},
-		{
-			name: "SuccessfulNeedsUpdate",
-			e: &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{
-				MockGet: func(_ context.Context, _ string, _ string, _ string) (result postgresql.VirtualNetworkRule, err error) {
-					return postgresql.VirtualNetworkRule{
-						VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-							VirtualNetworkSubnetID:           azure.ToStringPtr("/wrong/subnet"),
-							IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(true),
-						},
-					}, nil
-				},
-				MockCreateOrUpdate: func(_ context.Context, _ string, _ string, _ string, _ postgresql.VirtualNetworkRule) (postgresql.VirtualNetworkRulesCreateOrUpdateFuture, error) {
-					return postgresql.VirtualNetworkRulesCreateOrUpdateFuture{}, nil
-				},
-			}},
-			r:    virtualNetworkRule(),
-			want: virtualNetworkRule(),
-		},
-		{
-			name: "UnsuccessfulGet",
-			e: &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{
-				MockGet: func(_ context.Context, _ string, _ string, _ string) (result postgresql.VirtualNetworkRule, err error) {
-					return postgresql.VirtualNetworkRule{
-						VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-							VirtualNetworkSubnetID:           azure.ToStringPtr(vnetSubnetID),
-							IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(true),
-						},
-					}, errorBoom
-				},
-			}},
-			r:       virtualNetworkRule(),
-			want:    virtualNetworkRule(),
-			wantErr: errors.Wrap(errorBoom, errGetPostgreSQLServerVirtualNetworkRule),
-		},
-		{
 			name: "UnsuccessfulUpdate",
 			e: &external{client: &fake.MockPostgreSQLVirtualNetworkRulesClient{
-				MockGet: func(_ context.Context, _ string, _ string, _ string) (result postgresql.VirtualNetworkRule, err error) {
-					return postgresql.VirtualNetworkRule{
-						VirtualNetworkRuleProperties: &postgresql.VirtualNetworkRuleProperties{
-							VirtualNetworkSubnetID:           azure.ToStringPtr("/wrong/subnet"),
-							IgnoreMissingVnetServiceEndpoint: azure.ToBoolPtr(true),
-						},
-					}, nil
-				},
 				MockCreateOrUpdate: func(_ context.Context, _ string, _ string, _ string, _ postgresql.VirtualNetworkRule) (postgresql.VirtualNetworkRulesCreateOrUpdateFuture, error) {
 					return postgresql.VirtualNetworkRulesCreateOrUpdateFuture{}, errorBoom
 				},
