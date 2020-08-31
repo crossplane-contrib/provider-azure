@@ -6,7 +6,7 @@ metadata:
 spec:
   location: West US 2
   reclaimPolicy: Retain
-  providerRef:
+  providerConfigRef:
     name: azure-provider
 ---
 apiVersion: database.azure.crossplane.io/v1alpha3
@@ -27,7 +27,7 @@ spec:
           - failoverPriority: 0
             locationName: South Central US
             isZoneRedundant: false
-  providerRef:
+  providerConfigRef:
     name: azure-provider
   reclaimPolicy: Retain
   writeConnectionSecretToRef:
