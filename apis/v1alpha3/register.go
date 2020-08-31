@@ -45,6 +45,14 @@ var (
 	ProviderGroupVersionKind = SchemeGroupVersion.WithKind(ProviderKind)
 )
 
+// ProviderConfig type metadata.
+var (
+	ProviderConfigKind             = reflect.TypeOf(ProviderConfig{}).Name()
+	ProviderConfigGroupKind        = schema.GroupKind{Group: Group, Kind: ProviderConfigKind}.String()
+	ProviderConfigKindAPIVersion   = ProviderConfigKind + "." + SchemeGroupVersion.String()
+	ProviderConfigGroupVersionKind = SchemeGroupVersion.WithKind(ProviderConfigKind)
+)
+
 // ResourceGroup type metadata.
 var (
 	ResourceGroupKind             = reflect.TypeOf(ResourceGroup{}).Name()
@@ -55,5 +63,6 @@ var (
 
 func init() {
 	SchemeBuilder.Register(&Provider{}, &ProviderList{})
+	SchemeBuilder.Register(&ProviderConfig{}, &ProviderConfigList{})
 	SchemeBuilder.Register(&ResourceGroup{}, &ResourceGroupList{})
 }
