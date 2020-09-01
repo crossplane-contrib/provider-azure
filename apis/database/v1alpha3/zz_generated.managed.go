@@ -43,8 +43,21 @@ func (mg *CosmosDBAccount) GetCondition(ct runtimev1alpha1.ConditionType) runtim
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this CosmosDBAccount.
-func (mg *CosmosDBAccount) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this CosmosDBAccount.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *CosmosDBAccount) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -78,8 +91,21 @@ func (mg *CosmosDBAccount) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this CosmosDBAccount.
-func (mg *CosmosDBAccount) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this CosmosDBAccount.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *CosmosDBAccount) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -113,8 +139,21 @@ func (mg *MySQLServerFirewallRule) GetCondition(ct runtimev1alpha1.ConditionType
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this MySQLServerFirewallRule.
-func (mg *MySQLServerFirewallRule) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this MySQLServerFirewallRule.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *MySQLServerFirewallRule) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -148,8 +187,21 @@ func (mg *MySQLServerFirewallRule) SetConditions(c ...runtimev1alpha1.Condition)
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this MySQLServerFirewallRule.
-func (mg *MySQLServerFirewallRule) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this MySQLServerFirewallRule.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *MySQLServerFirewallRule) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -183,8 +235,21 @@ func (mg *MySQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.Conditi
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this MySQLServerVirtualNetworkRule.
-func (mg *MySQLServerVirtualNetworkRule) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this MySQLServerVirtualNetworkRule.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *MySQLServerVirtualNetworkRule) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -218,8 +283,21 @@ func (mg *MySQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1.Cond
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this MySQLServerVirtualNetworkRule.
-func (mg *MySQLServerVirtualNetworkRule) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this MySQLServerVirtualNetworkRule.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *MySQLServerVirtualNetworkRule) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -253,8 +331,21 @@ func (mg *PostgreSQLServerFirewallRule) GetCondition(ct runtimev1alpha1.Conditio
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this PostgreSQLServerFirewallRule.
-func (mg *PostgreSQLServerFirewallRule) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this PostgreSQLServerFirewallRule.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *PostgreSQLServerFirewallRule) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -288,8 +379,21 @@ func (mg *PostgreSQLServerFirewallRule) SetConditions(c ...runtimev1alpha1.Condi
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this PostgreSQLServerFirewallRule.
-func (mg *PostgreSQLServerFirewallRule) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this PostgreSQLServerFirewallRule.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *PostgreSQLServerFirewallRule) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -323,8 +427,21 @@ func (mg *PostgreSQLServerVirtualNetworkRule) GetCondition(ct runtimev1alpha1.Co
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this PostgreSQLServerVirtualNetworkRule.
-func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this PostgreSQLServerVirtualNetworkRule.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -358,8 +475,21 @@ func (mg *PostgreSQLServerVirtualNetworkRule) SetConditions(c ...runtimev1alpha1
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this PostgreSQLServerVirtualNetworkRule.
-func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this PostgreSQLServerVirtualNetworkRule.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

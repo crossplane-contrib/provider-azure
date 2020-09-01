@@ -17,17 +17,14 @@ limitations under the License.
 package database
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
-	"github.com/crossplane/crossplane-runtime/pkg/test"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -42,21 +39,6 @@ const (
 
 	id           = "very-cool-id"
 	resourceType = "very-cool-type"
-	credentials  = `
-		{
-			"clientId": "cool-id",
-			"clientSecret": "cool-secret",
-			"tenantId": "cool-tenant",
-			"subscriptionId": "cool-subscription",
-			"activeDirectoryEndpointUrl": "cool-aad-url",
-			"resourceManagerEndpointUrl": "cool-rm-url",
-			"activeDirectoryGraphResourceId": "cool-graph-id"
-		}
-	`
-)
-
-var (
-	ctx = context.Background()
 )
 
 type mySQLVirtualNetworkRuleModifier func(*v1alpha3.MySQLServerVirtualNetworkRule)
@@ -88,38 +70,6 @@ func mySQLVirtualNetworkRule(sm ...mySQLVirtualNetworkRuleModifier) *v1alpha3.My
 	}
 
 	return r
-}
-
-func TestNewMySQLVirtualNetworkRulesClient(t *testing.T) {
-	cases := []struct {
-		name       string
-		r          []byte
-		returnsErr bool
-	}{
-		{
-			name: "Successful",
-			r:    []byte(credentials),
-		},
-		{
-			name:       "Unsuccessful",
-			r:          []byte("invalid"),
-			returnsErr: true,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := NewMySQLVirtualNetworkRulesClient(ctx, tc.r)
-
-			if tc.returnsErr != (err != nil) {
-				t.Errorf("NewMySQLVirtualNetworkRulesClient(...) error: want: %t got: %t", tc.returnsErr, err != nil)
-			}
-
-			if _, ok := got.(MySQLVirtualNetworkRulesClient); !ok && !tc.returnsErr {
-				t.Error("NewMySQLVirtualNetworkRulesClient(...): got does not satisfy MySQLVirtualNetworkRulesClient interface")
-			}
-		})
-	}
 }
 
 func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {
@@ -300,39 +250,6 @@ func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 			tc.want.ResourceStatus = resourceStatus
 			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
 				t.Errorf("UpdateMySQLVirtualNetworkRuleStatusFromAzure(...): -want, +got\n%s", diff)
-			}
-		})
-	}
-}
-
-func TestNewMySQLFirewallRulesClient(t *testing.T) {
-	type args struct {
-		ctx         context.Context
-		credentials []byte
-	}
-
-	cases := map[string]struct {
-		args args
-		want error
-	}{
-		"UnmarshalError": {
-			args: args{
-				credentials: []byte("invalid"),
-			},
-			want: errors.Wrap(errors.New("invalid character 'i' looking for beginning of value"), "cannot unmarshal Azure client secret data"),
-		},
-		"Successful": {
-			args: args{
-				credentials: []byte(credentials),
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			_, err := NewMySQLFirewallRulesClient(tc.args.ctx, tc.args.credentials)
-			if diff := cmp.Diff(tc.want, err, test.EquateErrors()); diff != "" {
-				t.Errorf("NewMySQLFirewallRulesClient(...) -want error, +got error:\n%s", diff)
 			}
 		})
 	}

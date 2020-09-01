@@ -20,10 +20,12 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
+
+	azure "github.com/crossplane/provider-azure/pkg/clients"
+
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -40,7 +42,6 @@ import (
 
 // Error strings
 const (
-	errProviderSecretNil   = "provider does not have a secret reference"
 	errNotResourceGroup    = "managed resource is not an ResourceGroup"
 	errCreateResourceGroup = "cannot create ResourceGroup"
 	errCheckResourceGroup  = "cannot check existence of ResourceGroup"
@@ -58,40 +59,23 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		Complete(managed.NewReconciler(mgr,
 			resource.ManagedKind(v1alpha3.ResourceGroupGroupVersionKind),
 			managed.WithConnectionPublishers(),
-			managed.WithExternalConnecter(&connecter{kube: mgr.GetClient(), newClientFn: resourcegroup.NewClient}),
+			managed.WithExternalConnecter(&connecter{kube: mgr.GetClient()}),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connecter struct {
-	kube        client.Client
-	newClientFn func(creds []byte) (resourcegroup.GroupsClient, error)
+	kube client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	r, ok := mg.(*v1alpha3.ResourceGroup)
-	if !ok {
-		return nil, errors.New(errNotResourceGroup)
+	creds, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
+	if err != nil {
+		return nil, err
 	}
-
-	p := &v1alpha3.Provider{}
-	n := types.NamespacedName{Name: r.Spec.ProviderReference.Name}
-	if err := c.kube.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.kube.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-
-	client, err := c.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])
-	return &external{client: client}, errors.Wrap(err, "cannot create new Azure Resource Group client")
+	cl := resources.NewGroupsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl.Authorizer = auth
+	return &external{client: cl}, nil
 }
 
 // external is a createsyncdeleter using the Azure Groups API.

@@ -17,17 +17,14 @@ limitations under the License.
 package database
 
 import (
-	"context"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
-	"github.com/crossplane/crossplane-runtime/pkg/test"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -62,38 +59,6 @@ func postgreSQLVirtualNetworkRule(sm ...postgreSQLVirtualNetworkRuleModifier) *v
 	}
 
 	return r
-}
-
-func TestNewPostgreSQLVirtualNetworkRulesClient(t *testing.T) {
-	cases := []struct {
-		name       string
-		r          []byte
-		returnsErr bool
-	}{
-		{
-			name: "Successful",
-			r:    []byte(credentials),
-		},
-		{
-			name:       "Unsuccessful",
-			r:          []byte("invalid"),
-			returnsErr: true,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := NewPostgreSQLVirtualNetworkRulesClient(ctx, tc.r)
-
-			if tc.returnsErr != (err != nil) {
-				t.Errorf("NewPostgreSQLVirtualNetworkRulesClient(...) error: want: %t got: %t", tc.returnsErr, err != nil)
-			}
-
-			if _, ok := got.(PostgreSQLVirtualNetworkRulesClient); !ok && !tc.returnsErr {
-				t.Error("NewPostgreSQLVirtualNetworkRulesClient(...): got does not satisfy PostgreSQLVirtualNetworkRulesClient interface")
-			}
-		})
-	}
 }
 
 func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {
@@ -273,38 +238,6 @@ func TestUpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 			tc.want.ResourceStatus = resourceStatus
 			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
 				t.Errorf("UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(...): -want, +got\n%s", diff)
-			}
-		})
-	}
-}
-func TestNewPostgreSQLFirewallRulesClient(t *testing.T) {
-	type args struct {
-		ctx         context.Context
-		credentials []byte
-	}
-
-	cases := map[string]struct {
-		args args
-		want error
-	}{
-		"UnmarshalError": {
-			args: args{
-				credentials: []byte("invalid"),
-			},
-			want: errors.Wrap(errors.New("invalid character 'i' looking for beginning of value"), "cannot unmarshal Azure client secret data"),
-		},
-		"Successful": {
-			args: args{
-				credentials: []byte(credentials),
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			_, err := NewPostgreSQLFirewallRulesClient(tc.args.ctx, tc.args.credentials)
-			if diff := cmp.Diff(tc.want, err, test.EquateErrors()); diff != "" {
-				t.Errorf("NewPostgreSQLFirewallRulesClient(...) -want error, +got error:\n%s", diff)
 			}
 		})
 	}

@@ -1,10 +1,8 @@
----
 apiVersion: azure.crossplane.io/v1alpha3
 kind: ResourceGroup
 metadata:
-  name: redis-example
+  name: example
 spec:
   location: West US 2
-  reclaimPolicy: Delete
   providerConfigRef:
-    name: example
+    name: azure-provider

@@ -43,8 +43,21 @@ func (mg *Redis) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this Redis.
-func (mg *Redis) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this Redis.
+func (mg *Redis) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this Redis.
+func (mg *Redis) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this Redis.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *Redis) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -78,8 +91,21 @@ func (mg *Redis) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this Redis.
-func (mg *Redis) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this Redis.
+func (mg *Redis) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this Redis.
+func (mg *Redis) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this Redis.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *Redis) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

@@ -18,68 +18,33 @@ package mysqlserverfirewallrule
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
-	"github.com/crossplane/provider-azure/pkg/clients/database"
 	"github.com/crossplane/provider-azure/pkg/clients/fake"
 )
 
 const (
-	namespace         = "coolNamespace"
 	name              = "coolSubnet"
 	uid               = types.UID("definitely-a-uuid")
 	serverName        = "coolSrv"
 	resourceGroupName = "coolRG"
 	resourceID        = "a-very-cool-id"
 	resourceType      = "cooltype"
-
-	providerName       = "cool-aws"
-	providerSecretName = "cool-aws-secret"
-	providerSecretKey  = "credentials"
-	providerSecretData = "definitelyini"
-)
-
-var (
-	provider = azurev1alpha3.Provider{
-		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha3.ProviderSpec{
-			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
-					SecretReference: runtimev1alpha1.SecretReference{
-						Namespace: namespace,
-						Name:      providerSecretName,
-					},
-					Key: providerSecretKey,
-				},
-			},
-		},
-	}
-
-	providerSecret = corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerSecretName},
-		Data:       map[string][]byte{providerSecretKey: []byte(providerSecretData)},
-	}
 )
 
 type firewallRuleModifier func(*v1alpha3.MySQLServerFirewallRule)
@@ -96,10 +61,6 @@ func withID(s string) firewallRuleModifier {
 	return func(r *v1alpha3.MySQLServerFirewallRule) { r.Status.AtProvider.ID = s }
 }
 
-func withProviderRef(p runtimev1alpha1.Reference) firewallRuleModifier {
-	return func(r *v1alpha3.MySQLServerFirewallRule) { r.Spec.ProviderReference = p }
-}
-
 func firewallRule(sm ...firewallRuleModifier) *v1alpha3.MySQLServerFirewallRule {
 	r := &v1alpha3.MySQLServerFirewallRule{
 		ObjectMeta: metav1.ObjectMeta{
@@ -108,9 +69,6 @@ func firewallRule(sm ...firewallRuleModifier) *v1alpha3.MySQLServerFirewallRule 
 			Finalizers: []string{},
 		},
 		Spec: v1alpha3.FirewallRuleSpec{
-			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
-			},
 			ForProvider: v1alpha3.FirewallRuleParameters{
 				ServerName:        serverName,
 				ResourceGroupName: resourceGroupName,
@@ -135,118 +93,6 @@ func firewallRule(sm ...firewallRuleModifier) *v1alpha3.MySQLServerFirewallRule 
 // Test that our Reconciler implementation satisfies the Reconciler interface.
 var _ managed.ExternalClient = &external{}
 var _ managed.ExternalConnecter = &connecter{}
-
-func TestConnect(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		mg  resource.Managed
-	}
-
-	errBoom := errors.New("boom")
-
-	cases := map[string]struct {
-		conn managed.ExternalConnecter
-		args args
-		want error
-	}{
-		"NotMySQLFirewallRule": {
-			conn: &connecter{client: &test.MockClient{}},
-			want: errors.New(errNotMySQLServerFirewallRule),
-		},
-		"GetProviderError": {
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						return errBoom
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLFirewallRulesClient, error) {
-					return &fake.MockMySQLFirewallRulesClient{}, nil
-				},
-			},
-			args: args{
-				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			},
-			want: errors.Wrapf(errBoom, "cannot get provider %s", providerName),
-		},
-		"GetProviderSecretError": {
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errBoom
-						}
-						return nil
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLFirewallRulesClient, error) {
-					return &fake.MockMySQLFirewallRulesClient{}, nil
-				},
-			},
-			args: args{
-				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			},
-			want: errors.Wrapf(errBoom, "cannot get provider secret %s", fmt.Sprintf("%s/%s", namespace, providerSecretName)),
-		},
-		"GetProviderSecretNil": {
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							nilSecretProvider := provider
-							nilSecretProvider.SetCredentialsSecretReference(nil)
-							*obj.(*azurev1alpha3.Provider) = nilSecretProvider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errBoom
-						}
-						return nil
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLFirewallRulesClient, error) {
-					return &fake.MockMySQLFirewallRulesClient{}, nil
-				},
-			},
-			args: args{
-				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			},
-			want: errors.New(errProviderSecretNil),
-		},
-		"Successful": {
-			conn: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-				newClientFn: func(_ context.Context, _ []byte) (database.MySQLFirewallRulesClient, error) {
-					return &fake.MockMySQLFirewallRulesClient{}, nil
-				},
-			},
-			args: args{
-				mg: firewallRule(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			_, got := tc.conn.Connect(tc.args.ctx, tc.args.mg)
-			if diff := cmp.Diff(tc.want, got, test.EquateErrors()); diff != "" {
-				t.Errorf("tc.conn.Connect(...): want error != got error:\n%s", diff)
-			}
-		})
-	}
-}
 
 func TestObserve(t *testing.T) {
 	type args struct {

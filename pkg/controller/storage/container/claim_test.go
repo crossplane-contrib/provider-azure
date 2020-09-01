@@ -79,7 +79,7 @@ func TestConfigureContainer(t *testing.T) {
 				mg: &v1alpha3.Container{
 					Spec: v1alpha3.ContainerSpec{
 						ResourceSpec: runtimev1alpha1.ResourceSpec{
-							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
+							ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 						},
 						ContainerParameters: v1alpha3.ContainerParameters{
 							Metadata: azblob.Metadata{},

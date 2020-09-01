@@ -143,7 +143,7 @@ func ConfigureMySQLServer(_ context.Context, cm resource.Claim, cs resource.Clas
 		Namespace: rs.SpecTemplate.WriteConnectionSecretsToNamespace,
 		Name:      string(cm.GetUID()),
 	}
-	spec.ProviderReference = rs.SpecTemplate.ProviderReference
+	spec.ProviderReference = rs.SpecTemplate.ProviderReference.DeepCopy()
 	spec.ReclaimPolicy = rs.SpecTemplate.ReclaimPolicy
 
 	s.Spec = *spec

@@ -10,6 +10,6 @@ specTemplate:
   writeConnectionSecretsToNamespace: crossplane-system
   # Azure containers read their credentials from an Account, not a Provider. We
   # use the providerRef field to specify which Account to read credentials from.
-  providerRef:
+  providerConfigRef:
     name: storageaccount
   reclaimPolicy: Delete

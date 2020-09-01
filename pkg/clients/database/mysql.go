@@ -18,18 +18,14 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
-	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql/mysqlapi"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
@@ -67,41 +63,18 @@ type MySQLServerAPI interface {
 // interface for MySQL that calls Azure API.
 type MySQLServerClient struct {
 	mysql.ServersClient
-	mysql.CheckNameAvailabilityClient
 }
 
 // NewMySQLServerClient creates and initializes a MySQLServerClient instance.
-func NewMySQLServerClient(c *azure.Client) (*MySQLServerClient, error) {
-	mysqlServersClient := mysql.NewServersClient(c.SubscriptionID)
-	mysqlServersClient.Authorizer = c.Authorizer
-	if err := mysqlServersClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
-	nameClient := mysql.NewCheckNameAvailabilityClient(c.SubscriptionID)
-	nameClient.Authorizer = c.Authorizer
-	if err := nameClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
+func NewMySQLServerClient(cl mysql.ServersClient) *MySQLServerClient {
 	return &MySQLServerClient{
-		ServersClient:               mysqlServersClient,
-		CheckNameAvailabilityClient: nameClient,
-	}, nil
+		ServersClient: cl,
+	}
 }
 
 // GetRESTClient returns the underlying REST client that the client object uses.
 func (c *MySQLServerClient) GetRESTClient() autorest.Sender {
 	return c.ServersClient.Client
-}
-
-// ServerNameTaken returns true if the supplied server's name has been taken.
-func (c *MySQLServerClient) ServerNameTaken(ctx context.Context, s *azuredbv1beta1.MySQLServer) (bool, error) {
-	r, err := c.Execute(ctx, mysql.NameAvailabilityRequest{Name: azure.ToStringPtr(meta.GetExternalName(s))})
-	if err != nil {
-		return false, err
-	}
-	return !azure.ToBool(r.NameAvailable), nil
 }
 
 // GetServer retrieves the requested MySQL Server
@@ -194,38 +167,6 @@ func (c *MySQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1beta1
 	return nil
 }
 
-// A MySQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
-type MySQLVirtualNetworkRulesClient mysqlapi.VirtualNetworkRulesClientAPI
-
-// NewMySQLVirtualNetworkRulesClient returns a new Azure Virtual Network Rules client. Credentials must be
-// passed as JSON encoded data.
-func NewMySQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) (MySQLVirtualNetworkRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := mysql.NewVirtualNetworkRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
-}
-
 // NewMySQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewMySQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.MySQLServerVirtualNetworkRule) mysql.VirtualNetworkRule {
 	return mysql.VirtualNetworkRule{
@@ -257,38 +198,6 @@ func UpdateMySQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.MySQLServer
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Type = azure.ToString(az.Type)
-}
-
-// A MySQLFirewallRulesClient handles CRUD operations for Azure Firewall Rules.
-type MySQLFirewallRulesClient mysqlapi.FirewallRulesClientAPI
-
-// NewMySQLFirewallRulesClient returns a new Azure Firewall Rules client.
-// Credentials must be passed as JSON encoded data.
-func NewMySQLFirewallRulesClient(ctx context.Context, credentials []byte) (MySQLFirewallRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := mysql.NewFirewallRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
 }
 
 // NewMySQLFirewallRuleParameters returns an Azure FirewallRule object from a

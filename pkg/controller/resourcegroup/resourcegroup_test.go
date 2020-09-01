@@ -26,13 +26,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -41,20 +36,13 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
-	"github.com/crossplane/provider-azure/pkg/clients/resourcegroup"
 	fakerg "github.com/crossplane/provider-azure/pkg/clients/resourcegroup/fake"
 )
 
 const (
-	namespace = "cool-namespace"
-	uid       = types.UID("definitely-a-uuid")
-	name      = "cool-rg"
-	location  = "coolplace"
-
-	providerName       = "cool-azure"
-	providerSecretName = "cool-azure-secret"
-	providerSecretKey  = "credentials"
-	providerSecretData = "definitelyjson"
+	uid      = types.UID("definitely-a-uuid")
+	name     = "cool-rg"
+	location = "coolplace"
 )
 
 type resourceGroupModifier func(*v1alpha3.ResourceGroup)
@@ -76,9 +64,6 @@ func resourceGrp(rm ...resourceGroupModifier) *v1alpha3.ResourceGroup {
 		},
 		Spec: v1alpha3.ResourceGroupSpec{
 			Location: location,
-			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				ProviderReference: runtimev1alpha1.Reference{Name: providerName},
-			},
 		},
 		Status: v1alpha3.ResourceGroupStatus{},
 	}
@@ -90,175 +75,6 @@ func resourceGrp(rm ...resourceGroupModifier) *v1alpha3.ResourceGroup {
 	}
 
 	return r
-}
-
-func TestConnect(t *testing.T) {
-	errorBoom := errors.New("boom")
-
-	provider := v1alpha3.Provider{
-		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: v1alpha3.ProviderSpec{
-			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
-					SecretReference: runtimev1alpha1.SecretReference{
-						Namespace: namespace,
-						Name:      providerSecretName,
-					},
-					Key: providerSecretKey,
-				},
-			},
-		},
-	}
-
-	providerSecret := corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerSecretName},
-		Data:       map[string][]byte{providerSecretKey: []byte(providerSecretData)},
-	}
-
-	type args struct {
-		ctx context.Context
-		mg  resource.Managed
-	}
-
-	type want struct {
-		c   managed.ExternalClient
-		err error
-	}
-
-	cases := map[string]struct {
-		conn managed.ExternalConnecter
-		args args
-		want want
-	}{
-		"NotResourceGroup": {
-			conn: &connecter{},
-			args: args{
-				mg: nil,
-			},
-			want: want{
-				err: errors.New(errNotResourceGroup),
-			},
-		},
-		"SuccessfulConnect": {
-			conn: &connecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						*obj.(*v1alpha3.Provider) = provider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						*obj.(*corev1.Secret) = providerSecret
-					}
-					return nil
-				}},
-				newClientFn: func(_ []byte) (resourcegroup.GroupsClient, error) {
-					return &fakerg.MockClient{}, nil
-				},
-			},
-			args: args{
-				mg: resourceGrp(),
-			},
-			want: want{
-				c: &external{client: &fakerg.MockClient{}},
-			},
-		},
-		"FailedToGetProvider": {
-			conn: &connecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					return kerrors.NewNotFound(schema.GroupResource{}, providerName)
-				}},
-				newClientFn: func(_ []byte) (resourcegroup.GroupsClient, error) {
-					return &fakerg.MockClient{}, nil
-				},
-			},
-			args: args{
-				mg: resourceGrp(),
-			},
-			want: want{
-				err: errors.WithStack(errors.Errorf("cannot get provider /%s:  \"%s\" not found", providerName, providerName)),
-			},
-		},
-		"FailedToGetProviderSecret": {
-			conn: &connecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						*obj.(*v1alpha3.Provider) = provider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
-					}
-					return nil
-				}},
-				newClientFn: func(_ []byte) (resourcegroup.GroupsClient, error) {
-					return &fakerg.MockClient{}, nil
-				},
-			},
-			args: args{
-				mg: resourceGrp(),
-			},
-			want: want{
-				err: errors.WithStack(errors.Errorf("cannot get provider secret %s/%s:  \"%s\" not found", namespace, providerSecretName, providerSecretName)),
-			},
-		},
-		"ProviderSecretNil": {
-			conn: &connecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						nilSecretProvider := provider
-						nilSecretProvider.SetCredentialsSecretReference(nil)
-						*obj.(*v1alpha3.Provider) = nilSecretProvider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						return kerrors.NewNotFound(schema.GroupResource{}, providerSecretName)
-					}
-					return nil
-				}},
-				newClientFn: func(_ []byte) (resourcegroup.GroupsClient, error) {
-					return &fakerg.MockClient{}, nil
-				},
-			},
-			args: args{
-				mg: resourceGrp(),
-			},
-			want: want{
-				err: errors.New(errProviderSecretNil),
-			},
-		},
-		"FailedToCreateAzureGroupsClient": {
-			conn: &connecter{
-				kube: &test.MockClient{MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-					switch key {
-					case client.ObjectKey{Name: providerName}:
-						*obj.(*v1alpha3.Provider) = provider
-					case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-						*obj.(*corev1.Secret) = providerSecret
-					}
-					return nil
-				}},
-				newClientFn: func(_ []byte) (resourcegroup.GroupsClient, error) { return nil, errorBoom },
-			},
-			args: args{
-				mg: resourceGrp(),
-			},
-			want: want{
-				c:   &external{},
-				err: errors.Wrap(errorBoom, "cannot create new Azure Resource Group client"),
-			},
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			got, err := tc.conn.Connect(tc.args.ctx, tc.args.mg)
-
-			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
-				t.Errorf("tc.conn.Connect(...): want error != got error:\n%s", diff)
-			}
-
-			if diff := cmp.Diff(tc.want.c, got, cmp.AllowUnexported(external{})); diff != "" {
-				t.Errorf("tc.conn.Connect(...): -want, +got:\n%s", diff)
-			}
-		})
-	}
 }
 
 func TestObserve(t *testing.T) {

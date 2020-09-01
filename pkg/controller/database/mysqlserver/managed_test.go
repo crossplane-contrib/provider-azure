@@ -28,20 +28,15 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
-	"github.com/crossplane/provider-azure/pkg/clients/database"
 )
 
 var (
@@ -85,12 +80,6 @@ func withExternalName(name string) modifier {
 	}
 }
 
-func withProviderRef(r runtimev1alpha1.Reference) modifier {
-	return func(p *v1beta1.MySQLServer) {
-		p.Spec.ProviderReference = r
-	}
-}
-
 func withAdminName(name string) modifier {
 	return func(p *v1beta1.MySQLServer) {
 		p.Spec.ForProvider.AdministratorLogin = name
@@ -115,149 +104,6 @@ func mysqlserver(m ...modifier) *v1beta1.MySQLServer {
 const (
 	inProgressResponse = `{"status": "InProgress"}`
 )
-
-var (
-	providerName       = "cool-azure"
-	providerSecretName = "cool-azure-secret"
-	providerSecretKey  = "credentials"
-	providerSecretData = "definitelyjson"
-	namespace          = "cool-namespace"
-
-	provider = azurev1alpha3.Provider{
-		ObjectMeta: metav1.ObjectMeta{Name: providerName},
-		Spec: azurev1alpha3.ProviderSpec{
-			ProviderSpec: runtimev1alpha1.ProviderSpec{
-				CredentialsSecretRef: &runtimev1alpha1.SecretKeySelector{
-					SecretReference: runtimev1alpha1.SecretReference{
-						Namespace: namespace,
-						Name:      providerSecretName,
-					},
-					Key: providerSecretKey,
-				},
-			},
-		},
-	}
-
-	providerSecret = corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: providerSecretName},
-		Data:       map[string][]byte{providerSecretKey: []byte(providerSecretData)},
-	}
-)
-
-func TestConnect(t *testing.T) {
-	errBoom := errors.New("boom")
-
-	type args struct {
-		ctx context.Context
-		mg  resource.Managed
-	}
-
-	cases := map[string]struct {
-		ec   managed.ExternalConnecter
-		args args
-		want error
-	}{
-		"ErrNotAMySQLServer": {
-			ec: &connecter{},
-			args: args{
-				ctx: context.Background(),
-			},
-			want: errors.New(errNotMySQLServer),
-		},
-		"ErrGetProvider": {
-			ec: &connecter{
-				client: &test.MockClient{MockGet: test.NewMockGetFn(nil, func(obj runtime.Object) error {
-					switch obj.(type) {
-					case *azurev1alpha3.Provider:
-						return errBoom
-					default:
-						return errors.New("unexpected type")
-					}
-				})},
-				newClientFn: func(credentials []byte) (database.MySQLServerAPI, error) { return nil, nil },
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  mysqlserver(withProviderRef(runtimev1alpha1.Reference{})),
-			},
-			want: errors.Wrap(errBoom, errGetProvider),
-		},
-		"ErrGetProviderSecret": {
-			ec: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							return errBoom
-						}
-						return nil
-					},
-				},
-				newClientFn: func(credentials []byte) (database.MySQLServerAPI, error) { return nil, nil },
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  mysqlserver(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			},
-			want: errors.Wrap(errBoom, errGetProviderSecret),
-		},
-		"ErrProviderSecretNil": {
-			ec: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							nilSecretProvider := provider
-							nilSecretProvider.SetCredentialsSecretReference(nil)
-							*obj.(*azurev1alpha3.Provider) = nilSecretProvider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-				newClientFn: func(credentials []byte) (database.MySQLServerAPI, error) { return nil, nil },
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  mysqlserver(withProviderRef(runtimev1alpha1.Reference{})),
-			},
-			want: errors.New(errProviderSecretNil),
-		},
-		"Successful": {
-			ec: &connecter{
-				client: &test.MockClient{
-					MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
-						switch key {
-						case client.ObjectKey{Name: providerName}:
-							*obj.(*azurev1alpha3.Provider) = provider
-						case client.ObjectKey{Namespace: namespace, Name: providerSecretName}:
-							*obj.(*corev1.Secret) = providerSecret
-						}
-						return nil
-					},
-				},
-				newClientFn: func(credentials []byte) (database.MySQLServerAPI, error) { return nil, nil },
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  mysqlserver(withProviderRef(runtimev1alpha1.Reference{Name: providerName})),
-			},
-			want: nil,
-		},
-	}
-
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			_, got := tc.ec.Connect(tc.args.ctx, tc.args.mg)
-			if diff := cmp.Diff(tc.want, got, test.EquateErrors()); diff != "" {
-				t.Errorf("-want error, +got error:\n%s", diff)
-			}
-		})
-	}
-}
 
 func TestObserve(t *testing.T) {
 	errBoom := errors.New("boom")

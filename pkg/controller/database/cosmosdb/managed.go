@@ -20,9 +20,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
 	"github.com/pkg/errors"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -34,18 +33,16 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	apiv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/crossplane/provider-azure/pkg/clients/database/cosmosdb"
 )
 
 // Error strings
 const (
-	errProviderSecretNil  = "provider does not have a secret reference"
 	errNotNoSQLAccount    = "managed resource is not a Database Account"
 	errCreateNoSQLAccount = "cannot create Database Account"
 	errGetNoSQLAccount    = "cannot get Database Account"
 	errDeleteNoSQLAccount = "cannot delete Database Account"
-	errUpdateCR           = "cannot update CosmosDBAccount custom resource"
 )
 
 // Setup adds a controller that reconciles NoSQLAccount.
@@ -58,45 +55,24 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		Complete(managed.NewReconciler(mgr,
 			resource.ManagedKind(v1alpha3.CosmosDBAccountGroupVersionKind),
 			managed.WithConnectionPublishers(),
-			managed.WithExternalConnecter(&connecter{kube: mgr.GetClient(), newClientFn: cosmosdb.NewDatabaseAccountClient}),
+			managed.WithExternalConnecter(&connecter{kube: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
 
 type connecter struct {
-	kube        client.Client
-	newClientFn func(creds []byte) (cosmosdb.AccountClient, error)
+	kube client.Client
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	r, ok := mg.(*v1alpha3.CosmosDBAccount)
-	if !ok {
-		return nil, errors.New(errNotNoSQLAccount)
-	}
-
-	p := &apiv1alpha3.Provider{}
-	n := types.NamespacedName{Name: r.Spec.ProviderReference.Name}
-	if err := c.kube.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := c.kube.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider secret %s", n)
-	}
-
-	client, err := c.newClientFn(s.Data[p.Spec.CredentialsSecretRef.Key])
-	kube := c.kube
+	creds, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
 	if err != nil {
-		kube = nil
+		return nil, err
 	}
-	return &external{kube: kube, client: client}, errors.Wrap(err, "cannot create new Azure Database Account client")
+	cl := documentdb.NewDatabaseAccountsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl.Authorizer = auth
+	return &external{kube: c.kube, client: cl}, nil
 }
 
 // external is a createsyncdeleter using the Azure API.
@@ -131,9 +107,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		resource.SetBindable(r)
 	default:
 		r.SetConditions(runtimev1alpha1.Unavailable())
-	}
-	if err := e.kube.Update(ctx, r); err != nil {
-		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
 	resourceUpToDate := cosmosdb.CheckEqualDatabaseProperties(r.Spec.ForProvider.Properties, account)
 	return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: resourceUpToDate}, nil

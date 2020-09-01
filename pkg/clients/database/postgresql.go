@@ -18,7 +18,6 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -26,11 +25,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
-	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql/postgresqlapi"
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
@@ -59,27 +55,13 @@ type PostgreSQLServerAPI interface {
 // PostgreSQLServerClient is the concreate implementation of the SQLServerAPI interface for PostgreSQL that calls Azure API.
 type PostgreSQLServerClient struct {
 	postgresql.ServersClient
-	postgresql.CheckNameAvailabilityClient
 }
 
 // NewPostgreSQLServerClient creates and initializes a PostgreSQLServerClient instance.
-func NewPostgreSQLServerClient(c *azure.Client) (*PostgreSQLServerClient, error) {
-	postgreSQLServerClient := postgresql.NewServersClient(c.SubscriptionID)
-	postgreSQLServerClient.Authorizer = c.Authorizer
-	if err := postgreSQLServerClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
-	nameClient := postgresql.NewCheckNameAvailabilityClient(c.SubscriptionID)
-	nameClient.Authorizer = c.Authorizer
-	if err := nameClient.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, err
-	}
-
+func NewPostgreSQLServerClient(cl postgresql.ServersClient) *PostgreSQLServerClient {
 	return &PostgreSQLServerClient{
-		ServersClient:               postgreSQLServerClient,
-		CheckNameAvailabilityClient: nameClient,
-	}, nil
+		ServersClient: cl,
+	}
 }
 
 // GetRESTClient returns the underlying REST client that the client object uses.
@@ -177,38 +159,6 @@ func (c *PostgreSQLServerClient) DeleteServer(ctx context.Context, cr *azuredbv1
 	return nil
 }
 
-// A PostgreSQLVirtualNetworkRulesClient handles CRUD operations for Azure Virtual Network Rules.
-type PostgreSQLVirtualNetworkRulesClient postgresqlapi.VirtualNetworkRulesClientAPI
-
-// NewPostgreSQLVirtualNetworkRulesClient returns a new Azure Virtual Network Rules client. Credentials must be
-// passed as JSON encoded data.
-func NewPostgreSQLVirtualNetworkRulesClient(ctx context.Context, credentials []byte) (PostgreSQLVirtualNetworkRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := postgresql.NewVirtualNetworkRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
-}
-
 // NewPostgreSQLVirtualNetworkRuleParameters returns an Azure VirtualNetworkRule object from a virtual network spec
 func NewPostgreSQLVirtualNetworkRuleParameters(v *azuredbv1alpha3.PostgreSQLServerVirtualNetworkRule) postgresql.VirtualNetworkRule {
 	return postgresql.VirtualNetworkRule{
@@ -240,38 +190,6 @@ func UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v *azuredbv1alpha3.Postgr
 	v.Status.State = string(az.VirtualNetworkRuleProperties.State)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Type = azure.ToString(az.Type)
-}
-
-// A PostgreSQLFirewallRulesClient handles CRUD operations for Azure Firewall Rules.
-type PostgreSQLFirewallRulesClient postgresqlapi.FirewallRulesClientAPI
-
-// NewPostgreSQLFirewallRulesClient returns a new Azure Firewall Rules client.
-// Credentials must be passed as JSON encoded data.
-func NewPostgreSQLFirewallRulesClient(ctx context.Context, credentials []byte) (PostgreSQLFirewallRulesClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-
-	client := postgresql.NewFirewallRulesClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
 }
 
 // NewPostgreSQLFirewallRuleParameters returns an Azure FirewallRule object from a

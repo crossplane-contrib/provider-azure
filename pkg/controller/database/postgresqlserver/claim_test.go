@@ -80,7 +80,7 @@ func TestConfigurePostgreSQLServer(t *testing.T) {
 							WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
 								Name: string(claimUID),
 							},
-							ProviderReference: runtimev1alpha1.Reference{Name: providerName},
+							ProviderReference: &runtimev1alpha1.Reference{Name: providerName},
 						},
 						ForProvider: v1beta1.SQLServerParameters{
 							Version: version,

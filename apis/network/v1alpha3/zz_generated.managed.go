@@ -43,8 +43,21 @@ func (mg *Subnet) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this Subnet.
-func (mg *Subnet) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this Subnet.
+func (mg *Subnet) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this Subnet.
+func (mg *Subnet) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this Subnet.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *Subnet) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -78,8 +91,21 @@ func (mg *Subnet) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this Subnet.
-func (mg *Subnet) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this Subnet.
+func (mg *Subnet) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this Subnet.
+func (mg *Subnet) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this Subnet.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *Subnet) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -113,8 +139,21 @@ func (mg *VirtualNetwork) GetCondition(ct runtimev1alpha1.ConditionType) runtime
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this VirtualNetwork.
-func (mg *VirtualNetwork) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this VirtualNetwork.
+func (mg *VirtualNetwork) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this VirtualNetwork.
+func (mg *VirtualNetwork) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this VirtualNetwork.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *VirtualNetwork) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -148,8 +187,21 @@ func (mg *VirtualNetwork) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this VirtualNetwork.
-func (mg *VirtualNetwork) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this VirtualNetwork.
+func (mg *VirtualNetwork) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this VirtualNetwork.
+func (mg *VirtualNetwork) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this VirtualNetwork.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *VirtualNetwork) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

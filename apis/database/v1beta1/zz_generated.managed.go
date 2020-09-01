@@ -43,8 +43,21 @@ func (mg *MySQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1a
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this MySQLServer.
-func (mg *MySQLServer) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this MySQLServer.
+func (mg *MySQLServer) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this MySQLServer.
+func (mg *MySQLServer) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this MySQLServer.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *MySQLServer) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -78,8 +91,21 @@ func (mg *MySQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this MySQLServer.
-func (mg *MySQLServer) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this MySQLServer.
+func (mg *MySQLServer) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this MySQLServer.
+func (mg *MySQLServer) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this MySQLServer.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *MySQLServer) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
@@ -113,8 +139,21 @@ func (mg *PostgreSQLServer) GetCondition(ct runtimev1alpha1.ConditionType) runti
 	return mg.Status.GetCondition(ct)
 }
 
-// GetProviderReference of this PostgreSQLServer.
-func (mg *PostgreSQLServer) GetProviderReference() runtimev1alpha1.Reference {
+// GetDeletionPolicy of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) GetProviderConfigReference() *runtimev1alpha1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this PostgreSQLServer.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *PostgreSQLServer) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
@@ -148,8 +187,21 @@ func (mg *PostgreSQLServer) SetConditions(c ...runtimev1alpha1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
-// SetProviderReference of this PostgreSQLServer.
-func (mg *PostgreSQLServer) SetProviderReference(r runtimev1alpha1.Reference) {
+// SetDeletionPolicy of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this PostgreSQLServer.
+func (mg *PostgreSQLServer) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this PostgreSQLServer.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *PostgreSQLServer) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 

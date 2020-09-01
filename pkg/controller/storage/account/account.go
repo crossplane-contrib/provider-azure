@@ -38,7 +38,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/storage/v1alpha3"
-	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 	azurestorage "github.com/crossplane/provider-azure/pkg/clients/storage"
 )
@@ -50,11 +49,6 @@ const (
 	reconcileTimeout      = 2 * time.Minute
 	requeueAfterOnSuccess = 1 * time.Minute
 	requeueAfterOnWait    = 30 * time.Second
-)
-
-// Error strings
-const (
-	errProviderSecretNil = "provider does not have a secret reference"
 )
 
 var (
@@ -133,29 +127,16 @@ type accountSyncdeleterMaker struct {
 }
 
 func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account) (syncdeleter, error) {
-	p := &azurev1alpha3.Provider{}
-	n := types.NamespacedName{Name: b.Spec.ProviderReference.Name}
-	if err := m.Get(ctx, n, p); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider %s", n)
-	}
-
-	if p.GetCredentialsSecretReference() == nil {
-		return nil, errors.New(errProviderSecretNil)
-	}
-
-	s := &corev1.Secret{}
-	n = types.NamespacedName{Namespace: p.Spec.CredentialsSecretRef.Namespace, Name: p.Spec.CredentialsSecretRef.Name}
-	if err := m.Get(ctx, n, s); err != nil {
-		return nil, errors.Wrapf(err, "cannot get provider's secret %s", n)
-	}
-
-	storageClient, err := azurestorage.NewStorageAccountClient(s.Data[p.Spec.CredentialsSecretRef.Key])
+	creds, auth, err := azure.GetAuthInfo(ctx, m.Client, b)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create storageClient from json")
+		return nil, errors.Wrap(err, "cannot get auth information")
 	}
+
+	cl := storage.NewAccountsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl.Authorizer = auth
 
 	return newAccountSyncDeleter(
-		azurestorage.NewAccountHandle(storageClient, b.Spec.ResourceGroupName, meta.GetExternalName(b)),
+		azurestorage.NewAccountHandle(&cl, b.Spec.ResourceGroupName, meta.GetExternalName(b)),
 		m.Client, b), nil
 }
 

@@ -6,7 +6,7 @@ metadata:
 spec:
   location: West US 2
   reclaimPolicy: Delete
-  providerRef:
+  providerConfigRef:
     name: example
 ---
 apiVersion: network.azure.crossplane.io/v1alpha3
@@ -22,7 +22,7 @@ spec:
       addressPrefixes:
         - 10.2.0.0/16
   reclaimPolicy: Delete
-  providerRef:
+  providerConfigRef:
     name: example
 ---
 apiVersion: network.azure.crossplane.io/v1alpha3
@@ -39,5 +39,5 @@ spec:
     serviceEndpoints:
       - service: Microsoft.Sql
   reclaimPolicy: Delete
-  providerRef:
+  providerConfigRef:
     name: example

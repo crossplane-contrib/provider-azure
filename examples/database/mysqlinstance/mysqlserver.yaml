@@ -1,18 +1,18 @@
 ---
 apiVersion: database.azure.crossplane.io/v1beta1
-kind: SQLServerClass
+kind: MySQLServer
 metadata:
-  name: sqlserverpostgresql-standard
+  name: sqlservermysql-standard
   labels:
     example: "true"
-specTemplate:
+spec:
   forProvider:
     administratorLogin: myadmin
     resourceGroupNameRef:
-      name: postgres-example
+      name: example
     location: West US 2
     sslEnforcement: Disabled
-    version: "9.6"
+    version: "5.7"
     sku:
       # Note that Basic servers do not support virtual network rules
       tier: GeneralPurpose
@@ -20,7 +20,9 @@ specTemplate:
       family: Gen5
     storageProfile:
       storageMB: 20480
-  writeConnectionSecretsToNamespace: crossplane-system
-  providerRef:
-    name: example
+  writeConnectionSecretsToRef:
+    namespace: crossplane-system
+    name: sqlservermysql-standard-secret
+  providerConfigRef:
+    name: azure-provider
   reclaimPolicy: Delete
