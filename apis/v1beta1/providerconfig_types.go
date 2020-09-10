@@ -24,7 +24,9 @@ import (
 
 // A ProviderConfigSpec defines the desired state of a ProviderConfig.
 type ProviderConfigSpec struct {
-	runtimev1alpha1.ProviderConfigSpec `json:",inline"`
+	// CredentialsSecretRef references a specific secret's key that contains
+	// the credentials that are used to connect to the Azure API.
+	CredentialsSecretRef runtimev1alpha1.SecretKeySelector `json:"credentialsSecretRef"`
 }
 
 // +kubebuilder:object:root=true
