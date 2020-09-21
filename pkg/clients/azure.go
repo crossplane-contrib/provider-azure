@@ -51,7 +51,6 @@ const (
 	errGetProviderConfig         = "cannot get referenced ProviderConfig"
 	errGetProvider               = "cannot get referenced Provider"
 	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef is given"
-	errCredSecretRefEmpty        = "credentials secret reference cannot be empty"
 	errUnmarshalCredentialSecret = "cannot unmarshal the data in credentials secret"
 	errGetAuthorizer             = "cannot get authorizer from client credentials config"
 )
@@ -100,12 +99,9 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 			return nil, nil, errors.Wrap(err, errGetProvider)
 		}
 		p.ObjectMeta.DeepCopyInto(&pc.ObjectMeta)
-		p.Spec.ProviderSpec.CredentialsSecretRef.DeepCopyInto(pc.Spec.ProviderConfigSpec.CredentialsSecretRef)
+		p.Spec.CredentialsSecretRef.DeepCopyInto(&pc.Spec.CredentialsSecretRef)
 	default:
 		return nil, nil, errors.New(errNeitherPCNorPGiven)
-	}
-	if pc.Spec.CredentialsSecretRef == nil {
-		return nil, nil, errors.New(errCredSecretRefEmpty)
 	}
 	// NOTE(muvaf): When we implement the workload identity, we will only need to
 	// return a different type of option.ClientOption, which is WithTokenSource().
