@@ -42,132 +42,38 @@ spec:
       description: A Redis is a managed resource that represents an Azure Redis cluster.
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
           description: A RedisSpec defines the desired state of a Redis.
           properties:
-            claimRef:
-              description: ClaimReference specifies the resource claim to which this
-                managed resource will be bound. ClaimReference is set automatically
-                during dynamic provisioning. Deprecated. See https://github.com/crossplane/crossplane/issues/1670
-              properties:
-                apiVersion:
-                  description: API version of the referent.
-                  type: string
-                fieldPath:
-                  description: 'If referring to a piece of an object instead of an
-                    entire object, this string should contain a valid JSON/Go field
-                    access statement, such as desiredState.manifest.containers[2].
-                    For example, if the object reference is to a container within
-                    a pod, this would take on a value like: "spec.containers{name}"
-                    (where "name" refers to the name of the container that triggered
-                    the event) or if no container name is specified "spec.containers[2]"
-                    (container with index 2 in this pod). This syntax is chosen only
-                    to have some well-defined way of referencing a part of an object.
-                    TODO: this design is not final and this field is subject to change
-                    in the future.'
-                  type: string
-                kind:
-                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                  type: string
-                name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                  type: string
-                namespace:
-                  description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
-                  type: string
-                resourceVersion:
-                  description: 'Specific resourceVersion to which this reference is
-                    made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
-                  type: string
-                uid:
-                  description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
-                  type: string
-              type: object
-            classRef:
-              description: ClassReference specifies the resource class that was used
-                to dynamically provision this managed resource, if any. Deprecated.
-                See https://github.com/crossplane/crossplane/issues/1670
-              properties:
-                apiVersion:
-                  description: API version of the referent.
-                  type: string
-                fieldPath:
-                  description: 'If referring to a piece of an object instead of an
-                    entire object, this string should contain a valid JSON/Go field
-                    access statement, such as desiredState.manifest.containers[2].
-                    For example, if the object reference is to a container within
-                    a pod, this would take on a value like: "spec.containers{name}"
-                    (where "name" refers to the name of the container that triggered
-                    the event) or if no container name is specified "spec.containers[2]"
-                    (container with index 2 in this pod). This syntax is chosen only
-                    to have some well-defined way of referencing a part of an object.
-                    TODO: this design is not final and this field is subject to change
-                    in the future.'
-                  type: string
-                kind:
-                  description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                  type: string
-                name:
-                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
-                  type: string
-                namespace:
-                  description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
-                  type: string
-                resourceVersion:
-                  description: 'Specific resourceVersion to which this reference is
-                    made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
-                  type: string
-                uid:
-                  description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
-                  type: string
-              type: object
             deletionPolicy:
-              description: DeletionPolicy specifies what will happen to the underlying
-                external when this managed resource is deleted - either "Delete" or
-                "Orphan" the external resource. The "Delete" policy is the default
-                when no policy is specified.
+              description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
               enum:
               - Orphan
               - Delete
               type: string
             forProvider:
-              description: RedisParameters define the desired state of an Azure Redis
-                cluster. https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
+              description: RedisParameters define the desired state of an Azure Redis cluster. https://docs.microsoft.com/en-us/rest/api/redis/redis/create#redisresource
               properties:
                 enableNonSslPort:
-                  description: EnableNonSSLPort specifies whether the non-ssl Redis
-                    server port (6379) is enabled.
+                  description: EnableNonSSLPort specifies whether the non-ssl Redis server port (6379) is enabled.
                   type: boolean
                 location:
                   description: Location in which to create this resource.
                   type: string
                 minimumTlsVersion:
-                  description: 'MinimumTLSVersion - Optional: requires clients to
-                    use a specified TLS version (or higher) to connect (e,g, ''1.0'',
-                    ''1.1'', ''1.2''). Possible values include: ''OneFullStopZero'',
-                    ''OneFullStopOne'', ''OneFullStopTwo'''
+                  description: 'MinimumTLSVersion - Optional: requires clients to use a specified TLS version (or higher) to connect (e,g, ''1.0'', ''1.1'', ''1.2''). Possible values include: ''OneFullStopZero'', ''OneFullStopOne'', ''OneFullStopTwo'''
                   type: string
                 redisConfiguration:
                   additionalProperties:
                     type: string
-                  description: 'RedisConfiguration - All Redis Settings. Few possible
-                    keys: rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency
-                    maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples,
-                    slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries,
-                    list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value,
-                    set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value
-                    etc.'
+                  description: 'RedisConfiguration - All Redis Settings. Few possible keys: rdb-backup-enabled,rdb-storage-connection-string,rdb-backup-frequency maxmemory-delta,maxmemory-policy,notify-keyspace-events,maxmemory-samples, slowlog-log-slower-than,slowlog-max-len,list-max-ziplist-entries, list-max-ziplist-value,hash-max-ziplist-entries,hash-max-ziplist-value, set-max-intset-entries,zset-max-ziplist-entries,zset-max-ziplist-value etc.'
                   type: object
                 resourceGroupName:
                   description: ResourceGroupName in which to create this resource.
@@ -182,45 +88,36 @@ spec:
                   - name
                   type: object
                 resourceGroupNameSelector:
-                  description: ResourceGroupNameSelector to select a reference to
-                    a resource group.
+                  description: ResourceGroupNameSelector to select a reference to a resource group.
                   properties:
                     matchControllerRef:
-                      description: MatchControllerRef ensures an object with the same
-                        controller reference as the selecting object is selected.
+                      description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
                       type: boolean
                     matchLabels:
                       additionalProperties:
                         type: string
-                      description: MatchLabels ensures an object with matching labels
-                        is selected.
+                      description: MatchLabels ensures an object with matching labels is selected.
                       type: object
                   type: object
                 shardCount:
-                  description: ShardCount specifies the number of shards to be created
-                    on a Premium Cluster Cache.
+                  description: ShardCount specifies the number of shards to be created on a Premium Cluster Cache.
                   type: integer
                 sku:
                   description: Sku - The SKU of the Redis cache to deploy.
                   properties:
                     capacity:
-                      description: 'Capacity specifies the size of Redis cache to
-                        deploy. Valid values: for C family (0, 1, 2, 3, 4, 5, 6),
-                        for P family (1, 2, 3, 4).'
+                      description: 'Capacity specifies the size of Redis cache to deploy. Valid values: for C family (0, 1, 2, 3, 4, 5, 6), for P family (1, 2, 3, 4).'
                       maximum: 6
                       minimum: 0
                       type: integer
                     family:
-                      description: 'Family specifies which family to use. Valid values:
-                        (C, P). Possible values include: ''C'', ''P'''
+                      description: 'Family specifies which family to use. Valid values: (C, P). Possible values include: ''C'', ''P'''
                       enum:
                       - C
                       - P
                       type: string
                     name:
-                      description: 'Name specifies what type of Redis cache to deploy.
-                        Valid values: (Basic, Standard, Premium). Possible values
-                        include: ''Basic'', ''Standard'', ''Premium'''
+                      description: 'Name specifies what type of Redis cache to deploy. Valid values: (Basic, Standard, Premium). Possible values include: ''Basic'', ''Standard'', ''Premium'''
                       enum:
                       - Basic
                       - Standard
@@ -232,13 +129,10 @@ spec:
                   - name
                   type: object
                 staticIp:
-                  description: StaticIP address. Required when deploying a Redis cache
-                    inside an existing Azure Virtual Network.
+                  description: StaticIP address. Required when deploying a Redis cache inside an existing Azure Virtual Network.
                   type: string
                 subnetId:
-                  description: 'SubnetID specifies the full resource ID of a subnet
-                    in a virtual network to deploy the Redis cache in. Example format:
-                    /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1'
+                  description: 'SubnetID specifies the full resource ID of a subnet in a virtual network to deploy the Redis cache in. Example format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/Microsoft.{Network|ClassicNetwork}/VirtualNetworks/vnet1/subnets/subnet1'
                   type: string
                 tags:
                   additionalProperties:
@@ -251,8 +145,7 @@ spec:
                   description: TenantSettings - A dictionary of tenant settings
                   type: object
                 zones:
-                  description: Zones - A list of availability zones denoting where
-                    the resource needs to come from.
+                  description: Zones - A list of availability zones denoting where the resource needs to come from.
                   items:
                     type: string
                   type: array
@@ -261,9 +154,7 @@ spec:
               - sku
               type: object
             providerConfigRef:
-              description: ProviderConfigReference specifies how the provider that
-                will be used to create, observe, update, and delete this managed resource
-                should be configured.
+              description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
               properties:
                 name:
                   description: Name of the referenced object.
@@ -272,9 +163,7 @@ spec:
               - name
               type: object
             providerRef:
-              description: 'ProviderReference specifies the provider that will be
-                used to create, observe, update, and delete this managed resource.
-                Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
+              description: 'ProviderReference specifies the provider that will be used to create, observe, update, and delete this managed resource. Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
               properties:
                 name:
                   description: Name of the referenced object.
@@ -282,29 +171,8 @@ spec:
               required:
               - name
               type: object
-            reclaimPolicy:
-              description: "ReclaimPolicy specifies what will happen to this managed
-                resource when its resource claim is deleted, and what will happen
-                to the underlying external resource when the managed resource is deleted.
-                The \"Delete\" policy causes the managed resource to be deleted when
-                its bound resource claim is deleted, and in turn causes the external
-                resource to be deleted when its managed resource is deleted. The \"Retain\"
-                policy causes the managed resource to be retained, in binding phase
-                \"Released\", when its resource claim is deleted, and in turn causes
-                the external resource to be retained when its managed resource is
-                deleted. The \"Delete\" policy is used when no policy is specified.
-                \n Deprecated. DeletionPolicy takes precedence when both are set.
-                See https://github.com/crossplane/crossplane-runtime/issues/179."
-              enum:
-              - Retain
-              - Delete
-              type: string
             writeConnectionSecretToRef:
-              description: WriteConnectionSecretToReference specifies the namespace
-                and name of a Secret to which any connection details for this managed
-                resource should be written. Connection details frequently include
-                the endpoint, username, and password required to connect to the managed
-                resource.
+              description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
               properties:
                 name:
                   description: Name of the secret.
@@ -323,8 +191,7 @@ spec:
           description: A RedisStatus represents the observed state of a Redis.
           properties:
             atProvider:
-              description: RedisObservation represents the observed state of the Redis
-                object in Azure.
+              description: RedisObservation represents the observed state of the Redis object in Azure.
               properties:
                 hostName:
                   description: HostName - Redis host name.
@@ -333,8 +200,7 @@ spec:
                   description: ID - Resource ID.
                   type: string
                 linkedServers:
-                  description: LinkedServers - List of the linked servers associated
-                    with the cache
+                  description: LinkedServers - List of the linked servers associated with the cache
                   items:
                     type: string
                   type: array
@@ -345,11 +211,7 @@ spec:
                   description: Port - Redis non-SSL port.
                   type: integer
                 provisioningState:
-                  description: 'ProvisioningState - Redis instance provisioning status.
-                    Possible values include: ''Creating'', ''Deleting'', ''Disabled'',
-                    ''Failed'', ''Linking'', ''Provisioning'', ''RecoveringScaleFailure'',
-                    ''Scaling'', ''Succeeded'', ''Unlinking'', ''Unprovisioning'',
-                    ''Updating'''
+                  description: 'ProvisioningState - Redis instance provisioning status. Possible values include: ''Creating'', ''Deleting'', ''Disabled'', ''Failed'', ''Linking'', ''Provisioning'', ''RecoveringScaleFailure'', ''Scaling'', ''Succeeded'', ''Unlinking'', ''Unprovisioning'', ''Updating'''
                   type: string
                 redisVersion:
                   description: RedisVersion - Redis version.
@@ -358,43 +220,26 @@ spec:
                   description: SSLPort - Redis SSL port.
                   type: integer
               type: object
-            bindingPhase:
-              description: Phase represents the binding phase of a managed resource
-                or claim. Unbindable resources cannot be bound, typically because
-                they are currently unavailable, or still being created. Unbound resource
-                are available for binding, and Bound resources have successfully bound
-                to another resource. Deprecated. See https://github.com/crossplane/crossplane/issues/1670
-              enum:
-              - Unbindable
-              - Unbound
-              - Bound
-              - Released
-              type: string
             conditions:
               description: Conditions of the resource.
               items:
                 description: A Condition that may apply to a resource.
                 properties:
                   lastTransitionTime:
-                    description: LastTransitionTime is the last time this condition
-                      transitioned from one status to another.
+                    description: LastTransitionTime is the last time this condition transitioned from one status to another.
                     format: date-time
                     type: string
                   message:
-                    description: A Message containing details about this condition's
-                      last transition from one status to another, if any.
+                    description: A Message containing details about this condition's last transition from one status to another, if any.
                     type: string
                   reason:
-                    description: A Reason for this condition's last transition from
-                      one status to another.
+                    description: A Reason for this condition's last transition from one status to another.
                     type: string
                   status:
-                    description: Status of this condition; is it currently True, False,
-                      or Unknown?
+                    description: Status of this condition; is it currently True, False, or Unknown?
                     type: string
                   type:
-                    description: Type of this condition. At most one of each condition
-                      type may apply to a resource at any point in time.
+                    description: Type of this condition. At most one of each condition type may apply to a resource at any point in time.
                     type: string
                 required:
                 - lastTransitionTime

@@ -23,13 +23,6 @@ import (
 )
 
 const (
-	// ClusterProvisioningStateSucceeded is the state for a cluster that has
-	// succeeded provisioning.
-	ClusterProvisioningStateSucceeded = "Succeeded"
-
-	// DefaultReclaimPolicy is the default reclaim policy to use.
-	DefaultReclaimPolicy = runtimev1alpha1.ReclaimRetain
-
 	// DefaultNodeCount is the default node count for a cluster.
 	DefaultNodeCount = 1
 )
@@ -119,7 +112,6 @@ type AKSClusterStatus struct {
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="ENDPOINT",type="string",JSONPath=".status.endpoint"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
 // +kubebuilder:subresource:status

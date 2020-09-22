@@ -314,7 +314,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 		{
 			name: "RetainPolicy",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecReclaimPolicy(runtimev1alpha1.ReclaimRetain).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
 					WithFinalizers([]string{finalizer, "test"}).Account,
 				cc: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
@@ -326,7 +326,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				err: nil,
 				res: reconcile.Result{},
 				acct: v1alpha3test.NewMockAccount(bucketName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimRetain).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
 					WithFinalizer("test").
 					WithStatusConditions(runtimev1alpha1.Deleting()).
 					Account,
@@ -335,7 +335,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 		{
 			name: "DeleteSuccessful",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
@@ -349,7 +349,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				res: reconcile.Result{},
 				acct: v1alpha3test.NewMockAccount(bucketName).
 					WithFinalizers([]string{}).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithStatusConditions(runtimev1alpha1.Deleting()).
 					Account,
 			},
@@ -357,7 +357,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 		{
 			name: "DeleteFailed",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
 					MockStatusUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
@@ -373,7 +373,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 			want: want{
 				err: nil,
 				res: resultRequeue,
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).
 					WithStatusConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileError(errBoom)).
 					Account,
@@ -382,7 +382,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 		{
 			name: "DeleteNonExistent",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -400,7 +400,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				res: reconcile.Result{},
 				acct: v1alpha3test.NewMockAccount(bucketName).
 					WithFinalizers([]string{}).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithStatusConditions(runtimev1alpha1.Deleting()).
 					Account,
 			},
@@ -678,7 +678,6 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
 					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
-					WithStatusBindingPhase(runtimev1alpha1.BindingPhaseUnbound).
 					Account,
 			},
 		},
@@ -704,7 +703,6 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
 					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileError(errBoom)).
-					WithStatusBindingPhase(runtimev1alpha1.BindingPhaseUnbound).
 					Account,
 			},
 		},
@@ -733,7 +731,6 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
 					WithStatusConditions(runtimev1alpha1.Available()).
-					WithStatusBindingPhase(runtimev1alpha1.BindingPhaseUnbound).
 					Account,
 			},
 		},

@@ -187,7 +187,7 @@ func newAccountSyncDeleter(ao azurestorage.AccountOperations, kube client.Client
 
 func (asd *accountSyncDeleter) delete(ctx context.Context) (reconcile.Result, error) {
 	asd.acct.Status.SetConditions(runtimev1alpha1.Deleting())
-	if asd.acct.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
+	if asd.acct.Spec.DeletionPolicy == runtimev1alpha1.DeletionDelete {
 		if err := asd.Delete(ctx); err != nil && !azure.IsNotFound(err) {
 			asd.acct.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 			return resultRequeue, asd.kube.Status().Update(ctx, asd.acct)
@@ -262,7 +262,6 @@ func (acu *accountCreateUpdater) create(ctx context.Context) (reconcile.Result, 
 func (acu *accountCreateUpdater) update(ctx context.Context, account *storage.Account) (reconcile.Result, error) {
 	if account.ProvisioningState == storage.Succeeded {
 		acu.acct.Status.SetConditions(runtimev1alpha1.Available())
-		resource.SetBindable(acu.acct)
 
 		current := v1alpha3.NewStorageAccountSpec(account)
 		if reflect.DeepEqual(current, acu.acct.Spec.StorageAccountSpec) {
