@@ -45,15 +45,6 @@ var (
 	RedisGroupVersionKind = SchemeGroupVersion.WithKind(RedisKind)
 )
 
-// RedisClass type metadata.
-var (
-	RedisClassKind             = reflect.TypeOf(RedisClass{}).Name()
-	RedisClassGroupKind        = schema.GroupKind{Group: Group, Kind: RedisKind}.String()
-	RedisClassKindAPIVersion   = RedisClassKind + "." + SchemeGroupVersion.String()
-	RedisClassGroupVersionKind = SchemeGroupVersion.WithKind(RedisClassKind)
-)
-
 func init() {
 	SchemeBuilder.Register(&Redis{}, &RedisList{})
-	SchemeBuilder.Register(&RedisClass{}, &RedisClassList{})
 }

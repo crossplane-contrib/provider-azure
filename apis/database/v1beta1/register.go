@@ -53,16 +53,7 @@ var (
 	PostgreSQLServerGroupVersionKind = SchemeGroupVersion.WithKind(PostgreSQLServerKind)
 )
 
-// SQLServerClass type metadata.
-var (
-	SQLServerClassKind             = reflect.TypeOf(SQLServerClass{}).Name()
-	SQLServerClassGroupKind        = schema.GroupKind{Group: Group, Kind: SQLServerClassKind}.String()
-	SQLServerClassKindAPIVersion   = SQLServerClassKind + "." + SchemeGroupVersion.String()
-	SQLServerClassGroupVersionKind = SchemeGroupVersion.WithKind(SQLServerClassKind)
-)
-
 func init() {
 	SchemeBuilder.Register(&MySQLServer{}, &MySQLServerList{})
 	SchemeBuilder.Register(&PostgreSQLServer{}, &PostgreSQLServerList{})
-	SchemeBuilder.Register(&SQLServerClass{}, &SQLServerClassList{})
 }
