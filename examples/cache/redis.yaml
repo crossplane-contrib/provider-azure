@@ -1,12 +1,10 @@
----
 apiVersion: cache.azure.crossplane.io/v1beta1
-kind: RedisClass
+kind: Redis
 metadata:
-  name: azure-redis-standard
+  name: example
   labels:
     example: "true"
 specTemplate:
-  writeConnectionSecretsToNamespace: crossplane-system
   forProvider:
     resourceGroupNameRef:
       name: redis-example
@@ -19,3 +17,6 @@ specTemplate:
   providerConfigRef:
     name: example
   reclaimPolicy: Delete
+  writeConnectionSecretsToRef:
+    name: example-cache
+    namespace: crossplane-system

@@ -1,15 +1,15 @@
 ---
 apiVersion: compute.azure.crossplane.io/v1alpha3
-kind: AKSClusterClass
+kind: AKSCluster
 metadata:
-  name: akscluster-standard
+  name: example-akscluster
   labels:
     example: "true"
-specTemplate:
+spec:
   resourceGroupNameRef:
-    name: aks-example
+    name: example-rg
   vnetSubnetIDRef:
-    name: aks-example
+    name: example-sub
   location: West US 2
   version: "1.15.10"
   nodeCount: 1

@@ -37,8 +37,7 @@ const (
 // Server.
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.userVisibleState"
-// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
+// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.forProvider.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
@@ -65,8 +64,7 @@ type MySQLServerList struct {
 // Database Server.
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.userVisibleState"
-// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
+// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.forProvider.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}

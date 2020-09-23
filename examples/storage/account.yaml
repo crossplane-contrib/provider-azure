@@ -1,22 +1,11 @@
----
-apiVersion: azure.crossplane.io/v1alpha3
-kind: ResourceGroup
-metadata:
-  name: storage
-spec:
-  location: West US 2
-  providerConfigRef:
-    name: example
-  reclaimPolicy: Delete
----
 apiVersion: storage.azure.crossplane.io/v1alpha3
 kind: Account
 metadata:
-  name: storageaccount
-  annotations:
-    crossplane.io/external-name: crossplaneexample
+  name: exampleacc
+  labels:
+    example: "true"
 spec:
-  resourceGroupName: storage
+  resourceGroupName: example-rg
   storageAccountSpec:
     kind: Storage
     location: West US 2
@@ -30,4 +19,4 @@ spec:
   reclaimPolicy: Delete
   writeConnectionSecretToRef:
     namespace: crossplane-system
-    name: storageaccount
+    name: exampleacc

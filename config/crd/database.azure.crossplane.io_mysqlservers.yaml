@@ -15,10 +15,7 @@ spec:
   - JSONPath: .status.conditions[?(@.type=='Synced')].status
     name: SYNCED
     type: string
-  - JSONPath: .status.atProvider.userVisibleState
-    name: STATE
-    type: string
-  - JSONPath: .spec.version
+  - JSONPath: .spec.forProvider.version
     name: VERSION
     type: string
   - JSONPath: .metadata.creationTimestamp
