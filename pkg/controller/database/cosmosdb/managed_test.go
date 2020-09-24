@@ -88,10 +88,6 @@ func withConditions(c ...runtimev1alpha1.Condition) cosmosDBAccountModifier {
 	return func(r *v1alpha3.CosmosDBAccount) { r.Status.ConditionedStatus.Conditions = c }
 }
 
-func withBindingPhase(p runtimev1alpha1.BindingPhase) cosmosDBAccountModifier {
-	return func(r *v1alpha3.CosmosDBAccount) { r.Status.SetBindingPhase(p) }
-}
-
 func cosmosDBAccount(rm ...cosmosDBAccountModifier) *v1alpha3.CosmosDBAccount {
 	r := &v1alpha3.CosmosDBAccount{
 		ObjectMeta: metav1.ObjectMeta{
@@ -238,8 +234,7 @@ func TestObserve(t *testing.T) {
 					ResourceUpToDate: true,
 				},
 				mg: cosmosDBAccount(
-					withConditions(runtimev1alpha1.Available()),
-					withBindingPhase(runtimev1alpha1.BindingPhaseUnbound)),
+					withConditions(runtimev1alpha1.Available())),
 			},
 		},
 	}

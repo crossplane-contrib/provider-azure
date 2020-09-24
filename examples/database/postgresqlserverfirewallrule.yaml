@@ -1,0 +1,15 @@
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: PostgreSQLServerFirewallRule
+metadata:
+  name: example-psql-fwrule
+spec:
+  providerConfigRef:
+    name: example
+  forProvider:
+    resourceGroupNameRef:
+      name: example-rg
+    serverNameRef:
+      name: example-psql
+    properties:
+      startIpAddress: "0.0.0.0"
+      endIpAddress: "0.0.0.0"

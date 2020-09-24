@@ -119,7 +119,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 
 	cr.SetConditions(runtimev1alpha1.Available())
-	resource.SetBindable(cr)
 
 	// AKS clusters are always up to date because we can't yet update them.
 	o := managed.ExternalObservation{

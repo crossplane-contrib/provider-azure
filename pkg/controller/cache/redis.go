@@ -113,7 +113,6 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(azure.ToString(k.PrimaryKey)),
 		}
 		cr.Status.SetConditions(runtimev1alpha1.Available())
-		resource.SetBindable(cr)
 	case redisclients.ProvisioningStateCreating:
 		cr.Status.SetConditions(runtimev1alpha1.Creating())
 	case redisclients.ProvisioningStateDeleting:

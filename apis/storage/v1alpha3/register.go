@@ -53,16 +53,7 @@ var (
 	ContainerGroupVersionKind = SchemeGroupVersion.WithKind(ContainerKind)
 )
 
-// ContainerClass type metadata.
-var (
-	ContainerClassKind             = reflect.TypeOf(ContainerClass{}).Name()
-	ContainerClassGroupKind        = schema.GroupKind{Group: Group, Kind: ContainerClassKind}.String()
-	ContainerClassKindAPIVersion   = ContainerClassKind + "." + SchemeGroupVersion.String()
-	ContainerClassGroupVersionKind = SchemeGroupVersion.WithKind(ContainerClassKind)
-)
-
 func init() {
 	SchemeBuilder.Register(&Account{}, &AccountList{})
 	SchemeBuilder.Register(&Container{}, &ContainerList{})
-	SchemeBuilder.Register(&ContainerClass{}, &ContainerClassList{})
 }

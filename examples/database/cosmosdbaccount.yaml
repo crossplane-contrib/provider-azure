@@ -1,0 +1,24 @@
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: CosmosDBAccount
+metadata:
+  name: example-cdb
+  labels:
+    example: "true"
+spec:
+  forProvider:
+    resourceGroupNameRef:
+      name: example-rg
+    kind: MongoDB
+    location: westus2
+    properties:
+      databaseAccountOfferType: Standard
+      locations:
+        - failoverPriority: 0
+          locationName: South Central US
+          isZoneRedundant: false
+  providerConfigRef:
+    name: example
+  reclaimPolicy: Retain
+  writeConnectionSecretToRef:
+    namespace: crossplane-system
+    name: example-cdb

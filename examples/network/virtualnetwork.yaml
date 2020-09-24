@@ -1,0 +1,15 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: VirtualNetwork
+metadata:
+  name: example-vn
+spec:
+  resourceGroupNameRef:
+    name: example-rg
+  location: West US 2
+  properties:
+    addressSpace:
+      addressPrefixes:
+        - 10.2.0.0/16
+  reclaimPolicy: Delete
+  providerConfigRef:
+    name: example

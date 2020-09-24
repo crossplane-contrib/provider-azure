@@ -74,10 +74,6 @@ func withConditions(c ...runtimev1alpha1.Condition) redisResourceModifier {
 	return func(r *v1beta1.Redis) { r.Status.ConditionedStatus.Conditions = c }
 }
 
-func withBindingPhase(p runtimev1alpha1.BindingPhase) redisResourceModifier {
-	return func(r *v1beta1.Redis) { r.Status.SetBindingPhase(p) }
-}
-
 func withProvisioningState(s string) redisResourceModifier {
 	return func(r *v1beta1.Redis) { r.Status.AtProvider.ProvisioningState = s }
 }
@@ -177,7 +173,6 @@ func TestObserve(t *testing.T) {
 					withHostName(hostName),
 					withPort(port),
 					withConditions(runtimev1alpha1.Available()),
-					withBindingPhase(runtimev1alpha1.BindingPhaseUnbound),
 				),
 				o: managed.ExternalObservation{
 					ResourceExists:   true,

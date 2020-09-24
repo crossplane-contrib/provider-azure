@@ -122,7 +122,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	switch server.UserVisibleState {
 	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
-		resource.SetBindable(cr)
 	default:
 		cr.SetConditions(runtimev1alpha1.Unavailable())
 	}
