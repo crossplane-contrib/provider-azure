@@ -187,7 +187,8 @@ func newAccountSyncDeleter(ao azurestorage.AccountOperations, kube client.Client
 
 func (asd *accountSyncDeleter) delete(ctx context.Context) (reconcile.Result, error) {
 	asd.acct.Status.SetConditions(runtimev1alpha1.Deleting())
-	if asd.acct.Spec.DeletionPolicy == runtimev1alpha1.DeletionDelete {
+	switch asd.acct.Spec.DeletionPolicy {
+	case runtimev1alpha1.DeletionDelete, "":
 		if err := asd.Delete(ctx); err != nil && !azure.IsNotFound(err) {
 			asd.acct.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 			return resultRequeue, asd.kube.Status().Update(ctx, asd.acct)
