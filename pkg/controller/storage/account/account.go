@@ -193,6 +193,8 @@ func (asd *accountSyncDeleter) delete(ctx context.Context) (reconcile.Result, er
 			asd.acct.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 			return resultRequeue, asd.kube.Status().Update(ctx, asd.acct)
 		}
+	case runtimev1alpha1.DeletionOrphan:
+		// No need to do anything if we plan to orphan this account.
 	}
 
 	// NOTE(negz): We don't update the conditioned status here because assuming

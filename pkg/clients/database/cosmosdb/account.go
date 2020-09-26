@@ -67,7 +67,6 @@ func ToDatabaseAccountCreateOrUpdate(s *v1alpha3.CosmosDBAccountSpec) documentdb
 		return documentdb.DatabaseAccountCreateUpdateParameters{}
 	}
 
-	//DatabaseAccountProperties
 	return documentdb.DatabaseAccountCreateUpdateParameters{
 		Kind:                                  s.ForProvider.Kind,
 		Location:                              azure.ToStringPtr(s.ForProvider.Location),
@@ -171,11 +170,11 @@ func toDatabaseLocations(a []v1alpha3.CosmosDBAccountLocation) *[]documentdb.Loc
 	}
 
 	s := make([]documentdb.Location, len(a))
-	for i, location := range a {
+	for i := range a {
 		s[i] = documentdb.Location{
-			LocationName:     &location.LocationName,
-			FailoverPriority: &location.FailoverPriority,
-			IsZoneRedundant:  &location.IsZoneRedundant,
+			LocationName:     &a[i].LocationName,
+			FailoverPriority: &a[i].FailoverPriority,
+			IsZoneRedundant:  &a[i].IsZoneRedundant,
 		}
 	}
 
