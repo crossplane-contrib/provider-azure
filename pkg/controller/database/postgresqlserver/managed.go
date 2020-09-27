@@ -119,7 +119,8 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
 	}
-	switch server.UserVisibleState {
+	// Any state beside 'ready' is considered unavailable.
+	switch server.UserVisibleState { //nolint:exhaustive
 	case v1beta1.StateReady:
 		cr.SetConditions(runtimev1alpha1.Available())
 	default:
