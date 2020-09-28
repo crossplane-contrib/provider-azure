@@ -501,7 +501,7 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "ReclaimRetain",
+			name: "DeletionOrphan",
 			fields: fields{
 				kube: test.NewMockClient(),
 				container: v1alpha3test.NewMockContainer(testContainerName).

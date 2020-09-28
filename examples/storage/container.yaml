@@ -12,4 +12,3 @@ specTemplate:
   # use the providerRef field to specify which Account to read credentials from.
   providerConfigRef:
     name: exampleacc
-  reclaimPolicy: Delete

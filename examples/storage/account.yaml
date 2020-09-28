@@ -16,7 +16,6 @@ spec:
       application: crossplane
   providerConfigRef:
     name: example
-  reclaimPolicy: Delete
   writeConnectionSecretToRef:
     namespace: crossplane-system
     name: exampleacc
