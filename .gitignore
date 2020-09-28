@@ -4,9 +4,9 @@
 cover.out
 /vendor
 /.vendor-new
-.vscode
 
-/package
-# Legacy package directory is still ignored in case it is still sticking around locally
-/stack-package
-.DS_Store
+# ignore GoLand files (debug config etc...)
+/.idea
+
+# ignore vscode files (debug config etc...)
+/.vscode
