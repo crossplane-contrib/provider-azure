@@ -13,9 +13,6 @@ spec:
   - JSONPath: .spec.storageAccountName
     name: ACCOUNT_NAME
     type: string
-  - JSONPath: .spec.classRef.name
-    name: CLASS
-    type: string
   - JSONPath: .metadata.creationTimestamp
     name: AGE
     type: date
