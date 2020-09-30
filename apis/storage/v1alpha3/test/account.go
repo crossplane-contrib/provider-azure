@@ -83,7 +83,7 @@ func (ta *MockAccount) WithSpecProvider(name string) *MockAccount {
 	return ta
 }
 
-// WithSpecDeletionPolicy sets resource reclaim policy
+// WithSpecDeletionPolicy sets resource deletion policy
 func (ta *MockAccount) WithSpecDeletionPolicy(policy runtimev1alpha1.DeletionPolicy) *MockAccount {
 	ta.Spec.DeletionPolicy = policy
 	return ta

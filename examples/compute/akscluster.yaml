@@ -18,5 +18,4 @@ spec:
   disableRBAC: false
   providerConfigRef:
     name: example
-  reclaimPolicy: Delete
   writeConnectionSecretsToNamespace: crossplane-system

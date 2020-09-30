@@ -16,7 +16,6 @@ specTemplate:
     enableNonSslPort: true
   providerConfigRef:
     name: example
-  reclaimPolicy: Delete
   writeConnectionSecretsToRef:
     name: example-cache
     namespace: crossplane-system
