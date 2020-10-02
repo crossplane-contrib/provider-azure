@@ -23,6 +23,7 @@ import (
 
 	"github.com/crossplane/provider-azure/pkg/controller/cache"
 	"github.com/crossplane/provider-azure/pkg/controller/compute"
+	"github.com/crossplane/provider-azure/pkg/controller/config"
 	"github.com/crossplane/provider-azure/pkg/controller/database/cosmosdb"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserver"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserverfirewallrule"
@@ -40,6 +41,7 @@ import (
 // Setup Azure controllers.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
 	for _, setup := range []func(ctrl.Manager, logging.Logger) error{
+		config.Setup,
 		cache.SetupRedis,
 		compute.SetupAKSClusterTarget,
 		compute.SetupAKSCluster,

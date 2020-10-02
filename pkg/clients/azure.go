@@ -28,11 +28,12 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
 )
@@ -48,6 +49,7 @@ const (
 
 // Error strings.
 const (
+	errTrackProviderConfigUsage  = "cannot track ProviderConfig usage"
 	errGetProviderConfig         = "cannot get referenced ProviderConfig"
 	errGetProvider               = "cannot get referenced Provider"
 	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef is given"
@@ -88,6 +90,10 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 	pc := &v1beta1.ProviderConfig{}
 	switch {
 	case cr.GetProviderConfigReference() != nil && cr.GetProviderConfigReference().Name != "":
+		t := resource.NewProviderConfigUsageTracker(kube, &v1beta1.ProviderConfigUsage{})
+		if err := t.Track(ctx, cr); err != nil {
+			return nil, nil, errors.Wrap(err, errTrackProviderConfigUsage)
+		}
 		nn := types.NamespacedName{Name: cr.GetProviderConfigReference().Name}
 		if err := kube.Get(ctx, nn, pc); err != nil {
 			return nil, nil, errors.Wrap(err, errGetProviderConfig)
@@ -99,7 +105,7 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 			return nil, nil, errors.Wrap(err, errGetProvider)
 		}
 		p.ObjectMeta.DeepCopyInto(&pc.ObjectMeta)
-		p.Spec.CredentialsSecretRef.DeepCopyInto(&pc.Spec.CredentialsSecretRef)
+		p.Spec.CredentialsSecretRef.DeepCopyInto(pc.Spec.CredentialsSecretRef)
 	default:
 		return nil, nil, errors.New(errNeitherPCNorPGiven)
 	}
