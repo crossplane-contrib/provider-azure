@@ -19,6 +19,7 @@ package v1alpha3
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
@@ -41,12 +42,12 @@ func (mg *MySQLServerVirtualNetworkRule) ResolveReferences(ctx context.Context, 
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.resourceGroupName")
 	}
 	mg.Spec.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ResourceGroupNameRef = rsp.ResolvedReference
 
-	// Resolve spec.virtualNetworkSubnetID
+	// Resolve spec.virtualNetworkSubnetId
 	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.VirtualNetworkSubnetID,
 		Reference:    mg.Spec.VirtualNetworkSubnetIDRef,
@@ -55,7 +56,7 @@ func (mg *MySQLServerVirtualNetworkRule) ResolveReferences(ctx context.Context, 
 		Extract:      networkv1alpha3.SubnetID(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.virtualNetworkSubnetId")
 	}
 	mg.Spec.VirtualNetworkSubnetID = rsp.ResolvedValue
 	mg.Spec.VirtualNetworkSubnetIDRef = rsp.ResolvedReference
@@ -69,7 +70,7 @@ func (mg *MySQLServerVirtualNetworkRule) ResolveReferences(ctx context.Context, 
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.serverName")
 	}
 	mg.Spec.ServerName = rsp.ResolvedValue
 	mg.Spec.ServerNameRef = rsp.ResolvedReference
@@ -90,12 +91,12 @@ func (mg *PostgreSQLServerVirtualNetworkRule) ResolveReferences(ctx context.Cont
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.resourceGroupName")
 	}
 	mg.Spec.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ResourceGroupNameRef = rsp.ResolvedReference
 
-	// Resolve spec.virtualNetworkSubnetID
+	// Resolve spec.virtualNetworkSubnetId
 	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.VirtualNetworkSubnetID,
 		Reference:    mg.Spec.VirtualNetworkSubnetIDRef,
@@ -104,7 +105,7 @@ func (mg *PostgreSQLServerVirtualNetworkRule) ResolveReferences(ctx context.Cont
 		Extract:      networkv1alpha3.SubnetID(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.virtualNetworkSubnetId")
 	}
 	mg.Spec.VirtualNetworkSubnetID = rsp.ResolvedValue
 	mg.Spec.VirtualNetworkSubnetIDRef = rsp.ResolvedReference
@@ -118,7 +119,7 @@ func (mg *PostgreSQLServerVirtualNetworkRule) ResolveReferences(ctx context.Cont
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.serverName")
 	}
 	mg.Spec.ServerName = rsp.ResolvedValue
 	mg.Spec.ServerNameRef = rsp.ResolvedReference
@@ -139,7 +140,7 @@ func (mg *MySQLServerFirewallRule) ResolveReferences(ctx context.Context, c clie
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
 	}
 	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
@@ -153,7 +154,7 @@ func (mg *MySQLServerFirewallRule) ResolveReferences(ctx context.Context, c clie
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.serverName")
 	}
 	mg.Spec.ForProvider.ServerName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ServerNameRef = rsp.ResolvedReference
@@ -165,7 +166,7 @@ func (mg *MySQLServerFirewallRule) ResolveReferences(ctx context.Context, c clie
 func (mg *PostgreSQLServerFirewallRule) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)
 
-	// Resolve spec.resourceGroupName
+	// Resolve spec.forProvider.resourceGroupName
 	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
 		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
@@ -174,7 +175,7 @@ func (mg *PostgreSQLServerFirewallRule) ResolveReferences(ctx context.Context, c
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
 	}
 	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
@@ -188,7 +189,7 @@ func (mg *PostgreSQLServerFirewallRule) ResolveReferences(ctx context.Context, c
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.serverName")
 	}
 	mg.Spec.ForProvider.ServerName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ServerNameRef = rsp.ResolvedReference
@@ -209,7 +210,7 @@ func (mg *CosmosDBAccount) ResolveReferences(ctx context.Context, c client.Reade
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
 	}
 	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference

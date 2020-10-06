@@ -19,6 +19,7 @@ package v1alpha3
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
@@ -52,7 +53,7 @@ func (mg *VirtualNetwork) ResolveReferences(ctx context.Context, c client.Reader
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.resourceGroupName")
 	}
 	mg.Spec.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ResourceGroupNameRef = rsp.ResolvedReference
@@ -73,7 +74,7 @@ func (mg *Subnet) ResolveReferences(ctx context.Context, c client.Reader) error 
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.resourceGroupName")
 	}
 	mg.Spec.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ResourceGroupNameRef = rsp.ResolvedReference
@@ -87,7 +88,7 @@ func (mg *Subnet) ResolveReferences(ctx context.Context, c client.Reader) error 
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.virtualNetworkName")
 	}
 	mg.Spec.VirtualNetworkName = rsp.ResolvedValue
 	mg.Spec.VirtualNetworkNameRef = rsp.ResolvedReference

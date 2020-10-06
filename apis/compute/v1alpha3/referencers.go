@@ -19,6 +19,7 @@ package v1alpha3
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
@@ -40,12 +41,12 @@ func (mg *AKSCluster) ResolveReferences(ctx context.Context, c client.Reader) er
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.resourceGroupName")
 	}
 	mg.Spec.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ResourceGroupNameRef = rsp.ResolvedReference
 
-	// Resolve spec.virtualNetworkSubnetID
+	// Resolve spec.vnetSubnetID
 	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.VnetSubnetID,
 		Reference:    mg.Spec.VnetSubnetIDRef,
@@ -54,7 +55,7 @@ func (mg *AKSCluster) ResolveReferences(ctx context.Context, c client.Reader) er
 		Extract:      networkv1alpha3.SubnetID(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.vnetSubnetID")
 	}
 	mg.Spec.VnetSubnetID = rsp.ResolvedValue
 	mg.Spec.VnetSubnetIDRef = rsp.ResolvedReference

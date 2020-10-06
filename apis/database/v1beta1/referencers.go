@@ -19,6 +19,7 @@ package v1beta1
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
@@ -26,11 +27,11 @@ import (
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
-// ResolveReferences of this Redis.
-func (mg *Redis) ResolveReferences(ctx context.Context, c client.Reader) error {
+// ResolveReferences of this MySQLServer.
+func (mg *MySQLServer) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)
 
-	// Resolve spec.resourceGroupName
+	// Resolve spec.forProvider.resourceGroupName
 	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
 		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
@@ -39,7 +40,28 @@ func (mg *Redis) ResolveReferences(ctx context.Context, c client.Reader) error {
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
+	}
+	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
+
+	return nil
+}
+
+// ResolveReferences of this PostgreSQLServer.
+func (mg *PostgreSQLServer) ResolveReferences(ctx context.Context, c client.Reader) error {
+	r := reference.NewAPIResolver(c, mg)
+
+	// Resolve spec.forProvider.resourceGroupName
+	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
+		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
+		Selector:     mg.Spec.ForProvider.ResourceGroupNameSelector,
+		To:           reference.To{Managed: &v1alpha3.ResourceGroup{}, List: &v1alpha3.ResourceGroupList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
 	}
 	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
