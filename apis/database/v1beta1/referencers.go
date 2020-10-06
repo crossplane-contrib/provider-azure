@@ -19,6 +19,7 @@ package v1beta1
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
@@ -30,7 +31,7 @@ import (
 func (mg *MySQLServer) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)
 
-	// Resolve spec.resourceGroupName
+	// Resolve spec.forProvider.resourceGroupName
 	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
 		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
@@ -39,7 +40,7 @@ func (mg *MySQLServer) ResolveReferences(ctx context.Context, c client.Reader) e
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
 	}
 	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
@@ -51,7 +52,7 @@ func (mg *MySQLServer) ResolveReferences(ctx context.Context, c client.Reader) e
 func (mg *PostgreSQLServer) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)
 
-	// Resolve spec.resourceGroupName
+	// Resolve spec.forProvider.resourceGroupName
 	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
 		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
@@ -60,7 +61,7 @@ func (mg *PostgreSQLServer) ResolveReferences(ctx context.Context, c client.Read
 		Extract:      reference.ExternalName(),
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
 	}
 	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
 	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
