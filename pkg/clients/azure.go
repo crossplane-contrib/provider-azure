@@ -21,8 +21,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/crossplane/provider-azure/apis/v1beta1"
-
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -33,9 +31,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/v1beta1"
 )
 
 const (
@@ -52,9 +52,12 @@ const (
 	errTrackProviderConfigUsage  = "cannot track ProviderConfig usage"
 	errGetProviderConfig         = "cannot get referenced ProviderConfig"
 	errGetProvider               = "cannot get referenced Provider"
-	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef is given"
+	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef was supplied"
+	errCredSecretNotGiven        = "secretRef was not supplied"
 	errUnmarshalCredentialSecret = "cannot unmarshal the data in credentials secret"
 	errGetAuthorizer             = "cannot get authorizer from client credentials config"
+
+	errFmtUnsupportedCredSource = "unsupported credentials source %q"
 )
 
 // A FieldOption determines how common Go types are translated to the types
@@ -86,39 +89,32 @@ const (
 
 // GetAuthInfo figures out how to connect to Azure API and returns the necessary
 // information to be used for controllers to construct their specific clients.
-func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) { // nolint:gocyclo
-	pc := &v1beta1.ProviderConfig{}
+func GetAuthInfo(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
 	switch {
-	case cr.GetProviderConfigReference() != nil && cr.GetProviderConfigReference().Name != "":
-		t := resource.NewProviderConfigUsageTracker(kube, &v1beta1.ProviderConfigUsage{})
-		if err := t.Track(ctx, cr); err != nil {
-			return nil, nil, errors.Wrap(err, errTrackProviderConfigUsage)
-		}
-		nn := types.NamespacedName{Name: cr.GetProviderConfigReference().Name}
-		if err := kube.Get(ctx, nn, pc); err != nil {
-			return nil, nil, errors.Wrap(err, errGetProviderConfig)
-		}
-	case cr.GetProviderReference() != nil && cr.GetProviderReference().Name != "":
-		p := &v1alpha3.Provider{}
-		nn := types.NamespacedName{Name: cr.GetProviderReference().Name}
-		if err := kube.Get(ctx, nn, p); err != nil {
-			return nil, nil, errors.Wrap(err, errGetProvider)
-		}
-		p.ObjectMeta.DeepCopyInto(&pc.ObjectMeta)
-		p.Spec.CredentialsSecretRef.DeepCopyInto(pc.Spec.CredentialsSecretRef)
+	case mg.GetProviderConfigReference() != nil:
+		return UseProviderConfig(ctx, c, mg)
+	case mg.GetProviderReference() != nil:
+		return UseProvider(ctx, c, mg)
 	default:
 		return nil, nil, errors.New(errNeitherPCNorPGiven)
 	}
-	// NOTE(muvaf): When we implement the workload identity, we will only need to
-	// return a different type of option.ClientOption, which is WithTokenSource().
+}
 
+// UseProvider to return the necessary information to construct an Azure client.
+// Deprecated: Use UseProviderConfig
+func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
+	p := &v1alpha3.Provider{}
+	if err := c.Get(ctx, types.NamespacedName{Name: mg.GetProviderReference().Name}, p); err != nil {
+		return nil, nil, errors.Wrap(err, errGetProvider)
+	}
+
+	ref := p.Spec.CredentialsSecretRef
 	s := &corev1.Secret{}
-	nn := types.NamespacedName{Name: pc.Spec.CredentialsSecretRef.Name, Namespace: pc.Spec.CredentialsSecretRef.Namespace}
-	if err := kube.Get(ctx, nn, s); err != nil {
+	if err := c.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: ref.Namespace}, s); err != nil {
 		return nil, nil, err
 	}
 	m := map[string]string{}
-	if err := json.Unmarshal(s.Data[pc.Spec.CredentialsSecretRef.Key], &m); err != nil {
+	if err := json.Unmarshal(s.Data[ref.Key], &m); err != nil {
 		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
 	}
 	cfg := auth.NewClientCredentialsConfig(m[CredentialsKeyClientID], m[CredentialsKeyClientSecret], m[CredentialsKeyTenantID])
@@ -126,10 +122,46 @@ func GetAuthInfo(ctx context.Context, kube client.Client, cr resource.Managed) (
 	cfg.Resource = m[CredentialsKeyResourceManagerEndpointURL]
 
 	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, nil, errors.Wrap(err, errGetAuthorizer)
+	return m, a, errors.Wrap(err, errGetAuthorizer)
+}
+
+// UseProviderConfig to return the necessary information to construct an Azure
+// client.
+func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
+	pc := &v1beta1.ProviderConfig{}
+	t := resource.NewProviderConfigUsageTracker(c, &v1beta1.ProviderConfigUsage{})
+	if err := t.Track(ctx, mg); err != nil {
+		return nil, nil, errors.Wrap(err, errTrackProviderConfigUsage)
 	}
-	return m, a, nil
+	if err := c.Get(ctx, types.NamespacedName{Name: mg.GetProviderConfigReference().Name}, pc); err != nil {
+		return nil, nil, errors.Wrap(err, errGetProviderConfig)
+	}
+
+	// NOTE(muvaf): When we implement the workload identity, we will only need to
+	// return a different type of option.ClientOption, which is WithTokenSource().
+	if s := pc.Spec.Credentials.Source; s != runtimev1alpha1.CredentialsSourceSecret {
+		return nil, authorizer, errors.Errorf(errFmtUnsupportedCredSource, s)
+	}
+
+	ref := pc.Spec.Credentials.SecretRef
+	if ref == nil {
+		return nil, authorizer, errors.New(errCredSecretNotGiven)
+	}
+
+	s := &corev1.Secret{}
+	if err := c.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: ref.Namespace}, s); err != nil {
+		return nil, nil, err
+	}
+	m := map[string]string{}
+	if err := json.Unmarshal(s.Data[ref.Key], &m); err != nil {
+		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
+	}
+	cfg := auth.NewClientCredentialsConfig(m[CredentialsKeyClientID], m[CredentialsKeyClientSecret], m[CredentialsKeyTenantID])
+	cfg.AADEndpoint = m[CredentialsKeyActiveDirectoryEndpointURL]
+	cfg.Resource = m[CredentialsKeyResourceManagerEndpointURL]
+
+	a, err := cfg.Authorizer()
+	return m, a, errors.Wrap(err, errGetAuthorizer)
 }
 
 // Client struct that represents the information needed to connect to the Azure services as a client
