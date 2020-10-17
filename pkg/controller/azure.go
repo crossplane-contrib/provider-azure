@@ -43,7 +43,6 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 	for _, setup := range []func(ctrl.Manager, logging.Logger) error{
 		config.Setup,
 		cache.SetupRedis,
-		compute.SetupAKSClusterTarget,
 		compute.SetupAKSCluster,
 		mysqlserver.Setup,
 		mysqlserverfirewallrule.Setup,
