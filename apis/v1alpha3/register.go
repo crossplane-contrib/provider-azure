@@ -53,7 +53,17 @@ var (
 	ResourceGroupGroupVersionKind = SchemeGroupVersion.WithKind(ResourceGroupKind)
 )
 
+// SecurityGroup type metadata.
+var (
+	SecurityGroupKind             = reflect.TypeOf(SecurityGroup{}).Name()
+	SecurityGroupGroupKind        = schema.GroupKind{Group: Group, Kind: SecurityGroupKind}.String()
+	SecurityGroupKindAPIVersion   = SecurityGroupKind + "." + SchemeGroupVersion.String()
+	SecurityGroupGroupVersionKind = SchemeGroupVersion.WithKind(SecurityGroupKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&Provider{}, &ProviderList{})
 	SchemeBuilder.Register(&ResourceGroup{}, &ResourceGroupList{})
+	SchemeBuilder.Register(&SecurityGroup{}, &SecurityGroupList{})
+	SchemeBuilder.Register(&SecurityRule{})
 }
