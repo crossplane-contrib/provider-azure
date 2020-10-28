@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	SecurityGroup "github.com/crossplane/provider-azure/pkg/controller/securitygroup"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
@@ -70,6 +71,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		container.SetupClaimScheduling,
 		container.SetupClaimBinding,
 		container.Setup,
+		SecurityGroup.Setup,
 	} {
 		if err := setup(mgr, l); err != nil {
 			return err
