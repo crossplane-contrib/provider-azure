@@ -1,0 +1,14 @@
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: MySQLServerVirtualNetworkRule
+metadata:
+  name: example-mysql-vnrule
+spec:
+  providerConfigRef:
+    name: example
+  resourceGroupNameRef:
+    name: example-rg
+  serverNameRef:
+    name: example-mysql
+  properties:
+    virtualNetworkSubnetIdRef:
+      name: example-sub

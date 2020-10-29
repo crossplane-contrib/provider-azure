@@ -18,25 +18,7 @@ limitations under the License.
 
 package v1beta1
 
-import (
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
-)
-
-// GetBindingPhase of this Redis.
-func (mg *Redis) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return mg.Status.GetBindingPhase()
-}
-
-// GetClaimReference of this Redis.
-func (mg *Redis) GetClaimReference() *corev1.ObjectReference {
-	return mg.Spec.ClaimReference
-}
-
-// GetClassReference of this Redis.
-func (mg *Redis) GetClassReference() *corev1.ObjectReference {
-	return mg.Spec.ClassReference
-}
+import runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 
 // GetCondition of this Redis.
 func (mg *Redis) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
@@ -61,29 +43,9 @@ func (mg *Redis) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
-// GetReclaimPolicy of this Redis.
-func (mg *Redis) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return mg.Spec.ReclaimPolicy
-}
-
 // GetWriteConnectionSecretToReference of this Redis.
 func (mg *Redis) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
-}
-
-// SetBindingPhase of this Redis.
-func (mg *Redis) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	mg.Status.SetBindingPhase(p)
-}
-
-// SetClaimReference of this Redis.
-func (mg *Redis) SetClaimReference(r *corev1.ObjectReference) {
-	mg.Spec.ClaimReference = r
-}
-
-// SetClassReference of this Redis.
-func (mg *Redis) SetClassReference(r *corev1.ObjectReference) {
-	mg.Spec.ClassReference = r
 }
 
 // SetConditions of this Redis.
@@ -107,11 +69,6 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *Redis) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
-}
-
-// SetReclaimPolicy of this Redis.
-func (mg *Redis) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
-	mg.Spec.ReclaimPolicy = r
 }
 
 // SetWriteConnectionSecretToReference of this Redis.

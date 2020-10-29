@@ -18,25 +18,7 @@ limitations under the License.
 
 package v1alpha3
 
-import (
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
-)
-
-// GetBindingPhase of this ResourceGroup.
-func (mg *ResourceGroup) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return mg.Status.GetBindingPhase()
-}
-
-// GetClaimReference of this ResourceGroup.
-func (mg *ResourceGroup) GetClaimReference() *corev1.ObjectReference {
-	return mg.Spec.ClaimReference
-}
-
-// GetClassReference of this ResourceGroup.
-func (mg *ResourceGroup) GetClassReference() *corev1.ObjectReference {
-	return mg.Spec.ClassReference
-}
+import runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 
 // GetCondition of this ResourceGroup.
 func (mg *ResourceGroup) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
@@ -61,29 +43,9 @@ func (mg *ResourceGroup) GetProviderReference() *runtimev1alpha1.Reference {
 	return mg.Spec.ProviderReference
 }
 
-// GetReclaimPolicy of this ResourceGroup.
-func (mg *ResourceGroup) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return mg.Spec.ReclaimPolicy
-}
-
 // GetWriteConnectionSecretToReference of this ResourceGroup.
 func (mg *ResourceGroup) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
-}
-
-// SetBindingPhase of this ResourceGroup.
-func (mg *ResourceGroup) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	mg.Status.SetBindingPhase(p)
-}
-
-// SetClaimReference of this ResourceGroup.
-func (mg *ResourceGroup) SetClaimReference(r *corev1.ObjectReference) {
-	mg.Spec.ClaimReference = r
-}
-
-// SetClassReference of this ResourceGroup.
-func (mg *ResourceGroup) SetClassReference(r *corev1.ObjectReference) {
-	mg.Spec.ClassReference = r
 }
 
 // SetConditions of this ResourceGroup.
@@ -109,108 +71,7 @@ func (mg *ResourceGroup) SetProviderReference(r *runtimev1alpha1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
-// SetReclaimPolicy of this ResourceGroup.
-func (mg *ResourceGroup) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
-	mg.Spec.ReclaimPolicy = r
-}
-
 // SetWriteConnectionSecretToReference of this ResourceGroup.
 func (mg *ResourceGroup) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
-	mg.Spec.WriteConnectionSecretToReference = r
-}
-
-// GetBindingPhase of this SecurityGroup.
-func (mg *SecurityGroup) GetBindingPhase() runtimev1alpha1.BindingPhase {
-	return mg.Status.GetBindingPhase()
-}
-
-// GetClaimReference of this SecurityGroup.
-func (mg *SecurityGroup) GetClaimReference() *corev1.ObjectReference {
-	return mg.Spec.ClaimReference
-}
-
-// GetClassReference of this SecurityGroup.
-func (mg *SecurityGroup) GetClassReference() *corev1.ObjectReference {
-	return mg.Spec.ClassReference
-}
-
-// GetCondition of this SecurityGroup.
-func (mg *SecurityGroup) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
-	return mg.Status.GetCondition(ct)
-}
-
-// GetDeletionPolicy of this SecurityGroup.
-func (mg *SecurityGroup) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
-	return mg.Spec.DeletionPolicy
-}
-
-// GetProviderConfigReference of this SecurityGroup.
-func (mg *SecurityGroup) GetProviderConfigReference() *runtimev1alpha1.Reference {
-	return mg.Spec.ProviderConfigReference
-}
-
-/*
-GetProviderReference of this SecurityGroup.
-Deprecated: Use GetProviderConfigReference.
-*/
-func (mg *SecurityGroup) GetProviderReference() *runtimev1alpha1.Reference {
-	return mg.Spec.ProviderReference
-}
-
-// GetReclaimPolicy of this SecurityGroup.
-func (mg *SecurityGroup) GetReclaimPolicy() runtimev1alpha1.ReclaimPolicy {
-	return mg.Spec.ReclaimPolicy
-}
-
-// GetWriteConnectionSecretToReference of this SecurityGroup.
-func (mg *SecurityGroup) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
-	return mg.Spec.WriteConnectionSecretToReference
-}
-
-// SetBindingPhase of this SecurityGroup.
-func (mg *SecurityGroup) SetBindingPhase(p runtimev1alpha1.BindingPhase) {
-	mg.Status.SetBindingPhase(p)
-}
-
-// SetClaimReference of this SecurityGroup.
-func (mg *SecurityGroup) SetClaimReference(r *corev1.ObjectReference) {
-	mg.Spec.ClaimReference = r
-}
-
-// SetClassReference of this SecurityGroup.
-func (mg *SecurityGroup) SetClassReference(r *corev1.ObjectReference) {
-	mg.Spec.ClassReference = r
-}
-
-// SetConditions of this SecurityGroup.
-func (mg *SecurityGroup) SetConditions(c ...runtimev1alpha1.Condition) {
-	mg.Status.SetConditions(c...)
-}
-
-// SetDeletionPolicy of this SecurityGroup.
-func (mg *SecurityGroup) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
-	mg.Spec.DeletionPolicy = r
-}
-
-// SetProviderConfigReference of this SecurityGroup.
-func (mg *SecurityGroup) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
-	mg.Spec.ProviderConfigReference = r
-}
-
-/*
-SetProviderReference of this SecurityGroup.
-Deprecated: Use SetProviderConfigReference.
-*/
-func (mg *SecurityGroup) SetProviderReference(r *runtimev1alpha1.Reference) {
-	mg.Spec.ProviderReference = r
-}
-
-// SetReclaimPolicy of this SecurityGroup.
-func (mg *SecurityGroup) SetReclaimPolicy(r runtimev1alpha1.ReclaimPolicy) {
-	mg.Spec.ReclaimPolicy = r
-}
-
-// SetWriteConnectionSecretToReference of this SecurityGroup.
-func (mg *SecurityGroup) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }

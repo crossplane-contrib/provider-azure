@@ -24,7 +24,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/postgresql/mgmt/postgresql"
+	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
@@ -37,11 +37,13 @@ import (
 
 	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane/provider-azure/pkg/clients/database"
 )
 
 var (
-	_ managed.ExternalClient    = &external{}
-	_ managed.ExternalConnecter = &connecter{}
+	_ managed.ExternalClient       = &external{}
+	_ managed.ExternalConnecter    = &connecter{}
+	_ database.PostgreSQLServerAPI = &MockPostgreSQLServerAPI{}
 )
 
 type MockPostgreSQLServerAPI struct {

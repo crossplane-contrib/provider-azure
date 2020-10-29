@@ -1,0 +1,14 @@
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: PostgreSQLServerVirtualNetworkRule
+metadata:
+  name: example-psql-vnrule
+spec:
+  providerConfigRef:
+    name: example
+  resourceGroupNameRef:
+    name: example-rg
+  serverNameRef:
+    name: example-psql
+  properties:
+    virtualNetworkSubnetIdRef:
+      name: example-sub

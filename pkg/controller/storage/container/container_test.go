@@ -501,18 +501,18 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "ReclaimRetain",
+			name: "DeletionOrphan",
 			fields: fields{
 				kube: test.NewMockClient(),
 				container: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimRetain).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
 					WithFinalizer(finalizer).Container,
 			},
 			args: args{ctx: ctx},
 			want: want{
 				res: reconcile.Result{},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimRetain).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
 					WithFinalizers([]string{}).
 					WithStatusConditions(runtimev1alpha1.Deleting()).
 					Container,
@@ -528,7 +528,7 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 					},
 				},
 				container: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).
 					Container,
 			},
@@ -536,7 +536,7 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 			want: want{
 				res: reconcile.Result{},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizers([]string{}).
 					WithStatusConditions(runtimev1alpha1.Deleting()).
 					Container,
@@ -552,14 +552,14 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 					},
 				},
 				container: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).Container,
 			},
 			args: args{ctx: ctx},
 			want: want{
 				res: resultRequeue,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecReclaimPolicy(runtimev1alpha1.ReclaimDelete).
+					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
 					WithFinalizer(finalizer).
 					WithStatusConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileError(errBoom)).
 					Container,
@@ -781,7 +781,6 @@ func Test_containerCreateUpdater_create(t *testing.T) {
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer(finalizer).
 					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
-					WithStatusBindingPhase(runtimev1alpha1.BindingPhaseUnbound).
 					Container,
 			},
 		},
@@ -848,7 +847,6 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
 					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
-					WithStatusBindingPhase(runtimev1alpha1.BindingPhaseUnbound).
 					Container,
 			},
 		},
@@ -902,7 +900,6 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
 					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
-					WithStatusBindingPhase(runtimev1alpha1.BindingPhaseUnbound).
 					Container,
 			},
 		},

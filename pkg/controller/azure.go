@@ -17,13 +17,13 @@ limitations under the License.
 package controller
 
 import (
-	SecurityGroup "github.com/crossplane/provider-azure/pkg/controller/securitygroup"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
 	"github.com/crossplane/provider-azure/pkg/controller/cache"
 	"github.com/crossplane/provider-azure/pkg/controller/compute"
+	"github.com/crossplane/provider-azure/pkg/controller/config"
 	"github.com/crossplane/provider-azure/pkg/controller/database/cosmosdb"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserver"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserverfirewallrule"
@@ -31,6 +31,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/network/securitygroup"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
 	"github.com/crossplane/provider-azure/pkg/controller/resourcegroup"
@@ -41,24 +42,12 @@ import (
 // Setup Azure controllers.
 func Setup(mgr ctrl.Manager, l logging.Logger) error {
 	for _, setup := range []func(ctrl.Manager, logging.Logger) error{
-		cache.SetupRedisClaimScheduling,
-		cache.SetupRedisClaimDefaulting,
-		cache.SetupRedisClaimBinding,
+		config.Setup,
 		cache.SetupRedis,
-		compute.SetupAKSClusterClaimScheduling,
-		compute.SetupAKSClusterClaimDefaulting,
-		compute.SetupAKSClusterClaimBinding,
-		compute.SetupAKSClusterTarget,
 		compute.SetupAKSCluster,
-		mysqlserver.SetupClaimScheduling,
-		mysqlserver.SetupClaimDefaulting,
-		mysqlserver.SetupClaimBinding,
 		mysqlserver.Setup,
 		mysqlserverfirewallrule.Setup,
 		mysqlservervirtualnetworkrule.Setup,
-		postgresqlserver.SetupClaimScheduling,
-		postgresqlserver.SetupClaimDefaulting,
-		postgresqlserver.SetupClaimBinding,
 		postgresqlserver.Setup,
 		postgresqlserverfirewallrule.Setup,
 		postgresqlservervirtualnetworkrule.Setup,
@@ -67,9 +56,6 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 		subnet.Setup,
 		resourcegroup.Setup,
 		account.Setup,
-		container.SetupClaimDefaulting,
-		container.SetupClaimScheduling,
-		container.SetupClaimBinding,
 		container.Setup,
 		SecurityGroup.Setup,
 	} {
