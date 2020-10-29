@@ -1,0 +1,15 @@
+apiVersion: database.azure.crossplane.io/v1alpha3
+kind: MySQLServerFirewallRule
+metadata:
+  name: example-mysql-fwrule
+spec:
+  providerConfigRef:
+    name: example
+  forProvider:
+    resourceGroupNameRef:
+      name: example-rg
+    serverNameRef:
+      name: example-mysql
+    properties:
+      startIpAddress: "0.0.0.0"
+      endIpAddress: "0.0.0.0"

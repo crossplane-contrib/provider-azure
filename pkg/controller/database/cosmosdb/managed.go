@@ -104,7 +104,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	switch r.Status.AtProvider.State {
 	case "Succeeded":
 		r.SetConditions(runtimev1alpha1.Available())
-		resource.SetBindable(r)
 	default:
 		r.SetConditions(runtimev1alpha1.Unavailable())
 	}

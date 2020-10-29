@@ -37,8 +37,7 @@ const (
 // Server.
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.userVisibleState"
-// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
+// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.forProvider.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
@@ -65,8 +64,7 @@ type MySQLServerList struct {
 // Database Server.
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.atProvider.userVisibleState"
-// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.version"
+// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.forProvider.version"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
@@ -85,40 +83,6 @@ type PostgreSQLServerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []PostgreSQLServer `json:"items"`
-}
-
-// A SQLServerClassSpecTemplate is a template for the spec of a dynamically
-// provisioned MySQLServer or PostgreSQLServer.
-type SQLServerClassSpecTemplate struct {
-	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	ForProvider                       SQLServerParameters `json:"forProvider"`
-}
-
-// +kubebuilder:object:root=true
-
-// A SQLServerClass is a non-portable resource class. It defines the desired
-// spec of resource claims that use it to dynamically provision a managed
-// resource.
-// +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
-// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,class,azure}
-type SQLServerClass struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// SpecTemplate is a template for the spec of a dynamically provisioned
-	// SQLServer.
-	SpecTemplate SQLServerClassSpecTemplate `json:"specTemplate"`
-}
-
-// +kubebuilder:object:root=true
-
-// SQLServerClassList contains a list of SQLServerClass.
-type SQLServerClassList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []SQLServerClass `json:"items"`
 }
 
 // SKU billing information related properties of a server.

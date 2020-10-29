@@ -1,8 +1,0 @@
-apiVersion: storage.crossplane.io/v1alpha1
-kind: Bucket
-metadata:
-  name: app-bucket
-spec:
-  classSelector:
-    matchLabels:
-      example: "true"

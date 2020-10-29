@@ -1,0 +1,14 @@
+apiVersion: storage.azure.crossplane.io/v1alpha3
+kind: Container
+metadata:
+  name: example-container
+  labels:
+    example: "true"
+specTemplate:
+  writeConnectionSecretsToRef:
+    name: example-container
+    namespace: crossplane-system
+  # Azure containers read their credentials from an Account, not a Provider. We
+  # use the providerRef field to specify which Account to read credentials from.
+  providerConfigRef:
+    name: exampleacc

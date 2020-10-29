@@ -1,8 +1,8 @@
 apiVersion: azure.crossplane.io/v1alpha3
 kind: ResourceGroup
 metadata:
-  name: example
+  name: example-rg
 spec:
   location: West US 2
   providerConfigRef:
-    name: azure-provider
+    name: example

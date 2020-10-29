@@ -24,9 +24,12 @@ import (
 
 // A ProviderConfigSpec defines the desired state of a ProviderConfig.
 type ProviderConfigSpec struct {
-	// CredentialsSecretRef references a specific secret's key that contains
-	// the credentials that are used to connect to the Azure API.
-	CredentialsSecretRef runtimev1alpha1.SecretKeySelector `json:"credentialsSecretRef"`
+	runtimev1alpha1.ProviderConfigSpec `json:",inline"`
+}
+
+// A ProviderConfigStatus represents the status of a ProviderConfig.
+type ProviderConfigStatus struct {
+	runtimev1alpha1.ProviderConfigStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true
@@ -35,11 +38,13 @@ type ProviderConfigSpec struct {
 // Azure account using a particular Azure Service Principal.
 // +kubebuilder:printcolumn:name="SECRET-NAME",type="string",JSONPath=".spec.credentialsSecretRef.name",priority=1
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,provider,azure}
+// +kubebuilder:subresource:status
 type ProviderConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec ProviderConfigSpec `json:"spec"`
+	Spec   ProviderConfigSpec   `json:"spec"`
+	Status ProviderConfigStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -49,4 +54,28 @@ type ProviderConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []ProviderConfig `json:"items"`
+}
+
+// +kubebuilder:object:root=true
+
+// A ProviderConfigUsage indicates that a resource is using a ProviderConfig.
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="CONFIG-NAME",type="string",JSONPath=".providerConfigRef.name"
+// +kubebuilder:printcolumn:name="RESOURCE-KIND",type="string",JSONPath=".resourceRef.kind"
+// +kubebuilder:printcolumn:name="RESOURCE-NAME",type="string",JSONPath=".resourceRef.name"
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,provider,azure}
+type ProviderConfigUsage struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	runtimev1alpha1.ProviderConfigUsage `json:",inline"`
+}
+
+// +kubebuilder:object:root=true
+
+// ProviderConfigUsageList contains a list of ProviderConfigUsage
+type ProviderConfigUsageList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ProviderConfigUsage `json:"items"`
 }

@@ -25,7 +25,6 @@ import (
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -82,27 +81,15 @@ func (tc *MockContainer) WithFinalizers(f []string) *MockContainer {
 	return tc
 }
 
-// WithSpecClassRef set class reference
-func (tc *MockContainer) WithSpecClassRef(ref *corev1.ObjectReference) *MockContainer {
-	tc.Spec.ClassReference = ref
-	return tc
-}
-
-// WithSpecClaimRef set class reference
-func (tc *MockContainer) WithSpecClaimRef(ref *corev1.ObjectReference) *MockContainer {
-	tc.Spec.ClaimReference = ref
-	return tc
-}
-
 // WithSpecProviderRef sets spec account reference value
 func (tc *MockContainer) WithSpecProviderRef(name string) *MockContainer {
 	tc.Container.Spec.ProviderReference = &runtimev1alpha1.Reference{Name: name}
 	return tc
 }
 
-// WithSpecReclaimPolicy sets spec reclaim policy value
-func (tc *MockContainer) WithSpecReclaimPolicy(p runtimev1alpha1.ReclaimPolicy) *MockContainer {
-	tc.Container.Spec.ReclaimPolicy = p
+// WithSpecDeletionPolicy sets spec deletion policy value
+func (tc *MockContainer) WithSpecDeletionPolicy(p runtimev1alpha1.DeletionPolicy) *MockContainer {
+	tc.Container.Spec.DeletionPolicy = p
 	return tc
 }
 
@@ -121,11 +108,5 @@ func (tc *MockContainer) WithSpecMetadata(meta map[string]string) *MockContainer
 // WithStatusConditions sets the conditioned status.
 func (tc *MockContainer) WithStatusConditions(c ...runtimev1alpha1.Condition) *MockContainer {
 	tc.Status.SetConditions(c...)
-	return tc
-}
-
-// WithStatusBindingPhase sets the binding phase.
-func (tc *MockContainer) WithStatusBindingPhase(p runtimev1alpha1.BindingPhase) *MockContainer {
-	tc.Status.SetBindingPhase(p)
 	return tc
 }

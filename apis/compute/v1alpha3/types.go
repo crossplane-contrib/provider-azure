@@ -23,13 +23,6 @@ import (
 )
 
 const (
-	// ClusterProvisioningStateSucceeded is the state for a cluster that has
-	// succeeded provisioning.
-	ClusterProvisioningStateSucceeded = "Succeeded"
-
-	// DefaultReclaimPolicy is the default reclaim policy to use.
-	DefaultReclaimPolicy = runtimev1alpha1.ReclaimRetain
-
 	// DefaultNodeCount is the default node count for a cluster.
 	DefaultNodeCount = 1
 )
@@ -119,7 +112,6 @@ type AKSClusterStatus struct {
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="ENDPOINT",type="string",JSONPath=".status.endpoint"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
 // +kubebuilder:subresource:status
@@ -138,38 +130,4 @@ type AKSClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AKSCluster `json:"items"`
-}
-
-// An AKSClusterClassSpecTemplate is a template for the spec of a dynamically
-// provisioned AKSCluster.
-type AKSClusterClassSpecTemplate struct {
-	runtimev1alpha1.ClassSpecTemplate `json:",inline"`
-	AKSClusterParameters              `json:",inline"`
-}
-
-// +kubebuilder:object:root=true
-
-// An AKSClusterClass is a non-portable resource class. It defines the desired
-// spec of resource claims that use it to dynamically provision a managed
-// resource.
-// +kubebuilder:printcolumn:name="PROVIDER-REF",type="string",JSONPath=".specTemplate.providerRef.name"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".specTemplate.reclaimPolicy"
-// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,class,azure}
-type AKSClusterClass struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// SpecTemplate is a template for the spec of a dynamically provisioned
-	// AKSCluster.
-	SpecTemplate AKSClusterClassSpecTemplate `json:"specTemplate"`
-}
-
-// +kubebuilder:object:root=true
-
-// AKSClusterClassList contains a list of cloud memorystore resource classes.
-type AKSClusterClassList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AKSClusterClass `json:"items"`
 }

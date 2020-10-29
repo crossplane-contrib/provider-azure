@@ -1,0 +1,21 @@
+apiVersion: storage.azure.crossplane.io/v1alpha3
+kind: Account
+metadata:
+  name: exampleacc
+  labels:
+    example: "true"
+spec:
+  resourceGroupName: example-rg
+  storageAccountSpec:
+    kind: Storage
+    location: West US 2
+    sku:
+      name: Standard_LRS
+      tier: Standard
+    tags:
+      application: crossplane
+  providerConfigRef:
+    name: example
+  writeConnectionSecretToRef:
+    namespace: crossplane-system
+    name: exampleacc

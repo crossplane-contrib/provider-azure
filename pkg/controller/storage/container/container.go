@@ -176,7 +176,7 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 
 	// set owner reference on the container to storage account, thus
 	// if the account is delete - container is garbage collected as well
-	or := meta.AsOwner(meta.ReferenceTo(acct, v1alpha3.AccountGroupVersionKind))
+	or := meta.AsOwner(meta.TypedReferenceTo(acct, v1alpha3.AccountGroupVersionKind))
 	or.BlockOwnerDeletion = to.BoolPtr(true)
 	meta.AddOwnerReference(c, or)
 
@@ -222,7 +222,7 @@ type containerSyncdeleter struct {
 
 func (csd *containerSyncdeleter) delete(ctx context.Context) (reconcile.Result, error) {
 	csd.container.Status.SetConditions(runtimev1alpha1.Deleting())
-	if csd.container.Spec.ReclaimPolicy == runtimev1alpha1.ReclaimDelete {
+	if csd.container.Spec.DeletionPolicy == runtimev1alpha1.DeletionDelete {
 		if err := csd.Delete(ctx); err != nil && !azure.IsNotFound(err) {
 			csd.container.Status.SetConditions(runtimev1alpha1.ReconcileError(err))
 			return resultRequeue, csd.kube.Status().Update(ctx, csd.container)
@@ -280,7 +280,6 @@ func (ccu *containerCreateUpdater) create(ctx context.Context) (reconcile.Result
 	}
 
 	container.Status.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
-	resource.SetBindable(container)
 	return reconcile.Result{}, ccu.kube.Status().Update(ctx, ccu.container)
 }
 
@@ -296,6 +295,5 @@ func (ccu *containerCreateUpdater) update(ctx context.Context, accessType *azblo
 	}
 
 	container.Status.SetConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess())
-	resource.SetBindable(container)
 	return requeueOnSuccess, ccu.kube.Status().Update(ctx, ccu.container)
 }

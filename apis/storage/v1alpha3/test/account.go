@@ -18,7 +18,6 @@ package test
 
 import (
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -78,27 +77,15 @@ func (ta *MockAccount) WithFinalizers(f []string) *MockAccount {
 	return ta
 }
 
-// WithSpecClassRef set class reference
-func (ta *MockAccount) WithSpecClassRef(ref *corev1.ObjectReference) *MockAccount {
-	ta.Spec.ClassReference = ref
-	return ta
-}
-
-// WithSpecClaimRef set class reference
-func (ta *MockAccount) WithSpecClaimRef(ref *corev1.ObjectReference) *MockAccount {
-	ta.Spec.ClaimReference = ref
-	return ta
-}
-
 // WithSpecProvider set a provider
 func (ta *MockAccount) WithSpecProvider(name string) *MockAccount {
 	ta.Spec.ProviderReference = &runtimev1alpha1.Reference{Name: name}
 	return ta
 }
 
-// WithSpecReclaimPolicy sets resource reclaim policy
-func (ta *MockAccount) WithSpecReclaimPolicy(policy runtimev1alpha1.ReclaimPolicy) *MockAccount {
-	ta.Spec.ReclaimPolicy = policy
+// WithSpecDeletionPolicy sets resource deletion policy
+func (ta *MockAccount) WithSpecDeletionPolicy(policy runtimev1alpha1.DeletionPolicy) *MockAccount {
+	ta.Spec.DeletionPolicy = policy
 	return ta
 }
 
@@ -137,11 +124,5 @@ func (ta *MockAccount) WithSpecWriteConnectionSecretToReference(ns, name string)
 // WithStatusConditions sets the storage account's conditioned status.
 func (ta *MockAccount) WithStatusConditions(c ...runtimev1alpha1.Condition) *MockAccount {
 	ta.Status.SetConditions(c...)
-	return ta
-}
-
-// WithStatusBindingPhase sets the storage account's binding phase.
-func (ta *MockAccount) WithStatusBindingPhase(p runtimev1alpha1.BindingPhase) *MockAccount {
-	ta.Status.SetBindingPhase(p)
 	return ta
 }
