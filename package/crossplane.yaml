@@ -2,6 +2,13 @@ apiVersion: meta.pkg.crossplane.io/v1alpha1
 kind: Provider
 metadata:
   name: provider-azure
+  annotations:
+    company: Crossplane
+    maintainer: Crossplane Maintainers <info@crossplane.io>
+    source: github.com/crossplane/provider-azure
+    license: Apache-2.0
+    description: |
+      provider-azure is the Crossplane infrastructure provider for Microsoft Azure.
 spec:
   controller:
     image: crossplane/provider-azure-controller:VERSION
