@@ -7,8 +7,26 @@ metadata:
     maintainer: Crossplane Maintainers <info@crossplane.io>
     source: github.com/crossplane/provider-azure
     license: Apache-2.0
+    descriptionShort: |
+      The Azure Crossplane provider enables infrastructure management for the
+      Microsoft Azure Cloud Platform.
+
     description: |
-      provider-azure is the Crossplane infrastructure provider for Microsoft Azure.
+      The Microsoft Azure Crossplane provider adds support for managing Azure
+      resources in Kubernetes.
+
+    readme: |
+      `provider-azure` is the Crossplane infrastructure provider for [Microsoft
+      Azure](https://azure.microsoft.com/).
+
+      Available resources and their fields can be found in the [CRD
+      Docs](https://doc.crds.dev/github.com/crossplane/provider-azure).
+
+      If you encounter an issue please reach out on
+      [slack.crossplane.io](https://slack.crossplane.io) and create an issue in
+      the [crossplane/provider-azure](https://github.com/crossplane/provider-azure)
+      repo.
+
 spec:
   controller:
     image: crossplane/provider-azure-controller:VERSION
