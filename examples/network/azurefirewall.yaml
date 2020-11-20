@@ -1,0 +1,53 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: AzureFirewall
+metadata:
+  name: cerberus-firewall-cp
+status:
+  id: d5e6f50a
+  resourceGuid: 1234567890
+spec:
+  location: westus
+  reclaimPolicy: Delete
+  resourceGroupName: Cerberus_Squad_FW_Test_Shrey
+  providerRef:
+    name: azure-provider
+  resourceGroupNameRef:
+    name: Cerberus_Squad_FW_Test_Shrey
+  name: cerb-cp-fw
+  type: Microsoft.Network/azureFirewalls
+  properties:
+    threatIntelMode: Alert
+    ipConfigurations:
+      - name: CerbFWPubIP
+        properties: 
+          privateIPAddress: 172.19.2.4
+          subnet:
+            id: /subscriptions/1234567890/resourceGroups/Cerberus_Squad_FW_Test_Shrey/providers/Microsoft.Network/virtualNetworks/Cerb-CP-FW-Test-Vnet/subnets/AzureFirewallSubnet
+          publicIPAddress:
+            id: /subscriptions/1234567890/resourceGroups/cerberus-squad-crossplane-poc/providers/Microsoft.Network/publicIPAddresses/CerbFWPubIp
+    natRuleCollections:
+      - name: cerb-fw-nat-rule
+        properties:
+          priority: 110
+          action: Dnat 
+          rules: 
+            - name: SSH
+              description: 'Some SSH DNAT actions'
+              sourceAddresses: ['*']
+              destinationAddresses: ['40.81.15.247']
+              destinationPorts: ['220']
+              protocols: ['TCP']
+              translatedAddress: '172.23.1.4'
+              translatedPort: '22'
+    networkRuleCollections:
+      - name: PostgreDB
+        properties:
+          priority: 100
+          action: Allow
+          rules:
+            - name: postgredb
+              description: 'Some network rule actions'
+              protocols: ['Any']
+              sourceAddresses: ['*']
+              destinationAddresses: ['Sql']
+              destinationPorts: ['5432']
