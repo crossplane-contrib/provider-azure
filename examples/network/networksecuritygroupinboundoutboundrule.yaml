@@ -1,0 +1,38 @@
+apiVersion: azure.crossplane.io/v1alpha3
+kind: SecurityGroup
+metadata:
+  name: cerberus-securitygrp
+status:
+  id: d5e6f50a
+  resourceGuid: 1234567890
+spec:
+  location: eastus
+  reclaimPolicy: Delete
+  resourceGroupName: cerberus_squad
+  providerRef:
+    name: azure-provider
+  resourceGroupNameRef:
+    name: cerberus_squad
+  properties:
+    securityRules:
+      - name: NewRule_cerb_sec_out
+        properties: 
+          protocol: Tcp
+          sourcePortRange: '8080'
+          access: Deny
+          priority: 130
+          direction: Outbound
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+      - name: NewRule_cerb_sec_in
+        properties: 
+          protocol: Tcp
+          sourcePortRange: '8080'
+          access: Allow
+          priority: 150
+          direction: Inbound
+          destinationPortRange: '80'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          
