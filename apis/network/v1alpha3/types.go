@@ -218,7 +218,6 @@ type Subnet struct {
 }
 
 // +kubebuilder:object:root=true
-
 // SubnetList contains a list of Subnet items
 type SubnetList struct {
 	metav1.TypeMeta `json:",inline"`
