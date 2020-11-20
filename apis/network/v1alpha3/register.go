@@ -53,7 +53,16 @@ var (
 	SubnetGroupVersionKind = SchemeGroupVersion.WithKind(SubnetKind)
 )
 
+// AzureFirewall type Metadata.
+var (
+	AzureFirewallKind             = reflect.TypeOf(AzureFirewall{}).Name()
+	AzureFirewallGroupKind        = schema.GroupKind{Group: Group, Kind: AzureFirewallKind}.String()
+	AzureFirewallKindAPIVersion   = AzureFirewallKind + "." + SchemeGroupVersion.String()
+	AzureFirewallGroupVersionKind = SchemeGroupVersion.WithKind(AzureFirewallKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&VirtualNetwork{}, &VirtualNetworkList{})
 	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
+	SchemeBuilder.Register(&AzureFirewall{}, &AzureFirewallList{})
 }
