@@ -89,7 +89,7 @@ type VirtualNetworkStatus struct {
 	// ID of this VirtualNetwork.
 	ID string `json:"id,omitempty"`
 
-	// Etag - A unique read-only string that changes whenever the resource is
+	// Etag - A unique string that changes whenever the resource is
 	// updated.
 	Etag string `json:"etag,omitempty"`
 
@@ -233,7 +233,6 @@ type SubnetList struct {
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
@@ -243,7 +242,6 @@ type AzureFirewall struct {
 
 	Spec   AzureFirewallSpec   `json:"spec"`
 	Status AzureFirewallStatus `json:"status,omitempty"`
-	///Properties SecurityGroupPropertiesFormat   `json:"properties,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -272,7 +270,7 @@ type AzureFirewallSpec struct {
 	// Location - Resource location.
 	Location string `json:"location"`
 
-	//AzureFirewallPropertiesFormat - Properties of AzureFirewall
+	// AzureFirewallPropertiesFormat - Properties of AzureFirewall
 	AzureFirewallPropertiesFormat `json:"properties,omitempty"`
 
 	// Tags - Resource tags.
@@ -282,18 +280,17 @@ type AzureFirewallSpec struct {
 	// Zones - A list of availability zones denoting where the resource needs to come from.
 	Zones []string `json:"zones,omitempty"`
 
-	// Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+	// Etag - Gets a unique string that changes whenever the resource is updated.
 	Etag string `json:"etag,omitempty"`
 
 	// ID - Resource ID.
 	ID string `json:"id,omitempty"`
 
-	// Name - READ-ONLY; Resource name.
+	// Name - Resource name.
 	Name string `json:"name,omitempty"`
 
-	// Type - READ-ONLY; Resource type.
+	// Type - Resource type.
 	Type string `json:"type,omitempty"`
-	// Location - Resource location.
 }
 
 // AzureFirewallPropertiesFormat properties of the Azure Firewall.
@@ -314,7 +311,7 @@ type AzureFirewallPropertiesFormat struct {
 	VirtualHub *SubResource `json:"virtualHub,omitempty"`
 	// FirewallPolicy - The firewallPolicy associated with this azure firewall.
 	FirewallPolicy *SubResource `json:"firewallPolicy,omitempty"`
-	// HubIPAddresses - READ-ONLY; IP addresses associated with AzureFirewall.
+	// HubIPAddresses - IP addresses associated with AzureFirewall.
 	HubIPAddresses *HubIPAddresses `json:"hubIpAddresses,omitempty"`
 }
 
@@ -324,7 +321,7 @@ type AzureFirewallIPConfiguration struct {
 	AzureFirewallIPConfigurationPropertiesFormat AzureFirewallIPConfigurationPropertiesFormat `json:"properties,omitempty"`
 	// Name - Name of the resource that is unique within a resource group. This name can be used to access the resource.
 	Name *string `json:"name,omitempty"`
-	// Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
+	// Etag - A unique string that changes whenever the resource is updated.
 	Etag *string `json:"etag,omitempty"`
 	// ID - Resource ID.
 	ID *string `json:"id,omitempty"`
@@ -332,7 +329,7 @@ type AzureFirewallIPConfiguration struct {
 
 // AzureFirewallIPConfigurationPropertiesFormat properties of IP configuration of an Azure Firewall.
 type AzureFirewallIPConfigurationPropertiesFormat struct {
-	// PrivateIPAddress - READ-ONLY; The Firewall Internal Load Balancer IP to be used as the next hop in User Defined Routes.
+	// PrivateIPAddress - The Firewall Internal Load Balancer IP to be used as the next hop in User Defined Routes.
 	PrivateIPAddress *string `json:"privateIPAddress,omitempty"`
 	// Subnet - Reference of the subnet resource. This resource must be named 'AzureFirewallSubnet'.
 	Subnet *SubResource `json:"subnet,omitempty"`
@@ -376,7 +373,7 @@ type AzureFirewallStatus struct {
 	// ID of this AzureFirewall.
 	ID string `json:"id,omitempty"`
 
-	// Etag - A unique read-only string that changes whenever the resource is
+	// Etag - A unique string that changes whenever the resource is
 	// updated.
 	Etag string `json:"etag,omitempty"`
 
@@ -426,7 +423,7 @@ type AzureFirewallNatRuleCollection struct {
 	Properties AzureFirewallNatRuleCollectionProperties `json:"properties,omitempty"`
 	// Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
 	Name string `json:"name,omitempty"`
-	// Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+	// Etag - Gets a unique string that changes whenever the resource is updated.
 	Etag string `json:"etag,omitempty"`
 	// ID - Resource ID.
 	ID string `json:"id,omitempty"`
@@ -438,7 +435,7 @@ type AzureFirewallNetworkRuleCollection struct {
 	Properties AzureFirewallNetworkRuleCollectionPropertiesFormat `json:"properties,omitempty"`
 	// Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
 	Name string `json:"name,omitempty"`
-	// Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+	// Etag - Gets a unique string that changes whenever the resource is updated.
 	Etag string `json:"etag,omitempty"`
 	// ID - Resource ID.
 	ID string `json:"id,omitempty"`
