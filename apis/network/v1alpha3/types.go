@@ -296,7 +296,7 @@ type AzureFirewallSpec struct {
 // AzureFirewallPropertiesFormat properties of the Azure Firewall.
 type AzureFirewallPropertiesFormat struct {
 	// ApplicationRuleCollections - Collection of application rule collections used by Azure Firewall.
-	//ApplicationRuleCollections *[]AzureFirewallApplicationRuleCollection `json:"applicationRuleCollections,omitempty"`
+	ApplicationRuleCollections *[]AzureFirewallApplicationRuleCollection `json:"applicationRuleCollections,omitempty"`
 	// NatRuleCollections - Collection of NAT rule collections used by Azure Firewall.
 	NatRuleCollections *[]AzureFirewallNatRuleCollection `json:"natRuleCollections,omitempty"`
 	// NetworkRuleCollections - Collection of network rule collections used by Azure Firewall.
@@ -313,6 +313,54 @@ type AzureFirewallPropertiesFormat struct {
 	FirewallPolicy *SubResource `json:"firewallPolicy,omitempty"`
 	// HubIPAddresses - IP addresses associated with AzureFirewall.
 	HubIPAddresses *HubIPAddresses `json:"hubIpAddresses,omitempty"`
+}
+
+// AzureFirewallApplicationRuleCollection application rule collection resource.
+type AzureFirewallApplicationRuleCollection struct {
+	// AzureFirewallApplicationRuleCollectionPropertiesFormat - Properties of the azure firewall application rule collection.
+	Properties AzureFirewallApplicationRuleCollectionPropertiesFormat `json:"properties,omitempty"`
+	// Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
+	Name string `json:"name,omitempty"`
+	// Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+	// ID - Resource ID.
+	ID string `json:"id,omitempty"`
+}
+
+// AzureFirewallApplicationRuleCollectionPropertiesFormat properties of the application rule collection.
+type AzureFirewallApplicationRuleCollectionPropertiesFormat struct {
+	// Priority - Priority of the application rule collection resource.
+	Priority int32 `json:"priority,omitempty"`
+	// Action - The action type of a rule collection.
+	Action string `json:"action,omitempty"`
+	// Rules - Collection of rules used by a application rule collection.
+	Rules []AzureFirewallApplicationRule `json:"rules,omitempty"`
+	// ProvisioningState - The provisioning state of the resource. Possible values include: 'Succeeded', 'Updating', 'Deleting', 'Failed'
+	ProvisioningState string `json:"provisioningState,omitempty"`
+}
+
+// AzureFirewallApplicationRule properties of an application rule.
+type AzureFirewallApplicationRule struct {
+	// Name - Name of the application rule.
+	Name string `json:"name,omitempty"`
+	// Description - Description of the rule.
+	Description string `json:"description,omitempty"`
+	// SourceAddresses - List of source IP addresses for this rule.
+	SourceAddresses []string `json:"sourceAddresses,omitempty"`
+	// Protocols - Array of ApplicationRuleProtocols.
+	Protocols []AzureFirewallApplicationRuleProtocol `json:"protocols,omitempty"`
+	// TargetFqdns - List of FQDNs for this rule.
+	TargetFqdns []string `json:"targetFqdns,omitempty"`
+	// FqdnTags - List of FQDN Tags for this rule.
+	FqdnTags []string `json:"fqdnTags,omitempty"`
+}
+
+// AzureFirewallApplicationRuleProtocol properties of the application rule protocol.
+type AzureFirewallApplicationRuleProtocol struct {
+	// ProtocolType - Protocol type. Possible values include: 'AzureFirewallApplicationRuleProtocolTypeHTTP', 'AzureFirewallApplicationRuleProtocolTypeHTTPS'
+	ProtocolType string `json:"protocolType,omitempty"`
+	// Port - Port number for the protocol, cannot be greater than 64000. This field is optional.
+	Port int32 `json:"port,omitempty"`
 }
 
 // AzureFirewallIPConfiguration IP configuration of an Azure Firewall.
@@ -342,15 +390,15 @@ type AzureFirewallIPConfigurationPropertiesFormat struct {
 // SubResource reference to another subresource.
 type SubResource struct {
 	// ID - Resource ID.
-	ID *string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 }
 
 // HubIPAddresses IP addresses associated with azure firewall.
 type HubIPAddresses struct {
 	// PublicIPAddresses - List of Public IP addresses associated with azure firewall.
-	PublicIPAddresses *[]AzureFirewallPublicIPAddress `json:"publicIPAddresses,omitempty"`
+	PublicIPAddresses []AzureFirewallPublicIPAddress `json:"publicIPAddresses,omitempty"`
 	// PrivateIPAddress - Private IP Address associated with azure firewall.
-	PrivateIPAddress *string `json:"privateIPAddress,omitempty"`
+	PrivateIPAddress string `json:"privateIPAddress,omitempty"`
 }
 
 // AzureFirewallPublicIPAddress public IP Address associated with azure firewall.

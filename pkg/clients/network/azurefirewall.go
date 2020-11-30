@@ -25,7 +25,6 @@ import (
 // UpdateAzureFirewallStatusFromAzure updates the status related to the external
 // Azure Firewall in the AzureFirewallStatus
 func UpdateAzureFirewallStatusFromAzure(v *v1alpha3.AzureFirewall, az networkmgmt.AzureFirewall) {
-
 	v.Status.State = toStringProvisioningState(az.ProvisioningState)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Etag = azure.ToString(az.Etag)
@@ -39,8 +38,8 @@ func toStringProvisioningState(provisioningState networkmgmt.ProvisioningState) 
 func setHubIpAddresses(addresses *v1alpha3.HubIPAddresses) *networkmgmt.HubIPAddresses {
 	var hubIpAddresses = new(networkmgmt.HubIPAddresses)
 	if nil != addresses {
-		hubIpAddresses.PrivateIPAddress = addresses.PrivateIPAddress
-		for _, publicIpAddress := range *addresses.PublicIPAddresses {
+		hubIpAddresses.PrivateIPAddress = azure.ToStringPtr(addresses.PrivateIPAddress)
+		for _, publicIpAddress := range addresses.PublicIPAddresses {
 			var azureFirewallPublicIPAddress = networkmgmt.AzureFirewallPublicIPAddress{}
 			azureFirewallPublicIPAddress.Address = publicIpAddress.Address
 			*hubIpAddresses.PublicIPAddresses = append(*hubIpAddresses.PublicIPAddresses, azureFirewallPublicIPAddress)
@@ -77,9 +76,9 @@ func setIPConfigurations(configurations *[]v1alpha3.AzureFirewallIPConfiguration
 
 func setSubResource(sr *v1alpha3.SubResource) *networkmgmt.SubResource {
 	if nil != sr {
-		if nil != sr.ID {
+		if nil != azure.ToStringPtr(sr.ID) {
 			var subResource = new(networkmgmt.SubResource)
-			subResource.ID = sr.ID
+			subResource.ID = azure.ToStringPtr(sr.ID)
 			return subResource
 		}
 	}
@@ -87,7 +86,6 @@ func setSubResource(sr *v1alpha3.SubResource) *networkmgmt.SubResource {
 }
 
 func AzureFirewallNeedsUpdate(firewall *v1alpha3.AzureFirewall, az networkmgmt.AzureFirewall) bool {
-
 	if !reflect.DeepEqual(firewall.Name, az.Name) {
 		return true
 	}
@@ -124,8 +122,9 @@ func AzureFirewallNeedsUpdate(firewall *v1alpha3.AzureFirewall, az networkmgmt.A
 	if !reflect.DeepEqual(firewall.Spec.NetworkRuleCollections, az.AzureFirewallPropertiesFormat.NetworkRuleCollections) {
 		return true
 	}
-	//TODO: Azure firewall rules needed to added here once completed with structs
-
+	if !reflect.DeepEqual(firewall.Spec.ApplicationRuleCollections, az.AzureFirewallPropertiesFormat.ApplicationRuleCollections) {
+		return true
+	}
 	return false
 }
 
@@ -140,17 +139,56 @@ func NewAzureFirewallParameters(v *v1alpha3.AzureFirewall) networkmgmt.AzureFire
 		Location: azure.ToStringPtr(v.Spec.Location),
 		Tags:     azure.ToStringPtrMap(v.Spec.Tags),
 		AzureFirewallPropertiesFormat: &networkmgmt.AzureFirewallPropertiesFormat{
-			//ApplicationRuleCollections: nil,
-			NatRuleCollections:     setNatRulesCollections(v.Spec.NatRuleCollections),
-			NetworkRuleCollections: setNetworkRulesCollections(v.Spec.NetworkRuleCollections),
-			IPConfigurations:       setIPConfigurations(v.Spec.IPConfigurations),
-			ProvisioningState:      networkmgmt.ProvisioningState(v.Spec.ProvisioningState),
-			ThreatIntelMode:        networkmgmt.AzureFirewallThreatIntelMode(v.Spec.ThreatIntelMode),
-			VirtualHub:             setSubResource(v.Spec.VirtualHub),
-			FirewallPolicy:         setSubResource(v.Spec.FirewallPolicy),
-			HubIPAddresses:         setHubIpAddresses(v.Spec.HubIPAddresses),
+			ApplicationRuleCollections: setApplicationRulesCollections(v.Spec.ApplicationRuleCollections),
+			NatRuleCollections:         setNatRulesCollections(v.Spec.NatRuleCollections),
+			NetworkRuleCollections:     setNetworkRulesCollections(v.Spec.NetworkRuleCollections),
+			IPConfigurations:           setIPConfigurations(v.Spec.IPConfigurations),
+			ProvisioningState:          networkmgmt.ProvisioningState(v.Spec.ProvisioningState),
+			ThreatIntelMode:            networkmgmt.AzureFirewallThreatIntelMode(v.Spec.ThreatIntelMode),
+			VirtualHub:                 setSubResource(v.Spec.VirtualHub),
+			FirewallPolicy:             setSubResource(v.Spec.FirewallPolicy),
+			HubIPAddresses:             setHubIpAddresses(v.Spec.HubIPAddresses),
 		},
 	}
+}
+
+func setApplicationRulesCollections(applicationRulesCollections *[]v1alpha3.AzureFirewallApplicationRuleCollection) *[]networkmgmt.AzureFirewallApplicationRuleCollection {
+	if nil != applicationRulesCollections {
+		var afarc = new([]networkmgmt.AzureFirewallApplicationRuleCollection)
+		for _, arc := range *applicationRulesCollections {
+			var applicationRuleCollection = networkmgmt.AzureFirewallApplicationRuleCollection{}
+			applicationRuleCollection.ID = azure.ToStringPtr(arc.ID)
+			applicationRuleCollection.Name = azure.ToStringPtr(arc.Name)
+			applicationRuleCollection.Etag = azure.ToStringPtr(arc.Etag)
+			applicationRuleCollection.AzureFirewallApplicationRuleCollectionPropertiesFormat = &networkmgmt.AzureFirewallApplicationRuleCollectionPropertiesFormat{
+				Priority:          azure.ToInt32Ptr(int(arc.Properties.Priority)),
+				Action:            &networkmgmt.AzureFirewallRCAction{Type: networkmgmt.AzureFirewallRCActionType(arc.Properties.Action)},
+				Rules:             setApplicationRules(arc.Properties.Rules),
+				ProvisioningState: networkmgmt.ProvisioningState(arc.Properties.ProvisioningState),
+			}
+			*afarc = append(*afarc, applicationRuleCollection)
+		}
+		return afarc
+	}
+	return nil
+}
+
+func setApplicationRules(rules []v1alpha3.AzureFirewallApplicationRule) *[]networkmgmt.AzureFirewallApplicationRule {
+	if nil != rules {
+		var afar = new([]networkmgmt.AzureFirewallApplicationRule)
+		for _, rule := range rules {
+			var r = networkmgmt.AzureFirewallApplicationRule{}
+			r.Name = azure.ToStringPtr(rule.Name)
+			r.Description = azure.ToStringPtr(rule.Description)
+			r.FqdnTags = azure.ToStringArrayPtr(rule.FqdnTags)
+			r.SourceAddresses = azure.ToStringArrayPtr(rule.SourceAddresses)
+			r.TargetFqdns = azure.ToStringArrayPtr(rule.TargetFqdns)
+			r.Protocols = setApplicationRuleProtocols(rule.Protocols)
+			*afar = append(*afar, r)
+		}
+		return afar
+	}
+	return nil
 }
 
 func setNetworkRulesCollections(networkRulesCollections *[]v1alpha3.AzureFirewallNetworkRuleCollection) *[]networkmgmt.AzureFirewallNetworkRuleCollection {
@@ -242,6 +280,20 @@ func setProtocols(protocols []string) *[]networkmgmt.AzureFirewallNetworkRulePro
 			*afnrp = append(*afnrp, networkmgmt.AzureFirewallNetworkRuleProtocol(protocol))
 		}
 		return afnrp
+	}
+	return nil
+}
+
+func setApplicationRuleProtocols(protocols []v1alpha3.AzureFirewallApplicationRuleProtocol) *[]networkmgmt.AzureFirewallApplicationRuleProtocol {
+	if nil != protocols {
+		var afarp = new([]networkmgmt.AzureFirewallApplicationRuleProtocol)
+		for _, protocol := range protocols {
+			var p = networkmgmt.AzureFirewallApplicationRuleProtocol{}
+			p.Port = azure.ToInt32Ptr(int(protocol.Port))
+			p.ProtocolType = networkmgmt.AzureFirewallApplicationRuleProtocolType(protocol.ProtocolType)
+			*afarp = append(*afarp, p)
+		}
+		return afarp
 	}
 	return nil
 }

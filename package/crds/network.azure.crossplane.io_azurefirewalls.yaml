@@ -31,9 +31,6 @@ spec:
     - jsonPath: .spec.location
       name: LOCATION
       type: string
-    - jsonPath: .spec.reclaimPolicy
-      name: RECLAIM-POLICY
-      type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
@@ -60,7 +57,7 @@ spec:
                 - Delete
                 type: string
               etag:
-                description: Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+                description: Etag - Gets a unique string that changes whenever the resource is updated.
                 type: string
               id:
                 description: ID - Resource ID.
@@ -69,11 +66,83 @@ spec:
                 description: Location - Resource location.
                 type: string
               name:
-                description: Name - READ-ONLY; Resource name.
+                description: Name - Resource name.
                 type: string
               properties:
                 description: AzureFirewallPropertiesFormat - Properties of AzureFirewall
                 properties:
+                  applicationRuleCollections:
+                    description: ApplicationRuleCollections - Collection of application rule collections used by Azure Firewall.
+                    items:
+                      description: AzureFirewallApplicationRuleCollection application rule collection resource.
+                      properties:
+                        etag:
+                          description: Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+                          type: string
+                        id:
+                          description: ID - Resource ID.
+                          type: string
+                        name:
+                          description: Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
+                          type: string
+                        properties:
+                          description: AzureFirewallApplicationRuleCollectionPropertiesFormat - Properties of the azure firewall application rule collection.
+                          properties:
+                            action:
+                              description: Action - The action type of a rule collection.
+                              type: string
+                            priority:
+                              description: Priority - Priority of the application rule collection resource.
+                              format: int32
+                              type: integer
+                            provisioningState:
+                              description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
+                              type: string
+                            rules:
+                              description: Rules - Collection of rules used by a application rule collection.
+                              items:
+                                description: AzureFirewallApplicationRule properties of an application rule.
+                                properties:
+                                  description:
+                                    description: Description - Description of the rule.
+                                    type: string
+                                  fqdnTags:
+                                    description: FqdnTags - List of FQDN Tags for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                  name:
+                                    description: Name - Name of the application rule.
+                                    type: string
+                                  protocols:
+                                    description: Protocols - Array of ApplicationRuleProtocols.
+                                    items:
+                                      description: AzureFirewallApplicationRuleProtocol properties of the application rule protocol.
+                                      properties:
+                                        port:
+                                          description: Port - Port number for the protocol, cannot be greater than 64000. This field is optional.
+                                          format: int32
+                                          type: integer
+                                        protocolType:
+                                          description: 'ProtocolType - Protocol type. Possible values include: ''AzureFirewallApplicationRuleProtocolTypeHTTP'', ''AzureFirewallApplicationRuleProtocolTypeHTTPS'''
+                                          type: string
+                                      type: object
+                                    type: array
+                                  sourceAddresses:
+                                    description: SourceAddresses - List of source IP addresses for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                  targetFqdns:
+                                    description: TargetFqdns - List of FQDNs for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    type: array
                   firewallPolicy:
                     description: FirewallPolicy - The firewallPolicy associated with this azure firewall.
                     properties:
@@ -82,7 +151,7 @@ spec:
                         type: string
                     type: object
                   hubIpAddresses:
-                    description: HubIPAddresses - READ-ONLY; IP addresses associated with AzureFirewall.
+                    description: HubIPAddresses - IP addresses associated with AzureFirewall.
                     properties:
                       privateIPAddress:
                         description: PrivateIPAddress - Private IP Address associated with azure firewall.
@@ -104,7 +173,7 @@ spec:
                       description: AzureFirewallIPConfiguration IP configuration of an Azure Firewall.
                       properties:
                         etag:
-                          description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
+                          description: Etag - A unique string that changes whenever the resource is updated.
                           type: string
                         id:
                           description: ID - Resource ID.
@@ -116,7 +185,7 @@ spec:
                           description: AzureFirewallIPConfigurationPropertiesFormat - Properties of the azure firewall IP configuration.
                           properties:
                             privateIPAddress:
-                              description: PrivateIPAddress - READ-ONLY; The Firewall Internal Load Balancer IP to be used as the next hop in User Defined Routes.
+                              description: PrivateIPAddress - The Firewall Internal Load Balancer IP to be used as the next hop in User Defined Routes.
                               type: string
                             provisioningState:
                               description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
@@ -139,12 +208,12 @@ spec:
                       type: object
                     type: array
                   natRuleCollections:
-                    description: ApplicationRuleCollections - Collection of application rule collections used by Azure Firewall. ApplicationRuleCollections *[]AzureFirewallApplicationRuleCollection `json:"applicationRuleCollections,omitempty"` NatRuleCollections - Collection of NAT rule collections used by Azure Firewall.
+                    description: NatRuleCollections - Collection of NAT rule collections used by Azure Firewall.
                     items:
                       description: AzureFirewallNatRuleCollection NAT rule collection resource.
                       properties:
                         etag:
-                          description: Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+                          description: Etag - Gets a unique string that changes whenever the resource is updated.
                           type: string
                         id:
                           description: ID - Resource ID.
@@ -213,7 +282,7 @@ spec:
                       description: AzureFirewallNetworkRuleCollection network rule collection resource.
                       properties:
                         etag:
-                          description: Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+                          description: Etag - Gets a unique string that changes whenever the resource is updated.
                           type: string
                         id:
                           description: ID - Resource ID.
@@ -332,7 +401,7 @@ spec:
                 description: Tags - Resource tags.
                 type: object
               type:
-                description: Type - READ-ONLY; Resource type.
+                description: Type - Resource type.
                 type: string
               writeConnectionSecretToRef:
                 description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
@@ -387,7 +456,7 @@ spec:
                   type: object
                 type: array
               etag:
-                description: Etag - A unique read-only string that changes whenever the resource is updated.
+                description: Etag - A unique string that changes whenever the resource is updated.
                 type: string
               id:
                 description: ID of this AzureFirewall.
