@@ -1,0 +1,489 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: azurefirewalls.network.azure.crossplane.io
+spec:
+  group: network.azure.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - azure
+    kind: AzureFirewall
+    listKind: AzureFirewallList
+    plural: azurefirewalls
+    singular: azurefirewall
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .status.state
+      name: STATE
+      type: string
+    - jsonPath: .spec.location
+      name: LOCATION
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha3
+    schema:
+      openAPIV3Schema:
+        description: Azure Firewall Structs A AzureFirewall is a managed resource that represents an Azure Firewall
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: A AzureFirewallSpec defines the desired state of a AzureFirewall.
+            properties:
+              deletionPolicy:
+                description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              etag:
+                description: Etag - Gets a unique string that changes whenever the resource is updated.
+                type: string
+              id:
+                description: ID - Resource ID.
+                type: string
+              location:
+                description: Location - Resource location.
+                type: string
+              name:
+                description: Name - Resource name.
+                type: string
+              properties:
+                description: AzureFirewallPropertiesFormat - Properties of AzureFirewall
+                properties:
+                  applicationRuleCollections:
+                    description: ApplicationRuleCollections - Collection of application rule collections used by Azure Firewall.
+                    items:
+                      description: AzureFirewallApplicationRuleCollection application rule collection resource.
+                      properties:
+                        etag:
+                          description: Etag - READ-ONLY; Gets a unique read-only string that changes whenever the resource is updated.
+                          type: string
+                        id:
+                          description: ID - Resource ID.
+                          type: string
+                        name:
+                          description: Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
+                          type: string
+                        properties:
+                          description: AzureFirewallApplicationRuleCollectionPropertiesFormat - Properties of the azure firewall application rule collection.
+                          properties:
+                            action:
+                              description: Action - The action type of a rule collection.
+                              type: string
+                            priority:
+                              description: Priority - Priority of the application rule collection resource.
+                              format: int32
+                              type: integer
+                            provisioningState:
+                              description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
+                              type: string
+                            rules:
+                              description: Rules - Collection of rules used by a application rule collection.
+                              items:
+                                description: AzureFirewallApplicationRule properties of an application rule.
+                                properties:
+                                  description:
+                                    description: Description - Description of the rule.
+                                    type: string
+                                  fqdnTags:
+                                    description: FqdnTags - List of FQDN Tags for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                  name:
+                                    description: Name - Name of the application rule.
+                                    type: string
+                                  protocols:
+                                    description: Protocols - Array of ApplicationRuleProtocols.
+                                    items:
+                                      description: AzureFirewallApplicationRuleProtocol properties of the application rule protocol.
+                                      properties:
+                                        port:
+                                          description: Port - Port number for the protocol, cannot be greater than 64000. This field is optional.
+                                          format: int32
+                                          type: integer
+                                        protocolType:
+                                          description: 'ProtocolType - Protocol type. Possible values include: ''AzureFirewallApplicationRuleProtocolTypeHTTP'', ''AzureFirewallApplicationRuleProtocolTypeHTTPS'''
+                                          type: string
+                                      type: object
+                                    type: array
+                                  sourceAddresses:
+                                    description: SourceAddresses - List of source IP addresses for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                  targetFqdns:
+                                    description: TargetFqdns - List of FQDNs for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    type: array
+                  firewallPolicy:
+                    description: FirewallPolicy - The firewallPolicy associated with this azure firewall.
+                    properties:
+                      id:
+                        description: ID - Resource ID.
+                        type: string
+                    type: object
+                  hubIpAddresses:
+                    description: HubIPAddresses - IP addresses associated with AzureFirewall.
+                    properties:
+                      privateIPAddress:
+                        description: PrivateIPAddress - Private IP Address associated with azure firewall.
+                        type: string
+                      publicIPAddresses:
+                        description: PublicIPAddresses - List of Public IP addresses associated with azure firewall.
+                        items:
+                          description: AzureFirewallPublicIPAddress public IP Address associated with azure firewall.
+                          properties:
+                            address:
+                              description: Address - Public IP Address value.
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  ipConfigurations:
+                    description: IPConfigurations - IP configuration of the Azure Firewall resource.
+                    items:
+                      description: AzureFirewallIPConfiguration IP configuration of an Azure Firewall.
+                      properties:
+                        etag:
+                          description: Etag - A unique string that changes whenever the resource is updated.
+                          type: string
+                        id:
+                          description: ID - Resource ID.
+                          type: string
+                        name:
+                          description: Name - Name of the resource that is unique within a resource group. This name can be used to access the resource.
+                          type: string
+                        properties:
+                          description: AzureFirewallIPConfigurationPropertiesFormat - Properties of the azure firewall IP configuration.
+                          properties:
+                            privateIPAddress:
+                              description: PrivateIPAddress - The Firewall Internal Load Balancer IP to be used as the next hop in User Defined Routes.
+                              type: string
+                            provisioningState:
+                              description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
+                              type: string
+                            publicIPAddress:
+                              description: PublicIPAddress - Reference of the PublicIP resource. This field is a mandatory input if subnet is not null.
+                              properties:
+                                id:
+                                  description: ID - Resource ID.
+                                  type: string
+                              type: object
+                            subnet:
+                              description: Subnet - Reference of the subnet resource. This resource must be named 'AzureFirewallSubnet'.
+                              properties:
+                                id:
+                                  description: ID - Resource ID.
+                                  type: string
+                              type: object
+                          type: object
+                      type: object
+                    type: array
+                  natRuleCollections:
+                    description: NatRuleCollections - Collection of NAT rule collections used by Azure Firewall.
+                    items:
+                      description: AzureFirewallNatRuleCollection NAT rule collection resource.
+                      properties:
+                        etag:
+                          description: Etag - Gets a unique string that changes whenever the resource is updated.
+                          type: string
+                        id:
+                          description: ID - Resource ID.
+                          type: string
+                        name:
+                          description: Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
+                          type: string
+                        properties:
+                          description: AzureFirewallNatRuleCollectionProperties - Properties of the azure firewall NAT rule collection.
+                          properties:
+                            action:
+                              description: Action - The action type of a NAT rule collection.
+                              type: string
+                            priority:
+                              description: Priority - Priority of the NAT rule collection resource.
+                              format: int32
+                              type: integer
+                            provisioningState:
+                              description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
+                              type: string
+                            rules:
+                              description: Rules - Collection of rules used by a NAT rule collection.
+                              items:
+                                description: Rules Structs AzureFirewallNatRule properties of a NAT rule.
+                                properties:
+                                  description:
+                                    description: Description - Description of the rule.
+                                    type: string
+                                  destinationAddresses:
+                                    description: DestinationAddresses - List of destination IP addresses for this rule. Supports IP ranges, prefixes, and service tags.
+                                    items:
+                                      type: string
+                                    type: array
+                                  destinationPorts:
+                                    description: DestinationPorts - List of destination ports.
+                                    items:
+                                      type: string
+                                    type: array
+                                  name:
+                                    description: Name - Name of the NAT rule.
+                                    type: string
+                                  protocols:
+                                    description: Protocols - Array of AzureFirewallNetworkRuleProtocols applicable to this NAT rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                  sourceAddresses:
+                                    description: SourceAddresses - List of source IP addresses for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                  translatedAddress:
+                                    description: TranslatedAddress - The translated address for this NAT rule.
+                                    type: string
+                                  translatedPort:
+                                    description: TranslatedPort - The translated port for this NAT rule.
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    type: array
+                  networkRuleCollections:
+                    description: NetworkRuleCollections - Collection of network rule collections used by Azure Firewall.
+                    items:
+                      description: AzureFirewallNetworkRuleCollection network rule collection resource.
+                      properties:
+                        etag:
+                          description: Etag - Gets a unique string that changes whenever the resource is updated.
+                          type: string
+                        id:
+                          description: ID - Resource ID.
+                          type: string
+                        name:
+                          description: Name - Gets name of the resource that is unique within a resource group. This name can be used to access the resource.
+                          type: string
+                        properties:
+                          description: AzureFirewallNetworkRuleCollectionPropertiesFormat - Properties of the azure firewall network rule collection.
+                          properties:
+                            action:
+                              description: Action - The action type of a rule collection.
+                              type: string
+                            priority:
+                              description: Priority - Priority of the network rule collection resource.
+                              format: int32
+                              type: integer
+                            provisioningState:
+                              description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
+                              type: string
+                            rules:
+                              description: Rules - Collection of rules used by a network rule collection.
+                              items:
+                                description: AzureFirewallNetworkRule properties of the network rule.
+                                properties:
+                                  description:
+                                    description: Description - Description of the rule.
+                                    type: string
+                                  destinationAddresses:
+                                    description: DestinationAddresses - List of destination IP addresses.
+                                    items:
+                                      type: string
+                                    type: array
+                                  destinationPorts:
+                                    description: DestinationPorts - List of destination ports.
+                                    items:
+                                      type: string
+                                    type: array
+                                  name:
+                                    description: Name - Name of the network rule.
+                                    type: string
+                                  protocols:
+                                    description: Protocols - Array of AzureFirewallNetworkRuleProtocols.
+                                    items:
+                                      type: string
+                                    type: array
+                                  sourceAddresses:
+                                    description: SourceAddresses - List of source IP addresses for this rule.
+                                    items:
+                                      type: string
+                                    type: array
+                                type: object
+                              type: array
+                          type: object
+                      type: object
+                    type: array
+                  provisioningState:
+                    description: 'ProvisioningState - The provisioning state of the resource. Possible values include: ''Succeeded'', ''Updating'', ''Deleting'', ''Failed'''
+                    type: string
+                  threatIntelMode:
+                    description: 'ThreatIntelMode - The operation mode for Threat Intelligence. Possible values include: ''AzureFirewallThreatIntelModeAlert'', ''AzureFirewallThreatIntelModeDeny'', ''AzureFirewallThreatIntelModeOff'''
+                    type: string
+                  virtualHub:
+                    description: VirtualHub - The virtualHub to which the firewall belongs.
+                    properties:
+                      id:
+                        description: ID - Resource ID.
+                        type: string
+                    type: object
+                type: object
+              providerConfigRef:
+                description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              providerRef:
+                description: 'ProviderReference specifies the provider that will be used to create, observe, update, and delete this managed resource. Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              resourceGroupName:
+                description: ResourceGroupName - Name of the SecurityGroup's resource group.
+                type: string
+              resourceGroupNameRef:
+                description: ResourceGroupNameRef - A reference to the the SecurityGroup's resource group.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              resourceGroupNameSelector:
+                description: ResourceGroupNameSelector - Select a reference to the the Azure Firewall resource group.
+                properties:
+                  matchControllerRef:
+                    description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+                    type: boolean
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: MatchLabels ensures an object with matching labels is selected.
+                    type: object
+                type: object
+              tags:
+                additionalProperties:
+                  type: string
+                description: Tags - Resource tags.
+                type: object
+              type:
+                description: Type - Resource type.
+                type: string
+              writeConnectionSecretToRef:
+                description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+              zones:
+                description: Zones - A list of availability zones denoting where the resource needs to come from.
+                items:
+                  type: string
+                type: array
+            required:
+            - location
+            type: object
+          status:
+            description: A AzureFirewallStatus represents the observed status of a AzureFirewall.
+            properties:
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time this condition transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A Message containing details about this condition's last transition from one status to another, if any.
+                      type: string
+                    reason:
+                      description: A Reason for this condition's last transition from one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True, False, or Unknown?
+                      type: string
+                    type:
+                      description: Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              etag:
+                description: Etag - A unique string that changes whenever the resource is updated.
+                type: string
+              id:
+                description: ID of this AzureFirewall.
+                type: string
+              message:
+                description: A Message providing detail about the state of this AzureFirewall, if any.
+                type: string
+              resourceGuid:
+                description: ResourceGUID - The GUID of this AzureFirewall.
+                type: string
+              state:
+                description: State of this SecurityGroup.
+                type: string
+              type:
+                description: Type of this AzureFirewall.
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

@@ -176,7 +176,7 @@ spec:
                   type: object
                 type: array
               etag:
-                description: Etag - A unique read-only string that changes whenever the resource is updated.
+                description: Etag - A unique string that changes whenever the resource is updated.
                 type: string
               id:
                 description: ID of this VirtualNetwork.
