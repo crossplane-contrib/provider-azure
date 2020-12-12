@@ -19,7 +19,7 @@ package test
 import (
 	"time"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
@@ -83,12 +83,12 @@ func (tc *MockContainer) WithFinalizers(f []string) *MockContainer {
 
 // WithSpecProviderRef sets spec account reference value
 func (tc *MockContainer) WithSpecProviderRef(name string) *MockContainer {
-	tc.Container.Spec.ProviderReference = &runtimev1alpha1.Reference{Name: name}
+	tc.Container.Spec.ProviderReference = &xpv1.Reference{Name: name}
 	return tc
 }
 
 // WithSpecDeletionPolicy sets spec deletion policy value
-func (tc *MockContainer) WithSpecDeletionPolicy(p runtimev1alpha1.DeletionPolicy) *MockContainer {
+func (tc *MockContainer) WithSpecDeletionPolicy(p xpv1.DeletionPolicy) *MockContainer {
 	tc.Container.Spec.DeletionPolicy = p
 	return tc
 }
@@ -106,7 +106,7 @@ func (tc *MockContainer) WithSpecMetadata(meta map[string]string) *MockContainer
 }
 
 // WithStatusConditions sets the conditioned status.
-func (tc *MockContainer) WithStatusConditions(c ...runtimev1alpha1.Condition) *MockContainer {
+func (tc *MockContainer) WithStatusConditions(c ...xpv1.Condition) *MockContainer {
 	tc.Status.SetConditions(c...)
 	return tc
 }

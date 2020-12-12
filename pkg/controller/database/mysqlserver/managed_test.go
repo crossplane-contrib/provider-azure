@@ -29,7 +29,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -235,8 +235,8 @@ func TestObserve(t *testing.T) {
 					ResourceExists:   true,
 					ResourceUpToDate: true,
 					ConnectionDetails: managed.ConnectionDetails{
-						runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(endpoint),
-						runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", admin, name)),
+						xpv1.ResourceCredentialsSecretEndpointKey: []byte(endpoint),
+						xpv1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", admin, name)),
 					},
 				},
 			},
@@ -329,7 +329,7 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				ec: managed.ExternalCreation{
-					ConnectionDetails: managed.ConnectionDetails{runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(password)},
+					ConnectionDetails: managed.ConnectionDetails{xpv1.ResourceCredentialsSecretPasswordKey: []byte(password)},
 				},
 			},
 		},

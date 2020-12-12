@@ -31,7 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
@@ -139,7 +139,7 @@ func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed
 
 	// NOTE(muvaf): When we implement the workload identity, we will only need to
 	// return a different type of option.ClientOption, which is WithTokenSource().
-	if s := pc.Spec.Credentials.Source; s != runtimev1alpha1.CredentialsSourceSecret {
+	if s := pc.Spec.Credentials.Source; s != xpv1.CredentialsSourceSecret {
 		return nil, authorizer, errors.Errorf(errFmtUnsupportedCredSource, s)
 	}
 

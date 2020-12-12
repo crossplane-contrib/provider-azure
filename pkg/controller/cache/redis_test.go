@@ -29,7 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -70,7 +70,7 @@ var (
 
 type redisResourceModifier func(*v1beta1.Redis)
 
-func withConditions(c ...runtimev1alpha1.Condition) redisResourceModifier {
+func withConditions(c ...xpv1.Condition) redisResourceModifier {
 	return func(r *v1beta1.Redis) { r.Status.ConditionedStatus.Conditions = c }
 }
 
@@ -89,8 +89,8 @@ func withPort(p int) redisResourceModifier {
 func instance(rm ...redisResourceModifier) *v1beta1.Redis {
 	r := &v1beta1.Redis{
 		Spec: v1beta1.RedisSpec{
-			ResourceSpec: runtimev1alpha1.ResourceSpec{
-				WriteConnectionSecretToReference: &runtimev1alpha1.SecretReference{
+			ResourceSpec: xpv1.ResourceSpec{
+				WriteConnectionSecretToReference: &xpv1.SecretReference{
 					Namespace: namespace,
 					Name:      connectionSecretName,
 				},
@@ -172,15 +172,15 @@ func TestObserve(t *testing.T) {
 					withProvisioningState(redisclient.ProvisioningStateSucceeded),
 					withHostName(hostName),
 					withPort(port),
-					withConditions(runtimev1alpha1.Available()),
+					withConditions(xpv1.Available()),
 				),
 				o: managed.ExternalObservation{
 					ResourceExists:   true,
 					ResourceUpToDate: false,
 					ConnectionDetails: managed.ConnectionDetails{
-						runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(hostName),
-						runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(port)),
-						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(primaryKey),
+						xpv1.ResourceCredentialsSecretEndpointKey: []byte(hostName),
+						xpv1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(port)),
+						xpv1.ResourceCredentialsSecretPasswordKey: []byte(primaryKey),
 					},
 				},
 			},
@@ -256,7 +256,7 @@ func TestObserve(t *testing.T) {
 			want: want{
 				cr: instance(
 					withProvisioningState(redisclient.ProvisioningStateCreating),
-					withConditions(runtimev1alpha1.Creating()),
+					withConditions(xpv1.Creating()),
 				),
 				o: managed.ExternalObservation{
 					ResourceUpToDate: false,
@@ -282,7 +282,7 @@ func TestObserve(t *testing.T) {
 			want: want{
 				cr: instance(
 					withProvisioningState(redisclient.ProvisioningStateDeleting),
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 				o: managed.ExternalObservation{
 					ResourceUpToDate: false,
@@ -308,7 +308,7 @@ func TestObserve(t *testing.T) {
 			want: want{
 				cr: instance(
 					withProvisioningState(redisclient.ProvisioningStateFailed),
-					withConditions(runtimev1alpha1.Unavailable()),
+					withConditions(xpv1.Unavailable()),
 				),
 				o: managed.ExternalObservation{
 					ResourceUpToDate: false,
@@ -363,7 +363,7 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				cr: instance(
-					withConditions(runtimev1alpha1.Creating()),
+					withConditions(xpv1.Creating()),
 				),
 			},
 		},
@@ -378,7 +378,7 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				cr: instance(
-					withConditions(runtimev1alpha1.Creating()),
+					withConditions(xpv1.Creating()),
 				),
 				err: errors.Wrap(errorBoom, errCreateFailed),
 			},
@@ -516,7 +516,7 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				cr: instance(
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 			},
 		},
@@ -531,7 +531,7 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				cr: instance(
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 			},
 		},
@@ -541,7 +541,7 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				cr: instance(
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 					withProvisioningState(redisclient.ProvisioningStateDeleting),
 				),
 			},
@@ -556,7 +556,7 @@ func TestDelete(t *testing.T) {
 				},
 			},
 			want: want{
-				cr:  instance(withConditions(runtimev1alpha1.Deleting())),
+				cr:  instance(withConditions(xpv1.Deleting())),
 				err: errors.Wrap(errorBoom, errDeleteFailed),
 			},
 		},

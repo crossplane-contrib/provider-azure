@@ -19,7 +19,7 @@ package v1alpha3
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 // FirewallRuleProperties defines the properties of an Azure SQL firewall rule.
@@ -43,8 +43,8 @@ type FirewallRuleObservation struct {
 
 // A FirewallRuleStatus represents the status of an Azure SQL firewall rule.
 type FirewallRuleStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
-	AtProvider                     FirewallRuleObservation `json:"atProvider,omitempty"`
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          FirewallRuleObservation `json:"atProvider,omitempty"`
 }
 
 // FirewallRuleParameters define the desired state of an Azure SQL firewall
@@ -54,20 +54,20 @@ type FirewallRuleParameters struct {
 	ServerName string `json:"serverName,omitempty"`
 
 	// ServerNameRef - A reference to the Firewall Rule's MySQLServer.
-	ServerNameRef *runtimev1alpha1.Reference `json:"serverNameRef,omitempty"`
+	ServerNameRef *xpv1.Reference `json:"serverNameRef,omitempty"`
 
 	// ServerNameSelector - Selects a MySQLServer to reference.
-	ServerNameSelector *runtimev1alpha1.Selector `json:"serverNameSelector,omitempty"`
+	ServerNameSelector *xpv1.Selector `json:"serverNameSelector,omitempty"`
 
 	// ResourceGroupName - Name of the Firewall Rule's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
 	// its name
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - Selects a ResourceGroup to reference.
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// FirewallRuleProperties - Resource properties.
 	FirewallRuleProperties `json:"properties"`
@@ -75,8 +75,8 @@ type FirewallRuleParameters struct {
 
 // A FirewallRuleSpec defines the desired state of an Azure SQL firewall rule.
 type FirewallRuleSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ForProvider                  FirewallRuleParameters `json:"forProvider"`
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       FirewallRuleParameters `json:"forProvider"`
 }
 
 // +kubebuilder:object:root=true

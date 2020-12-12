@@ -19,7 +19,7 @@ package v1beta1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 const (
@@ -66,11 +66,11 @@ type RedisParameters struct {
 
 	// ResourceGroupNameRef to fetch resource group name.
 	// +immutable
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector to select a reference to a resource group.
 	// +immutable
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// Sku - The SKU of the Redis cache to deploy.
 	SKU SKU `json:"sku"`
@@ -135,8 +135,8 @@ type RedisParameters struct {
 
 // A RedisSpec defines the desired state of a Redis.
 type RedisSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ForProvider                  RedisParameters `json:"forProvider"`
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       RedisParameters `json:"forProvider"`
 }
 
 // RedisObservation represents the observed state of the Redis object in Azure.
@@ -171,8 +171,8 @@ type RedisObservation struct {
 
 // A RedisStatus represents the observed state of a Redis.
 type RedisStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
-	AtProvider                     RedisObservation `json:"atProvider,omitempty"`
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          RedisObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

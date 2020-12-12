@@ -25,7 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -96,7 +96,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	network.UpdateVirtualNetworkStatusFromAzure(v, az)
 
-	v.SetConditions(runtimev1alpha1.Available())
+	v.SetConditions(xpv1.Available())
 
 	o := managed.ExternalObservation{
 		ResourceExists:    true,
@@ -112,7 +112,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotVirtualNetwork)
 	}
 
-	v.Status.SetConditions(runtimev1alpha1.Creating())
+	v.Status.SetConditions(xpv1.Creating())
 
 	vnet := network.NewVirtualNetworkParameters(v)
 	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), vnet); err != nil {
@@ -148,7 +148,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotVirtualNetwork)
 	}
 
-	mg.SetConditions(runtimev1alpha1.Deleting())
+	mg.SetConditions(xpv1.Deleting())
 
 	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v))
 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteVirtualNetwork)

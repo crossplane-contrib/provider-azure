@@ -12,7 +12,7 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.2.0
 	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
-	github.com/crossplane/crossplane-runtime v0.11.0
+	github.com/crossplane/crossplane-runtime v0.12.0
 	github.com/crossplane/crossplane-tools v0.0.0-20201007233256-88b291e145bb
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect

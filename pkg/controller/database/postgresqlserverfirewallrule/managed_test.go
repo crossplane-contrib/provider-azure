@@ -23,7 +23,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -49,7 +49,7 @@ const (
 
 type firewallRuleModifier func(*v1alpha3.PostgreSQLServerFirewallRule)
 
-func withConditions(c ...runtimev1alpha1.Condition) firewallRuleModifier {
+func withConditions(c ...xpv1.Condition) firewallRuleModifier {
 	return func(r *v1alpha3.PostgreSQLServerFirewallRule) { r.Status.ConditionedStatus.Conditions = c }
 }
 
@@ -146,7 +146,7 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				mg: firewallRule(
-					withConditions(runtimev1alpha1.Available()),
+					withConditions(xpv1.Available()),
 					withType(resourceType),
 					withID(resourceID),
 				),
@@ -218,7 +218,7 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				mg: firewallRule(
-					withConditions(runtimev1alpha1.Creating()),
+					withConditions(xpv1.Creating()),
 				),
 				err: errors.Wrap(errBoom, errCreatePostgreSQLServerFirewallRule),
 			},
@@ -234,7 +234,7 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				mg: firewallRule(
-					withConditions(runtimev1alpha1.Creating()),
+					withConditions(xpv1.Creating()),
 				),
 			},
 		},
@@ -369,7 +369,7 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				mg: firewallRule(
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 			},
 		},
@@ -386,7 +386,7 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				mg: firewallRule(
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 			},
 		},
@@ -401,7 +401,7 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				mg: firewallRule(
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 				err: errors.Wrap(errBoom, errDeletePostgreSQLServerFirewallRule),
 			},

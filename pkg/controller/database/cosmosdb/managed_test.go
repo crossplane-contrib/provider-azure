@@ -30,7 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -84,7 +84,7 @@ func (m *MockClient) Delete(ctx context.Context, resourceGroupName string, accou
 	return m.MockDelete(ctx, resourceGroupName, accountName)
 }
 
-func withConditions(c ...runtimev1alpha1.Condition) cosmosDBAccountModifier {
+func withConditions(c ...xpv1.Condition) cosmosDBAccountModifier {
 	return func(r *v1alpha3.CosmosDBAccount) { r.Status.ConditionedStatus.Conditions = c }
 }
 
@@ -234,7 +234,7 @@ func TestObserve(t *testing.T) {
 					ResourceUpToDate: true,
 				},
 				mg: cosmosDBAccount(
-					withConditions(runtimev1alpha1.Available())),
+					withConditions(xpv1.Available())),
 			},
 		},
 	}
@@ -299,7 +299,7 @@ func TestCreate(t *testing.T) {
 				mg: cosmosDBAccount(),
 			},
 			want: want{
-				mg:  cosmosDBAccount(withConditions(runtimev1alpha1.Creating())),
+				mg:  cosmosDBAccount(withConditions(xpv1.Creating())),
 				err: errors.Wrap(errBoom, errCreateNoSQLAccount),
 			},
 		},
@@ -363,7 +363,7 @@ func TestDelete(t *testing.T) {
 				mg: cosmosDBAccount(),
 			},
 			want: want{
-				mg:  cosmosDBAccount(withConditions(runtimev1alpha1.Deleting())),
+				mg:  cosmosDBAccount(withConditions(xpv1.Deleting())),
 				err: errors.Wrap(errBoom, errDeleteNoSQLAccount),
 			},
 		},

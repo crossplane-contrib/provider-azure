@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -268,10 +268,10 @@ func TestVirtualNetworkNeedsUpdate(t *testing.T) {
 }
 
 func TestUpdateVirtualNetworkStatusFromAzure(t *testing.T) {
-	mockCondition := runtimev1alpha1.Condition{Message: "mockMessage"}
-	resourceStatus := runtimev1alpha1.ResourceStatus{
-		ConditionedStatus: runtimev1alpha1.ConditionedStatus{
-			Conditions: []runtimev1alpha1.Condition{mockCondition},
+	mockCondition := xpv1.Condition{Message: "mockMessage"}
+	resourceStatus := xpv1.ResourceStatus{
+		ConditionedStatus: xpv1.ConditionedStatus{
+			Conditions: []xpv1.Condition{mockCondition},
 		},
 	}
 
@@ -474,10 +474,10 @@ func TestSubnetNeedsUpdate(t *testing.T) {
 }
 
 func TestUpdateSubnetStatusFromAzure(t *testing.T) {
-	mockCondition := runtimev1alpha1.Condition{Message: "mockMessage"}
-	resourceStatus := runtimev1alpha1.ResourceStatus{
-		ConditionedStatus: runtimev1alpha1.ConditionedStatus{
-			Conditions: []runtimev1alpha1.Condition{mockCondition},
+	mockCondition := xpv1.Condition{Message: "mockMessage"}
+	resourceStatus := xpv1.ResourceStatus{
+		ConditionedStatus: xpv1.ConditionedStatus{
+			Conditions: []xpv1.Condition{mockCondition},
 		},
 	}
 

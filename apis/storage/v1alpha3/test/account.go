@@ -21,7 +21,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
@@ -79,12 +79,12 @@ func (ta *MockAccount) WithFinalizers(f []string) *MockAccount {
 
 // WithSpecProvider set a provider
 func (ta *MockAccount) WithSpecProvider(name string) *MockAccount {
-	ta.Spec.ProviderReference = &runtimev1alpha1.Reference{Name: name}
+	ta.Spec.ProviderReference = &xpv1.Reference{Name: name}
 	return ta
 }
 
 // WithSpecDeletionPolicy sets resource deletion policy
-func (ta *MockAccount) WithSpecDeletionPolicy(policy runtimev1alpha1.DeletionPolicy) *MockAccount {
+func (ta *MockAccount) WithSpecDeletionPolicy(policy xpv1.DeletionPolicy) *MockAccount {
 	ta.Spec.DeletionPolicy = policy
 	return ta
 }
@@ -114,7 +114,7 @@ func (ta *MockAccount) WithSpecStatusFromProperties(props *storage.AccountProper
 // WithSpecWriteConnectionSecretToReference sets where the storage account will write its
 // connection secret.
 func (ta *MockAccount) WithSpecWriteConnectionSecretToReference(ns, name string) *MockAccount {
-	ta.Spec.WriteConnectionSecretToReference = &runtimev1alpha1.SecretReference{
+	ta.Spec.WriteConnectionSecretToReference = &xpv1.SecretReference{
 		Namespace: ns,
 		Name:      name,
 	}
@@ -122,7 +122,7 @@ func (ta *MockAccount) WithSpecWriteConnectionSecretToReference(ns, name string)
 }
 
 // WithStatusConditions sets the storage account's conditioned status.
-func (ta *MockAccount) WithStatusConditions(c ...runtimev1alpha1.Condition) *MockAccount {
+func (ta *MockAccount) WithStatusConditions(c ...xpv1.Condition) *MockAccount {
 	ta.Status.SetConditions(c...)
 	return ta
 }

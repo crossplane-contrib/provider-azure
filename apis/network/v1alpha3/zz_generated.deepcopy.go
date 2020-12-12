@@ -21,7 +21,7 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/apis/common/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -152,22 +152,22 @@ func (in *SubnetSpec) DeepCopyInto(out *SubnetSpec) {
 	in.ResourceSpec.DeepCopyInto(&out.ResourceSpec)
 	if in.VirtualNetworkNameRef != nil {
 		in, out := &in.VirtualNetworkNameRef, &out.VirtualNetworkNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.VirtualNetworkNameSelector != nil {
 		in, out := &in.VirtualNetworkNameSelector, &out.VirtualNetworkNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ResourceGroupNameRef != nil {
 		in, out := &in.ResourceGroupNameRef, &out.ResourceGroupNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ResourceGroupNameSelector != nil {
 		in, out := &in.ResourceGroupNameSelector, &out.ResourceGroupNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	in.SubnetPropertiesFormat.DeepCopyInto(&out.SubnetPropertiesFormat)
@@ -280,12 +280,12 @@ func (in *VirtualNetworkSpec) DeepCopyInto(out *VirtualNetworkSpec) {
 	in.ResourceSpec.DeepCopyInto(&out.ResourceSpec)
 	if in.ResourceGroupNameRef != nil {
 		in, out := &in.ResourceGroupNameRef, &out.ResourceGroupNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ResourceGroupNameSelector != nil {
 		in, out := &in.ResourceGroupNameSelector, &out.ResourceGroupNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	in.VirtualNetworkPropertiesFormat.DeepCopyInto(&out.VirtualNetworkPropertiesFormat)

@@ -26,7 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -108,17 +108,17 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
 		conn = managed.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.HostName),
-			runtimev1alpha1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.AtProvider.Port)),
-			runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(azure.ToString(k.PrimaryKey)),
+			xpv1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.HostName),
+			xpv1.ResourceCredentialsSecretPortKey:     []byte(strconv.Itoa(cr.Status.AtProvider.Port)),
+			xpv1.ResourceCredentialsSecretPasswordKey: []byte(azure.ToString(k.PrimaryKey)),
 		}
-		cr.Status.SetConditions(runtimev1alpha1.Available())
+		cr.Status.SetConditions(xpv1.Available())
 	case redisclients.ProvisioningStateCreating:
-		cr.Status.SetConditions(runtimev1alpha1.Creating())
+		cr.Status.SetConditions(xpv1.Creating())
 	case redisclients.ProvisioningStateDeleting:
-		cr.Status.SetConditions(runtimev1alpha1.Deleting())
+		cr.Status.SetConditions(xpv1.Deleting())
 	default:
-		cr.Status.SetConditions(runtimev1alpha1.Unavailable())
+		cr.Status.SetConditions(xpv1.Unavailable())
 	}
 	return managed.ExternalObservation{
 		ResourceExists:    true,
@@ -132,7 +132,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotRedis)
 	}
-	cr.Status.SetConditions(runtimev1alpha1.Creating())
+	cr.Status.SetConditions(xpv1.Creating())
 	_, err := c.client.Create(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), redisclients.NewCreateParameters(cr))
 	return managed.ExternalCreation{}, errors.Wrap(err, errCreateFailed)
 }
@@ -164,7 +164,7 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if !ok {
 		return errors.New(errNotRedis)
 	}
-	cr.Status.SetConditions(runtimev1alpha1.Deleting())
+	cr.Status.SetConditions(xpv1.Deleting())
 	if cr.Status.AtProvider.ProvisioningState == redisclients.ProvisioningStateDeleting {
 		return nil
 	}

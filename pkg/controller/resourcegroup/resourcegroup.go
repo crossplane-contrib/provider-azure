@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -106,7 +106,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		r.Status.ProvisioningState = v1alpha3.ProvisioningState(to.String(g.Properties.ProvisioningState))
 	}
 
-	r.SetConditions(runtimev1alpha1.Available())
+	r.SetConditions(xpv1.Available())
 	return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true}, nil
 }
 
@@ -116,7 +116,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotResourceGroup)
 	}
 
-	r.Status.SetConditions(runtimev1alpha1.Creating())
+	r.Status.SetConditions(xpv1.Creating())
 	_, err := e.client.CreateOrUpdate(ctx, meta.GetExternalName(r), resourcegroup.NewParameters(r))
 	return managed.ExternalCreation{}, errors.Wrap(err, errCreateResourceGroup)
 }
@@ -139,7 +139,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return nil
 	}
 
-	r.Status.SetConditions(runtimev1alpha1.Deleting())
+	r.Status.SetConditions(xpv1.Deleting())
 	_, err := e.client.Delete(ctx, meta.GetExternalName(r))
 	return errors.Wrap(err, errDeleteResourceGroup)
 }

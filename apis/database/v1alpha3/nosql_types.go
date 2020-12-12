@@ -20,7 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb"
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 // +kubebuilder:object:root=true
@@ -63,12 +63,12 @@ type CosmosDBAccountParameters struct {
 	// its name
 	// +immutable
 	// +optional
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector to select a reference to a resource group.
 	// +immutable
 	// +optional
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// Kind - Indicates the type of database account.
 	Kind documentdb.DatabaseAccountKind `json:"kind"`
@@ -170,13 +170,13 @@ type CosmosDBAccountLocation struct {
 
 // A CosmosDBAccountSpec defines the desired state of a CosmosDB Account.
 type CosmosDBAccountSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ForProvider                  CosmosDBAccountParameters `json:"forProvider"`
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       CosmosDBAccountParameters `json:"forProvider"`
 }
 
 // An CosmosDBAccountStatus represents the observed state of an Account.
 type CosmosDBAccountStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 	// + optional
 	AtProvider *CosmosDBAccountObservation `json:"atProvider,omitempty"`
 }

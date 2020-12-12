@@ -39,7 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -234,7 +234,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				res: resultRequeue,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithStatusConditions(
-						runtimev1alpha1.ReconcileError(errBoom),
+						xpv1.ReconcileError(errBoom),
 					).
 					WithFinalizer("foo.bar").Account,
 			},
@@ -314,7 +314,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 		{
 			name: "RetainPolicy",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionOrphan).
 					WithFinalizers([]string{finalizer, "test"}).Account,
 				cc: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
@@ -326,16 +326,16 @@ func Test_syncdeleter_delete(t *testing.T) {
 				err: nil,
 				res: reconcile.Result{},
 				acct: v1alpha3test.NewMockAccount(bucketName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
+					WithSpecDeletionPolicy(xpv1.DeletionOrphan).
 					WithFinalizer("test").
-					WithStatusConditions(runtimev1alpha1.Deleting()).
+					WithStatusConditions(xpv1.Deleting()).
 					Account,
 			},
 		},
 		{
 			name: "DeleteSuccessful",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
@@ -349,15 +349,15 @@ func Test_syncdeleter_delete(t *testing.T) {
 				res: reconcile.Result{},
 				acct: v1alpha3test.NewMockAccount(bucketName).
 					WithFinalizers([]string{}).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
-					WithStatusConditions(runtimev1alpha1.Deleting()).
+					WithSpecDeletionPolicy(xpv1.DeletionDelete).
+					WithStatusConditions(xpv1.Deleting()).
 					Account,
 			},
 		},
 		{
 			name: "DeleteFailed",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
 					MockStatusUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
@@ -373,16 +373,16 @@ func Test_syncdeleter_delete(t *testing.T) {
 			want: want{
 				err: nil,
 				res: resultRequeue,
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).
-					WithStatusConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.Deleting(), xpv1.ReconcileError(errBoom)).
 					Account,
 			},
 		},
 		{
 			name: "DeleteNonExistent",
 			fields: fields{
-				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
 					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error { return nil },
@@ -400,8 +400,8 @@ func Test_syncdeleter_delete(t *testing.T) {
 				res: reconcile.Result{},
 				acct: v1alpha3test.NewMockAccount(bucketName).
 					WithFinalizers([]string{}).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
-					WithStatusConditions(runtimev1alpha1.Deleting()).
+					WithSpecDeletionPolicy(xpv1.DeletionDelete).
+					WithStatusConditions(xpv1.Deleting()).
 					Account,
 			},
 		},
@@ -463,7 +463,7 @@ func Test_syncdeleter_sync(t *testing.T) {
 				res: resultRequeue,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithUID("test-uid").
-					WithStatusConditions(runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.ReconcileError(errBoom)).
 					Account,
 			},
 		},
@@ -571,7 +571,7 @@ func Test_createupdater_create(t *testing.T) {
 			want: want{
 				res: resultRequeue,
 				obj: v1alpha3test.NewMockAccount(name).
-					WithStatusConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.Creating(), xpv1.ReconcileError(errBoom)).
 					WithFinalizer(finalizer).
 					Account,
 			},
@@ -596,7 +596,7 @@ func Test_createupdater_create(t *testing.T) {
 				obj: v1alpha3test.NewMockAccount(name).
 					WithUID("test-uid").
 					WithFinalizer(finalizer).
-					WithStatusConditions(runtimev1alpha1.Creating()).
+					WithStatusConditions(xpv1.Creating()).
 					Account,
 			},
 		},
@@ -677,7 +677,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				res: requeueOnSuccess,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
-					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
+					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
 					Account,
 			},
 		},
@@ -702,7 +702,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				res: resultRequeue,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
-					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.Available(), xpv1.ReconcileError(errBoom)).
 					Account,
 			},
 		},
@@ -730,7 +730,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				res: requeueOnSuccess,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
-					WithStatusConditions(runtimev1alpha1.Available()).
+					WithStatusConditions(xpv1.Available()).
 					Account,
 			},
 		},
@@ -812,7 +812,7 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 				res: requeueOnWait,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStatusFromProperties(&storage.AccountProperties{ProvisioningState: storage.Creating}).
-					WithStatusConditions(runtimev1alpha1.ReconcileSuccess()).
+					WithStatusConditions(xpv1.ReconcileSuccess()).
 					Account,
 			},
 		},
@@ -832,7 +832,7 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 				res: resultRequeue,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStatusFromProperties(&storage.AccountProperties{ProvisioningState: storage.Succeeded}).
-					WithStatusConditions(runtimev1alpha1.ReconcileError(errBoom)).Account,
+					WithStatusConditions(xpv1.ReconcileError(errBoom)).Account,
 			},
 		},
 		{
@@ -851,7 +851,7 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 				res: requeueOnSuccess,
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStatusFromProperties(&storage.AccountProperties{ProvisioningState: storage.Succeeded}).
-					WithStatusConditions(runtimev1alpha1.ReconcileSuccess()).
+					WithStatusConditions(xpv1.ReconcileSuccess()).
 					Account,
 			},
 		},

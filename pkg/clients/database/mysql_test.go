@@ -23,7 +23,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
@@ -183,10 +183,10 @@ func TestMySQLServerVirtualNetworkRuleNeedsUpdate(t *testing.T) {
 
 func TestUpdateMySQLVirtualNetworkRuleStatusFromAzure(t *testing.T) {
 
-	mockCondition := runtimev1alpha1.Condition{Message: "mockMessage"}
-	resourceStatus := runtimev1alpha1.ResourceStatus{
-		ConditionedStatus: runtimev1alpha1.ConditionedStatus{
-			Conditions: []runtimev1alpha1.Condition{mockCondition},
+	mockCondition := xpv1.Condition{Message: "mockMessage"}
+	resourceStatus := xpv1.ResourceStatus{
+		ConditionedStatus: xpv1.ConditionedStatus{
+			Conditions: []xpv1.Condition{mockCondition},
 		},
 	}
 
