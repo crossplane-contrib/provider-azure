@@ -23,7 +23,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -63,7 +63,7 @@ type testCase struct {
 
 type virtualNetworkRuleModifier func(*v1alpha3.PostgreSQLServerVirtualNetworkRule)
 
-func withConditions(c ...runtimev1alpha1.Condition) virtualNetworkRuleModifier {
+func withConditions(c ...xpv1.Condition) virtualNetworkRuleModifier {
 	return func(r *v1alpha3.PostgreSQLServerVirtualNetworkRule) { r.Status.ConditionedStatus.Conditions = c }
 }
 
@@ -128,7 +128,7 @@ func TestCreate(t *testing.T) {
 			}},
 			r: virtualNetworkRule(),
 			want: virtualNetworkRule(
-				withConditions(runtimev1alpha1.Creating()),
+				withConditions(xpv1.Creating()),
 			),
 		},
 		{
@@ -140,7 +140,7 @@ func TestCreate(t *testing.T) {
 			}},
 			r: virtualNetworkRule(),
 			want: virtualNetworkRule(
-				withConditions(runtimev1alpha1.Creating()),
+				withConditions(xpv1.Creating()),
 			),
 			wantErr: errors.Wrap(errorBoom, errCreatePostgreSQLServerVirtualNetworkRule),
 		},
@@ -199,7 +199,7 @@ func TestObserve(t *testing.T) {
 			}},
 			r: virtualNetworkRule(),
 			want: virtualNetworkRule(
-				withConditions(runtimev1alpha1.Available()),
+				withConditions(xpv1.Available()),
 				withState(string(postgresql.Ready)),
 				withType(resourceType),
 				withID(resourceID),
@@ -288,7 +288,7 @@ func TestDelete(t *testing.T) {
 			}},
 			r: virtualNetworkRule(),
 			want: virtualNetworkRule(
-				withConditions(runtimev1alpha1.Deleting()),
+				withConditions(xpv1.Deleting()),
 			),
 		},
 		{
@@ -302,7 +302,7 @@ func TestDelete(t *testing.T) {
 			}},
 			r: virtualNetworkRule(),
 			want: virtualNetworkRule(
-				withConditions(runtimev1alpha1.Deleting()),
+				withConditions(xpv1.Deleting()),
 			),
 		},
 		{
@@ -314,7 +314,7 @@ func TestDelete(t *testing.T) {
 			}},
 			r: virtualNetworkRule(),
 			want: virtualNetworkRule(
-				withConditions(runtimev1alpha1.Deleting()),
+				withConditions(xpv1.Deleting()),
 			),
 			wantErr: errors.Wrap(errorBoom, errDeletePostgreSQLServerVirtualNetworkRule),
 		},

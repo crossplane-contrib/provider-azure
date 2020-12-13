@@ -19,7 +19,7 @@ package v1alpha3
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 const (
@@ -36,11 +36,11 @@ type AKSClusterParameters struct {
 
 	// ResourceGroupNameRef - A reference to a ResourceGroup to retrieve its
 	// name
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - Select a reference to a ResourceGroup to
 	// retrieve its name
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// Location is the Azure location that the cluster will be created in
 	Location string `json:"location"`
@@ -53,11 +53,11 @@ type AKSClusterParameters struct {
 	VnetSubnetID string `json:"vnetSubnetID,omitempty"`
 
 	// ResourceGroupNameRef - A reference to a Subnet to retrieve its ID
-	VnetSubnetIDRef *runtimev1alpha1.Reference `json:"vnetSubnetIDRef,omitempty"`
+	VnetSubnetIDRef *xpv1.Reference `json:"vnetSubnetIDRef,omitempty"`
 
 	// ResourceGroupNameSelector - Select a reference to a Subnet to retrieve
 	// its ID
-	VnetSubnetIDSelector *runtimev1alpha1.Selector `json:"vnetSubnetIDSelector,omitempty"`
+	VnetSubnetIDSelector *xpv1.Selector `json:"vnetSubnetIDSelector,omitempty"`
 
 	// NodeCount is the number of nodes that the cluster will initially be
 	// created with.  This can be scaled over time and defaults to 1.
@@ -85,13 +85,13 @@ type AKSClusterParameters struct {
 
 // An AKSClusterSpec defines the desired state of a AKSCluster.
 type AKSClusterSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	AKSClusterParameters         `json:",inline"`
+	xpv1.ResourceSpec    `json:",inline"`
+	AKSClusterParameters `json:",inline"`
 }
 
 // An AKSClusterStatus represents the observed state of an AKSCluster.
 type AKSClusterStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 
 	// State is the current state of the cluster.
 	State string `json:"state,omitempty"`

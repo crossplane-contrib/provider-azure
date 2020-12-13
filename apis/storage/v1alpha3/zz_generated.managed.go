@@ -18,20 +18,20 @@ limitations under the License.
 
 package v1alpha3
 
-import runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+import xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
 // GetCondition of this Account.
-func (mg *Account) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+func (mg *Account) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
 	return mg.Status.GetCondition(ct)
 }
 
 // GetDeletionPolicy of this Account.
-func (mg *Account) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+func (mg *Account) GetDeletionPolicy() xpv1.DeletionPolicy {
 	return mg.Spec.DeletionPolicy
 }
 
 // GetProviderConfigReference of this Account.
-func (mg *Account) GetProviderConfigReference() *runtimev1alpha1.Reference {
+func (mg *Account) GetProviderConfigReference() *xpv1.Reference {
 	return mg.Spec.ProviderConfigReference
 }
 
@@ -39,27 +39,27 @@ func (mg *Account) GetProviderConfigReference() *runtimev1alpha1.Reference {
 GetProviderReference of this Account.
 Deprecated: Use GetProviderConfigReference.
 */
-func (mg *Account) GetProviderReference() *runtimev1alpha1.Reference {
+func (mg *Account) GetProviderReference() *xpv1.Reference {
 	return mg.Spec.ProviderReference
 }
 
 // GetWriteConnectionSecretToReference of this Account.
-func (mg *Account) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+func (mg *Account) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
 // SetConditions of this Account.
-func (mg *Account) SetConditions(c ...runtimev1alpha1.Condition) {
+func (mg *Account) SetConditions(c ...xpv1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
 // SetDeletionPolicy of this Account.
-func (mg *Account) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+func (mg *Account) SetDeletionPolicy(r xpv1.DeletionPolicy) {
 	mg.Spec.DeletionPolicy = r
 }
 
 // SetProviderConfigReference of this Account.
-func (mg *Account) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+func (mg *Account) SetProviderConfigReference(r *xpv1.Reference) {
 	mg.Spec.ProviderConfigReference = r
 }
 
@@ -67,27 +67,27 @@ func (mg *Account) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
 SetProviderReference of this Account.
 Deprecated: Use SetProviderConfigReference.
 */
-func (mg *Account) SetProviderReference(r *runtimev1alpha1.Reference) {
+func (mg *Account) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
 // SetWriteConnectionSecretToReference of this Account.
-func (mg *Account) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+func (mg *Account) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
 // GetCondition of this Container.
-func (mg *Container) GetCondition(ct runtimev1alpha1.ConditionType) runtimev1alpha1.Condition {
+func (mg *Container) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
 	return mg.Status.GetCondition(ct)
 }
 
 // GetDeletionPolicy of this Container.
-func (mg *Container) GetDeletionPolicy() runtimev1alpha1.DeletionPolicy {
+func (mg *Container) GetDeletionPolicy() xpv1.DeletionPolicy {
 	return mg.Spec.DeletionPolicy
 }
 
 // GetProviderConfigReference of this Container.
-func (mg *Container) GetProviderConfigReference() *runtimev1alpha1.Reference {
+func (mg *Container) GetProviderConfigReference() *xpv1.Reference {
 	return mg.Spec.ProviderConfigReference
 }
 
@@ -95,27 +95,27 @@ func (mg *Container) GetProviderConfigReference() *runtimev1alpha1.Reference {
 GetProviderReference of this Container.
 Deprecated: Use GetProviderConfigReference.
 */
-func (mg *Container) GetProviderReference() *runtimev1alpha1.Reference {
+func (mg *Container) GetProviderReference() *xpv1.Reference {
 	return mg.Spec.ProviderReference
 }
 
 // GetWriteConnectionSecretToReference of this Container.
-func (mg *Container) GetWriteConnectionSecretToReference() *runtimev1alpha1.SecretReference {
+func (mg *Container) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
 }
 
 // SetConditions of this Container.
-func (mg *Container) SetConditions(c ...runtimev1alpha1.Condition) {
+func (mg *Container) SetConditions(c ...xpv1.Condition) {
 	mg.Status.SetConditions(c...)
 }
 
 // SetDeletionPolicy of this Container.
-func (mg *Container) SetDeletionPolicy(r runtimev1alpha1.DeletionPolicy) {
+func (mg *Container) SetDeletionPolicy(r xpv1.DeletionPolicy) {
 	mg.Spec.DeletionPolicy = r
 }
 
 // SetProviderConfigReference of this Container.
-func (mg *Container) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
+func (mg *Container) SetProviderConfigReference(r *xpv1.Reference) {
 	mg.Spec.ProviderConfigReference = r
 }
 
@@ -123,11 +123,11 @@ func (mg *Container) SetProviderConfigReference(r *runtimev1alpha1.Reference) {
 SetProviderReference of this Container.
 Deprecated: Use SetProviderConfigReference.
 */
-func (mg *Container) SetProviderReference(r *runtimev1alpha1.Reference) {
+func (mg *Container) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
 }
 
 // SetWriteConnectionSecretToReference of this Container.
-func (mg *Container) SetWriteConnectionSecretToReference(r *runtimev1alpha1.SecretReference) {
+func (mg *Container) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
 	mg.Spec.WriteConnectionSecretToReference = r
 }

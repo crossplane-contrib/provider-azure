@@ -19,7 +19,7 @@ package v1alpha3
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 const (
@@ -39,10 +39,10 @@ type VirtualNetworkRuleProperties struct {
 	VirtualNetworkSubnetID string `json:"virtualNetworkSubnetId,omitempty"`
 
 	// VirtualNetworkSubnetIDRef - A reference to a Subnet to retrieve its ID
-	VirtualNetworkSubnetIDRef *runtimev1alpha1.Reference `json:"virtualNetworkSubnetIdRef,omitempty"`
+	VirtualNetworkSubnetIDRef *xpv1.Reference `json:"virtualNetworkSubnetIdRef,omitempty"`
 
 	// VirtualNetworkSubnetIDRef - A selector for a Subnet to retrieve its ID
-	VirtualNetworkSubnetIDSelector *runtimev1alpha1.Selector `json:"virtualNetworkSubnetIdSelector,omitempty"`
+	VirtualNetworkSubnetIDSelector *xpv1.Selector `json:"virtualNetworkSubnetIdSelector,omitempty"`
 
 	// IgnoreMissingVnetServiceEndpoint - Create firewall rule before the
 	// virtual network has vnet service endpoint enabled.
@@ -52,7 +52,7 @@ type VirtualNetworkRuleProperties struct {
 // A VirtualNetworkRuleStatus represents the observed state of a
 // VirtualNetworkRule.
 type VirtualNetworkRuleStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 
 	// State of this virtual network rule.
 	State string `json:"state,omitempty"`
@@ -70,28 +70,28 @@ type VirtualNetworkRuleStatus struct {
 
 // A PostgreSQLVirtualNetworkRuleSpec defines the desired state of a PostgreSQLVirtualNetworkRule.
 type PostgreSQLVirtualNetworkRuleSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
+	xpv1.ResourceSpec `json:",inline"`
 
 	// ServerName - Name of the Virtual Network Rule's PostgreSQLServer.
 	ServerName string `json:"serverName,omitempty"`
 
 	// ServerNameRef - A reference to the Virtual Network Rule's PostgreSQLServer.
-	ServerNameRef *runtimev1alpha1.Reference `json:"serverNameRef,omitempty"`
+	ServerNameRef *xpv1.Reference `json:"serverNameRef,omitempty"`
 
 	// ServerNameSelector - A selector of the Virtual Network Rule's
 	// PostgreSQLServer.
-	ServerNameSelector *runtimev1alpha1.Selector `json:"serverNameSelector,omitempty"`
+	ServerNameSelector *xpv1.Selector `json:"serverNameSelector,omitempty"`
 
 	// ResourceGroupName - Name of the Virtual Network Rule's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
 	// its name
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - A selector for a ResourceGroup object to
 	// retrieve its name
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// VirtualNetworkRuleProperties - Resource properties.
 	VirtualNetworkRuleProperties `json:"properties"`
@@ -126,26 +126,26 @@ type PostgreSQLServerVirtualNetworkRuleList struct {
 
 // A MySQLVirtualNetworkRuleSpec defines the desired state of a MySQLVirtualNetworkRule.
 type MySQLVirtualNetworkRuleSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
+	xpv1.ResourceSpec `json:",inline"`
 
 	// ServerName - Name of the Virtual Network Rule's server.
 	ServerName string `json:"serverName,omitempty"`
 
 	// ServerNameRef - A reference to the Virtual Network Rule's MySQLServer.
-	ServerNameRef *runtimev1alpha1.Reference `json:"serverNameRef,omitempty"`
+	ServerNameRef *xpv1.Reference `json:"serverNameRef,omitempty"`
 
 	// ServerNameSelector - Selects a MySQLServer to reference.
-	ServerNameSelector *runtimev1alpha1.Selector `json:"serverNameSelector,omitempty"`
+	ServerNameSelector *xpv1.Selector `json:"serverNameSelector,omitempty"`
 
 	// ResourceGroupName - Name of the Virtual Network Rule's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
 	// its name
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - Selects a ResourceGroup to reference.
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// VirtualNetworkRuleProperties - Resource properties.
 	VirtualNetworkRuleProperties `json:"properties"`

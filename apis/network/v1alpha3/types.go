@@ -19,7 +19,7 @@ package v1alpha3
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 // AddressSpace contains an array of IP address ranges that can be used by
@@ -51,18 +51,18 @@ type VirtualNetworkPropertiesFormat struct {
 
 // A VirtualNetworkSpec defines the desired state of a VirtualNetwork.
 type VirtualNetworkSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
+	xpv1.ResourceSpec `json:",inline"`
 
 	// ResourceGroupName - Name of the Virtual Network's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to the the Virtual Network's resource
 	// group.
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - Select a reference to the the Virtual
 	// Network's resource group.
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// VirtualNetworkPropertiesFormat - Properties of the virtual network.
 	VirtualNetworkPropertiesFormat `json:"properties"`
@@ -77,7 +77,7 @@ type VirtualNetworkSpec struct {
 
 // A VirtualNetworkStatus represents the observed state of a VirtualNetwork.
 type VirtualNetworkStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 
 	// State of this VirtualNetwork.
 	State string `json:"state,omitempty"`
@@ -154,27 +154,27 @@ type SubnetPropertiesFormat struct {
 
 // A SubnetSpec defines the desired state of a Subnet.
 type SubnetSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
+	xpv1.ResourceSpec `json:",inline"`
 
 	// VirtualNetworkName - Name of the Subnet's virtual network.
 	VirtualNetworkName string `json:"virtualNetworkName,omitempty"`
 
 	// VirtualNetworkNameRef references to a VirtualNetwork to retrieve its name
-	VirtualNetworkNameRef *runtimev1alpha1.Reference `json:"virtualNetworkNameRef,omitempty"`
+	VirtualNetworkNameRef *xpv1.Reference `json:"virtualNetworkNameRef,omitempty"`
 
 	// VirtualNetworkNameSelector selects a reference to a VirtualNetwork to
 	// retrieve its name
-	VirtualNetworkNameSelector *runtimev1alpha1.Selector `json:"virtualNetworkNameSelector,omitempty"`
+	VirtualNetworkNameSelector *xpv1.Selector `json:"virtualNetworkNameSelector,omitempty"`
 
 	// ResourceGroupName - Name of the Subnet's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
 	// ResourceGroupNameRef - A reference to the the Subnets's resource group.
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - Selects a reference to the the Subnets's
 	// resource group.
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// SubnetPropertiesFormat - Properties of the subnet.
 	SubnetPropertiesFormat `json:"properties"`
@@ -182,7 +182,7 @@ type SubnetSpec struct {
 
 // A SubnetStatus represents the observed state of a Subnet.
 type SubnetStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 
 	// State of this Subnet.
 	State string `json:"state,omitempty"`

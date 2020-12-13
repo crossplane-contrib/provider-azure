@@ -25,7 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -103,9 +103,9 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	switch r.Status.AtProvider.State {
 	case "Succeeded":
-		r.SetConditions(runtimev1alpha1.Available())
+		r.SetConditions(xpv1.Available())
 	default:
-		r.SetConditions(runtimev1alpha1.Unavailable())
+		r.SetConditions(xpv1.Unavailable())
 	}
 	resourceUpToDate := cosmosdb.CheckEqualDatabaseProperties(r.Spec.ForProvider.Properties, account)
 	return managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: resourceUpToDate}, nil
@@ -117,7 +117,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotNoSQLAccount)
 	}
 
-	r.Status.SetConditions(runtimev1alpha1.Creating())
+	r.Status.SetConditions(xpv1.Creating())
 	_, err := e.client.CreateOrUpdate(ctx,
 		r.Spec.ForProvider.ResourceGroupName,
 		meta.GetExternalName(r),
@@ -137,7 +137,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotNoSQLAccount)
 	}
 
-	r.Status.SetConditions(runtimev1alpha1.Deleting())
+	r.Status.SetConditions(xpv1.Deleting())
 	_, err := e.client.Delete(ctx, r.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(r))
 	return errors.Wrap(err, errDeleteNoSQLAccount)
 }

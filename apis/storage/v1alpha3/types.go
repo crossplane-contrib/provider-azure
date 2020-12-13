@@ -20,7 +20,7 @@ import (
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 // AccountParameters define the desired state of an Azure Blob Storage Account.
@@ -34,13 +34,13 @@ type AccountParameters struct {
 
 // An AccountSpec defines the desired state of an Account.
 type AccountSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	AccountParameters            `json:",inline"`
+	xpv1.ResourceSpec `json:",inline"`
+	AccountParameters `json:",inline"`
 }
 
 // An AccountStatus represents the observed state of an Account.
 type AccountStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 
 	*StorageAccountStatus `json:",inline"`
 }
@@ -84,13 +84,13 @@ type ContainerParameters struct {
 
 // A ContainerSpec defines the desired state of a Container.
 type ContainerSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ContainerParameters          `json:",inline"`
+	xpv1.ResourceSpec   `json:",inline"`
+	ContainerParameters `json:",inline"`
 }
 
 // A ContainerStatus represents the observed status of a Container.
 type ContainerStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 }
 
 // +kubebuilder:object:root=true

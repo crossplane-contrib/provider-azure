@@ -19,7 +19,7 @@ package v1beta1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
 	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
@@ -136,12 +136,12 @@ type SQLServerParameters struct {
 	// ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve
 	// its name
 	// +immutable
-	ResourceGroupNameRef *runtimev1alpha1.Reference `json:"resourceGroupNameRef,omitempty"`
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
 	// ResourceGroupNameSelector - A selector for a ResourceGroup object to
 	// retrieve its name
 	// +immutable
-	ResourceGroupNameSelector *runtimev1alpha1.Selector `json:"resourceGroupNameSelector,omitempty"`
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 
 	// SKU is the billing information related properties of the server.
 	SKU SKU `json:"sku"`
@@ -181,8 +181,8 @@ type SQLServerParameters struct {
 
 // A SQLServerSpec defines the desired state of a SQLServer.
 type SQLServerSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
-	ForProvider                  SQLServerParameters `json:"forProvider"`
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       SQLServerParameters `json:"forProvider"`
 }
 
 // SQLServerObservation represents the current state of Azure SQL resource.
@@ -212,6 +212,6 @@ type SQLServerObservation struct {
 
 // A SQLServerStatus represents the observed state of a SQLServer.
 type SQLServerStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
-	AtProvider                     SQLServerObservation `json:"atProvider,omitempty"`
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          SQLServerObservation `json:"atProvider,omitempty"`
 }

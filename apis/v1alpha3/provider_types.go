@@ -19,7 +19,7 @@ package v1alpha3
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
 // A ProvisioningState of a resource group.
@@ -35,7 +35,7 @@ const (
 type ProviderSpec struct {
 	// CredentialsSecretRef references a specific secret's key that contains
 	// the credentials that are used to connect to the Azure API.
-	CredentialsSecretRef runtimev1alpha1.SecretKeySelector `json:"credentialsSecretRef"`
+	CredentialsSecretRef xpv1.SecretKeySelector `json:"credentialsSecretRef"`
 }
 
 // +kubebuilder:object:root=true
@@ -62,7 +62,7 @@ type ProviderList struct {
 
 // A ResourceGroupSpec defines the desired state of a ResourceGroup.
 type ResourceGroupSpec struct {
-	runtimev1alpha1.ResourceSpec `json:",inline"`
+	xpv1.ResourceSpec `json:",inline"`
 
 	// Location of the resource group. See the  official list of valid regions -
 	// https://azure.microsoft.com/en-us/global-infrastructure/regions/
@@ -71,7 +71,7 @@ type ResourceGroupSpec struct {
 
 // A ResourceGroupStatus represents the observed status of a ResourceGroup.
 type ResourceGroupStatus struct {
-	runtimev1alpha1.ResourceStatus `json:",inline"`
+	xpv1.ResourceStatus `json:",inline"`
 
 	// ProvisioningState - The provisioning state of the resource group.
 	ProvisioningState ProvisioningState `json:"provisioningState,omitempty"`

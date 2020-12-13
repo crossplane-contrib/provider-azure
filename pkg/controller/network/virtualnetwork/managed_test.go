@@ -28,7 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -63,7 +63,7 @@ type testCase struct {
 
 type virtualNetworkModifier func(*v1alpha3.VirtualNetwork)
 
-func withConditions(c ...runtimev1alpha1.Condition) virtualNetworkModifier {
+func withConditions(c ...xpv1.Condition) virtualNetworkModifier {
 	return func(r *v1alpha3.VirtualNetwork) { r.Status.ConditionedStatus.Conditions = c }
 }
 
@@ -123,7 +123,7 @@ func TestCreate(t *testing.T) {
 			}},
 			r: virtualNetwork(),
 			want: virtualNetwork(
-				withConditions(runtimev1alpha1.Creating()),
+				withConditions(xpv1.Creating()),
 			),
 		},
 		{
@@ -135,7 +135,7 @@ func TestCreate(t *testing.T) {
 			}},
 			r: virtualNetwork(),
 			want: virtualNetwork(
-				withConditions(runtimev1alpha1.Creating()),
+				withConditions(xpv1.Creating()),
 			),
 			wantErr: errors.Wrap(errorBoom, errCreateVirtualNetwork),
 		},
@@ -205,7 +205,7 @@ func TestObserve(t *testing.T) {
 			}},
 			r: virtualNetwork(),
 			want: virtualNetwork(
-				withConditions(runtimev1alpha1.Available()),
+				withConditions(xpv1.Available()),
 				withState(string(network.Available)),
 			),
 		},
@@ -365,7 +365,7 @@ func TestDelete(t *testing.T) {
 			}},
 			r: virtualNetwork(),
 			want: virtualNetwork(
-				withConditions(runtimev1alpha1.Deleting()),
+				withConditions(xpv1.Deleting()),
 			),
 		},
 		{
@@ -379,7 +379,7 @@ func TestDelete(t *testing.T) {
 			}},
 			r: virtualNetwork(),
 			want: virtualNetwork(
-				withConditions(runtimev1alpha1.Deleting()),
+				withConditions(xpv1.Deleting()),
 			),
 		},
 		{
@@ -391,7 +391,7 @@ func TestDelete(t *testing.T) {
 			}},
 			r: virtualNetwork(),
 			want: virtualNetwork(
-				withConditions(runtimev1alpha1.Deleting()),
+				withConditions(xpv1.Deleting()),
 			),
 			wantErr: errors.Wrap(errorBoom, errDeleteVirtualNetwork),
 		},

@@ -21,7 +21,7 @@ limitations under the License.
 package v1alpha3
 
 import (
-	"github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	"github.com/crossplane/crossplane-runtime/apis/common/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -144,12 +144,12 @@ func (in *CosmosDBAccountParameters) DeepCopyInto(out *CosmosDBAccountParameters
 	*out = *in
 	if in.ResourceGroupNameRef != nil {
 		in, out := &in.ResourceGroupNameRef, &out.ResourceGroupNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ResourceGroupNameSelector != nil {
 		in, out := &in.ResourceGroupNameSelector, &out.ResourceGroupNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	in.Properties.DeepCopyInto(&out.Properties)
@@ -275,22 +275,22 @@ func (in *FirewallRuleParameters) DeepCopyInto(out *FirewallRuleParameters) {
 	*out = *in
 	if in.ServerNameRef != nil {
 		in, out := &in.ServerNameRef, &out.ServerNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ServerNameSelector != nil {
 		in, out := &in.ServerNameSelector, &out.ServerNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ResourceGroupNameRef != nil {
 		in, out := &in.ResourceGroupNameRef, &out.ResourceGroupNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ResourceGroupNameSelector != nil {
 		in, out := &in.ResourceGroupNameSelector, &out.ResourceGroupNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	out.FirewallRuleProperties = in.FirewallRuleProperties
@@ -479,22 +479,22 @@ func (in *MySQLVirtualNetworkRuleSpec) DeepCopyInto(out *MySQLVirtualNetworkRule
 	in.ResourceSpec.DeepCopyInto(&out.ResourceSpec)
 	if in.ServerNameRef != nil {
 		in, out := &in.ServerNameRef, &out.ServerNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ServerNameSelector != nil {
 		in, out := &in.ServerNameSelector, &out.ServerNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ResourceGroupNameRef != nil {
 		in, out := &in.ResourceGroupNameRef, &out.ResourceGroupNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ResourceGroupNameSelector != nil {
 		in, out := &in.ResourceGroupNameSelector, &out.ResourceGroupNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	in.VirtualNetworkRuleProperties.DeepCopyInto(&out.VirtualNetworkRuleProperties)
@@ -634,22 +634,22 @@ func (in *PostgreSQLVirtualNetworkRuleSpec) DeepCopyInto(out *PostgreSQLVirtualN
 	in.ResourceSpec.DeepCopyInto(&out.ResourceSpec)
 	if in.ServerNameRef != nil {
 		in, out := &in.ServerNameRef, &out.ServerNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ServerNameSelector != nil {
 		in, out := &in.ServerNameSelector, &out.ServerNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.ResourceGroupNameRef != nil {
 		in, out := &in.ResourceGroupNameRef, &out.ResourceGroupNameRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.ResourceGroupNameSelector != nil {
 		in, out := &in.ResourceGroupNameSelector, &out.ResourceGroupNameSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 	in.VirtualNetworkRuleProperties.DeepCopyInto(&out.VirtualNetworkRuleProperties)
@@ -670,12 +670,12 @@ func (in *VirtualNetworkRuleProperties) DeepCopyInto(out *VirtualNetworkRuleProp
 	*out = *in
 	if in.VirtualNetworkSubnetIDRef != nil {
 		in, out := &in.VirtualNetworkSubnetIDRef, &out.VirtualNetworkSubnetIDRef
-		*out = new(v1alpha1.Reference)
+		*out = new(v1.Reference)
 		**out = **in
 	}
 	if in.VirtualNetworkSubnetIDSelector != nil {
 		in, out := &in.VirtualNetworkSubnetIDSelector, &out.VirtualNetworkSubnetIDSelector
-		*out = new(v1alpha1.Selector)
+		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
 }

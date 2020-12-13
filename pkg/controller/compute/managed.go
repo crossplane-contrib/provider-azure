@@ -25,7 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -118,7 +118,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(err, errGetAKSCluster)
 	}
 
-	cr.SetConditions(runtimev1alpha1.Available())
+	cr.SetConditions(xpv1.Available())
 
 	// AKS clusters are always up to date because we can't yet update them.
 	o := managed.ExternalObservation{
@@ -134,7 +134,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotAKSCluster)
 	}
-	cr.SetConditions(runtimev1alpha1.Creating())
+	cr.SetConditions(xpv1.Creating())
 	secret, err := e.newPasswordFn()
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
@@ -152,7 +152,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if !ok {
 		return errors.New(errNotAKSCluster)
 	}
-	cr.SetConditions(runtimev1alpha1.Deleting())
+	cr.SetConditions(xpv1.Deleting())
 	return errors.Wrap(e.client.DeleteManagedCluster(ctx, cr), errDeleteAKSCluster)
 }
 
@@ -176,10 +176,10 @@ func connectionDetails(kubeconfig []byte, name string) (managed.ConnectionDetail
 	}
 
 	return managed.ConnectionDetails{
-		runtimev1alpha1.ResourceCredentialsSecretEndpointKey:   []byte(cluster.Server),
-		runtimev1alpha1.ResourceCredentialsSecretCAKey:         cluster.CertificateAuthorityData,
-		runtimev1alpha1.ResourceCredentialsSecretClientCertKey: auth.ClientCertificateData,
-		runtimev1alpha1.ResourceCredentialsSecretClientKeyKey:  auth.ClientKeyData,
-		runtimev1alpha1.ResourceCredentialsSecretKubeconfigKey: kubeconfig,
+		xpv1.ResourceCredentialsSecretEndpointKey:   []byte(cluster.Server),
+		xpv1.ResourceCredentialsSecretCAKey:         cluster.CertificateAuthorityData,
+		xpv1.ResourceCredentialsSecretClientCertKey: auth.ClientCertificateData,
+		xpv1.ResourceCredentialsSecretClientKeyKey:  auth.ClientKeyData,
+		xpv1.ResourceCredentialsSecretKubeconfigKey: kubeconfig,
 	}, nil
 }

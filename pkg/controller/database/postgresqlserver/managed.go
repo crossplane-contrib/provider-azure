@@ -26,7 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -122,17 +122,17 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	// Any state beside 'ready' is considered unavailable.
 	switch server.UserVisibleState { //nolint:exhaustive
 	case v1beta1.StateReady:
-		cr.SetConditions(runtimev1alpha1.Available())
+		cr.SetConditions(xpv1.Available())
 	default:
-		cr.SetConditions(runtimev1alpha1.Unavailable())
+		cr.SetConditions(xpv1.Unavailable())
 	}
 
 	o := managed.ExternalObservation{
 		ResourceExists:   true,
 		ResourceUpToDate: database.IsPostgreSQLUpToDate(cr.Spec.ForProvider, server), // NOTE(negz): We don't yet support updating Azure SQL servers.
 		ConnectionDetails: managed.ConnectionDetails{
-			runtimev1alpha1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
-			runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
+			xpv1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
+			xpv1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
 		},
 	}
 
@@ -145,7 +145,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotPostgreSQLServer)
 	}
 
-	cr.SetConditions(runtimev1alpha1.Creating())
+	cr.SetConditions(xpv1.Creating())
 
 	pw, err := e.newPasswordFn()
 	if err != nil {
@@ -157,7 +157,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	return managed.ExternalCreation{
 			ConnectionDetails: managed.ConnectionDetails{
-				runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte(pw),
+				xpv1.ResourceCredentialsSecretPasswordKey: []byte(pw),
 			},
 		}, errors.Wrap(
 			azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
@@ -186,7 +186,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if !ok {
 		return errors.New(errNotPostgreSQLServer)
 	}
-	cr.SetConditions(runtimev1alpha1.Deleting())
+	cr.SetConditions(xpv1.Deleting())
 	if cr.Status.AtProvider.UserVisibleState == v1beta1.StateDropping {
 		return nil
 	}

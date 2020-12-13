@@ -29,7 +29,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -99,7 +99,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	database.UpdatePostgreSQLVirtualNetworkRuleStatusFromAzure(v, az)
 
-	v.SetConditions(runtimev1alpha1.Available())
+	v.SetConditions(xpv1.Available())
 
 	return managed.ExternalObservation{
 		ResourceExists:    true,
@@ -114,7 +114,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
-	v.SetConditions(runtimev1alpha1.Creating())
+	v.SetConditions(xpv1.Creating())
 
 	vnet := database.NewPostgreSQLVirtualNetworkRuleParameters(v)
 	_, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v), vnet)
@@ -138,7 +138,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 		return errors.New(errNotPostgreSQLServerVirtualNetworkRule)
 	}
 
-	v.SetConditions(runtimev1alpha1.Deleting())
+	v.SetConditions(xpv1.Deleting())
 
 	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, v.Spec.ServerName, meta.GetExternalName(v))
 

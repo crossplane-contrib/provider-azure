@@ -41,7 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
@@ -207,7 +207,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				con: v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer("foo.bar").
 					WithStatusConditions(
-						runtimev1alpha1.ReconcileError(errBoom),
+						xpv1.ReconcileError(errBoom),
 					).
 					Container,
 			},
@@ -391,8 +391,8 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 				Client: fake.NewFakeClient(
 					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 					newSecret(testNamespace, testAccountName, map[string][]byte{
-						runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
-						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte("test-key"),
+						xpv1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
+						xpv1.ResourceCredentialsSecretPasswordKey: []byte("test-key"),
 					}),
 					v1alpha3test.NewMockAccount(testAccountName).
 						WithSpecWriteConnectionSecretToReference(testNamespace, testAccountName).
@@ -415,8 +415,8 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 				Client: fake.NewFakeClient(
 					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 					newSecret(testNamespace, testAccountName, map[string][]byte{
-						runtimev1alpha1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
-						runtimev1alpha1.ResourceCredentialsSecretPasswordKey: []byte("dGVzdC1rZXkK"),
+						xpv1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
+						xpv1.ResourceCredentialsSecretPasswordKey: []byte("dGVzdC1rZXkK"),
 					}),
 					v1alpha3test.NewMockAccount(testAccountName).
 						WithSpecWriteConnectionSecretToReference(testNamespace, testAccountName).
@@ -505,16 +505,16 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 			fields: fields{
 				kube: test.NewMockClient(),
 				container: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
+					WithSpecDeletionPolicy(xpv1.DeletionOrphan).
 					WithFinalizer(finalizer).Container,
 			},
 			args: args{ctx: ctx},
 			want: want{
 				res: reconcile.Result{},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionOrphan).
+					WithSpecDeletionPolicy(xpv1.DeletionOrphan).
 					WithFinalizers([]string{}).
-					WithStatusConditions(runtimev1alpha1.Deleting()).
+					WithStatusConditions(xpv1.Deleting()).
 					Container,
 			},
 		},
@@ -528,7 +528,7 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 					},
 				},
 				container: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+					WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).
 					Container,
 			},
@@ -536,9 +536,9 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 			want: want{
 				res: reconcile.Result{},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+					WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizers([]string{}).
-					WithStatusConditions(runtimev1alpha1.Deleting()).
+					WithStatusConditions(xpv1.Deleting()).
 					Container,
 			},
 		},
@@ -552,16 +552,16 @@ func Test_containerSyncdeleter_delete(t *testing.T) {
 					},
 				},
 				container: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+					WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Container,
 			},
 			args: args{ctx: ctx},
 			want: want{
 				res: resultRequeue,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithSpecDeletionPolicy(runtimev1alpha1.DeletionDelete).
+					WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).
-					WithStatusConditions(runtimev1alpha1.Deleting(), runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.Deleting(), xpv1.ReconcileError(errBoom)).
 					Container,
 			},
 		},
@@ -642,7 +642,7 @@ func Test_containerSyncdeleter_sync(t *testing.T) {
 			want: want{
 				res: resultRequeue,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
-					WithStatusConditions(runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.ReconcileError(errBoom)).
 					Container,
 			},
 		},
@@ -744,7 +744,7 @@ func Test_containerCreateUpdater_create(t *testing.T) {
 				err: errors.Wrapf(errors.New("test-update-error"), "failed to update container spec"),
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer(finalizer).
-					WithStatusConditions(runtimev1alpha1.Creating()).
+					WithStatusConditions(xpv1.Creating()).
 					Container,
 			},
 		},
@@ -764,7 +764,7 @@ func Test_containerCreateUpdater_create(t *testing.T) {
 				res: resultRequeue,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer(finalizer).
-					WithStatusConditions(runtimev1alpha1.Creating(), runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.Creating(), xpv1.ReconcileError(errBoom)).
 					Container,
 			},
 		},
@@ -780,7 +780,7 @@ func Test_containerCreateUpdater_create(t *testing.T) {
 				res: reconcile.Result{},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer(finalizer).
-					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
+					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
 					Container,
 			},
 		},
@@ -846,7 +846,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				res: requeueOnSuccess,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
-					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
+					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
 					Container,
 			},
 		},
@@ -875,7 +875,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				res: resultRequeue,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
-					WithStatusConditions(runtimev1alpha1.ReconcileError(errBoom)).
+					WithStatusConditions(xpv1.ReconcileError(errBoom)).
 					Container,
 			},
 		},
@@ -899,7 +899,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				res: requeueOnSuccess,
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
-					WithStatusConditions(runtimev1alpha1.Available(), runtimev1alpha1.ReconcileSuccess()).
+					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
 					Container,
 			},
 		},

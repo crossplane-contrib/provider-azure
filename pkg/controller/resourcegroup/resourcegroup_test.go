@@ -29,7 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -47,7 +47,7 @@ const (
 
 type resourceGroupModifier func(*v1alpha3.ResourceGroup)
 
-func withConditions(c ...runtimev1alpha1.Condition) resourceGroupModifier {
+func withConditions(c ...xpv1.Condition) resourceGroupModifier {
 	return func(r *v1alpha3.ResourceGroup) { r.Status.ConditionedStatus.Conditions = c }
 }
 
@@ -180,7 +180,7 @@ func TestObserve(t *testing.T) {
 				},
 				mg: resourceGrp(
 					withProvisioningstate(v1alpha3.ProvisioningStateSucceeded),
-					withConditions(runtimev1alpha1.Available()),
+					withConditions(xpv1.Available()),
 				),
 			},
 		},
@@ -246,7 +246,7 @@ func TestCreate(t *testing.T) {
 				mg: resourceGrp(),
 			},
 			want: want{
-				mg:  resourceGrp(withConditions(runtimev1alpha1.Creating())),
+				mg:  resourceGrp(withConditions(xpv1.Creating())),
 				err: errors.Wrap(errBoom, errCreateResourceGroup),
 			},
 		},
@@ -303,13 +303,13 @@ func TestDelete(t *testing.T) {
 			args: args{
 				mg: resourceGrp(
 					withProvisioningstate(v1alpha3.ProvisioningStateDeleting),
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 			},
 			want: want{
 				mg: resourceGrp(
 					withProvisioningstate(v1alpha3.ProvisioningStateDeleting),
-					withConditions(runtimev1alpha1.Deleting()),
+					withConditions(xpv1.Deleting()),
 				),
 			},
 		},
@@ -325,7 +325,7 @@ func TestDelete(t *testing.T) {
 				mg: resourceGrp(),
 			},
 			want: want{
-				mg:  resourceGrp(withConditions(runtimev1alpha1.Deleting())),
+				mg:  resourceGrp(withConditions(xpv1.Deleting())),
 				err: errors.Wrap(errBoom, errDeleteResourceGroup),
 			},
 		},
