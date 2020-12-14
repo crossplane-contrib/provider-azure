@@ -18,6 +18,7 @@ package SecurityGroup
 import (
 	"context"
 	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
 	securitygroup "github.com/crossplane/provider-azure/pkg/clients/network"
 
 	//"github.com/crossplane/provider-azure/pkg/clients/network"
@@ -76,8 +77,8 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 }
 
 type external struct {
-	//client networkapi.SecurityGroupsClientAPI
-	client azurenetwork.SecurityGroupsClient
+	client networkapi.SecurityGroupsClientAPI
+	//client azurenetwork.SecurityGroupsClient
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {

@@ -86,3 +86,35 @@ func (c *MockSubnetsClient) Get(ctx context.Context, resourceGroupName string, v
 func (c *MockSubnetsClient) List(ctx context.Context, resourceGroupName string, virtualNetworkName string) (result network.SubnetListResultPage, err error) {
 	return c.MockList(ctx, resourceGroupName, virtualNetworkName)
 }
+
+var _ networkapi.SecurityGroupsClientAPI = &MockSecurityGroupClient{}
+
+// MockSecurityGroupClient is a fake implementation of network.SecurityGroupClient.
+type MockSecurityGroupClient struct {
+	networkapi.SecurityGroupsClientAPI
+
+	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, securityGroupName string, parameters network.SecurityGroup) (result network.SecurityGroupsCreateOrUpdateFuture, err error)
+	MockDelete         func(ctx context.Context, resourceGroupName string, securityGroupName string) (result network.SecurityGroupsDeleteFuture, err error)
+	MockGet            func(ctx context.Context, resourceGroupName string, securityGroupName string, expand string) (result network.SecurityGroup, err error)
+	MockList           func(ctx context.Context, securityGroupName string) (result network.SecurityGroupListResultPage, err error)
+}
+
+// CreateOrUpdate calls the MockSecurityGroupClient's MockCreateOrUpdate method.
+func (c *MockSecurityGroupClient) CreateOrUpdate(ctx context.Context, resourceGroupName string, securityGroupName string, parameters network.SecurityGroup) (result network.SecurityGroupsCreateOrUpdateFuture, err error) {
+	return c.MockCreateOrUpdate(ctx, resourceGroupName, securityGroupName, parameters)
+}
+
+// Delete calls the MockSecurityGroupClient's MockDelete method.
+func (c *MockSecurityGroupClient) Delete(ctx context.Context, resourceGroupName string, securityGroupName string) (result network.SecurityGroupsDeleteFuture, err error) {
+	return c.MockDelete(ctx, resourceGroupName, securityGroupName)
+}
+
+// Get calls the MockSecurityGroupClient's MockGet method.
+func (c *MockSecurityGroupClient) Get(ctx context.Context, resourceGroupName string, securityGroupName string, expand string) (result network.SecurityGroup, err error) {
+	return c.MockGet(ctx, resourceGroupName, securityGroupName, expand)
+}
+
+// List calls the MockSecurityGroupClient's MockListKeys method.
+func (c *MockSecurityGroupClient) List(ctx context.Context, securityGroupName string) (result network.SecurityGroupListResultPage, err error) {
+	return c.MockList(ctx, securityGroupName)
+}
