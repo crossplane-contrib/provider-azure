@@ -22,8 +22,11 @@ import (
 
 const (
 	name              = "coolNSG"
-	ruleName          = "coolSecurityRule"
+	ruleName1         = "coolSecurityRule1"
+	ruleName2         = "coolSecurityRule2"
 	uid               = types.UID("definitely-a-uuid")
+	etagRule1         = "definitely-a-etag1"
+	etagRule2         = "definitely-a-etag2"
 	resourceGroupName = "coolRG"
 	location          = "coolplace"
 )
@@ -95,7 +98,8 @@ func setRules() *[]v1alpha3.SecurityRule {
 			Priority:                 120,
 			Direction:                "Inbound",
 		},
-		Name: ruleName,
+		Name: ruleName1,
+		Etag: etagRule1,
 	}
 	var rule2 = v1alpha3.SecurityRule{
 		TypeMeta:   metav1.TypeMeta{},
@@ -111,7 +115,8 @@ func setRules() *[]v1alpha3.SecurityRule {
 			Priority:                 130,
 			Direction:                "Outbound",
 		},
-		Name: ruleName,
+		Name: ruleName2,
+		Etag: etagRule2,
 	}
 	*securityRules = append(*securityRules, rule1)
 	*securityRules = append(*securityRules, rule2)
@@ -132,7 +137,8 @@ func setSecurityRules() *[]network.SecurityRule {
 			Priority:                 azure.ToInt32Ptr(120),
 			Direction:                "Inbound",
 		},
-		Name: azure.ToStringPtr(ruleName),
+		Name: azure.ToStringPtr(ruleName1),
+		Etag: azure.ToStringPtr(etagRule1),
 	}
 	var rule2 = network.SecurityRule{
 		SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
@@ -146,7 +152,8 @@ func setSecurityRules() *[]network.SecurityRule {
 			Priority:                 azure.ToInt32Ptr(130),
 			Direction:                "Outbound",
 		},
-		Name: azure.ToStringPtr(ruleName),
+		Name: azure.ToStringPtr(ruleName2),
+		Etag: azure.ToStringPtr(etagRule2),
 	}
 	*securityRules = append(*securityRules, rule1)
 	*securityRules = append(*securityRules, rule2)

@@ -123,9 +123,21 @@ func SecurityGroupNeedsUpdate(sg *v1alpha3.SecurityGroup, az networkmgmt.Securit
 	if !reflect.DeepEqual(azure.ToStringPtr(sg.Spec.Location), az.Location) {
 		return true
 	}
-	if !reflect.DeepEqual(SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules), az.SecurityRules) {
-		return true
-		//TODO: Add a check for rules based on name and direction , name and direction is constant for a rule
+	if sg.Spec.SecurityRules != nil {
+		var sgRules = SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules)
+		var azSgRules = az.SecurityRules
+		for _, rule := range *sgRules {
+			for _, azRule := range *azSgRules {
+				if reflect.DeepEqual(rule.Name, azRule.Name) {
+					if !reflect.DeepEqual(rule.Etag, azRule.Etag) {
+						return true
+					}
+				}
+			}
+		}
 	}
+	/*if !reflect.DeepEqual(SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules), az.SecurityRules) {
+		return true
+	}*/
 	return false
 }
