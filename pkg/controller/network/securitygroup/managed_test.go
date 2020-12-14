@@ -322,6 +322,71 @@ func TestUpdate(t *testing.T) {
 			sg:   SecurityGroup(),
 			want: SecurityGroup(),
 		},
+		{
+			name: "SuccessfulNeedsUpdate",
+			e: &external{client: &fake.MockSecurityGroupClient{
+				MockGet: func(_ context.Context, _ string, _ string, _ string) (result network.SecurityGroup, err error) {
+					return network.SecurityGroup{
+						SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
+							SecurityRules:        setSecurityRules(),
+							DefaultSecurityRules: nil,
+							ProvisioningState:    azure.ToStringPtr(string(network.Available)),
+						},
+						Name:     azure.ToStringPtr("new Name"),
+						Location: azure.ToStringPtr(location),
+						Tags:     azure.ToStringPtrMap(tags),
+					}, nil
+				},
+				MockCreateOrUpdate: func(_ context.Context, _ string, _ string, _ network.SecurityGroup) (result network.SecurityGroupsCreateOrUpdateFuture, err error) {
+					return network.SecurityGroupsCreateOrUpdateFuture{}, nil
+				},
+			}},
+			sg:   SecurityGroup(),
+			want: SecurityGroup(),
+		},
+		{
+			name: "UnsuccessfulGet",
+			e: &external{client: &fake.MockSecurityGroupClient{
+				MockGet: func(_ context.Context, _ string, _ string, _ string) (result network.SecurityGroup, err error) {
+					return network.SecurityGroup{
+						SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
+							SecurityRules:        setSecurityRules(),
+							DefaultSecurityRules: nil,
+							ProvisioningState:    azure.ToStringPtr(string(network.Available)),
+						},
+						Name:     azure.ToStringPtr(name),
+						Location: azure.ToStringPtr(location),
+						Tags:     azure.ToStringPtrMap(tags),
+					}, errorBoom
+				},
+			}},
+			sg:      SecurityGroup(),
+			want:    SecurityGroup(),
+			wantErr: errors.Wrap(errorBoom, errGetSecurityGroup),
+		},
+		{
+			name: "UnsuccessfulUpdate",
+			e: &external{client: &fake.MockSecurityGroupClient{
+				MockGet: func(_ context.Context, _ string, _ string, _ string) (result network.SecurityGroup, err error) {
+					return network.SecurityGroup{
+						SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
+							SecurityRules:        setSecurityRules(),
+							DefaultSecurityRules: nil,
+							ProvisioningState:    azure.ToStringPtr(string(network.Available)),
+						},
+						Name:     azure.ToStringPtr("new name"),
+						Location: azure.ToStringPtr(location),
+						Tags:     azure.ToStringPtrMap(tags),
+					}, nil
+				},
+				MockCreateOrUpdate: func(_ context.Context, _ string, _ string, _ network.SecurityGroup) (result network.SecurityGroupsCreateOrUpdateFuture, err error) {
+					return network.SecurityGroupsCreateOrUpdateFuture{}, errorBoom
+				},
+			}},
+			sg:      SecurityGroup(),
+			want:    SecurityGroup(),
+			wantErr: errors.Wrap(errorBoom, errUpdateSecurityGroup),
+		},
 	}
 
 	for _, tc := range cases {
@@ -330,6 +395,71 @@ func TestUpdate(t *testing.T) {
 
 			if diff := cmp.Diff(tc.wantErr, err, test.EquateErrors()); diff != "" {
 				t.Errorf("tc.e.Update(...): want error != got error:\n%s", diff)
+			}
+
+			if diff := cmp.Diff(tc.want, tc.sg, test.EquateConditions()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestDelete(t *testing.T) {
+	cases := []testCase{
+		{
+			name:    "NotSecurityGroup",
+			e:       &external{client: &fake.MockSecurityGroupClient{}},
+			sg:      nil,
+			want:    nil,
+			wantErr: errors.New(errNotSecurityGroup),
+		},
+		{
+			name: "Successful",
+			e: &external{client: &fake.MockSecurityGroupClient{
+				MockDelete: func(_ context.Context, _ string, _ string) (result network.SecurityGroupsDeleteFuture, err error) {
+					return network.SecurityGroupsDeleteFuture{}, nil
+				},
+			}},
+			sg: SecurityGroup(),
+			want: SecurityGroup(
+				withConditions(runtimev1alpha1.Deleting()),
+			),
+		},
+		{
+			name: "SuccessfulNotFound",
+			e: &external{client: &fake.MockSecurityGroupClient{
+				MockDelete: func(_ context.Context, _ string, _ string) (result network.SecurityGroupsDeleteFuture, err error) {
+					return network.SecurityGroupsDeleteFuture{}, autorest.DetailedError{
+						StatusCode: http.StatusNotFound,
+					}
+				},
+			}},
+			sg: SecurityGroup(),
+			want: SecurityGroup(
+				withConditions(runtimev1alpha1.Deleting()),
+			),
+		},
+		{
+			name: "Failed",
+			e: &external{client: &fake.MockSecurityGroupClient{
+				MockDelete: func(_ context.Context, _ string, _ string) (result network.SecurityGroupsDeleteFuture, err error) {
+					return network.SecurityGroupsDeleteFuture{}, errorBoom
+				},
+			}},
+			sg: SecurityGroup(),
+			want: SecurityGroup(
+				withConditions(runtimev1alpha1.Deleting()),
+			),
+			wantErr: errors.Wrap(errorBoom, errDeleteSecurityGroup),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.e.Delete(ctx, tc.sg)
+
+			if diff := cmp.Diff(tc.wantErr, err, test.EquateErrors()); diff != "" {
+				t.Errorf("tc.e.Delete(...): want error != got error:\n%s", diff)
 			}
 
 			if diff := cmp.Diff(tc.want, tc.sg, test.EquateConditions()); diff != "" {
