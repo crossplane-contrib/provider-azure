@@ -21,9 +21,6 @@ import (
 	"reflect"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-12-01/network/networkapi"
-	//"github.com/crossplane/crossplane-runtime/pkg/meta"
-
-	//"github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
@@ -117,15 +114,13 @@ func setSecurityRuleProtocol(protocol v1alpha3.SecurityRuleProtocol) networkmgmt
 
 // SecurityGroupNeedsUpdate determines if a Security Group need to be updated
 func SecurityGroupNeedsUpdate(sg *v1alpha3.SecurityGroup, az networkmgmt.SecurityGroup) bool {
-	if !reflect.DeepEqual(azure.ToStringPtr(sg.Name), az.Name) {
-		return true
-	}
-	if !reflect.DeepEqual(azure.ToStringPtr(sg.Spec.Location), az.Location) {
-		return true
-	}
-	if sg.Spec.SecurityRules != nil {
-		var sgRules = SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules)
-		var azSgRules = az.SecurityRules
+	up := NewSecurityGroupParameters(sg)
+	if sg.Spec.SecurityRules != nil && az.SecurityRules != nil {
+		sgRules := SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules)
+		azSgRules := az.SecurityRules
+		if !reflect.DeepEqual(len(*sgRules), len(*azSgRules)) {
+			return true
+		}
 		for _, rule := range *sgRules {
 			for _, azRule := range *azSgRules {
 				if reflect.DeepEqual(rule.Name, azRule.Name) {
@@ -136,8 +131,20 @@ func SecurityGroupNeedsUpdate(sg *v1alpha3.SecurityGroup, az networkmgmt.Securit
 			}
 		}
 	}
-	/*if !reflect.DeepEqual(SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules), az.SecurityRules) {
+	if nil == sg.Spec.SecurityRules && nil != az.SecurityRules {
 		return true
-	}*/
+	}
+	if nil != sg.Spec.SecurityRules && nil == az.SecurityRules {
+		return true
+	}
+	if !reflect.DeepEqual(up.Tags, az.Tags) {
+		return true
+	}
+	if !reflect.DeepEqual(azure.ToStringPtr(sg.Spec.Location), az.Location) {
+		return true
+	}
+	if !reflect.DeepEqual(azure.ToStringPtr(sg.Name), az.Name) {
+		return true
+	}
 	return false
 }
