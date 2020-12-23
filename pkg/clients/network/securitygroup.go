@@ -16,50 +16,16 @@ limitations under the License.
 package network
 
 import (
-	"encoding/json"
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
 	"reflect"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-12-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-12-01/network/networkapi"
-	"github.com/Azure/go-autorest/autorest/azure/auth"
-	"github.com/pkg/errors"
-
-	//"github.com/crossplane/crossplane-runtime/pkg/meta"
-
-	//"github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 // A GroupsClient handles CRUD operations for Azure Security Group resources.
 type GroupsClient networkapi.SecurityGroupsClientAPI
-
-func NewClient(credentials []byte) (GroupsClient, error) {
-	c := azure.Credentials{}
-	if err := json.Unmarshal(credentials, &c); err != nil {
-		return nil, errors.Wrap(err, "cannot unmarshal Azure client secret data")
-	}
-	client := network.NewSecurityGroupsClient(c.SubscriptionID)
-
-	cfg := auth.ClientCredentialsConfig{
-		ClientID:     c.ClientID,
-		ClientSecret: c.ClientSecret,
-		TenantID:     c.TenantID,
-		AADEndpoint:  c.ActiveDirectoryEndpointURL,
-		Resource:     c.ResourceManagerEndpointURL,
-	}
-	a, err := cfg.Authorizer()
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot create Azure authorizer from credentials config")
-	}
-	client.Authorizer = a
-	if err := client.AddToUserAgent(azure.UserAgent); err != nil {
-		return nil, errors.Wrap(err, "cannot add to Azure client user agent")
-	}
-
-	return client, nil
-}
 
 // UpdateSecurityGroupStatusFromAzure updates the status related to the external
 // Azure Security Group in the SecurityGroupStatus
@@ -91,7 +57,6 @@ func SetSecurityRulesToSecurityGroup(vList *[]v1alpha3.SecurityRule) *[]networkm
 			sRule.ID = azure.ToStringPtr(v.ID)
 			sRule.Name = azure.ToStringPtr(v.Name)
 			sRule.Etag = azure.ToStringPtr(v.Etag)
-			//sRule.Protocol = setSecurityRuleProtocol(v.Properties.Protocol)
 			var ruleProperties = new(networkmgmt.SecurityRulePropertiesFormat)
 			ruleProperties.Description = azure.ToStringPtr(v.Properties.Description)
 			ruleProperties.Protocol = setSecurityRuleProtocol(v.Properties.Protocol)
@@ -149,16 +114,37 @@ func setSecurityRuleProtocol(protocol v1alpha3.SecurityRuleProtocol) networkmgmt
 
 // SecurityGroupNeedsUpdate determines if a Security Group need to be updated
 func SecurityGroupNeedsUpdate(sg *v1alpha3.SecurityGroup, az networkmgmt.SecurityGroup) bool {
-
-	if !reflect.DeepEqual(sg.Name, az.Name) {
+	up := NewSecurityGroupParameters(sg)
+	if sg.Spec.SecurityRules != nil && az.SecurityRules != nil {
+		sgRules := SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules)
+		azSgRules := az.SecurityRules
+		if !reflect.DeepEqual(len(*sgRules), len(*azSgRules)) {
+			return true
+		}
+		for _, rule := range *sgRules {
+			for _, azRule := range *azSgRules {
+				if reflect.DeepEqual(rule.Name, azRule.Name) {
+					if !reflect.DeepEqual(rule.Etag, azRule.Etag) {
+						return true
+					}
+				}
+			}
+		}
+	}
+	if nil == sg.Spec.SecurityRules && nil != az.SecurityRules {
 		return true
 	}
-	if !reflect.DeepEqual(sg.Spec.Location, az.Location) {
+	if nil != sg.Spec.SecurityRules && nil == az.SecurityRules {
 		return true
 	}
-	if !reflect.DeepEqual(sg.Spec.SecurityRules, az.SecurityRules) {
+	if !reflect.DeepEqual(up.Tags, az.Tags) {
 		return true
 	}
-
+	if !reflect.DeepEqual(azure.ToStringPtr(sg.Spec.Location), az.Location) {
+		return true
+	}
+	if !reflect.DeepEqual(azure.ToStringPtr(sg.Name), az.Name) {
+		return true
+	}
 	return false
 }
