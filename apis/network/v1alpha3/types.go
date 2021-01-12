@@ -262,56 +262,53 @@ type SecurityRuleDirection string
 // SecurityRulePropertiesFormat security rule resource.
 type SecurityRulePropertiesFormat struct {
 	// Description - A description for this rule. Restricted to 140 chars.
-	Description string `json:"description,omitempty"`
-	// Protocol - Network protocol this rule applies to. Possible values include: 'SecurityRuleProtocolTCP', 'SecurityRuleProtocolUDP', 'SecurityRuleProtocolIcmp', 'SecurityRuleProtocolEsp', 'SecurityRuleProtocolAsterisk'
-	Protocol SecurityRuleProtocol `json:"protocol,omitempty"`
-	// SourcePortRange - The source port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
-	SourcePortRange string `json:"sourcePortRange,omitempty"`
-	// DestinationPortRange - The destination port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
-	DestinationPortRange string `json:"destinationPortRange,omitempty"`
-	// SourceAddressPrefix - The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used. If this is an ingress rule, specifies where network traffic originates from.
-	SourceAddressPrefix string `json:"sourceAddressPrefix,omitempty"`
+	Description *string `json:"description,omitempty"`
+	// Protocol - Network protocol this rule applies to.
+	//Possible values include: 'SecurityRuleProtocolTCP', 'SecurityRuleProtocolUDP', 'SecurityRuleProtocolIcmp', 'SecurityRuleProtocolEsp', 'SecurityRuleProtocolAsterisk'
+	Protocol *SecurityRuleProtocol `json:"protocol,omitempty"`
+	// SourcePortRange - The source port or range. Integer or range between 0 and 65535.
+	//Asterisk '*' can also be used to match all ports.
+	SourcePortRange *string `json:"sourcePortRange,omitempty"`
+	// DestinationPortRange - The destination port or range. Integer or range between 0 and 65535.
+	//Asterisk '*' can also be used to match all ports.
+	DestinationPortRange *string `json:"destinationPortRange,omitempty"`
+	// SourceAddressPrefix - The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs.
+	//Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
+	//If this is an ingress rule, specifies where network traffic originates from.
+	SourceAddressPrefix *string `json:"sourceAddressPrefix,omitempty"`
 	// SourceAddressPrefixes - The CIDR or source IP ranges.
-	SourceAddressPrefixes []string `json:"sourceAddressPrefixes,omitempty"`
+	SourceAddressPrefixes *[]string `json:"sourceAddressPrefixes,omitempty"`
 	// SourceApplicationSecurityGroups - The application security group specified as source.
-	SourceApplicationSecurityGroups []ApplicationSecurityGroup `json:"sourceApplicationSecurityGroups,omitempty"`
-	// DestinationAddressPrefix - The destination address prefix. CIDR or destination IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
-	DestinationAddressPrefix string `json:"destinationAddressPrefix,omitempty"`
+	SourceApplicationSecurityGroups *[]ApplicationSecurityGroup `json:"sourceApplicationSecurityGroups,omitempty"`
+	// DestinationAddressPrefix - The destination address prefix. CIDR or destination IP range.
+	//Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
+	DestinationAddressPrefix *string `json:"destinationAddressPrefix,omitempty"`
 	// DestinationAddressPrefixes - The destination address prefixes. CIDR or destination IP ranges.
-	DestinationAddressPrefixes []string `json:"destinationAddressPrefixes,omitempty"`
+	DestinationAddressPrefixes *[]string `json:"destinationAddressPrefixes,omitempty"`
 	// DestinationApplicationSecurityGroups - The application security group specified as destination.
-	DestinationApplicationSecurityGroups []ApplicationSecurityGroup `json:"destinationApplicationSecurityGroups,omitempty"`
+	DestinationApplicationSecurityGroups *[]ApplicationSecurityGroup `json:"destinationApplicationSecurityGroups,omitempty"`
 	// SourcePortRanges - The source port ranges.
-	SourcePortRanges []string `json:"sourcePortRanges,omitempty"`
+	SourcePortRanges *[]string `json:"sourcePortRanges,omitempty"`
 	// DestinationPortRanges - The destination port ranges.
-	DestinationPortRanges []string `json:"destinationPortRanges,omitempty"`
+	DestinationPortRanges *[]string `json:"destinationPortRanges,omitempty"`
 	// Access - The network traffic is allowed or denied. Possible values include: 'SecurityRuleAccessAllow', 'SecurityRuleAccessDeny'
-	Access SecurityRuleAccess `json:"access,omitempty"`
-	// Priority - The priority of the rule. The value can be between 100 and 4096. The priority number must be unique for each rule in the collection. The lower the priority number, the higher the priority of the rule.
-	Priority int32 `json:"priority,omitempty"`
-	// Direction - The direction of the rule. The direction specifies if rule will be evaluated on incoming or outgoing traffic. Possible values include: 'SecurityRuleDirectionInbound', 'SecurityRuleDirectionOutbound'
-	Direction SecurityRuleDirection `json:"direction,omitempty"`
+	Access *SecurityRuleAccess `json:"access,omitempty"`
+	// Priority - The priority of the rule. The value can be between 100 and 4096.
+	//The priority number must be unique for each rule in the collection. The lower the priority number, the higher the priority of the rule.
+	Priority *int32 `json:"priority,omitempty"`
+	// Direction - The direction of the rule. The direction specifies if rule will be evaluated on incoming or outgoing traffic.
+	//Possible values include: 'SecurityRuleDirectionInbound', 'SecurityRuleDirectionOutbound'
+	Direction *SecurityRuleDirection `json:"direction,omitempty"`
 	// ProvisioningState - The provisioning state of the public IP resource. Possible values are: 'Updating', 'Deleting', and 'Failed'.
-	ProvisioningState string `json:"provisioningState,omitempty"`
+	ProvisioningState *string `json:"provisioningState,omitempty"`
 }
 
-// +kubebuilder:object:root=true
 // SecurityRule network security rule.
-// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
-// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
-// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
-// +kubebuilder:printcolumn:name="RECLAIM-POLICY",type="string",JSONPath=".spec.reclaimPolicy"
-// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
 type SecurityRule struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
 	// SecurityRulePropertiesFormat - Properties of the security rule.
 	Properties SecurityRulePropertiesFormat `json:"properties,omitempty"`
-	// Name - The name of the resource that is unique within a resource group. This name can be used to access the resource.
+	// Name - The name of the resource that is unique within a resource group.
+	//This name can be used to access the resource.
 	Name string `json:"name,omitempty"`
 	// Etag - A unique read-only string that changes whenever the resource is updated.
 	Etag string `json:"etag,omitempty"`
@@ -322,7 +319,10 @@ type SecurityRule struct {
 // A SecurityGroupSpec defines the desired state of a SecurityGroup.
 type SecurityGroupSpec struct {
 	runtimev1alpha1.ResourceSpec `json:",inline"`
+	ForProvider                  SecurityGroupParameters `json:"forProvider"`
+}
 
+type SecurityGroupParameters struct {
 	// ResourceGroupName - Name of the SecurityGroup's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
@@ -376,10 +376,6 @@ type SecurityGroupPropertiesFormat struct {
 	SecurityRules *[]SecurityRule `json:"securityRules,omitempty"`
 	// DefaultSecurityRules - The default security rules of network security group.
 	DefaultSecurityRules *[]SecurityRule `json:"defaultSecurityRules,omitempty"`
-	// NetworkInterfaces - READ-ONLY; A collection of references to network interfaces.
-	//NetworkInterfaces *[]Interface `json:"networkInterfaces,omitempty"`
-	// Subnets - READ-ONLY; A collection of references to subnets.
-	//Subnets *[]Subnet `json:"subnets,omitempty"`
 	// ResourceGUID - The resource GUID property of the network security group resource.
 	ResourceGUID *string `json:"resourceGuid,omitempty"`
 	// ProvisioningState - The provisioning state of the public IP resource. Possible values are: 'Updating', 'Deleting', and 'Failed'.
@@ -403,7 +399,6 @@ type SecurityGroup struct {
 
 	Spec   SecurityGroupSpec   `json:"spec"`
 	Status SecurityGroupStatus `json:"status,omitempty"`
-	///Properties SecurityGroupPropertiesFormat   `json:"properties,omitempty"`
 }
 
 // +kubebuilder:object:root=true

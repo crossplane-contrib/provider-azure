@@ -44,35 +44,31 @@ const (
 func setRules() *[]v1alpha3.SecurityRule {
 	var securityRules = new([]v1alpha3.SecurityRule)
 	var rule1 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:              "Test Description",
-			Protocol:                 "TCP",
-			SourcePortRange:          "8080",
-			DestinationPortRange:     "80",
-			SourceAddressPrefix:      "Internet",
-			DestinationAddressPrefix: "*",
-			Access:                   "Allow",
-			Priority:                 120,
-			Direction:                "Inbound",
+			Description:              azure.ToStringPtr("Test Description"),
+			Protocol:                 setProtocol("TCP"),
+			SourcePortRange:          azure.ToStringPtr("8080"),
+			DestinationPortRange:     azure.ToStringPtr("80"),
+			SourceAddressPrefix:      azure.ToStringPtr("Internet"),
+			DestinationAddressPrefix: azure.ToStringPtr("*"),
+			Access:                   setAccess("Allow"),
+			Priority:                 azure.ToInt32Ptr(120),
+			Direction:                setDirection("Inbound"),
 		},
 		Name: ruleName1,
 		Etag: "new " + etagRule1,
 	}
 	var rule2 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:              "Test Description",
-			Protocol:                 "TCP",
-			SourcePortRange:          "8080",
-			DestinationPortRange:     "80",
-			SourceAddressPrefix:      "Internet",
-			DestinationAddressPrefix: "*",
-			Access:                   "Deny",
-			Priority:                 130,
-			Direction:                "Outbound",
+			Description:              azure.ToStringPtr("Test Description"),
+			Protocol:                 setProtocol("TCP"),
+			SourcePortRange:          azure.ToStringPtr("8080"),
+			DestinationPortRange:     azure.ToStringPtr("80"),
+			SourceAddressPrefix:      azure.ToStringPtr("Internet"),
+			DestinationAddressPrefix: azure.ToStringPtr("*"),
+			Access:                   setAccess("Deny"),
+			Priority:                 azure.ToInt32Ptr(130),
+			Direction:                setDirection("Outbound"),
 		},
 		Name: ruleName2,
 		Etag: "new " + etagRule2,
@@ -82,21 +78,34 @@ func setRules() *[]v1alpha3.SecurityRule {
 	return securityRules
 }
 
+func setDirection(s string) *v1alpha3.SecurityRuleDirection {
+	var direction = v1alpha3.SecurityRuleDirection(s)
+	return &direction
+}
+
+func setAccess(s string) *v1alpha3.SecurityRuleAccess {
+	var access = v1alpha3.SecurityRuleAccess(s)
+	return &access
+}
+
+func setProtocol(s string) *v1alpha3.SecurityRuleProtocol {
+	var protocol = v1alpha3.SecurityRuleProtocol(s)
+	return &protocol
+}
+
 func setUpdatedRules() *[]v1alpha3.SecurityRule {
 	var securityRules = new([]v1alpha3.SecurityRule)
 	var rule1 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:              "Test Description",
-			Protocol:                 "TCP",
-			SourcePortRange:          "8080",
-			DestinationPortRange:     "80",
-			SourceAddressPrefix:      "Internet",
-			DestinationAddressPrefix: "*",
-			Access:                   "Allow",
-			Priority:                 120,
-			Direction:                "Inbound",
+			Description:              azure.ToStringPtr("Test Description"),
+			Protocol:                 setProtocol("TCP"),
+			SourcePortRange:          azure.ToStringPtr("8080"),
+			DestinationPortRange:     azure.ToStringPtr("80"),
+			SourceAddressPrefix:      azure.ToStringPtr("Internet"),
+			DestinationAddressPrefix: azure.ToStringPtr("*"),
+			Access:                   setAccess("Allow"),
+			Priority:                 azure.ToInt32Ptr(120),
+			Direction:                setDirection("Inbound"),
 		},
 		Name: ruleName1,
 		Etag: "new " + etagRule1,
@@ -108,49 +117,45 @@ func setUpdatedRules() *[]v1alpha3.SecurityRule {
 func setNewRules() *[]v1alpha3.SecurityRule {
 	var securityRules = new([]v1alpha3.SecurityRule)
 	var rule1 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:                          "Test Description",
-			Protocol:                             "TCP",
-			SourcePortRange:                      "8080",
-			DestinationPortRange:                 "80",
-			SourceAddressPrefix:                  "Internet",
+			Description:                          azure.ToStringPtr("Test Description"),
+			Protocol:                             setProtocol("TCP"),
+			SourcePortRange:                      azure.ToStringPtr("8080"),
+			DestinationPortRange:                 azure.ToStringPtr("80"),
+			SourceAddressPrefix:                  azure.ToStringPtr("Internet"),
 			SourceAddressPrefixes:                nil,
 			SourceApplicationSecurityGroups:      setASGs(),
-			DestinationAddressPrefix:             "*",
+			DestinationAddressPrefix:             azure.ToStringPtr("*"),
 			DestinationAddressPrefixes:           nil,
 			DestinationApplicationSecurityGroups: setASGs(),
 			SourcePortRanges:                     nil,
 			DestinationPortRanges:                nil,
-			Access:                               v1alpha3.SecurityRuleAccess("Allow"),
-			Priority:                             120,
-			Direction:                            v1alpha3.SecurityRuleDirection("Inbound"),
-			ProvisioningState:                    "",
+			Access:                               setAccess("Allow"),
+			Priority:                             azure.ToInt32Ptr(120),
+			Direction:                            setDirection("Inbound"),
+			ProvisioningState:                    azure.ToStringPtr(""),
 		},
 		Name: ruleName1,
 		Etag: etagRule1,
 	}
 	var rule2 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:                          "Test Description",
-			Protocol:                             "TCP",
-			SourcePortRange:                      "8080",
-			DestinationPortRange:                 "80",
-			SourceAddressPrefix:                  "Internet",
+			Description:                          azure.ToStringPtr("Test Description"),
+			Protocol:                             setProtocol("TCP"),
+			SourcePortRange:                      azure.ToStringPtr("8080"),
+			DestinationPortRange:                 azure.ToStringPtr("80"),
+			SourceAddressPrefix:                  azure.ToStringPtr("Internet"),
 			SourceAddressPrefixes:                nil,
 			SourceApplicationSecurityGroups:      setASGs(),
-			DestinationAddressPrefix:             "*",
+			DestinationAddressPrefix:             azure.ToStringPtr("*"),
 			DestinationAddressPrefixes:           nil,
 			DestinationApplicationSecurityGroups: setASGs(),
 			SourcePortRanges:                     nil,
 			DestinationPortRanges:                nil,
-			Access:                               v1alpha3.SecurityRuleAccess("Deny"),
-			Priority:                             130,
-			Direction:                            v1alpha3.SecurityRuleDirection("Outbound"),
-			ProvisioningState:                    "",
+			Access:                               setAccess("Deny"),
+			Priority:                             azure.ToInt32Ptr(130),
+			Direction:                            setDirection("Outbound"),
+			ProvisioningState:                    azure.ToStringPtr(""),
 		},
 		Name: ruleName2,
 		Etag: etagRule2,
@@ -210,7 +215,7 @@ func setSecurityRules() *[]network.SecurityRule {
 	*securityRules = append(*securityRules, rule2)
 	return securityRules
 }
-func setASGs() []v1alpha3.ApplicationSecurityGroup {
+func setASGs() *[]v1alpha3.ApplicationSecurityGroup {
 	asgs := new([]v1alpha3.ApplicationSecurityGroup)
 	applicationSecurityGroup := v1alpha3.ApplicationSecurityGroup{
 		Properties: v1alpha3.ApplicationSecurityGroupPropertiesFormat{},
@@ -221,7 +226,7 @@ func setASGs() []v1alpha3.ApplicationSecurityGroup {
 		Location:   "",
 	}
 	*asgs = append(*asgs, applicationSecurityGroup)
-	return *asgs
+	return asgs
 }
 
 func setNetworkASGs() *[]networkmgmt.ApplicationSecurityGroup {
@@ -329,10 +334,12 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateName",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName:             resourceGroupName,
-					Location:                      location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
-					Tags:                          tags,
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName:             resourceGroupName,
+						Location:                      location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
+						Tags:                          tags,
+					},
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -347,10 +354,12 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateLocation",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName:             resourceGroupName,
-					Location:                      location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
-					Tags:                          tags,
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName:             resourceGroupName,
+						Location:                      location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
+						Tags:                          tags,
+					},
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -365,10 +374,12 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateTags",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName:             resourceGroupName,
-					Location:                      location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
-					Tags:                          tags,
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName:             resourceGroupName,
+						Location:                      location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
+						Tags:                          tags,
+					},
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -383,12 +394,14 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateSecurityRules",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName: resourceGroupName,
-					Location:          location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
-						SecurityRules: setRules(),
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName: resourceGroupName,
+						Location:          location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
+							SecurityRules: setRules(),
+						},
+						Tags: tags,
 					},
-					Tags: tags,
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -405,12 +418,14 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateSecurityRulesRuleDeletedOnAzure",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName: resourceGroupName,
-					Location:          location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
-						SecurityRules: setRules(),
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName: resourceGroupName,
+						Location:          location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
+							SecurityRules: setRules(),
+						},
+						Tags: tags,
 					},
-					Tags: tags,
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -426,12 +441,14 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateSecurityRulesRuleDeletedOnCluster",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName: resourceGroupName,
-					Location:          location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
-						SecurityRules: nil,
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName: resourceGroupName,
+						Location:          location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
+							SecurityRules: nil,
+						},
+						Tags: tags,
 					},
-					Tags: tags,
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -447,12 +464,14 @@ func TestSecurityGroupNeedsUpdate(t *testing.T) {
 			name: "NeedsUpdateSecurityRulesRuleCountDontMatch",
 			kube: &v1alpha3.SecurityGroup{
 				Spec: v1alpha3.SecurityGroupSpec{
-					ResourceGroupName: resourceGroupName,
-					Location:          location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
-						SecurityRules: setUpdatedRules(),
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						ResourceGroupName: resourceGroupName,
+						Location:          location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
+							SecurityRules: setUpdatedRules(),
+						},
+						Tags: tags,
 					},
-					Tags: tags,
 				},
 			},
 			az: networkmgmt.SecurityGroup{
@@ -489,14 +508,16 @@ func TestNewSecurityGroupParameters(t *testing.T) {
 			sg: &v1alpha3.SecurityGroup{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.SecurityGroupSpec{
-					Location: location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
-						SecurityRules:        setNewRules(),
-						DefaultSecurityRules: nil,
-						ResourceGUID:         nil,
-						ProvisioningState:    nil,
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						Location: location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
+							SecurityRules:        setNewRules(),
+							DefaultSecurityRules: nil,
+							ResourceGUID:         nil,
+							ProvisioningState:    nil,
+						},
+						Tags: tags,
 					},
-					Tags: tags,
 				},
 			},
 			want: networkmgmt.SecurityGroup{
@@ -517,9 +538,11 @@ func TestNewSecurityGroupParameters(t *testing.T) {
 			sg: &v1alpha3.SecurityGroup{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.SecurityGroupSpec{
-					Location:                      location,
-					SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
-					Tags:                          tags,
+					ForProvider: v1alpha3.SecurityGroupParameters{
+						Location:                      location,
+						SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{},
+						Tags:                          tags,
+					},
 				},
 			},
 			want: networkmgmt.SecurityGroup{

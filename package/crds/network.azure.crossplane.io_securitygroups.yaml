@@ -59,304 +59,322 @@ spec:
                 - Orphan
                 - Delete
                 type: string
-              location:
-                description: Location - Resource location.
-                type: string
-              properties:
-                description: SecurityGroPropertiesFormat - Properties of security group
+              forProvider:
                 properties:
-                  defaultSecurityRules:
-                    description: DefaultSecurityRules - The default security rules of network security group.
-                    items:
-                      description: SecurityRule network security rule.
-                      properties:
-                        apiVersion:
-                          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-                          type: string
-                        etag:
-                          description: Etag - A unique read-only string that changes whenever the resource is updated.
-                          type: string
-                        id:
-                          description: ID - Resource ID.
-                          type: string
-                        kind:
-                          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                          type: string
-                        metadata:
-                          type: object
-                        name:
-                          description: Name - The name of the resource that is unique within a resource group. This name can be used to access the resource.
-                          type: string
-                        properties:
-                          description: SecurityRulePropertiesFormat - Properties of the security rule.
-                          properties:
-                            access:
-                              description: 'Access - The network traffic is allowed or denied. Possible values include: ''SecurityRuleAccessAllow'', ''SecurityRuleAccessDeny'''
-                              type: string
-                            description:
-                              description: Description - A description for this rule. Restricted to 140 chars.
-                              type: string
-                            destinationAddressPrefix:
-                              description: DestinationAddressPrefix - The destination address prefix. CIDR or destination IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
-                              type: string
-                            destinationAddressPrefixes:
-                              description: DestinationAddressPrefixes - The destination address prefixes. CIDR or destination IP ranges.
-                              items:
-                                type: string
-                              type: array
-                            destinationApplicationSecurityGroups:
-                              description: DestinationApplicationSecurityGroups - The application security group specified as destination.
-                              items:
-                                description: ApplicationSecurityGroup an application security group in a resource group.
-                                properties:
-                                  etag:
-                                    description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
-                                    type: string
-                                  id:
-                                    description: ID - Resource ID.
-                                    type: string
-                                  location:
-                                    description: Location - Resource location.
-                                    type: string
-                                  name:
-                                    description: Name - READ-ONLY; Resource name.
-                                    type: string
-                                  properties:
-                                    description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
-                                    properties:
-                                      provisioningState:
-                                        description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
-                                        type: string
-                                      resourceGuid:
-                                        description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
-                                        type: string
-                                    type: object
-                                  type:
-                                    description: Type - READ-ONLY; Resource type.
-                                    type: string
-                                type: object
-                              type: array
-                            destinationPortRange:
-                              description: DestinationPortRange - The destination port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
-                              type: string
-                            destinationPortRanges:
-                              description: DestinationPortRanges - The destination port ranges.
-                              items:
-                                type: string
-                              type: array
-                            direction:
-                              description: 'Direction - The direction of the rule. The direction specifies if rule will be evaluated on incoming or outgoing traffic. Possible values include: ''SecurityRuleDirectionInbound'', ''SecurityRuleDirectionOutbound'''
-                              type: string
-                            priority:
-                              description: Priority - The priority of the rule. The value can be between 100 and 4096. The priority number must be unique for each rule in the collection. The lower the priority number, the higher the priority of the rule.
-                              format: int32
-                              type: integer
-                            protocol:
-                              description: 'Protocol - Network protocol this rule applies to. Possible values include: ''SecurityRuleProtocolTCP'', ''SecurityRuleProtocolUDP'', ''SecurityRuleProtocolIcmp'', ''SecurityRuleProtocolEsp'', ''SecurityRuleProtocolAsterisk'''
-                              type: string
-                            provisioningState:
-                              description: 'ProvisioningState - The provisioning state of the public IP resource. Possible values are: ''Updating'', ''Deleting'', and ''Failed''.'
-                              type: string
-                            sourceAddressPrefix:
-                              description: SourceAddressPrefix - The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used. If this is an ingress rule, specifies where network traffic originates from.
-                              type: string
-                            sourceAddressPrefixes:
-                              description: SourceAddressPrefixes - The CIDR or source IP ranges.
-                              items:
-                                type: string
-                              type: array
-                            sourceApplicationSecurityGroups:
-                              description: SourceApplicationSecurityGroups - The application security group specified as source.
-                              items:
-                                description: ApplicationSecurityGroup an application security group in a resource group.
-                                properties:
-                                  etag:
-                                    description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
-                                    type: string
-                                  id:
-                                    description: ID - Resource ID.
-                                    type: string
-                                  location:
-                                    description: Location - Resource location.
-                                    type: string
-                                  name:
-                                    description: Name - READ-ONLY; Resource name.
-                                    type: string
-                                  properties:
-                                    description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
-                                    properties:
-                                      provisioningState:
-                                        description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
-                                        type: string
-                                      resourceGuid:
-                                        description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
-                                        type: string
-                                    type: object
-                                  type:
-                                    description: Type - READ-ONLY; Resource type.
-                                    type: string
-                                type: object
-                              type: array
-                            sourcePortRange:
-                              description: SourcePortRange - The source port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
-                              type: string
-                            sourcePortRanges:
-                              description: SourcePortRanges - The source port ranges.
-                              items:
-                                type: string
-                              type: array
-                          type: object
-                      type: object
-                    type: array
-                  provisioningState:
-                    description: 'ProvisioningState - The provisioning state of the public IP resource. Possible values are: ''Updating'', ''Deleting'', and ''Failed''.'
+                  location:
+                    description: Location - Resource location.
                     type: string
-                  resourceGuid:
-                    description: NetworkInterfaces - READ-ONLY; A collection of references to network interfaces. NetworkInterfaces *[]Interface `json:"networkInterfaces,omitempty"` Subnets - READ-ONLY; A collection of references to subnets. Subnets *[]Subnet `json:"subnets,omitempty"` ResourceGUID - The resource GUID property of the network security group resource.
-                    type: string
-                  securityRules:
-                    description: SecurityRules - A collection of security rules of the network security group.
-                    items:
-                      description: SecurityRule network security rule.
-                      properties:
-                        apiVersion:
-                          description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-                          type: string
-                        etag:
-                          description: Etag - A unique read-only string that changes whenever the resource is updated.
-                          type: string
-                        id:
-                          description: ID - Resource ID.
-                          type: string
-                        kind:
-                          description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-                          type: string
-                        metadata:
-                          type: object
-                        name:
-                          description: Name - The name of the resource that is unique within a resource group. This name can be used to access the resource.
-                          type: string
-                        properties:
-                          description: SecurityRulePropertiesFormat - Properties of the security rule.
+                  properties:
+                    description: SecurityGroPropertiesFormat - Properties of security group
+                    properties:
+                      defaultSecurityRules:
+                        description: DefaultSecurityRules - The default security rules of network security group.
+                        items:
+                          description: SecurityRule network security rule.
                           properties:
-                            access:
-                              description: 'Access - The network traffic is allowed or denied. Possible values include: ''SecurityRuleAccessAllow'', ''SecurityRuleAccessDeny'''
+                            etag:
+                              description: Etag - A unique read-only string that changes whenever the resource is updated.
                               type: string
-                            description:
-                              description: Description - A description for this rule. Restricted to 140 chars.
+                            id:
+                              description: ID - Resource ID.
                               type: string
-                            destinationAddressPrefix:
-                              description: DestinationAddressPrefix - The destination address prefix. CIDR or destination IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
+                            name:
+                              description: Name - The name of the resource that is unique within a resource group. This name can be used to access the resource.
                               type: string
-                            destinationAddressPrefixes:
-                              description: DestinationAddressPrefixes - The destination address prefixes. CIDR or destination IP ranges.
-                              items:
-                                type: string
-                              type: array
-                            destinationApplicationSecurityGroups:
-                              description: DestinationApplicationSecurityGroups - The application security group specified as destination.
-                              items:
-                                description: ApplicationSecurityGroup an application security group in a resource group.
-                                properties:
-                                  etag:
-                                    description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
+                            properties:
+                              description: SecurityRulePropertiesFormat - Properties of the security rule.
+                              properties:
+                                access:
+                                  description: 'Access - The network traffic is allowed or denied. Possible values include: ''SecurityRuleAccessAllow'', ''SecurityRuleAccessDeny'''
+                                  type: string
+                                description:
+                                  description: Description - A description for this rule. Restricted to 140 chars.
+                                  type: string
+                                destinationAddressPrefix:
+                                  description: DestinationAddressPrefix - The destination address prefix. CIDR or destination IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
+                                  type: string
+                                destinationAddressPrefixes:
+                                  description: DestinationAddressPrefixes - The destination address prefixes. CIDR or destination IP ranges.
+                                  items:
                                     type: string
-                                  id:
-                                    description: ID - Resource ID.
-                                    type: string
-                                  location:
-                                    description: Location - Resource location.
-                                    type: string
-                                  name:
-                                    description: Name - READ-ONLY; Resource name.
-                                    type: string
-                                  properties:
-                                    description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
+                                  type: array
+                                destinationApplicationSecurityGroups:
+                                  description: DestinationApplicationSecurityGroups - The application security group specified as destination.
+                                  items:
+                                    description: ApplicationSecurityGroup an application security group in a resource group.
                                     properties:
-                                      provisioningState:
-                                        description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
+                                      etag:
+                                        description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
                                         type: string
-                                      resourceGuid:
-                                        description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
+                                      id:
+                                        description: ID - Resource ID.
+                                        type: string
+                                      location:
+                                        description: Location - Resource location.
+                                        type: string
+                                      name:
+                                        description: Name - READ-ONLY; Resource name.
+                                        type: string
+                                      properties:
+                                        description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
+                                        properties:
+                                          provisioningState:
+                                            description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
+                                            type: string
+                                          resourceGuid:
+                                            description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
+                                            type: string
+                                        type: object
+                                      type:
+                                        description: Type - READ-ONLY; Resource type.
                                         type: string
                                     type: object
-                                  type:
-                                    description: Type - READ-ONLY; Resource type.
+                                  type: array
+                                destinationPortRange:
+                                  description: DestinationPortRange - The destination port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
+                                  type: string
+                                destinationPortRanges:
+                                  description: DestinationPortRanges - The destination port ranges.
+                                  items:
                                     type: string
-                                type: object
-                              type: array
-                            destinationPortRange:
-                              description: DestinationPortRange - The destination port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
-                              type: string
-                            destinationPortRanges:
-                              description: DestinationPortRanges - The destination port ranges.
-                              items:
-                                type: string
-                              type: array
-                            direction:
-                              description: 'Direction - The direction of the rule. The direction specifies if rule will be evaluated on incoming or outgoing traffic. Possible values include: ''SecurityRuleDirectionInbound'', ''SecurityRuleDirectionOutbound'''
-                              type: string
-                            priority:
-                              description: Priority - The priority of the rule. The value can be between 100 and 4096. The priority number must be unique for each rule in the collection. The lower the priority number, the higher the priority of the rule.
-                              format: int32
-                              type: integer
-                            protocol:
-                              description: 'Protocol - Network protocol this rule applies to. Possible values include: ''SecurityRuleProtocolTCP'', ''SecurityRuleProtocolUDP'', ''SecurityRuleProtocolIcmp'', ''SecurityRuleProtocolEsp'', ''SecurityRuleProtocolAsterisk'''
-                              type: string
-                            provisioningState:
-                              description: 'ProvisioningState - The provisioning state of the public IP resource. Possible values are: ''Updating'', ''Deleting'', and ''Failed''.'
-                              type: string
-                            sourceAddressPrefix:
-                              description: SourceAddressPrefix - The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used. If this is an ingress rule, specifies where network traffic originates from.
-                              type: string
-                            sourceAddressPrefixes:
-                              description: SourceAddressPrefixes - The CIDR or source IP ranges.
-                              items:
-                                type: string
-                              type: array
-                            sourceApplicationSecurityGroups:
-                              description: SourceApplicationSecurityGroups - The application security group specified as source.
-                              items:
-                                description: ApplicationSecurityGroup an application security group in a resource group.
-                                properties:
-                                  etag:
-                                    description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
+                                  type: array
+                                direction:
+                                  description: 'Direction - The direction of the rule. The direction specifies if rule will be evaluated on incoming or outgoing traffic. Possible values include: ''SecurityRuleDirectionInbound'', ''SecurityRuleDirectionOutbound'''
+                                  type: string
+                                priority:
+                                  description: Priority - The priority of the rule. The value can be between 100 and 4096. The priority number must be unique for each rule in the collection. The lower the priority number, the higher the priority of the rule.
+                                  format: int32
+                                  type: integer
+                                protocol:
+                                  description: 'Protocol - Network protocol this rule applies to. Possible values include: ''SecurityRuleProtocolTCP'', ''SecurityRuleProtocolUDP'', ''SecurityRuleProtocolIcmp'', ''SecurityRuleProtocolEsp'', ''SecurityRuleProtocolAsterisk'''
+                                  type: string
+                                provisioningState:
+                                  description: 'ProvisioningState - The provisioning state of the public IP resource. Possible values are: ''Updating'', ''Deleting'', and ''Failed''.'
+                                  type: string
+                                sourceAddressPrefix:
+                                  description: SourceAddressPrefix - The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used. If this is an ingress rule, specifies where network traffic originates from.
+                                  type: string
+                                sourceAddressPrefixes:
+                                  description: SourceAddressPrefixes - The CIDR or source IP ranges.
+                                  items:
                                     type: string
-                                  id:
-                                    description: ID - Resource ID.
-                                    type: string
-                                  location:
-                                    description: Location - Resource location.
-                                    type: string
-                                  name:
-                                    description: Name - READ-ONLY; Resource name.
-                                    type: string
-                                  properties:
-                                    description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
+                                  type: array
+                                sourceApplicationSecurityGroups:
+                                  description: SourceApplicationSecurityGroups - The application security group specified as source.
+                                  items:
+                                    description: ApplicationSecurityGroup an application security group in a resource group.
                                     properties:
-                                      provisioningState:
-                                        description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
+                                      etag:
+                                        description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
                                         type: string
-                                      resourceGuid:
-                                        description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
+                                      id:
+                                        description: ID - Resource ID.
+                                        type: string
+                                      location:
+                                        description: Location - Resource location.
+                                        type: string
+                                      name:
+                                        description: Name - READ-ONLY; Resource name.
+                                        type: string
+                                      properties:
+                                        description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
+                                        properties:
+                                          provisioningState:
+                                            description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
+                                            type: string
+                                          resourceGuid:
+                                            description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
+                                            type: string
+                                        type: object
+                                      type:
+                                        description: Type - READ-ONLY; Resource type.
                                         type: string
                                     type: object
-                                  type:
-                                    description: Type - READ-ONLY; Resource type.
+                                  type: array
+                                sourcePortRange:
+                                  description: SourcePortRange - The source port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
+                                  type: string
+                                sourcePortRanges:
+                                  description: SourcePortRanges - The source port ranges.
+                                  items:
                                     type: string
-                                type: object
-                              type: array
-                            sourcePortRange:
-                              description: SourcePortRange - The source port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
-                              type: string
-                            sourcePortRanges:
-                              description: SourcePortRanges - The source port ranges.
-                              items:
-                                type: string
-                              type: array
+                                  type: array
+                              type: object
                           type: object
-                      type: object
-                    type: array
+                        type: array
+                      provisioningState:
+                        description: 'ProvisioningState - The provisioning state of the public IP resource. Possible values are: ''Updating'', ''Deleting'', and ''Failed''.'
+                        type: string
+                      resourceGuid:
+                        description: ResourceGUID - The resource GUID property of the network security group resource.
+                        type: string
+                      securityRules:
+                        description: SecurityRules - A collection of security rules of the network security group.
+                        items:
+                          description: SecurityRule network security rule.
+                          properties:
+                            etag:
+                              description: Etag - A unique read-only string that changes whenever the resource is updated.
+                              type: string
+                            id:
+                              description: ID - Resource ID.
+                              type: string
+                            name:
+                              description: Name - The name of the resource that is unique within a resource group. This name can be used to access the resource.
+                              type: string
+                            properties:
+                              description: SecurityRulePropertiesFormat - Properties of the security rule.
+                              properties:
+                                access:
+                                  description: 'Access - The network traffic is allowed or denied. Possible values include: ''SecurityRuleAccessAllow'', ''SecurityRuleAccessDeny'''
+                                  type: string
+                                description:
+                                  description: Description - A description for this rule. Restricted to 140 chars.
+                                  type: string
+                                destinationAddressPrefix:
+                                  description: DestinationAddressPrefix - The destination address prefix. CIDR or destination IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used.
+                                  type: string
+                                destinationAddressPrefixes:
+                                  description: DestinationAddressPrefixes - The destination address prefixes. CIDR or destination IP ranges.
+                                  items:
+                                    type: string
+                                  type: array
+                                destinationApplicationSecurityGroups:
+                                  description: DestinationApplicationSecurityGroups - The application security group specified as destination.
+                                  items:
+                                    description: ApplicationSecurityGroup an application security group in a resource group.
+                                    properties:
+                                      etag:
+                                        description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
+                                        type: string
+                                      id:
+                                        description: ID - Resource ID.
+                                        type: string
+                                      location:
+                                        description: Location - Resource location.
+                                        type: string
+                                      name:
+                                        description: Name - READ-ONLY; Resource name.
+                                        type: string
+                                      properties:
+                                        description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
+                                        properties:
+                                          provisioningState:
+                                            description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
+                                            type: string
+                                          resourceGuid:
+                                            description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
+                                            type: string
+                                        type: object
+                                      type:
+                                        description: Type - READ-ONLY; Resource type.
+                                        type: string
+                                    type: object
+                                  type: array
+                                destinationPortRange:
+                                  description: DestinationPortRange - The destination port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
+                                  type: string
+                                destinationPortRanges:
+                                  description: DestinationPortRanges - The destination port ranges.
+                                  items:
+                                    type: string
+                                  type: array
+                                direction:
+                                  description: 'Direction - The direction of the rule. The direction specifies if rule will be evaluated on incoming or outgoing traffic. Possible values include: ''SecurityRuleDirectionInbound'', ''SecurityRuleDirectionOutbound'''
+                                  type: string
+                                priority:
+                                  description: Priority - The priority of the rule. The value can be between 100 and 4096. The priority number must be unique for each rule in the collection. The lower the priority number, the higher the priority of the rule.
+                                  format: int32
+                                  type: integer
+                                protocol:
+                                  description: 'Protocol - Network protocol this rule applies to. Possible values include: ''SecurityRuleProtocolTCP'', ''SecurityRuleProtocolUDP'', ''SecurityRuleProtocolIcmp'', ''SecurityRuleProtocolEsp'', ''SecurityRuleProtocolAsterisk'''
+                                  type: string
+                                provisioningState:
+                                  description: 'ProvisioningState - The provisioning state of the public IP resource. Possible values are: ''Updating'', ''Deleting'', and ''Failed''.'
+                                  type: string
+                                sourceAddressPrefix:
+                                  description: SourceAddressPrefix - The CIDR or source IP range. Asterisk '*' can also be used to match all source IPs. Default tags such as 'VirtualNetwork', 'AzureLoadBalancer' and 'Internet' can also be used. If this is an ingress rule, specifies where network traffic originates from.
+                                  type: string
+                                sourceAddressPrefixes:
+                                  description: SourceAddressPrefixes - The CIDR or source IP ranges.
+                                  items:
+                                    type: string
+                                  type: array
+                                sourceApplicationSecurityGroups:
+                                  description: SourceApplicationSecurityGroups - The application security group specified as source.
+                                  items:
+                                    description: ApplicationSecurityGroup an application security group in a resource group.
+                                    properties:
+                                      etag:
+                                        description: Etag - READ-ONLY; A unique read-only string that changes whenever the resource is updated.
+                                        type: string
+                                      id:
+                                        description: ID - Resource ID.
+                                        type: string
+                                      location:
+                                        description: Location - Resource location.
+                                        type: string
+                                      name:
+                                        description: Name - READ-ONLY; Resource name.
+                                        type: string
+                                      properties:
+                                        description: ApplicationSecurityGroupPropertiesFormat - Properties of the application security group.
+                                        properties:
+                                          provisioningState:
+                                            description: 'ProvisioningState - READ-ONLY; The provisioning state of the application security group resource. Possible values are: ''Succeeded'', ''Updating'', ''Deleting'', and ''Failed''.'
+                                            type: string
+                                          resourceGuid:
+                                            description: ResourceGUID - READ-ONLY; The resource GUID property of the application security group resource. It uniquely identifies a resource, even if the user changes its name or migrate the resource across subscriptions or resource groups.
+                                            type: string
+                                        type: object
+                                      type:
+                                        description: Type - READ-ONLY; Resource type.
+                                        type: string
+                                    type: object
+                                  type: array
+                                sourcePortRange:
+                                  description: SourcePortRange - The source port or range. Integer or range between 0 and 65535. Asterisk '*' can also be used to match all ports.
+                                  type: string
+                                sourcePortRanges:
+                                  description: SourcePortRanges - The source port ranges.
+                                  items:
+                                    type: string
+                                  type: array
+                              type: object
+                          type: object
+                        type: array
+                    type: object
+                  resourceGroupName:
+                    description: ResourceGroupName - Name of the SecurityGroup's resource group.
+                    type: string
+                  resourceGroupNameRef:
+                    description: ResourceGroupNameRef - A reference to the the SecurityGroup's resource group.
+                    properties:
+                      name:
+                        description: Name of the referenced object.
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  resourceGroupNameSelector:
+                    description: ResourceGroupNameSelector - Select a reference to the the Security group's resource group.
+                    properties:
+                      matchControllerRef:
+                        description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+                        type: boolean
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: MatchLabels ensures an object with matching labels is selected.
+                        type: object
+                    type: object
+                  tags:
+                    additionalProperties:
+                      type: string
+                    description: Tags - Resource tags.
+                    type: object
+                required:
+                - location
                 type: object
               providerConfigRef:
                 description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -376,35 +394,6 @@ spec:
                 required:
                 - name
                 type: object
-              resourceGroupName:
-                description: ResourceGroupName - Name of the SecurityGroup's resource group.
-                type: string
-              resourceGroupNameRef:
-                description: ResourceGroupNameRef - A reference to the the SecurityGroup's resource group.
-                properties:
-                  name:
-                    description: Name of the referenced object.
-                    type: string
-                required:
-                - name
-                type: object
-              resourceGroupNameSelector:
-                description: ResourceGroupNameSelector - Select a reference to the the Security group's resource group.
-                properties:
-                  matchControllerRef:
-                    description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
-                    type: boolean
-                  matchLabels:
-                    additionalProperties:
-                      type: string
-                    description: MatchLabels ensures an object with matching labels is selected.
-                    type: object
-                type: object
-              tags:
-                additionalProperties:
-                  type: string
-                description: Tags - Resource tags.
-                type: object
               writeConnectionSecretToRef:
                 description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
                 properties:
@@ -419,7 +408,7 @@ spec:
                 - namespace
                 type: object
             required:
-            - location
+            - forProvider
             type: object
           status:
             description: A SecurityGroupStatus represents the observed status of a SecurityGroup.

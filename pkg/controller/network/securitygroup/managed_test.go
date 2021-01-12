@@ -1,4 +1,4 @@
-package SecurityGroup
+package securitygroup
 
 import (
 	"context"
@@ -64,13 +64,15 @@ func SecurityGroup(sm ...securityGroupModifier) *v1alpha3.SecurityGroup {
 			Finalizers: []string{},
 		},
 		Spec: v1alpha3.SecurityGroupSpec{
-			ResourceGroupName: resourceGroupName,
-			Location:          location,
-			SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
-				SecurityRules:        setRules(),
-				DefaultSecurityRules: nil,
+			ForProvider: v1alpha3.SecurityGroupParameters{
+				ResourceGroupName: resourceGroupName,
+				Location:          location,
+				SecurityGroupPropertiesFormat: v1alpha3.SecurityGroupPropertiesFormat{
+					SecurityRules:        setRules(),
+					DefaultSecurityRules: nil,
+				},
+				Tags: tags,
 			},
-			Tags: tags,
 		},
 		Status: v1alpha3.SecurityGroupStatus{},
 	}
@@ -85,35 +87,31 @@ func SecurityGroup(sm ...securityGroupModifier) *v1alpha3.SecurityGroup {
 func setRules() *[]v1alpha3.SecurityRule {
 	var securityRules = new([]v1alpha3.SecurityRule)
 	var rule1 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:              "Test Description",
-			Protocol:                 "TEST",
-			SourcePortRange:          "8080",
-			DestinationPortRange:     "80",
-			SourceAddressPrefix:      "Internet",
-			DestinationAddressPrefix: "*",
-			Access:                   "Allow",
-			Priority:                 120,
-			Direction:                "Inbound",
+			Description:              azure.ToStringPtr("Test Description"),
+			Protocol:                 setSecurityRuleProtocol("TEST"),
+			SourcePortRange:          azure.ToStringPtr("8080"),
+			DestinationPortRange:     azure.ToStringPtr("80"),
+			SourceAddressPrefix:      azure.ToStringPtr("Internet"),
+			DestinationAddressPrefix: azure.ToStringPtr("*"),
+			Access:                   setSecurityRuleAccess("Allow"),
+			Priority:                 azure.ToInt32Ptr(120),
+			Direction:                setSecurityRuleDirection("Inbound"),
 		},
 		Name: ruleName1,
 		Etag: etagRule1,
 	}
 	var rule2 = v1alpha3.SecurityRule{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{},
 		Properties: v1alpha3.SecurityRulePropertiesFormat{
-			Description:              "Test Description",
-			Protocol:                 "TEST",
-			SourcePortRange:          "8080",
-			DestinationPortRange:     "80",
-			SourceAddressPrefix:      "Internet",
-			DestinationAddressPrefix: "*",
-			Access:                   "Deny",
-			Priority:                 130,
-			Direction:                "Outbound",
+			Description:              azure.ToStringPtr("Test Description"),
+			Protocol:                 setSecurityRuleProtocol("TEST"),
+			SourcePortRange:          azure.ToStringPtr("8080"),
+			DestinationPortRange:     azure.ToStringPtr("80"),
+			SourceAddressPrefix:      azure.ToStringPtr("Internet"),
+			DestinationAddressPrefix: azure.ToStringPtr("*"),
+			Access:                   setSecurityRuleAccess("Deny"),
+			Priority:                 azure.ToInt32Ptr(130),
+			Direction:                setSecurityRuleDirection("Outbound"),
 		},
 		Name: ruleName2,
 		Etag: etagRule2,
@@ -121,6 +119,21 @@ func setRules() *[]v1alpha3.SecurityRule {
 	*securityRules = append(*securityRules, rule1)
 	*securityRules = append(*securityRules, rule2)
 	return securityRules
+}
+
+func setSecurityRuleDirection(s string) *v1alpha3.SecurityRuleDirection {
+	var direction = v1alpha3.SecurityRuleDirection(s)
+	return &direction
+}
+
+func setSecurityRuleAccess(s string) *v1alpha3.SecurityRuleAccess {
+	var access = v1alpha3.SecurityRuleAccess(s)
+	return &access
+}
+
+func setSecurityRuleProtocol(s string) *v1alpha3.SecurityRuleProtocol {
+	var protocol = v1alpha3.SecurityRuleProtocol(s)
+	return &protocol
 }
 
 func setSecurityRules() *[]network.SecurityRule {

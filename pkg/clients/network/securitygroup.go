@@ -40,83 +40,86 @@ func UpdateSecurityGroupStatusFromAzure(v *v1alpha3.SecurityGroup, az networkmgm
 // NewSecurityGroupParameters returns an Azure SecurityGroup object from a Security Group Spec
 func NewSecurityGroupParameters(v *v1alpha3.SecurityGroup) networkmgmt.SecurityGroup {
 	return networkmgmt.SecurityGroup{
-		Location: azure.ToStringPtr(v.Spec.Location),
-		Tags:     azure.ToStringPtrMap(v.Spec.Tags),
+		Location: azure.ToStringPtr(v.Spec.ForProvider.Location),
+		Tags:     azure.ToStringPtrMap(v.Spec.ForProvider.Tags),
 		SecurityGroupPropertiesFormat: &networkmgmt.SecurityGroupPropertiesFormat{
 			// Default spec changes will be added if needed here
-			SecurityRules: SetSecurityRulesToSecurityGroup(v.Spec.SecurityGroupPropertiesFormat.SecurityRules),
+			SecurityRules: SetSecurityRulesToSecurityGroup(v.Spec.ForProvider.SecurityGroupPropertiesFormat.SecurityRules),
 		},
 	}
 }
 
 func SetSecurityRulesToSecurityGroup(vList *[]v1alpha3.SecurityRule) *[]networkmgmt.SecurityRule {
-	var vSecList = new([]networkmgmt.SecurityRule)
 	if vList != nil {
-		for _, v := range *vList {
+		var vSecList = make([]networkmgmt.SecurityRule, len(*vList))
+		for i, v := range *vList {
 			var sRule = networkmgmt.SecurityRule{}
 			sRule.ID = azure.ToStringPtr(v.ID)
 			sRule.Name = azure.ToStringPtr(v.Name)
 			sRule.Etag = azure.ToStringPtr(v.Etag)
 			var ruleProperties = new(networkmgmt.SecurityRulePropertiesFormat)
-			ruleProperties.Description = azure.ToStringPtr(v.Properties.Description)
+			ruleProperties.Description = v.Properties.Description
 			ruleProperties.Protocol = setSecurityRuleProtocol(v.Properties.Protocol)
 			ruleProperties.Access = setSecurityRuleAccess(v.Properties.Access)
-			ruleProperties.ProvisioningState = azure.ToStringPtr(v.Properties.ProvisioningState)
-			ruleProperties.SourcePortRange = azure.ToStringPtr(v.Properties.SourcePortRange)
-			ruleProperties.DestinationPortRange = azure.ToStringPtr(v.Properties.DestinationPortRange)
-			ruleProperties.SourcePortRanges = azure.ToStringArrayPtr(v.Properties.SourcePortRanges)
-			ruleProperties.DestinationPortRanges = azure.ToStringArrayPtr(v.Properties.DestinationPortRanges)
-			ruleProperties.SourceAddressPrefix = azure.ToStringPtr(v.Properties.SourceAddressPrefix)
-			ruleProperties.DestinationAddressPrefix = azure.ToStringPtr(v.Properties.DestinationAddressPrefix)
-			ruleProperties.SourceAddressPrefixes = azure.ToStringArrayPtr(v.Properties.SourceAddressPrefixes)
-			ruleProperties.DestinationAddressPrefixes = azure.ToStringArrayPtr(v.Properties.DestinationAddressPrefixes)
+			ruleProperties.ProvisioningState = v.Properties.ProvisioningState
+			ruleProperties.SourcePortRange = v.Properties.SourcePortRange
+			ruleProperties.DestinationPortRange = v.Properties.DestinationPortRange
+			ruleProperties.SourcePortRanges = v.Properties.SourcePortRanges
+			ruleProperties.DestinationPortRanges = v.Properties.DestinationPortRanges
+			ruleProperties.SourceAddressPrefix = v.Properties.SourceAddressPrefix
+			ruleProperties.DestinationAddressPrefix = v.Properties.DestinationAddressPrefix
+			ruleProperties.SourceAddressPrefixes = v.Properties.SourceAddressPrefixes
+			ruleProperties.DestinationAddressPrefixes = v.Properties.DestinationAddressPrefixes
 			ruleProperties.Direction = setSecurityRuleDirection(v.Properties.Direction)
-			ruleProperties.Priority = azure.ToInt32Ptr(int(v.Properties.Priority))
-			ruleProperties.SourceApplicationSecurityGroups = setApplicationSecurityGroups(&v.Properties.SourceApplicationSecurityGroups)
-			ruleProperties.DestinationApplicationSecurityGroups = setApplicationSecurityGroups(&v.Properties.DestinationApplicationSecurityGroups)
+			ruleProperties.Priority = v.Properties.Priority
+			ruleProperties.SourceApplicationSecurityGroups = setApplicationSecurityGroups(v.Properties.SourceApplicationSecurityGroups)
+			ruleProperties.DestinationApplicationSecurityGroups = setApplicationSecurityGroups(v.Properties.DestinationApplicationSecurityGroups)
 			sRule.SecurityRulePropertiesFormat = ruleProperties
-			*vSecList = append(*vSecList, sRule)
+			vSecList[i] = sRule
 		}
-		return vSecList
+		return &vSecList
 	}
 	return nil
 }
 
 func setApplicationSecurityGroups(groups *[]v1alpha3.ApplicationSecurityGroup) *[]networkmgmt.ApplicationSecurityGroup {
-	var appSecurityGroups = new([]networkmgmt.ApplicationSecurityGroup)
-	for _, v := range *groups {
-		var applicationSecurityGroup = networkmgmt.ApplicationSecurityGroup{}
-		applicationSecurityGroup.ID = azure.ToStringPtr(v.ID)
-		applicationSecurityGroup.Name = azure.ToStringPtr(v.Name)
-		applicationSecurityGroup.Location = azure.ToStringPtr(v.Location)
-		applicationSecurityGroup.Type = azure.ToStringPtr(v.Type)
-		applicationSecurityGroup.Etag = azure.ToStringPtr(v.Etag)
-		var applicationSecurityGroupPropertiesFormat = new(networkmgmt.ApplicationSecurityGroupPropertiesFormat)
-		applicationSecurityGroupPropertiesFormat.ResourceGUID = azure.ToStringPtr(v.Properties.ResourceGUID)
-		applicationSecurityGroupPropertiesFormat.ProvisioningState = azure.ToStringPtr(v.Properties.ProvisioningState)
-		applicationSecurityGroup.ApplicationSecurityGroupPropertiesFormat = applicationSecurityGroupPropertiesFormat
-		*appSecurityGroups = append(*appSecurityGroups, applicationSecurityGroup)
+	if groups != nil {
+		var appSecurityGroups = make([]networkmgmt.ApplicationSecurityGroup, len(*groups))
+		for i, v := range *groups {
+			var applicationSecurityGroup = networkmgmt.ApplicationSecurityGroup{}
+			applicationSecurityGroup.ID = azure.ToStringPtr(v.ID)
+			applicationSecurityGroup.Name = azure.ToStringPtr(v.Name)
+			applicationSecurityGroup.Location = azure.ToStringPtr(v.Location)
+			applicationSecurityGroup.Type = azure.ToStringPtr(v.Type)
+			applicationSecurityGroup.Etag = azure.ToStringPtr(v.Etag)
+			var applicationSecurityGroupPropertiesFormat = new(networkmgmt.ApplicationSecurityGroupPropertiesFormat)
+			applicationSecurityGroupPropertiesFormat.ResourceGUID = azure.ToStringPtr(v.Properties.ResourceGUID)
+			applicationSecurityGroupPropertiesFormat.ProvisioningState = azure.ToStringPtr(v.Properties.ProvisioningState)
+			applicationSecurityGroup.ApplicationSecurityGroupPropertiesFormat = applicationSecurityGroupPropertiesFormat
+			appSecurityGroups[i] = applicationSecurityGroup
+		}
+		return &appSecurityGroups
 	}
-	return appSecurityGroups
+	return nil
 }
 
-func setSecurityRuleDirection(direction v1alpha3.SecurityRuleDirection) networkmgmt.SecurityRuleDirection {
-	return networkmgmt.SecurityRuleDirection(direction)
+func setSecurityRuleDirection(direction *v1alpha3.SecurityRuleDirection) networkmgmt.SecurityRuleDirection {
+	return networkmgmt.SecurityRuleDirection(*direction)
 }
 
-func setSecurityRuleAccess(access v1alpha3.SecurityRuleAccess) networkmgmt.SecurityRuleAccess {
-	return networkmgmt.SecurityRuleAccess(access)
+func setSecurityRuleAccess(access *v1alpha3.SecurityRuleAccess) networkmgmt.SecurityRuleAccess {
+	return networkmgmt.SecurityRuleAccess(*access)
 }
 
-func setSecurityRuleProtocol(protocol v1alpha3.SecurityRuleProtocol) networkmgmt.SecurityRuleProtocol {
-	return networkmgmt.SecurityRuleProtocol(protocol)
+func setSecurityRuleProtocol(protocol *v1alpha3.SecurityRuleProtocol) networkmgmt.SecurityRuleProtocol {
+	return networkmgmt.SecurityRuleProtocol(*protocol)
 }
 
 // SecurityGroupNeedsUpdate determines if a Security Group need to be updated
 func SecurityGroupNeedsUpdate(sg *v1alpha3.SecurityGroup, az networkmgmt.SecurityGroup) bool {
 	up := NewSecurityGroupParameters(sg)
-	if sg.Spec.SecurityRules != nil && az.SecurityRules != nil {
-		sgRules := SetSecurityRulesToSecurityGroup(sg.Spec.SecurityRules)
+	if sg.Spec.ForProvider.SecurityRules != nil && az.SecurityRules != nil {
+		sgRules := SetSecurityRulesToSecurityGroup(sg.Spec.ForProvider.SecurityRules)
 		azSgRules := az.SecurityRules
 		if !reflect.DeepEqual(len(*sgRules), len(*azSgRules)) {
 			return true
@@ -131,16 +134,16 @@ func SecurityGroupNeedsUpdate(sg *v1alpha3.SecurityGroup, az networkmgmt.Securit
 			}
 		}
 	}
-	if nil == sg.Spec.SecurityRules && nil != az.SecurityRules {
+	if nil == sg.Spec.ForProvider.SecurityRules && nil != az.SecurityRules {
 		return true
 	}
-	if nil != sg.Spec.SecurityRules && nil == az.SecurityRules {
+	if nil != sg.Spec.ForProvider.SecurityRules && nil == az.SecurityRules {
 		return true
 	}
 	if !reflect.DeepEqual(up.Tags, az.Tags) {
 		return true
 	}
-	if !reflect.DeepEqual(azure.ToStringPtr(sg.Spec.Location), az.Location) {
+	if !reflect.DeepEqual(azure.ToStringPtr(sg.Spec.ForProvider.Location), az.Location) {
 		return true
 	}
 	if !reflect.DeepEqual(azure.ToStringPtr(sg.Name), az.Name) {

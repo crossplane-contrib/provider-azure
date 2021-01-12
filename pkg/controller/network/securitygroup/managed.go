@@ -13,17 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package SecurityGroup
+package securitygroup
 
 import (
 	"context"
 	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
-	securitygroup "github.com/crossplane/provider-azure/pkg/clients/network"
-
-	//"github.com/crossplane/provider-azure/pkg/clients/network"
-
-	//"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-12-01/network/networkapi"
 	runtimev1alpha1 "github.com/crossplane/crossplane-runtime/apis/core/v1alpha1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
@@ -32,6 +27,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
 	azureclients "github.com/crossplane/provider-azure/pkg/clients"
+	securitygroup "github.com/crossplane/provider-azure/pkg/clients/network"
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -78,7 +74,6 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 
 type external struct {
 	client networkapi.SecurityGroupsClientAPI
-	//client azurenetwork.SecurityGroupsClient
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
@@ -86,7 +81,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotSecurityGroup)
 	}
-	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), "")
+	az, err := e.client.Get(ctx, v.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(v), "")
 	if azureclients.IsNotFound(err) {
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
@@ -114,7 +109,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	sg := securitygroup.NewSecurityGroupParameters(v)
 
-	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), sg); err != nil {
+	if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(v), sg); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateSecurityGroup)
 	}
 
@@ -126,13 +121,13 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotSecurityGroup)
 	}
-	az, err := e.client.Get(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), "")
+	az, err := e.client.Get(ctx, v.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(v), "")
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetSecurityGroup)
 	}
 	if securitygroup.SecurityGroupNeedsUpdate(v, az) {
 		sg := securitygroup.NewSecurityGroupParameters(v)
-		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v), sg); err != nil {
+		if _, err := e.client.CreateOrUpdate(ctx, v.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(v), sg); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateSecurityGroup)
 		}
 	}
@@ -146,6 +141,6 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	mg.SetConditions(runtimev1alpha1.Deleting())
 
-	_, err := e.client.Delete(ctx, v.Spec.ResourceGroupName, meta.GetExternalName(v))
+	_, err := e.client.Delete(ctx, v.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(v))
 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteSecurityGroup)
 }

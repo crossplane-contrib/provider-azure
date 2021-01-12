@@ -65,5 +65,5 @@ func init() {
 	SchemeBuilder.Register(&VirtualNetwork{}, &VirtualNetworkList{})
 	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
 	SchemeBuilder.Register(&SecurityGroup{}, &SecurityGroupList{})
-	SchemeBuilder.Register(&SecurityRule{})
+	//SchemeBuilder.Register(&SecurityRule{})
 }
