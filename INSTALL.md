@@ -34,6 +34,14 @@ updated. After initial setup, it can be updated by running `make submodules`.
 
 Run `make help` for more options.
 
+### Go support
+
+To build with as-yet unvalidated go versions set GO_SUPPORTED_VERSIONS:
+
+```console
+GO_SUPPORTED_VERSIONS=1.15 make
+```
+
 ## Building inside the cross container
 
 Official Crossplane builds are done inside a build container. This ensures that we get a consistent build, test and release environment. To run the build inside the cross container run:
