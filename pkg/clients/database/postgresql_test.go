@@ -27,6 +27,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
@@ -41,6 +42,47 @@ func postgreSQLWithSubnetID(id string) postgreSQLVirtualNetworkRuleModifier {
 func postgreSQLWithIgnoreMissing(ignore bool) postgreSQLVirtualNetworkRuleModifier {
 	return func(r *v1alpha3.PostgreSQLServerVirtualNetworkRule) {
 		r.Spec.IgnoreMissingVnetServiceEndpoint = ignore
+	}
+}
+
+func postgresqlServerParameters(createMode *v1beta1.CreateMode) v1beta1.SQLServerParameters {
+	fp := v1beta1.SQLServerParameters{
+		CreateMode: createMode,
+	}
+	return fp
+}
+
+func postgresqlServerPropertiesForDefaultCreate(withMode bool) postgresql.BasicServerPropertiesForCreate {
+	adminPassword := "admin"
+	var mode postgresql.CreateMode = postgresql.CreateModeDefault
+	if !withMode {
+		mode = ""
+	}
+	return &postgresql.ServerPropertiesForDefaultCreate{
+		AdministratorLoginPassword: &adminPassword,
+		CreateMode:                 mode,
+		StorageProfile:             &postgresql.StorageProfile{},
+	}
+}
+
+func postgresqlServerPropertiesForRestore() postgresql.BasicServerPropertiesForCreate {
+	return &postgresql.ServerPropertiesForRestore{
+		CreateMode:     postgresql.CreateModePointInTimeRestore,
+		StorageProfile: &postgresql.StorageProfile{},
+	}
+}
+
+func postgresqlServerPropertiesForGeoRestore() postgresql.BasicServerPropertiesForCreate {
+	return &postgresql.ServerPropertiesForGeoRestore{
+		CreateMode:     postgresql.CreateModeGeoRestore,
+		StorageProfile: &postgresql.StorageProfile{},
+	}
+}
+
+func postgresqlServerPropertiesForReplica() postgresql.BasicServerPropertiesForCreate {
+	return &postgresql.ServerPropertiesForReplica{
+		CreateMode:     postgresql.CreateModeReplica,
+		StorageProfile: &postgresql.StorageProfile{},
 	}
 }
 
@@ -59,6 +101,54 @@ func postgreSQLVirtualNetworkRule(sm ...postgreSQLVirtualNetworkRuleModifier) *v
 	}
 
 	return r
+}
+
+func TestTopostgresqlProperties(t *testing.T) {
+	cases := []struct {
+		name string
+		fp   v1beta1.SQLServerParameters
+		want postgresql.BasicServerPropertiesForCreate
+	}{
+		{
+			name: "CreateModeDefault",
+			fp:   postgresqlServerParameters(pointerFromCreateMode(v1beta1.CreateModeDefault)),
+			want: postgresqlServerPropertiesForDefaultCreate(true),
+		},
+		{
+			name: "CreateModePointInTimeRestore",
+			fp:   postgresqlServerParameters(pointerFromCreateMode(v1beta1.CreateModePointInTimeRestore)),
+			want: postgresqlServerPropertiesForRestore(),
+		},
+		{
+			name: "CreateModeGeoRestore",
+			fp:   postgresqlServerParameters(pointerFromCreateMode(v1beta1.CreateModeGeoRestore)),
+			want: postgresqlServerPropertiesForGeoRestore(),
+		},
+		{
+			name: "CreateModeReplica",
+			fp:   postgresqlServerParameters(pointerFromCreateMode(v1beta1.CreateModeReplica)),
+			want: postgresqlServerPropertiesForReplica(),
+		},
+		{
+			name: "ServerPropertiesForInvalidString",
+			fp:   postgresqlServerParameters(pointerFromCreateMode("")),
+			want: postgresqlServerPropertiesForDefaultCreate(false),
+		},
+		{
+			name: "ServerPropertiesForDefaultCreate",
+			fp:   postgresqlServerParameters(nil),
+			want: postgresqlServerPropertiesForDefaultCreate(false),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := toPGSQLProperties(tc.fp, "admin")
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("TestTopostgresqlProperties(%s): -want, +got\n%s", tc.name, diff)
+			}
+		})
+	}
 }
 
 func TestNewPostgreSQLVirtualNetworkRuleParameters(t *testing.T) {

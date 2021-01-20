@@ -30,6 +30,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	azuredbv1alpha3 "github.com/crossplane/provider-azure/apis/database/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/database/v1beta1"
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -82,30 +83,83 @@ func (c *MySQLServerClient) GetServer(ctx context.Context, cr *azuredbv1beta1.My
 	return c.ServersClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 }
 
+// toMySQLProperties converts the CrossPlane ForProvider object to a MySQL Azure properties object
+func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysql.BasicServerPropertiesForCreate {
+	createMode := pointerToCreateMode(s.CreateMode)
+	switch createMode {
+	case azuredbv1beta1.CreateModePointInTimeRestore:
+		return &mysql.ServerPropertiesForRestore{
+			MinimalTLSVersion:  mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:            mysql.ServerVersion(s.Version),
+			SslEnforcement:     mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:         mysql.CreateMode(createMode),
+			RestorePointInTime: safeDate(s.RestorePointInTime),
+			SourceServerID:     s.SourceServerID,
+			StorageProfile: &mysql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	case azuredbv1beta1.CreateModeGeoRestore:
+		return &mysql.ServerPropertiesForGeoRestore{
+			MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:           mysql.ServerVersion(s.Version),
+			SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:        mysql.CreateMode(createMode),
+			SourceServerID:    s.SourceServerID,
+			StorageProfile: &mysql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	case azuredbv1beta1.CreateModeReplica:
+		return &mysql.ServerPropertiesForReplica{
+			MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:           mysql.ServerVersion(s.Version),
+			SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:        mysql.CreateMode(createMode),
+			SourceServerID:    s.SourceServerID,
+			StorageProfile: &mysql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	case azuredbv1beta1.CreateModeDefault:
+		fallthrough
+	default:
+		return &mysql.ServerPropertiesForDefaultCreate{
+			MinimalTLSVersion:          mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
+			AdministratorLoginPassword: &adminPassword,
+			Version:                    mysql.ServerVersion(s.Version),
+			SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:                 mysql.CreateMode(createMode),
+			StorageProfile: &mysql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	}
+}
+
 // CreateServer creates a MySQL Server.
 func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1.MySQLServer, adminPassword string) error {
 	s := cr.Spec.ForProvider
-	properties := &mysql.ServerPropertiesForDefaultCreate{
-		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
-		AdministratorLoginPassword: &adminPassword,
-		MinimalTLSVersion:          mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-		Version:                    mysql.ServerVersion(s.Version),
-		SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
-		CreateMode:                 mysql.CreateModeDefault,
-		StorageProfile: &mysql.StorageProfile{
-			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
-			StorageAutogrow:     mysql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
-		},
-	}
 	sku, err := ToMySQLSKU(s.SKU)
 	if err != nil {
 		return err
 	}
 	createParams := mysql.ServerForCreate{
 		Sku:        sku,
-		Properties: properties,
+		Properties: toMySQLProperties(s, adminPassword),
 		Location:   &s.Location,
 		Tags:       azure.ToStringPtrMap(s.Tags),
 	}

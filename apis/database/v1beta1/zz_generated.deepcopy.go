@@ -193,6 +193,20 @@ func (in *SQLServerParameters) DeepCopyInto(out *SQLServerParameters) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.SKU.DeepCopyInto(&out.SKU)
+	if in.CreateMode != nil {
+		in, out := &in.CreateMode, &out.CreateMode
+		*out = new(CreateMode)
+		**out = **in
+	}
+	if in.RestorePointInTime != nil {
+		in, out := &in.RestorePointInTime, &out.RestorePointInTime
+		*out = (*in).DeepCopy()
+	}
+	if in.SourceServerID != nil {
+		in, out := &in.SourceServerID, &out.SourceServerID
+		*out = new(string)
+		**out = **in
+	}
 	if in.Tags != nil {
 		in, out := &in.Tags, &out.Tags
 		*out = make(map[string]string, len(*in))

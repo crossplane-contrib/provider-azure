@@ -163,7 +163,17 @@ type SQLServerParameters struct {
 
 	// TODO(hasheddan): support PublicNetworkAccess
 
-	// TODO(hasheddan): support CreateMode
+	// CreateMode - Possible values include: 'CreateModeDefault', 'CreateModePointInTimeRestore', 'CreateModeGeoRestore', 'CreateModeReplica'
+	// +optional
+	CreateMode *CreateMode `json:"createMode,omitempty"`
+
+	// RestorePointInTime - Restore point creation time (RFC3339 format), specifying the time to restore from.
+	// +optional
+	RestorePointInTime *metav1.Time `json:"restorePointInTime,omitempty"`
+
+	// SourceServerID - The server to restore from when restoring or creating replicas
+	// +optional
+	SourceServerID *string `json:"sourceServerID,omitempty"`
 
 	// Tags - Application-specific metadata in the form of key-value pairs.
 	// +optional
@@ -191,6 +201,19 @@ const (
 	TLS11                  MinimalTLSVersionEnum = "TLS1_1"
 	TLS12                  MinimalTLSVersionEnum = "TLS1_2"
 	TLSEnforcementDisabled MinimalTLSVersionEnum = "TLSEnforcementDisabled"
+)
+
+// CreateMode controls the creation behaviour
+// Keep synced with "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql".MinimalTLSVersionEnum
+// +kubebuilder:validation:Enum=Default;GeoRestore;PointInTimeRestore;Replica
+type CreateMode string
+
+// All valid values of CreateMode
+const (
+	CreateModeDefault            CreateMode = "Default"
+	CreateModeReplica            CreateMode = "Replica"
+	CreateModeGeoRestore         CreateMode = "GeoRestore"
+	CreateModePointInTimeRestore CreateMode = "PointInTimeRestore"
 )
 
 // A SQLServerSpec defines the desired state of a SQLServer.

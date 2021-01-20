@@ -59,6 +59,14 @@ spec:
                   administratorLogin:
                     description: AdministratorLogin - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
                     type: string
+                  createMode:
+                    description: 'CreateMode - Possible values include: ''CreateModeDefault'', ''CreateModePointInTimeRestore'', ''CreateModeGeoRestore'', ''CreateModeReplica'''
+                    enum:
+                    - Default
+                    - GeoRestore
+                    - PointInTimeRestore
+                    - Replica
+                    type: string
                   location:
                     description: Location specifies the location of this SQLServer.
                     type: string
@@ -94,6 +102,10 @@ spec:
                         description: MatchLabels ensures an object with matching labels is selected.
                         type: object
                     type: object
+                  restorePointInTime:
+                    description: RestorePointInTime - Restore point creation time (RFC3339 format), specifying the time to restore from.
+                    format: date-time
+                    type: string
                   sku:
                     description: SKU is the billing information related properties of the server.
                     properties:
@@ -118,6 +130,9 @@ spec:
                     - family
                     - tier
                     type: object
+                  sourceServerID:
+                    description: SourceServerID - The server to restore from when restoring or creating replicas
+                    type: string
                   sslEnforcement:
                     description: 'SSLEnforcement - Enable ssl enforcement or not when connect to server. Possible values include: ''Enabled'', ''Disabled'''
                     enum:
