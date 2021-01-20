@@ -80,6 +80,7 @@ func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1
 	properties := &postgresql.ServerPropertiesForDefaultCreate{
 		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
+		MinimalTLSVersion:          postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 		Version:                    postgresql.ServerVersion(s.Version),
 		SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
 		CreateMode:                 postgresql.CreateModeDefault,
@@ -117,8 +118,9 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 	// we don't support that.
 	s := cr.Spec.ForProvider
 	properties := &postgresql.ServerUpdateParametersProperties{
-		Version:        postgresql.ServerVersion(s.Version),
-		SslEnforcement: postgresql.SslEnforcementEnum(s.SSLEnforcement),
+		Version:           postgresql.ServerVersion(s.Version),
+		MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+		SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
 		StorageProfile: &postgresql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -260,6 +262,8 @@ func IsPostgreSQLUpToDate(p azuredbv1beta1.SQLServerParameters, in postgresql.Se
 		return false
 	}
 	switch {
+	case p.MinimalTLSVersion != azuredbv1beta1.MinimalTLSVersionEnum(in.MinimalTLSVersion):
+		return false
 	case p.SSLEnforcement != string(in.SslEnforcement):
 		return false
 	case p.Version != string(in.Version):
