@@ -156,7 +156,8 @@ type SQLServerParameters struct {
 
 	// TODO(hasheddan): support AdministratorLoginPassword
 
-	// TODO(hasheddan): support MinimalTLSVersion
+	// MinimalTLSVersion - control TLS connection policy
+	MinimalTLSVersion MinimalTLSVersionEnum `json:"minimalTlsVersion,omitempty"`
 
 	// TODO(hasheddan): support InfrastructureEncryption
 
@@ -178,6 +179,19 @@ type SQLServerParameters struct {
 	// StorageProfile - Storage profile of a server.
 	StorageProfile StorageProfile `json:"storageProfile"`
 }
+
+// MinimalTLSVersionEnum describes the TLS connection policy.
+// Keep synced with "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql".MinimalTLSVersionEnum
+// +kubebuilder:validation:Enum=TLS1_0;TLS1_1;TLS1_2;TLSEnforcementDisabled
+type MinimalTLSVersionEnum string
+
+// All the legitimate MinimalTLSVersion values
+const (
+	TLS10                  MinimalTLSVersionEnum = "TLS1_0"
+	TLS11                  MinimalTLSVersionEnum = "TLS1_1"
+	TLS12                  MinimalTLSVersionEnum = "TLS1_2"
+	TLSEnforcementDisabled MinimalTLSVersionEnum = "TLSEnforcementDisabled"
+)
 
 // A SQLServerSpec defines the desired state of a SQLServer.
 type SQLServerSpec struct {

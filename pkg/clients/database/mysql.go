@@ -88,6 +88,7 @@ func (c *MySQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1
 	properties := &mysql.ServerPropertiesForDefaultCreate{
 		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
 		AdministratorLoginPassword: &adminPassword,
+		MinimalTLSVersion:          mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 		Version:                    mysql.ServerVersion(s.Version),
 		SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
 		CreateMode:                 mysql.CreateModeDefault,
@@ -125,8 +126,9 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1
 	// we don't support that.
 	s := cr.Spec.ForProvider
 	properties := &mysql.ServerUpdateParametersProperties{
-		Version:        mysql.ServerVersion(s.Version),
-		SslEnforcement: mysql.SslEnforcementEnum(s.SSLEnforcement),
+		Version:           mysql.ServerVersion(s.Version),
+		MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+		SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
 		StorageProfile: &mysql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -268,6 +270,8 @@ func IsMySQLUpToDate(p azuredbv1beta1.SQLServerParameters, in mysql.Server) bool
 		return false
 	}
 	switch {
+	case p.MinimalTLSVersion != azuredbv1beta1.MinimalTLSVersionEnum(in.MinimalTLSVersion):
+		return false
 	case p.SSLEnforcement != string(in.SslEnforcement):
 		return false
 	case p.Version != string(in.Version):
