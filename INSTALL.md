@@ -54,4 +54,4 @@ The first run of `build/run` will build the container itself and could take a fe
 
 ## Install
 
-TBD: Steps to install the Azure provider into a Crossplane cluster
+Installation instructions for local development builds can be found in the [Crossplane contributing guide](https://github.com/crossplane/crossplane/blob/master/CONTRIBUTING.md#establishing-a-development-environment).
