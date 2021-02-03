@@ -33,7 +33,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -166,7 +165,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "GetErrNotFound",
 			fields: fields{
 				Client: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return newContainerNotFoundError(testContainerName)
 					},
 				},
@@ -180,7 +179,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "GetErrOther",
 			fields: fields{
 				Client: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return errors.New("test-get-error")
 					},
 				},
@@ -258,7 +257,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Initializer:      managed.NewNameAsExternalName(tt.fields.Client),
 				log:              logging.NewNopLogger(),
 			}
-			got, err := r.Reconcile(req)
+			got, err := r.Reconcile(context.Background(), req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("Reconciler.Reconcile(): -want error, +got error:\n%s", diff)
 			}
@@ -318,7 +317,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			name: "FailedToGetAccountNotFoundNoDelete",
 			fields: fields{
 				Client: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return newAccountNotFoundError(testAccountName)
 					},
 				},
@@ -733,7 +732,7 @@ func Test_containerCreateUpdater_create(t *testing.T) {
 			fields: fields{
 				container: v1alpha3test.NewMockContainer(testContainerName).Container,
 				kube: &test.MockClient{
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return errors.New("test-update-error")
 					},
 				},

@@ -26,7 +26,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -143,10 +142,10 @@ func TestObserve(t *testing.T) {
 	}
 
 	mockKube := &test.MockClient{
-		MockGet: func(_ context.Context, key client.ObjectKey, obj runtime.Object) error {
+		MockGet: func(_ context.Context, key client.ObjectKey, obj client.Object) error {
 			return nil
 		},
-		MockUpdate: func(ctx context.Context, obj runtime.Object, opts ...client.UpdateOption) error {
+		MockUpdate: func(ctx context.Context, obj client.Object, opts ...client.UpdateOption) error {
 			return nil
 		},
 	}

@@ -31,7 +31,6 @@ import (
 	"github.com/pkg/errors"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -217,7 +216,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "GetErrorOther",
 			fields: fields{
 				client: &test.MockClient{
-					MockGet: func(context.Context, client.ObjectKey, runtime.Object) error {
+					MockGet: func(context.Context, client.ObjectKey, client.Object) error {
 						return errBoom
 					},
 				},
@@ -266,7 +265,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Initializer:      managed.NewNameAsExternalName(tt.fields.client),
 				log:              logging.NewNopLogger(),
 			}
-			got, err := r.Reconcile(req)
+			got, err := r.Reconcile(context.Background(), req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("Reconciler.Reconcile(): -want error, +got error:\n%s", diff)
 			}
@@ -317,7 +316,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionOrphan).
 					WithFinalizers([]string{finalizer, "test"}).Account,
 				cc: &test.MockClient{
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return nil
 					},
 				},
@@ -338,7 +337,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return nil
 					},
 				},
@@ -360,7 +359,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
-					MockStatusUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockStatusUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return nil
 					},
 				},
@@ -385,7 +384,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 				acct: v1alpha3test.NewMockAccount(bucketName).WithSpecDeletionPolicy(xpv1.DeletionDelete).
 					WithFinalizer(finalizer).Account,
 				cc: &test.MockClient{
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error { return nil },
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error { return nil },
 				},
 				ao: &azurestoragefake.MockAccountOperations{
 					MockDelete: func(ctx context.Context) error {
@@ -452,8 +451,8 @@ func Test_syncdeleter_sync(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockCreate: func(ctx context.Context, obj runtime.Object, _ ...client.CreateOption) error { return nil },
-					MockStatusUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockCreate: func(ctx context.Context, obj client.Object, _ ...client.CreateOption) error { return nil },
+					MockStatusUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return nil
 					},
 				},
@@ -471,7 +470,7 @@ func Test_syncdeleter_sync(t *testing.T) {
 			name: "AttrsNotFoundCreate",
 			fields: fields{
 				kube: &test.MockClient{
-					MockCreate: func(ctx context.Context, obj runtime.Object, _ ...client.CreateOption) error { return nil },
+					MockCreate: func(ctx context.Context, obj client.Object, _ ...client.CreateOption) error { return nil },
 				},
 				ao: &azurestoragefake.MockAccountOperations{
 					MockGet: func(i context.Context) (attrs *storage.Account, e error) {
@@ -491,7 +490,7 @@ func Test_syncdeleter_sync(t *testing.T) {
 			name: "Update",
 			fields: fields{
 				kube: &test.MockClient{
-					MockCreate: func(ctx context.Context, obj runtime.Object, _ ...client.CreateOption) error { return nil },
+					MockCreate: func(ctx context.Context, obj client.Object, _ ...client.CreateOption) error { return nil },
 				},
 				ao: &azurestoragefake.MockAccountOperations{
 					MockGet: func(i context.Context) (attrs *storage.Account, e error) {
@@ -561,7 +560,7 @@ func Test_createupdater_create(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockStatusUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockStatusUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return nil
 					},
 				},
@@ -695,7 +694,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockStatusUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error { return nil },
+					MockStatusUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error { return nil },
 				},
 			},
 			want: want{
@@ -787,7 +786,7 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 				secretupdater: &MockAccountSecretupdater{},
 				acct:          v1alpha3test.NewMockAccount(name).Account,
 				kube: &test.MockClient{
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return errBoom
 					},
 				},
@@ -907,7 +906,7 @@ func Test_accountSecretUpdater_updatesecret(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return kerrors.NewNotFound(schema.GroupResource{Group: azurev1alpha3.Group, Resource: "secret"}, name)
 					},
 				},
@@ -931,7 +930,7 @@ func Test_accountSecretUpdater_updatesecret(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return kerrors.NewNotFound(schema.GroupResource{Group: azurev1alpha3.Group, Resource: "secret"}, name)
 					},
 				},
@@ -960,10 +959,10 @@ func Test_accountSecretUpdater_updatesecret(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return kerrors.NewNotFound(schema.GroupResource{Group: azurev1alpha3.Group, Resource: "secret"}, name)
 					},
-					MockCreate: func(ctx context.Context, obj runtime.Object, _ ...client.CreateOption) error {
+					MockCreate: func(ctx context.Context, obj client.Object, _ ...client.CreateOption) error {
 						return nil
 					},
 				},
@@ -991,10 +990,10 @@ func Test_accountSecretUpdater_updatesecret(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return kerrors.NewNotFound(schema.GroupResource{Group: azurev1alpha3.Group, Resource: "secret"}, name)
 					},
-					MockCreate: func(ctx context.Context, obj runtime.Object, _ ...client.CreateOption) error {
+					MockCreate: func(ctx context.Context, obj client.Object, _ ...client.CreateOption) error {
 						return errors.New("test-create-secret-error")
 					},
 				},
@@ -1023,13 +1022,13 @@ func Test_accountSecretUpdater_updatesecret(t *testing.T) {
 					},
 				},
 				kube: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return nil
 					},
-					MockCreate: func(ctx context.Context, obj runtime.Object, _ ...client.CreateOption) error {
+					MockCreate: func(ctx context.Context, obj client.Object, _ ...client.CreateOption) error {
 						return kerrors.NewAlreadyExists(schema.GroupResource{Group: azurev1alpha3.Group, Resource: "secret"}, name)
 					},
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return nil
 					},
 				},
