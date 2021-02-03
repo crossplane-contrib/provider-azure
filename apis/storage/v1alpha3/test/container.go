@@ -45,6 +45,12 @@ func NewMockContainer(name string) *MockContainer {
 	return c
 }
 
+// WithResourceVersion sets ResourceVersion value
+func (tc *MockContainer) WithResourceVersion(v string) *MockContainer {
+	tc.ObjectMeta.ResourceVersion = v
+	return tc
+}
+
 // WithTypeMeta sets TypeMeta value
 func (tc *MockContainer) WithTypeMeta(tm metav1.TypeMeta) *MockContainer {
 	tc.TypeMeta = tm

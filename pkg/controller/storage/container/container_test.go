@@ -336,11 +336,12 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			fields: fields{
 				Client: fake.NewClientBuilder().WithObjects(newCont().WithSpecProviderRef(testAccountName).
 					WithFinalizer(finalizer).
-					Container).Build(),
+					WithResourceVersion("1").Container).Build(),
 			},
 			args: args{
 				ctx: ctx,
 				c: newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).
+					WithResourceVersion("1").
 					WithDeleteTimestamp(time.Now()).
 					Container,
 			},
