@@ -209,7 +209,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 	}{
 		{
 			name:   "GetErrNotFound",
-			fields: fields{client: fake.NewFakeClient(), maker: nil},
+			fields: fields{client: fake.NewClientBuilder().Build(), maker: nil},
 			want:   want{res: rsDone},
 		},
 		{
@@ -226,7 +226,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "AccountHandlerError",
 			fields: fields{
-				client: fake.NewFakeClient(v1alpha3test.NewMockAccount(name).WithFinalizer("foo.bar").Account),
+				client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockAccount(name).WithFinalizer("foo.bar").Account).Build(),
 				maker:  newMockAccountHandleMaker(nil, errBoom),
 			},
 			want: want{
@@ -241,8 +241,8 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ReconcileDelete",
 			fields: fields{
-				client: fake.NewFakeClient(v1alpha3test.NewMockAccount(name).
-					WithDeleteTimestamp(metav1.NewTime(time.Now())).Account),
+				client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockAccount(name).
+					WithDeleteTimestamp(metav1.NewTime(time.Now())).Account).Build(),
 				maker: newMockAccountHandleMaker(newMockAccountSyncDeleter(), nil),
 			},
 			want: want{res: rsDone},
@@ -250,7 +250,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "ReconcileSync",
 			fields: fields{
-				client: fake.NewFakeClient(v1alpha3test.NewMockAccount(name).Account),
+				client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockAccount(name).Account).Build(),
 				maker:  newMockAccountHandleMaker(newMockAccountSyncDeleter(), nil),
 			},
 			want: want{res: requeueOnSuccess},
