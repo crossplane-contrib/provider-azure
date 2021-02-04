@@ -87,10 +87,10 @@ func Setup(mgr ctrl.Manager, l logging.Logger) error {
 
 // Reconcile reads that state of the cluster for a Provider acct and makes changes based on the state read
 // and what is in the Provider.Spec
-func (r *Reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	r.log.Debug("Reconciling", "request", request)
 
-	ctx, cancel := context.WithTimeout(context.Background(), reconcileTimeout)
+	ctx, cancel := context.WithTimeout(ctx, reconcileTimeout)
 	defer cancel()
 
 	b := &v1alpha3.Account{}

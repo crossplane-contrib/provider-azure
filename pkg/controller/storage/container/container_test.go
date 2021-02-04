@@ -33,7 +33,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -166,7 +165,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "GetErrNotFound",
 			fields: fields{
 				Client: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return newContainerNotFoundError(testContainerName)
 					},
 				},
@@ -180,7 +179,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "GetErrOther",
 			fields: fields{
 				Client: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return errors.New("test-get-error")
 					},
 				},
@@ -194,8 +193,8 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "SyncdeleteMakerError",
 			fields: fields{
-				Client: fake.NewFakeClient(v1alpha3test.NewMockContainer(testContainerName).
-					WithFinalizer("foo.bar").Container),
+				Client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockContainer(testContainerName).
+					WithFinalizer("foo.bar").Container).Build(),
 				syncdeleterMaker: &mockSyncdeleteMaker{
 					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
 						return nil, errBoom
@@ -215,8 +214,8 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "Delete",
 			fields: fields{
-				Client: fake.NewFakeClient(v1alpha3test.NewMockContainer(testContainerName).
-					WithDeleteTimestamp(time.Now()).Container),
+				Client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockContainer(testContainerName).
+					WithDeleteTimestamp(time.Now()).Container).Build(),
 				syncdeleterMaker: &mockSyncdeleteMaker{
 					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
 						return &mockSyncdeleter{
@@ -234,7 +233,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 		{
 			name: "Sync",
 			fields: fields{
-				Client: fake.NewFakeClient(v1alpha3test.NewMockContainer(testContainerName).Container),
+				Client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockContainer(testContainerName).Container).Build(),
 				syncdeleterMaker: &mockSyncdeleteMaker{
 					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
 						return &mockSyncdeleter{
@@ -258,7 +257,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Initializer:      managed.NewNameAsExternalName(tt.fields.Client),
 				log:              logging.NewNopLogger(),
 			}
-			got, err := r.Reconcile(req)
+			got, err := r.Reconcile(context.Background(), req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("Reconciler.Reconcile(): -want error, +got error:\n%s", diff)
 			}
@@ -318,7 +317,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			name: "FailedToGetAccountNotFoundNoDelete",
 			fields: fields{
 				Client: &test.MockClient{
-					MockGet: func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
 						return newAccountNotFoundError(testAccountName)
 					},
 				},
@@ -335,13 +334,14 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 		{
 			name: "FailedToGetAccountNotFoundYesDelete",
 			fields: fields{
-				Client: fake.NewFakeClient(newCont().WithSpecProviderRef(testAccountName).
+				Client: fake.NewClientBuilder().WithObjects(newCont().WithSpecProviderRef(testAccountName).
 					WithFinalizer(finalizer).
-					Container),
+					WithResourceVersion("1").Container).Build(),
 			},
 			args: args{
 				ctx: ctx,
 				c: newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).
+					WithResourceVersion("1").
 					WithDeleteTimestamp(time.Now()).
 					Container,
 			},
@@ -353,11 +353,11 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 		{
 			name: "AccountReferenceSecretNotFound",
 			fields: fields{
-				Client: fake.NewFakeClient(
+				Client: fake.NewClientBuilder().WithObjects(
 					v1alpha3test.NewMockAccount(testAccountName).
 						WithSpecWriteConnectionSecretToReference(testNamespace, testAccountName).
 						Account,
-					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container),
+					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container).Build(),
 			},
 			args: args{
 				ctx: ctx,
@@ -372,9 +372,9 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 		{
 			name: "AccountReferenceSecretNil",
 			fields: fields{
-				Client: fake.NewFakeClient(
+				Client: fake.NewClientBuilder().WithObjects(
 					v1alpha3test.NewMockAccount(testAccountName).Account,
-					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container),
+					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container).Build(),
 			},
 			args: args{
 				ctx: ctx,
@@ -388,7 +388,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 		{
 			name: "FailedToCreateContainerHandle",
 			fields: fields{
-				Client: fake.NewFakeClient(
+				Client: fake.NewClientBuilder().WithObjects(
 					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 					newSecret(testNamespace, testAccountName, map[string][]byte{
 						xpv1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
@@ -396,7 +396,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 					}),
 					v1alpha3test.NewMockAccount(testAccountName).
 						WithSpecWriteConnectionSecretToReference(testNamespace, testAccountName).
-						Account),
+						Account).Build(),
 			},
 			args: args{
 				ctx: ctx,
@@ -412,7 +412,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				Client: fake.NewFakeClient(
+				Client: fake.NewClientBuilder().WithObjects(
 					newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
 					newSecret(testNamespace, testAccountName, map[string][]byte{
 						xpv1.ResourceCredentialsSecretUserKey:     []byte(testAccountName),
@@ -420,7 +420,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 					}),
 					v1alpha3test.NewMockAccount(testAccountName).
 						WithSpecWriteConnectionSecretToReference(testNamespace, testAccountName).
-						Account),
+						Account).Build(),
 			},
 			args: args{
 				ctx: ctx,
@@ -733,7 +733,7 @@ func Test_containerCreateUpdater_create(t *testing.T) {
 			fields: fields{
 				container: v1alpha3test.NewMockContainer(testContainerName).Container,
 				kube: &test.MockClient{
-					MockUpdate: func(ctx context.Context, obj runtime.Object, _ ...client.UpdateOption) error {
+					MockUpdate: func(ctx context.Context, obj client.Object, _ ...client.UpdateOption) error {
 						return errors.New("test-update-error")
 					},
 				},

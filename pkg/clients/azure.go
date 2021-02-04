@@ -31,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
@@ -53,11 +52,8 @@ const (
 	errGetProviderConfig         = "cannot get referenced ProviderConfig"
 	errGetProvider               = "cannot get referenced Provider"
 	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef was supplied"
-	errCredSecretNotGiven        = "secretRef was not supplied"
 	errUnmarshalCredentialSecret = "cannot unmarshal the data in credentials secret"
 	errGetAuthorizer             = "cannot get authorizer from client credentials config"
-
-	errFmtUnsupportedCredSource = "unsupported credentials source %q"
 )
 
 // A FieldOption determines how common Go types are translated to the types
@@ -137,23 +133,12 @@ func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed
 		return nil, nil, errors.Wrap(err, errGetProviderConfig)
 	}
 
-	// NOTE(muvaf): When we implement the workload identity, we will only need to
-	// return a different type of option.ClientOption, which is WithTokenSource().
-	if s := pc.Spec.Credentials.Source; s != xpv1.CredentialsSourceSecret {
-		return nil, authorizer, errors.Errorf(errFmtUnsupportedCredSource, s)
-	}
-
-	ref := pc.Spec.Credentials.SecretRef
-	if ref == nil {
-		return nil, authorizer, errors.New(errCredSecretNotGiven)
-	}
-
-	s := &corev1.Secret{}
-	if err := c.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: ref.Namespace}, s); err != nil {
-		return nil, nil, err
+	data, err := resource.CommonCredentialExtractor(ctx, pc.Spec.Credentials.Source, c, pc.Spec.Credentials.CommonCredentialSelectors)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot get credentials")
 	}
 	m := map[string]string{}
-	if err := json.Unmarshal(s.Data[ref.Key], &m); err != nil {
+	if err := json.Unmarshal(data, &m); err != nil {
 		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
 	}
 	cfg := auth.NewClientCredentialsConfig(m[CredentialsKeyClientID], m[CredentialsKeyClientSecret], m[CredentialsKeyTenantID])
