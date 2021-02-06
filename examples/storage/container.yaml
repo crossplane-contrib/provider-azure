@@ -4,8 +4,8 @@ metadata:
   name: example-container
   labels:
     example: "true"
-specTemplate:
-  writeConnectionSecretsToRef:
+spec:
+  writeConnectionSecretToRef:
     name: example-container
     namespace: crossplane-system
   # Azure containers read their credentials from an Account, not a Provider. We
