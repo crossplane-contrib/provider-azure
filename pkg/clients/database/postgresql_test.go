@@ -52,15 +52,11 @@ func postgresqlServerParameters(createMode *v1beta1.CreateMode) v1beta1.SQLServe
 	return fp
 }
 
-func postgresqlServerPropertiesForDefaultCreate(withMode bool) postgresql.BasicServerPropertiesForCreate {
+func postgresqlServerPropertiesForDefaultCreate() postgresql.BasicServerPropertiesForCreate {
 	adminPassword := "admin"
-	var mode postgresql.CreateMode = postgresql.CreateModeDefault
-	if !withMode {
-		mode = ""
-	}
 	return &postgresql.ServerPropertiesForDefaultCreate{
 		AdministratorLoginPassword: &adminPassword,
-		CreateMode:                 mode,
+		CreateMode:                 postgresql.CreateModeDefault,
 		StorageProfile:             &postgresql.StorageProfile{},
 	}
 }
@@ -112,7 +108,7 @@ func TestTopostgresqlProperties(t *testing.T) {
 		{
 			name: "CreateModeDefault",
 			fp:   postgresqlServerParameters(pointerFromCreateMode(v1beta1.CreateModeDefault)),
-			want: postgresqlServerPropertiesForDefaultCreate(true),
+			want: postgresqlServerPropertiesForDefaultCreate(),
 		},
 		{
 			name: "CreateModePointInTimeRestore",
@@ -132,12 +128,12 @@ func TestTopostgresqlProperties(t *testing.T) {
 		{
 			name: "ServerPropertiesForInvalidString",
 			fp:   postgresqlServerParameters(pointerFromCreateMode("")),
-			want: postgresqlServerPropertiesForDefaultCreate(false),
+			want: postgresqlServerPropertiesForDefaultCreate(),
 		},
 		{
 			name: "ServerPropertiesForDefaultCreate",
 			fp:   postgresqlServerParameters(nil),
-			want: postgresqlServerPropertiesForDefaultCreate(false),
+			want: postgresqlServerPropertiesForDefaultCreate(),
 		},
 	}
 
