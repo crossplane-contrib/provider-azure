@@ -27,6 +27,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
@@ -55,6 +56,47 @@ func mySQLWithIgnoreMissing(ignore bool) mySQLVirtualNetworkRuleModifier {
 	}
 }
 
+func mySQLServerParameters(createMode *v1beta1.CreateMode) v1beta1.SQLServerParameters {
+	fp := v1beta1.SQLServerParameters{
+		CreateMode: createMode,
+	}
+	return fp
+}
+
+func mySQLServerPropertiesForDefaultCreate(withMode bool) mysql.BasicServerPropertiesForCreate {
+	adminPassword := "admin"
+	var mode mysql.CreateMode = mysql.CreateModeDefault
+	if !withMode {
+		mode = ""
+	}
+	return &mysql.ServerPropertiesForDefaultCreate{
+		AdministratorLoginPassword: &adminPassword,
+		CreateMode:                 mode,
+		StorageProfile:             &mysql.StorageProfile{},
+	}
+}
+
+func mySQLServerPropertiesForRestore() mysql.BasicServerPropertiesForCreate {
+	return &mysql.ServerPropertiesForRestore{
+		CreateMode:     mysql.CreateModePointInTimeRestore,
+		StorageProfile: &mysql.StorageProfile{},
+	}
+}
+
+func mySQLServerPropertiesForGeoRestore() mysql.BasicServerPropertiesForCreate {
+	return &mysql.ServerPropertiesForGeoRestore{
+		CreateMode:     mysql.CreateModeGeoRestore,
+		StorageProfile: &mysql.StorageProfile{},
+	}
+}
+
+func mySQLServerPropertiesForReplica() mysql.BasicServerPropertiesForCreate {
+	return &mysql.ServerPropertiesForReplica{
+		CreateMode:     mysql.CreateModeReplica,
+		StorageProfile: &mysql.StorageProfile{},
+	}
+}
+
 func mySQLVirtualNetworkRule(sm ...mySQLVirtualNetworkRuleModifier) *v1alpha3.MySQLServerVirtualNetworkRule {
 	r := &v1alpha3.MySQLServerVirtualNetworkRule{
 		Spec: v1alpha3.MySQLVirtualNetworkRuleSpec{
@@ -70,6 +112,54 @@ func mySQLVirtualNetworkRule(sm ...mySQLVirtualNetworkRuleModifier) *v1alpha3.My
 	}
 
 	return r
+}
+
+func TestToMySQLProperties(t *testing.T) {
+	cases := []struct {
+		name string
+		fp   v1beta1.SQLServerParameters
+		want mysql.BasicServerPropertiesForCreate
+	}{
+		{
+			name: "CreateModeDefault",
+			fp:   mySQLServerParameters(pointerFromCreateMode(v1beta1.CreateModeDefault)),
+			want: mySQLServerPropertiesForDefaultCreate(true),
+		},
+		{
+			name: "CreateModePointInTimeRestore",
+			fp:   mySQLServerParameters(pointerFromCreateMode(v1beta1.CreateModePointInTimeRestore)),
+			want: mySQLServerPropertiesForRestore(),
+		},
+		{
+			name: "CreateModeGeoRestore",
+			fp:   mySQLServerParameters(pointerFromCreateMode(v1beta1.CreateModeGeoRestore)),
+			want: mySQLServerPropertiesForGeoRestore(),
+		},
+		{
+			name: "CreateModeReplica",
+			fp:   mySQLServerParameters(pointerFromCreateMode(v1beta1.CreateModeReplica)),
+			want: mySQLServerPropertiesForReplica(),
+		},
+		{
+			name: "ServerPropertiesForInvalidString",
+			fp:   mySQLServerParameters(pointerFromCreateMode("")),
+			want: mySQLServerPropertiesForDefaultCreate(false),
+		},
+		{
+			name: "ServerPropertiesForDefaultCreate",
+			fp:   mySQLServerParameters(nil),
+			want: mySQLServerPropertiesForDefaultCreate(false),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := toMySQLProperties(tc.fp, "admin")
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("TestToMySQLProperties(%s): -want, +got\n%s", tc.name, diff)
+			}
+		})
+	}
 }
 
 func TestNewMySQLVirtualNetworkRuleParameters(t *testing.T) {

@@ -31,6 +31,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
 	azuredbv1alpha3 "github.com/crossplane/provider-azure/apis/database/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/database/v1beta1"
 	"github.com/crossplane/provider-azure/apis/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -74,30 +75,83 @@ func (c *PostgreSQLServerClient) GetServer(ctx context.Context, cr *azuredbv1bet
 	return c.ServersClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 }
 
+// toMySQLProperties converts the CrossPlane ForProvider object to a PostgreSQL Azure properties object
+func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) postgresql.BasicServerPropertiesForCreate {
+	createMode := pointerToCreateMode(s.CreateMode)
+	switch createMode {
+	case azuredbv1beta1.CreateModePointInTimeRestore:
+		return &postgresql.ServerPropertiesForRestore{
+			MinimalTLSVersion:  postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:            postgresql.ServerVersion(s.Version),
+			SslEnforcement:     postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:         postgresql.CreateMode(createMode),
+			RestorePointInTime: safeDate(s.RestorePointInTime),
+			SourceServerID:     s.SourceServerID,
+			StorageProfile: &postgresql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	case azuredbv1beta1.CreateModeGeoRestore:
+		return &postgresql.ServerPropertiesForGeoRestore{
+			MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:           postgresql.ServerVersion(s.Version),
+			SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			SourceServerID:    s.SourceServerID,
+			CreateMode:        postgresql.CreateMode(createMode),
+			StorageProfile: &postgresql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	case azuredbv1beta1.CreateModeReplica:
+		return &postgresql.ServerPropertiesForReplica{
+			MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:           postgresql.ServerVersion(s.Version),
+			SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:        postgresql.CreateMode(createMode),
+			SourceServerID:    s.SourceServerID,
+			StorageProfile: &postgresql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	case azuredbv1beta1.CreateModeDefault:
+		fallthrough
+	default:
+		return &postgresql.ServerPropertiesForDefaultCreate{
+			MinimalTLSVersion:          postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
+			AdministratorLoginPassword: &adminPassword,
+			Version:                    postgresql.ServerVersion(s.Version),
+			SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:                 postgresql.CreateMode(createMode),
+			StorageProfile: &postgresql.StorageProfile{
+				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
+				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
+				StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
+				StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
+			},
+		}
+	}
+}
+
 // CreateServer creates a PostgreSQL Server
 func (c *PostgreSQLServerClient) CreateServer(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServer, adminPassword string) error {
 	s := cr.Spec.ForProvider
-	properties := &postgresql.ServerPropertiesForDefaultCreate{
-		AdministratorLogin:         azure.ToStringPtr(s.AdministratorLogin),
-		AdministratorLoginPassword: &adminPassword,
-		MinimalTLSVersion:          postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-		Version:                    postgresql.ServerVersion(s.Version),
-		SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
-		CreateMode:                 postgresql.CreateModeDefault,
-		StorageProfile: &postgresql.StorageProfile{
-			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
-			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
-			StorageMB:           azure.ToInt32Ptr(s.StorageProfile.StorageMB),
-			StorageAutogrow:     postgresql.StorageAutogrow(azure.ToString(s.StorageProfile.StorageAutogrow)),
-		},
-	}
 	sku, err := ToPostgreSQLSKU(s.SKU)
 	if err != nil {
 		return err
 	}
 	createParams := postgresql.ServerForCreate{
 		Sku:        sku,
-		Properties: properties,
+		Properties: toPGSQLProperties(s, adminPassword),
 		Location:   &s.Location,
 		Tags:       azure.ToStringPtrMap(s.Tags),
 	}
