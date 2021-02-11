@@ -63,15 +63,11 @@ func mySQLServerParameters(createMode *v1beta1.CreateMode) v1beta1.SQLServerPara
 	return fp
 }
 
-func mySQLServerPropertiesForDefaultCreate(withMode bool) mysql.BasicServerPropertiesForCreate {
+func mySQLServerPropertiesForDefaultCreate() mysql.BasicServerPropertiesForCreate {
 	adminPassword := "admin"
-	var mode mysql.CreateMode = mysql.CreateModeDefault
-	if !withMode {
-		mode = ""
-	}
 	return &mysql.ServerPropertiesForDefaultCreate{
 		AdministratorLoginPassword: &adminPassword,
-		CreateMode:                 mode,
+		CreateMode:                 mysql.CreateModeDefault,
 		StorageProfile:             &mysql.StorageProfile{},
 	}
 }
@@ -123,7 +119,7 @@ func TestToMySQLProperties(t *testing.T) {
 		{
 			name: "CreateModeDefault",
 			fp:   mySQLServerParameters(pointerFromCreateMode(v1beta1.CreateModeDefault)),
-			want: mySQLServerPropertiesForDefaultCreate(true),
+			want: mySQLServerPropertiesForDefaultCreate(),
 		},
 		{
 			name: "CreateModePointInTimeRestore",
@@ -143,12 +139,12 @@ func TestToMySQLProperties(t *testing.T) {
 		{
 			name: "ServerPropertiesForInvalidString",
 			fp:   mySQLServerParameters(pointerFromCreateMode("")),
-			want: mySQLServerPropertiesForDefaultCreate(false),
+			want: mySQLServerPropertiesForDefaultCreate(),
 		},
 		{
 			name: "ServerPropertiesForDefaultCreate",
 			fp:   mySQLServerParameters(nil),
-			want: mySQLServerPropertiesForDefaultCreate(false),
+			want: mySQLServerPropertiesForDefaultCreate(),
 		},
 	}
 

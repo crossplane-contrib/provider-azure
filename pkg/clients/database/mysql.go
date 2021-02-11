@@ -92,7 +92,7 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 			MinimalTLSVersion:  mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:            mysql.ServerVersion(s.Version),
 			SslEnforcement:     mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:         mysql.CreateMode(createMode),
+			CreateMode:         mysql.CreateModePointInTimeRestore,
 			RestorePointInTime: safeDate(s.RestorePointInTime),
 			SourceServerID:     s.SourceServerID,
 			StorageProfile: &mysql.StorageProfile{
@@ -107,7 +107,7 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 			MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:           mysql.ServerVersion(s.Version),
 			SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:        mysql.CreateMode(createMode),
+			CreateMode:        mysql.CreateModeGeoRestore,
 			SourceServerID:    s.SourceServerID,
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
@@ -121,7 +121,7 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 			MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:           mysql.ServerVersion(s.Version),
 			SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:        mysql.CreateMode(createMode),
+			CreateMode:        mysql.CreateModeReplica,
 			SourceServerID:    s.SourceServerID,
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
@@ -139,7 +139,7 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 			AdministratorLoginPassword: &adminPassword,
 			Version:                    mysql.ServerVersion(s.Version),
 			SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:                 mysql.CreateMode(createMode),
+			CreateMode:                 mysql.CreateModeDefault,
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),

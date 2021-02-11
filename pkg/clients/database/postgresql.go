@@ -84,7 +84,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			MinimalTLSVersion:  postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:            postgresql.ServerVersion(s.Version),
 			SslEnforcement:     postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:         postgresql.CreateMode(createMode),
+			CreateMode:         postgresql.CreateModePointInTimeRestore,
 			RestorePointInTime: safeDate(s.RestorePointInTime),
 			SourceServerID:     s.SourceServerID,
 			StorageProfile: &postgresql.StorageProfile{
@@ -100,7 +100,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			Version:           postgresql.ServerVersion(s.Version),
 			SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
 			SourceServerID:    s.SourceServerID,
-			CreateMode:        postgresql.CreateMode(createMode),
+			CreateMode:        postgresql.CreateModeGeoRestore,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -113,7 +113,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:           postgresql.ServerVersion(s.Version),
 			SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:        postgresql.CreateMode(createMode),
+			CreateMode:        postgresql.CreateModeReplica,
 			SourceServerID:    s.SourceServerID,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
@@ -131,7 +131,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			AdministratorLoginPassword: &adminPassword,
 			Version:                    postgresql.ServerVersion(s.Version),
 			SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:                 postgresql.CreateMode(createMode),
+			CreateMode:                 postgresql.CreateModeDefault,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
