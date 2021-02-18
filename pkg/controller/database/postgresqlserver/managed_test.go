@@ -237,6 +237,7 @@ func TestObserve(t *testing.T) {
 					ConnectionDetails: managed.ConnectionDetails{
 						xpv1.ResourceCredentialsSecretEndpointKey: []byte(endpoint),
 						xpv1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", admin, name)),
+						xpv1.ResourceCredentialsSecretPortKey:     []byte(v1beta1.PostgreSQLServerPort),
 					},
 				},
 			},

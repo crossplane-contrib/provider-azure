@@ -31,6 +31,9 @@ const (
 	StateReady    = "Ready"
 )
 
+// PostgreSQLServerPort is the port PostgreSQLServer listens to.
+const PostgreSQLServerPort = "5432"
+
 // +kubebuilder:object:root=true
 
 // A MySQLServer is a managed resource that represents an Azure MySQL Database
