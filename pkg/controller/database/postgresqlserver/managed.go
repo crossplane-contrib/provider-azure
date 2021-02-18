@@ -133,6 +133,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		ConnectionDetails: managed.ConnectionDetails{
 			xpv1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
 			xpv1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
+			xpv1.ResourceCredentialsSecretPortKey:     []byte(v1beta1.PostgreSQLServerPort),
 		},
 	}
 
