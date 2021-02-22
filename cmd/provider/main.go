@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 
 	"github.com/crossplane/provider-azure/apis"
 	"github.com/crossplane/provider-azure/pkg/controller"
@@ -61,7 +62,7 @@ func main() {
 	kingpin.FatalIfError(err, "Cannot create controller manager")
 
 	kingpin.FatalIfError(apis.AddToScheme(mgr.GetScheme()), "Cannot add Azure APIs to scheme")
-	kingpin.FatalIfError(controller.Setup(mgr, log), "Cannot setup Azure controllers")
+	kingpin.FatalIfError(controller.Setup(mgr, log, ratelimiter.NewDefaultProviderRateLimiter(ratelimiter.DefaultProviderRPS)), "Cannot setup Azure controllers")
 	kingpin.FatalIfError(mgr.Start(ctrl.SetupSignalHandler()), "Cannot start controller manager")
 
 }
