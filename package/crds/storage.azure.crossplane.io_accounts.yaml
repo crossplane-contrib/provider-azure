@@ -146,12 +146,6 @@ spec:
                               file:
                                 description: File - The encryption function of the file storage service.
                                 type: boolean
-                              queue:
-                                description: Queue - The encryption function of the queue storage service.
-                                type: boolean
-                              table:
-                                description: Table - The encryption function of the table storage service.
-                                type: boolean
                             type: object
                         type: object
                       networkAcls:

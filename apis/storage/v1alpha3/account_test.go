@@ -95,16 +95,12 @@ func Test_newEnabledEncryptionServices(t *testing.T) {
 		{
 			name: "test",
 			args: &storage.EncryptionServices{
-				File:  &storage.EncryptionService{Enabled: to.BoolPtr(true), LastEnabledTime: &date.Time{Time: now}},
-				Table: &storage.EncryptionService{Enabled: to.BoolPtr(true), LastEnabledTime: nil},
-				Queue: &storage.EncryptionService{Enabled: to.BoolPtr(false), LastEnabledTime: nil},
-				Blob:  nil,
+				File: &storage.EncryptionService{Enabled: to.BoolPtr(true), LastEnabledTime: &date.Time{Time: now}},
+				Blob: nil,
 			},
 			want: &EnabledEncryptionServices{
-				File:  true,
-				Table: true,
-				Queue: false,
-				Blob:  false,
+				File: true,
+				Blob: false,
 			},
 		},
 	}
@@ -127,16 +123,12 @@ func Test_toStorageEncryptedServices(t *testing.T) {
 		{
 			name: "test",
 			args: &EnabledEncryptionServices{
-				Blob:  true,
-				File:  false,
-				Table: true,
-				Queue: false,
+				Blob: true,
+				File: false,
 			},
 			want: &storage.EncryptionServices{
-				Blob:  &storage.EncryptionService{Enabled: to.BoolPtr(true)},
-				File:  &storage.EncryptionService{Enabled: to.BoolPtr(false)},
-				Table: &storage.EncryptionService{Enabled: to.BoolPtr(true)},
-				Queue: &storage.EncryptionService{Enabled: to.BoolPtr(false)},
+				Blob: &storage.EncryptionService{Enabled: to.BoolPtr(true)},
+				File: &storage.EncryptionService{Enabled: to.BoolPtr(false)},
 			},
 		},
 	}
@@ -192,10 +184,8 @@ func Test_toStorageEncryption(t *testing.T) {
 			},
 			want: &storage.Encryption{
 				Services: &storage.EncryptionServices{
-					Blob:  &storage.EncryptionService{Enabled: to.BoolPtr(false)},
-					File:  &storage.EncryptionService{Enabled: to.BoolPtr(false)},
-					Table: &storage.EncryptionService{Enabled: to.BoolPtr(false)},
-					Queue: &storage.EncryptionService{Enabled: to.BoolPtr(false)},
+					Blob: &storage.EncryptionService{Enabled: to.BoolPtr(false)},
+					File: &storage.EncryptionService{Enabled: to.BoolPtr(false)},
 				},
 				KeySource: storage.MicrosoftKeyvault,
 				KeyVaultProperties: &storage.KeyVaultProperties{
