@@ -68,12 +68,6 @@ type EnabledEncryptionServices struct {
 
 	// File - The encryption function of the file storage service.
 	File bool `json:"file,omitempty"`
-
-	// Table - The encryption function of the table storage service.
-	Table bool `json:"table,omitempty"`
-
-	// Queue - The encryption function of the queue storage service.
-	Queue bool `json:"queue,omitempty"`
 }
 
 // newEnabledEncryptionServices from the storage equivalent
@@ -86,20 +80,16 @@ func newEnabledEncryptionServices(s *storage.EncryptionServices) *EnabledEncrypt
 		return s != nil && s.Enabled != nil && *s.Enabled
 	}
 	return &EnabledEncryptionServices{
-		Blob:  b(s.Blob),
-		File:  b(s.File),
-		Table: b(s.Table),
-		Queue: b(s.Queue),
+		Blob: b(s.Blob),
+		File: b(s.File),
 	}
 }
 
 // toStorageEncryptedServices format
 func toStorageEncryptedServices(s *EnabledEncryptionServices) *storage.EncryptionServices {
 	return &storage.EncryptionServices{
-		Blob:  &storage.EncryptionService{Enabled: to.BoolPtr(s.Blob)},
-		File:  &storage.EncryptionService{Enabled: to.BoolPtr(s.File)},
-		Table: &storage.EncryptionService{Enabled: to.BoolPtr(s.Table)},
-		Queue: &storage.EncryptionService{Enabled: to.BoolPtr(s.Queue)},
+		Blob: &storage.EncryptionService{Enabled: to.BoolPtr(s.Blob)},
+		File: &storage.EncryptionService{Enabled: to.BoolPtr(s.File)},
 	}
 }
 
