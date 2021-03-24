@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.3.0
+    controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
   name: mysqlservers.database.azure.crossplane.io
 spec:
@@ -72,11 +72,6 @@ spec:
                     type: string
                   minimalTlsVersion:
                     description: MinimalTLSVersion - control TLS connection policy
-                    enum:
-                    - TLS1_0
-                    - TLS1_1
-                    - TLS1_2
-                    - TLSEnforcementDisabled
                     type: string
                   resourceGroupName:
                     description: ResourceGroupName specifies the name of the resource group that should contain this SQLServer.

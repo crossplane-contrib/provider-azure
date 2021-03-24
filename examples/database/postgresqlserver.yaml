@@ -11,7 +11,7 @@ spec:
     resourceGroupNameRef:
       name: example-rg
     location: West US 2
-    minimalTlsVersion: TLS1_2
+    minimalTlsVersion: TLS12
     sslEnforcement: Disabled
     version: "9.6"
     sku:
