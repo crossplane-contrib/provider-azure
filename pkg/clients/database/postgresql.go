@@ -307,6 +307,12 @@ func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgres
 		p.StorageProfile.GeoRedundantBackup = azure.LateInitializeStringPtrFromVal(p.StorageProfile.GeoRedundantBackup, string(in.StorageProfile.GeoRedundantBackup))
 		p.StorageProfile.StorageAutogrow = azure.LateInitializeStringPtrFromVal(p.StorageProfile.StorageAutogrow, string(in.StorageProfile.StorageAutogrow))
 	}
+	if p.MinimalTLSVersion == "" {
+		p.MinimalTLSVersion = string(in.MinimalTLSVersion)
+	}
+	if p.SSLEnforcement == "" {
+		p.SSLEnforcement = string(in.SslEnforcement)
+	}
 }
 
 // IsPostgreSQLUpToDate is used to report whether given postgresql.Server is in
