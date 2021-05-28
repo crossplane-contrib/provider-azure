@@ -19,11 +19,14 @@ spec:
   scope: Cluster
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
     - jsonPath: .status.state
       name: STATE
-      type: string
-    - jsonPath: .spec.location
-      name: LOCATION
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE

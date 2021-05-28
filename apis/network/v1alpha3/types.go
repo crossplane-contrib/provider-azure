@@ -204,8 +204,9 @@ type SubnetStatus struct {
 // +kubebuilder:object:root=true
 
 // A Subnet is a managed resource that represents an Azure Subnet.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
-// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.location"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
