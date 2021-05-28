@@ -199,8 +199,6 @@ spec:
               state:
                 description: State is the current state of the cluster.
                 type: string
-            required:
-            - endpoint
             type: object
         required:
         - spec
