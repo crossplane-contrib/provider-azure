@@ -11,11 +11,13 @@ spec:
   vnetSubnetIDRef:
     name: example-sub
   location: West US 2
-  version: "1.15.10"
+  version: "1.20.2"
   nodeCount: 1
   nodeVMSize: Standard_B2s
   dnsNamePrefix: crossplane-aks
   disableRBAC: false
   providerConfigRef:
     name: example
-  writeConnectionSecretsToNamespace: crossplane-system
+  writeConnectionSecretToRef:
+    namespace: crossplane-system
+    name: example-akscluster
