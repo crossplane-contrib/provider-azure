@@ -101,7 +101,7 @@ type AKSClusterStatus struct {
 	ProviderID string `json:"providerID,omitempty"`
 
 	// Endpoint is the endpoint where the cluster can be reached
-	Endpoint string `json:"endpoint"`
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
 // +kubebuilder:object:root=true
