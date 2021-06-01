@@ -53,7 +53,16 @@ var (
 	SubnetGroupVersionKind = SchemeGroupVersion.WithKind(SubnetKind)
 )
 
+// Subnet type metadata.
+var (
+	DdosProtectionPlanKind             = reflect.TypeOf(DdosProtectionPlan{}).Name()
+	DdosProtectionPlanGroupKind        = schema.GroupKind{Group: Group, Kind: DdosProtectionPlanKind}.String()
+	DdosProtectionPlanKindAPIVersion   = DdosProtectionPlanKind + "." + SchemeGroupVersion.String()
+	DdosProtectionPlanGroupVersionKind = SchemeGroupVersion.WithKind(DdosProtectionPlanKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&VirtualNetwork{}, &VirtualNetworkList{})
 	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
+	SchemeBuilder.Register(&DdosProtectionPlan{}, &DdosProtectionPlanList{})
 }

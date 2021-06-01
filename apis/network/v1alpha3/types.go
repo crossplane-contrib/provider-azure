@@ -226,3 +226,74 @@ type SubnetList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Subnet `json:"items"`
 }
+
+// A DdosProtectionPlanSpec defines the desired state of a DdosProtectionPlan.
+type DdosProtectionPlanSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// DdosProtectionPlan - Name of the DdosProtectionPlan.
+	DdosProtectionPlanName string `json:"ddosProtectionPlanName,omitempty"`
+
+	// Location - Location of the DdosProtectionPlan.
+	Location string `json:"location,omitempty"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// ResourceGroupName - Name of the Subnet's resource group.
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to the the Subnets's resource group.
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Selects a reference to the the Subnets's
+	// resource group.
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
+}
+
+// A DdosProtectionPlanStatus represents the observed state of a DdosProtectionPlan.
+type DdosProtectionPlanStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// // State of this DdosProtectionPlan.
+	// State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this DdosProtectionPlan, if any.
+	Message string `json:"message,omitempty"`
+
+	// Type - A unique string that changes whenever the resource is updated.
+	Type string `json:"type,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this DdosProtectionPlan.
+	ID string `json:"id,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// A DdosProtectionPlan is a managed resource that represents an Azure DDoS Protection Plan.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type DdosProtectionPlan struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   DdosProtectionPlanSpec   `json:"spec"`
+	Status DdosProtectionPlanStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// DdosProtectionPlanList contains a list of DdosProtectionPlan items
+type DdosProtectionPlanList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []DdosProtectionPlan `json:"items"`
+}
