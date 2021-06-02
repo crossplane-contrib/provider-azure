@@ -14,29 +14,42 @@ limitations under the License.
 package ddosprotectionplan
 
 import (
+	"context"
+
+	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
+
+	"github.com/pkg/errors"
+
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
+
+	azureclients "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane/provider-azure/pkg/clients/network"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
 )
 
 // Error strings.
 const (
-// errNotDdosProtectionPlan    = "managed resource is not an Ddos Protection Plan"
-// errCreateDdosProtectionPlan = "cannot create Ddos Protection Plan"
-// errUpdateDdosProtectionPlan = "cannot update Ddos Protection Plan"
-// errGetDdosProtectionPlan    = "cannot get Ddos Protection Plan"
-// errDeleteDdosProtectionPlan = "cannot delete Ddos Protection Plan"
+	errNotDdosProtectionPlan    = "managed resource is not an Ddos Protection Plan"
+	errCreateDdosProtectionPlan = "cannot create Ddos Protection Plan"
+	errUpdateDdosProtectionPlan = "cannot update Ddos Protection Plan"
+	errGetDdosProtectionPlan    = "cannot get Ddos Protection Plan"
+	errDeleteDdosProtectionPlan = "cannot delete Ddos Protection Plan"
 )
 
-// Setup adds a controller that reconciles Subnets.
+// Setup adds a controller that reconciles Ddos Protection Plans.
 func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 	name := managed.ControllerName(v1alpha3.DdosProtectionPlanGroupKind)
 
@@ -49,7 +62,136 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 		Complete(managed.NewReconciler(mgr,
 			resource.ManagedKind(v1alpha3.DdosProtectionPlanGroupVersionKind),
 			managed.WithConnectionPublishers(),
+			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
+
+type connecter struct {
+	client client.Client
+}
+
+type external struct {
+	client networkapi.DdosProtectionPlansClientAPI
+}
+
+func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
+	creds, auth, err := azureclients.GetAuthInfo(ctx, c.client, mg)
+	if err != nil {
+		return nil, err
+	}
+	cl := azurenetwork.NewDdosProtectionPlansClient(creds[azureclients.CredentialsKeySubscriptionID])
+	cl.Authorizer = auth
+	return &external{client: cl}, nil
+}
+
+func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
+	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
+	if !ok {
+		return managed.ExternalObservation{}, errors.New(errNotDdosProtectionPlan)
+	}
+
+	az, err := e.client.Get(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
+	if azureclients.IsNotFound(err) {
+		return managed.ExternalObservation{ResourceExists: false}, nil
+	}
+	if err != nil {
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetDdosProtectionPlan)
+	}
+
+	network.UpdateDdosProtectionPlanStatusFromAzure(d, az)
+	d.SetConditions(xpv1.Available())
+
+	o := managed.ExternalObservation{
+		ResourceExists:    true,
+		ConnectionDetails: managed.ConnectionDetails{},
+	}
+
+	return o, nil
+}
+
+func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
+	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
+	if !ok {
+		return managed.ExternalCreation{}, errors.New(errNotDdosProtectionPlan)
+	}
+
+	d.Status.SetConditions(xpv1.Creating())
+
+	ddos := network.NewDdosProtectionPlanParameters(d)
+	if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d), ddos); err != nil {
+		return managed.ExternalCreation{}, errors.Wrap(err, errCreateDdosProtectionPlan)
+	}
+
+	return managed.ExternalCreation{}, nil
+}
+
+func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
+	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
+	if !ok {
+		return managed.ExternalUpdate{}, errors.New(errNotDdosProtectionPlan)
+	}
+
+	// fmt.Println(d) //Placeholder for debugging. Remove later
+
+	az, err := e.client.Get(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
+	if err != nil {
+		return managed.ExternalUpdate{}, errors.Wrap(err, errGetDdosProtectionPlan)
+	}
+
+	if network.DdosProtectionPlanNeedsUpdate(d, az) {
+		ddos := network.NewDdosProtectionPlanParameters(d)
+		if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d), ddos); err != nil {
+			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateDdosProtectionPlan)
+		}
+	}
+	return managed.ExternalUpdate{}, nil
+}
+
+func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
+	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
+	if !ok {
+		return errors.New(errNotDdosProtectionPlan)
+	}
+
+	// fmt.Println(d) // Placeholder for debugging. Remove later
+
+	mg.SetConditions(xpv1.Deleting())
+
+	_, err := e.client.Delete(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
+	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteDdosProtectionPlan)
+	// return errors.Wrap(resource.Ignore(azureclients.IsNotFound, nil), errDeleteDdosProtectionPlan) //Placeholder for debugging. Remove later
+}
+
+// func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
+// 	s, ok := mg.(*v1alpha3.DdosProtectionPlan)
+// 	if !ok {
+// 		return managed.ExternalUpdate{}, errors.New(errNotDdosProtectionPlan)
+// 	}
+
+// 	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), "")
+// 	if err != nil {
+// 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetDdosProtectionPlan)
+// 	}
+
+// 	if network.SubnetNeedsUpdate(s, az) {
+// 		snet := network.NewSubnetParameters(s)
+// 		if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), snet); err != nil {
+// 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateDdosProtectionPlan)
+// 		}
+// 	}
+// 	return managed.ExternalUpdate{}, nil
+// }
+
+// func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
+// 	s, ok := mg.(*v1alpha3.DdosProtectionPlan)
+// 	if !ok {
+// 		return errors.New(errNotDdosProtectionPlan)
+// 	}
+
+// 	mg.SetConditions(xpv1.Deleting())
+
+// 	_, err := e.client.Delete(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s))
+// 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteDdosProtectionPlan)
+// }

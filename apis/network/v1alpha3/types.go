@@ -227,12 +227,27 @@ type SubnetList struct {
 	Items           []Subnet `json:"items"`
 }
 
+// DdosProtectionPlanPropertiesFormat defines properties of a DdosProtectionPlan..
+type DdosProtectionPlanPropertiesFormat struct {
+	// ResourceGUID - The resource GUID property of the DDoS protection plan resource.
+	// +optional
+	ResourceGUID *string `json:"resourceGuid,omitempty"`
+
+	// ProvisioningState - The provisioning state of the DDoS protection plan resource.
+	// +optional
+	ProvisioningState *string `json:"provisioningState,omitempty"`
+
+	// VirtualNetworks - The list of virtual networks associated with the DDoS protection plan resource.
+	// +optional
+	VirtualNetworks *[]VirtualNetwork `json:"virtualNetworks,omitempty"`
+}
+
 // A DdosProtectionPlanSpec defines the desired state of a DdosProtectionPlan.
 type DdosProtectionPlanSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
 
 	// DdosProtectionPlan - Name of the DdosProtectionPlan.
-	DdosProtectionPlanName string `json:"ddosProtectionPlanName,omitempty"`
+	Name string `json:"name,omitempty"`
 
 	// Location - Location of the DdosProtectionPlan.
 	Location string `json:"location,omitempty"`
@@ -240,6 +255,10 @@ type DdosProtectionPlanSpec struct {
 	// Tags - Resource tags.
 	// +optional
 	Tags map[string]string `json:"tags,omitempty"`
+
+	// DdosProtectionPlanPropertiesFormat - Properties of the ddos protection plan.
+	// +optional
+	DdosProtectionPlanPropertiesFormat `json:"properties,omitempty"`
 
 	// ResourceGroupName - Name of the Subnet's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
@@ -256,8 +275,8 @@ type DdosProtectionPlanSpec struct {
 type DdosProtectionPlanStatus struct {
 	xpv1.ResourceStatus `json:",inline"`
 
-	// // State of this DdosProtectionPlan.
-	// State string `json:"state,omitempty"`
+	// State of this DdosProtectionPlan.
+	State string `json:"state,omitempty"`
 
 	// A Message providing detail about the state of this DdosProtectionPlan, if any.
 	Message string `json:"message,omitempty"`
@@ -270,6 +289,12 @@ type DdosProtectionPlanStatus struct {
 
 	// ID of this DdosProtectionPlan.
 	ID string `json:"id,omitempty"`
+
+	// Tags of this DdosProtectionPlan..
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// Location of the DdosProtectionPlan.
+	Location string `json:"location,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -278,6 +303,7 @@ type DdosProtectionPlanStatus struct {
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".status.location"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}

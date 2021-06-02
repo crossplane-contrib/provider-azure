@@ -106,3 +106,42 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Purpose = azure.ToString(az.Purpose)
 }
+
+// --------------------------------------------------------------------------------------------------- //
+
+// NewDdosProtectionPlanParameters returns an Azure DdosProtectionPlan object from a ddosProtectionPlan spec
+func NewDdosProtectionPlanParameters(d *v1alpha3.DdosProtectionPlan) networkmgmt.DdosProtectionPlan {
+	return networkmgmt.DdosProtectionPlan{
+		Name:     azure.ToStringPtr(d.Spec.Name),
+		Location: azure.ToStringPtr(d.Spec.Location),
+		Tags:     azure.ToStringPtrMap(d.Spec.Tags),
+		// VirtualNetwork:
+	}
+}
+
+// DdosProtectionPlanNeedsUpdate determines if a ddos protection plan needs to be updated
+func DdosProtectionPlanNeedsUpdate(kube *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) bool {
+	up := NewDdosProtectionPlanParameters(kube)
+	switch {
+	case !reflect.DeepEqual(up.Name, az.Name):
+		return true
+	case !reflect.DeepEqual(up.Location, az.Location):
+		return true
+	case !reflect.DeepEqual(up.Tags, az.Tags):
+		return true
+	case !reflect.DeepEqual(up.DdosProtectionPlanPropertiesFormat.VirtualNetworks, az.DdosProtectionPlanPropertiesFormat.VirtualNetworks):
+		return true
+	}
+	return false
+}
+
+// UpdateDdosProtectionPlanStatusFromAzure updates the status related to the external
+// Azure DdosProtectionPlan in the DdosProtectionPlanStatus
+func UpdateDdosProtectionPlanStatusFromAzure(d *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) {
+	d.Status.Etag = azure.ToString(az.Etag)
+	d.Status.ID = azure.ToString(az.ID)
+	d.Status.Type = azure.ToString(az.Type)
+	d.Status.Tags = azure.ToStringMap(az.Tags)
+	d.Status.State = azure.ToString(az.DdosProtectionPlanPropertiesFormat.ProvisioningState)
+	d.Status.Location = azure.ToString(az.Location)
+}
