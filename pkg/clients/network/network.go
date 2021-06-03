@@ -112,10 +112,11 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 // NewDdosProtectionPlanParameters returns an Azure DdosProtectionPlan object from a ddosProtectionPlan spec
 func NewDdosProtectionPlanParameters(d *v1alpha3.DdosProtectionPlan) networkmgmt.DdosProtectionPlan {
 	return networkmgmt.DdosProtectionPlan{
-		Name:     azure.ToStringPtr(d.Spec.Name),
 		Location: azure.ToStringPtr(d.Spec.Location),
 		Tags:     azure.ToStringPtrMap(d.Spec.Tags),
-		// VirtualNetwork:
+		DdosProtectionPlanPropertiesFormat: &networkmgmt.DdosProtectionPlanPropertiesFormat{
+			ProvisioningState: d.Spec.DdosProtectionPlanPropertiesFormat.ProvisioningState,
+		},
 	}
 }
 
@@ -128,8 +129,6 @@ func DdosProtectionPlanNeedsUpdate(kube *v1alpha3.DdosProtectionPlan, az network
 	case !reflect.DeepEqual(up.Location, az.Location):
 		return true
 	case !reflect.DeepEqual(up.Tags, az.Tags):
-		return true
-	case !reflect.DeepEqual(up.DdosProtectionPlanPropertiesFormat.VirtualNetworks, az.DdosProtectionPlanPropertiesFormat.VirtualNetworks):
 		return true
 	}
 	return false

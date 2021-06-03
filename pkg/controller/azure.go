@@ -32,6 +32,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/network/ddosprotectionplan"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
 	"github.com/crossplane/provider-azure/pkg/controller/resourcegroup"
@@ -54,6 +55,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 		cosmosdb.Setup,
 		virtualnetwork.Setup,
 		subnet.Setup,
+		ddosprotectionplan.Setup,
 		resourcegroup.Setup,
 		account.Setup,
 		container.Setup,

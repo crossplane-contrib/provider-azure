@@ -238,16 +238,12 @@ type DdosProtectionPlanPropertiesFormat struct {
 	ProvisioningState *string `json:"provisioningState,omitempty"`
 
 	// VirtualNetworks - The list of virtual networks associated with the DDoS protection plan resource.
-	// +optional
-	VirtualNetworks *[]VirtualNetwork `json:"virtualNetworks,omitempty"`
+	// VirtualNetworks *[]network.SubResource `json:"virtualNetworks,omitempty"`
 }
 
 // A DdosProtectionPlanSpec defines the desired state of a DdosProtectionPlan.
 type DdosProtectionPlanSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-
-	// DdosProtectionPlan - Name of the DdosProtectionPlan.
-	Name string `json:"name,omitempty"`
 
 	// Location - Location of the DdosProtectionPlan.
 	Location string `json:"location,omitempty"`
