@@ -19,6 +19,7 @@ import (
 
 	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/pkg/errors"
 
@@ -95,23 +96,28 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotDdosProtectionPlan)
 	}
 
-	// az, err := e.client.Get(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
 	az, err := e.client.Get(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
-	if azureclients.IsNotFound(err) {
-		fmt.Println("=====================OBSERVE END TWO=====================")
-		return managed.ExternalObservation{ResourceExists: false}, nil
-	}
 	if err != nil {
 		fmt.Println("=====================OBSERVE END THREE=====================")
-		return managed.ExternalObservation{}, errors.Wrap(err, errGetDdosProtectionPlan)
+		return managed.ExternalObservation{}, errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errGetDdosProtectionPlan)
+	}
+
+	currentDdpp := d.DeepCopy()
+	network.LateInitializeDdos(currentDdpp, az)
+	if !cmp.Equal(currentDdpp.Spec, d.Spec) {
+		if _, err := e.Update(ctx, mg); err != nil {
+			return managed.ExternalObservation{}, errors.Wrap(err, errUpdateDdosProtectionPlan)
+		}
 	}
 
 	network.UpdateDdosProtectionPlanStatusFromAzure(d, az)
 	d.SetConditions(xpv1.Available())
-
 	o := managed.ExternalObservation{
-		ResourceExists:    true,
-		ConnectionDetails: managed.ConnectionDetails{},
+		ResourceExists:   true,
+		ResourceUpToDate: network.IsDdosProtectionPlanUpToDate(d, az),
+		ConnectionDetails: managed.ConnectionDetails{
+			"ddpp": []byte(meta.GetExternalName(d)),
+		},
 	}
 
 	fmt.Println("=====================OBSERVE END LAST=====================")
@@ -129,8 +135,6 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	ddos := network.NewDdosProtectionPlanParameters(d)
 
-	// if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, *ddos.Name, ddos); err != nil {
-	// if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupNameRef.Name, meta.GetExternalName(d), ddos); err != nil {
 	if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d), ddos); err != nil {
 		fmt.Println("***********************CREATE END ONE***********************")
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateDdosProtectionPlan)
@@ -153,7 +157,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetDdosProtectionPlan)
 	}
 
-	if network.DdosProtectionPlanNeedsUpdate(d, az) {
+	if !network.IsDdosProtectionPlanUpToDate(d, az) {
 		ddos := network.NewDdosProtectionPlanParameters(d)
 		if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d), ddos); err != nil {
 			fmt.Println("^^^^^^^^^^^^^^^^^^^^UPDATE END THREE^^^^^^^^^^^^^^^^^^^^")

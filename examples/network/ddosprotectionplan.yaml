@@ -3,12 +3,9 @@ kind: DdosProtectionPlan
 metadata:
   name: example-ddos-protection-plan
 spec:
-  resourceGroupNameRef:
-    name: example-rg
-  ddosProtectionPlanName: test-ddos-protection-plan-name
+  resourceGroupName: example-rg
   location: eastus
   tags:
     a: b
-  properties:
   providerConfigRef:
-    name: example
+    name: default 

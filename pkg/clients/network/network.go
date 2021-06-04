@@ -120,18 +120,18 @@ func NewDdosProtectionPlanParameters(d *v1alpha3.DdosProtectionPlan) networkmgmt
 	}
 }
 
-// DdosProtectionPlanNeedsUpdate determines if a ddos protection plan needs to be updated
-func DdosProtectionPlanNeedsUpdate(kube *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) bool {
+// IsDdosProtectionPlanUpToDate determines if a ddos protection plan is up to date or not.
+func IsDdosProtectionPlanUpToDate(kube *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) bool {
 	up := NewDdosProtectionPlanParameters(kube)
 	switch {
 	case !reflect.DeepEqual(up.Name, az.Name):
-		return true
+		return false
 	case !reflect.DeepEqual(up.Location, az.Location):
-		return true
+		return false
 	case !reflect.DeepEqual(up.Tags, az.Tags):
-		return true
+		return false
 	}
-	return false
+	return true
 }
 
 // UpdateDdosProtectionPlanStatusFromAzure updates the status related to the external
@@ -143,4 +143,15 @@ func UpdateDdosProtectionPlanStatusFromAzure(d *v1alpha3.DdosProtectionPlan, az 
 	d.Status.Tags = azure.ToStringMap(az.Tags)
 	d.Status.State = azure.ToString(az.DdosProtectionPlanPropertiesFormat.ProvisioningState)
 	d.Status.Location = azure.ToString(az.Location)
+}
+
+// LateInitializeDdos updates the Tags from the external
+// Azure DdosProtectionPlan in the DdosProtectionPlan
+func LateInitializeDdos(d *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) {
+	if len(d.Spec.Tags) == 0 && len(az.Tags) != 0 {
+		d.Spec.Tags = make(map[string]string)
+		for k, v := range az.Tags {
+			d.Spec.Tags[k] = *v
+		}
+	}
 }
