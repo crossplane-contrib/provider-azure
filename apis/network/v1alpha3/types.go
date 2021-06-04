@@ -226,3 +226,65 @@ type SubnetList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Subnet `json:"items"`
 }
+
+// ExpressRouteCircuitsPropertiesFormat defines properties of a ExpressRouteCircuits.
+type ExpressRouteCircuitsPropertiesFormat struct {
+
+	// GlobalReachEnabled - Flag denoting Global reach status.
+	GlobalReachEnabled *bool `json:"globalReachEnabled,omitempty"`
+}
+
+// A ExpressRouteCircuitsSpec defines the desired state of a Subnet.
+type ExpressRouteCircuitsSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// ExpressRouteCircuitsPropertiesFormat - Properties of the subnet.
+	ExpressRouteCircuitsPropertiesFormat `json:"properties"`
+}
+
+// A ExpressRouteCircuitsStatus represents the observed state of a Subnet.
+type ExpressRouteCircuitsStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// State of this Subnet.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this Subnet, if any.
+	Message string `json:"message,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this Subnet.
+	ID string `json:"id,omitempty"`
+
+	// Purpose - A string identifying the intention of use for this subnet based
+	// on delegations and other user-defined properties.
+	Purpose string `json:"purpose,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// A ExpressRouteCircuits is a managed resource that represents an Azure ExpressRouteCircuits.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type ExpressRouteCircuits struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ExpressRouteCircuitsSpec   `json:"spec"`
+	Status ExpressRouteCircuitsStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// ExpressRouteCircuitsList contains a list of ExpressRouteCircuits items
+type ExpressRouteCircuitsList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ExpressRouteCircuits `json:"items"`
+}
