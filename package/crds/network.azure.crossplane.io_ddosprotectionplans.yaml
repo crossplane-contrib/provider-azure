@@ -88,10 +88,10 @@ spec:
                 - name
                 type: object
               resourceGroupName:
-                description: ResourceGroupName - Name of the Subnet's resource group.
+                description: ResourceGroupName - Name of the Ddos Protection Plan's resource group.
                 type: string
               resourceGroupNameRef:
-                description: ResourceGroupNameRef - A reference to the the Subnets's resource group.
+                description: ResourceGroupNameRef - A reference to the the Ddos Protection Plan's resource group.
                 properties:
                   name:
                     description: Name of the referenced object.
@@ -100,7 +100,7 @@ spec:
                 - name
                 type: object
               resourceGroupNameSelector:
-                description: ResourceGroupNameSelector - Selects a reference to the the Subnets's resource group.
+                description: ResourceGroupNameSelector - Selects a reference to the the Ddos Protection Plan's resource group.
                 properties:
                   matchControllerRef:
                     description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.

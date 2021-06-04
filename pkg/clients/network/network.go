@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -106,8 +106,6 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Purpose = azure.ToString(az.Purpose)
 }
-
-// --------------------------------------------------------------------------------------------------- //
 
 // NewDdosProtectionPlanParameters returns an Azure DdosProtectionPlan object from a ddosProtectionPlan spec
 func NewDdosProtectionPlanParameters(d *v1alpha3.DdosProtectionPlan) networkmgmt.DdosProtectionPlan {

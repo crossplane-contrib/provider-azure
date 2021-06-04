@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ var (
 	SubnetGroupVersionKind = SchemeGroupVersion.WithKind(SubnetKind)
 )
 
-// Subnet type metadata.
+// DdosProtectionPlan type metadata.
 var (
 	DdosProtectionPlanKind             = reflect.TypeOf(DdosProtectionPlan{}).Name()
 	DdosProtectionPlanGroupKind        = schema.GroupKind{Group: Group, Kind: DdosProtectionPlanKind}.String()

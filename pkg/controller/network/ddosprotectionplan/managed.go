@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -15,7 +15,6 @@ package ddosprotectionplan
 
 import (
 	"context"
-	"fmt"
 
 	azurenetwork "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
@@ -89,16 +88,13 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	fmt.Println("=====================OBSERVE START=====================")
 	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
 	if !ok {
-		fmt.Println("=====================OBSERVE END ONE=====================")
 		return managed.ExternalObservation{}, errors.New(errNotDdosProtectionPlan)
 	}
 
 	az, err := e.client.Get(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
 	if err != nil {
-		fmt.Println("=====================OBSERVE END THREE=====================")
 		return managed.ExternalObservation{}, errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errGetDdosProtectionPlan)
 	}
 
@@ -120,12 +116,10 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		},
 	}
 
-	fmt.Println("=====================OBSERVE END LAST=====================")
 	return o, nil
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	fmt.Println("***********************CREATE START***********************")
 	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotDdosProtectionPlan)
@@ -136,49 +130,39 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	ddos := network.NewDdosProtectionPlanParameters(d)
 
 	if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d), ddos); err != nil {
-		fmt.Println("***********************CREATE END ONE***********************")
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateDdosProtectionPlan)
 	}
-	fmt.Println("***********************CREATE END LAST***********************")
 	return managed.ExternalCreation{}, nil
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	fmt.Println("^^^^^^^^^^^^^^^^^^^^UPDATE START^^^^^^^^^^^^^^^^^^^^")
 	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
 	if !ok {
-		fmt.Println("^^^^^^^^^^^^^^^^^^^^UPDATE END ONE^^^^^^^^^^^^^^^^^^^^")
 		return managed.ExternalUpdate{}, errors.New(errNotDdosProtectionPlan)
 	}
 
 	az, err := e.client.Get(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
 	if err != nil {
-		fmt.Println("^^^^^^^^^^^^^^^^^^^^UPDATE END TWO^^^^^^^^^^^^^^^^^^^^")
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetDdosProtectionPlan)
 	}
 
 	if !network.IsDdosProtectionPlanUpToDate(d, az) {
 		ddos := network.NewDdosProtectionPlanParameters(d)
 		if _, err := e.client.CreateOrUpdate(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d), ddos); err != nil {
-			fmt.Println("^^^^^^^^^^^^^^^^^^^^UPDATE END THREE^^^^^^^^^^^^^^^^^^^^")
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateDdosProtectionPlan)
 		}
 	}
-	fmt.Println("^^^^^^^^^^^^^^^^^^^^UPDATE END LAST^^^^^^^^^^^^^^^^^^^^")
 	return managed.ExternalUpdate{}, nil
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!DELETE START!!!!!!!!!!!!!!!!!!!!!!!!!")
 	d, ok := mg.(*v1alpha3.DdosProtectionPlan)
 	if !ok {
-		fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!DELETE END ONE!!!!!!!!!!!!!!!!!!!!!!!!!")
 		return errors.New(errNotDdosProtectionPlan)
 	}
 
 	mg.SetConditions(xpv1.Deleting())
 
 	_, err := e.client.Delete(ctx, d.Spec.ResourceGroupName, meta.GetExternalName(d))
-	fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!!!DELETE LAST!!!!!!!!!!!!!!!!!!!!!!!!!")
 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteDdosProtectionPlan)
 }

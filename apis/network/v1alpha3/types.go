@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -236,9 +236,6 @@ type DdosProtectionPlanPropertiesFormat struct {
 	// ProvisioningState - The provisioning state of the DDoS protection plan resource.
 	// +optional
 	ProvisioningState *string `json:"provisioningState,omitempty"`
-
-	// VirtualNetworks - The list of virtual networks associated with the DDoS protection plan resource.
-	// VirtualNetworks *[]network.SubResource `json:"virtualNetworks,omitempty"`
 }
 
 // A DdosProtectionPlanSpec defines the desired state of a DdosProtectionPlan.
@@ -256,13 +253,13 @@ type DdosProtectionPlanSpec struct {
 	// +optional
 	DdosProtectionPlanPropertiesFormat `json:"properties,omitempty"`
 
-	// ResourceGroupName - Name of the Subnet's resource group.
+	// ResourceGroupName - Name of the Ddos Protection Plan's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
-	// ResourceGroupNameRef - A reference to the the Subnets's resource group.
+	// ResourceGroupNameRef - A reference to the the Ddos Protection Plan's resource group.
 	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
 
-	// ResourceGroupNameSelector - Selects a reference to the the Subnets's
+	// ResourceGroupNameSelector - Selects a reference to the the Ddos Protection Plan's
 	// resource group.
 	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
 }
