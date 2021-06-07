@@ -19,7 +19,6 @@ package network
 import (
 	"reflect"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
@@ -115,8 +114,8 @@ func NewExpressRouteCircuitsParameters(d *v1alpha3.ExpressRouteCircuits) network
 		Tags:     azure.ToStringPtrMap(d.Spec.Tags),
 		Sku: &networkmgmt.ExpressRouteCircuitSku{
 			Name:   azure.ToStringPtr(d.Spec.Sku.Tier + "_" + d.Spec.Sku.Family),
-			Tier:   network.ExpressRouteCircuitSkuTier(d.Spec.Sku.Tier),
-			Family: network.ExpressRouteCircuitSkuFamily(d.Spec.Sku.Family),
+			Tier:   networkmgmt.ExpressRouteCircuitSkuTier(d.Spec.Sku.Tier),
+			Family: networkmgmt.ExpressRouteCircuitSkuFamily(d.Spec.Sku.Family),
 		},
 		ExpressRouteCircuitPropertiesFormat: &networkmgmt.ExpressRouteCircuitPropertiesFormat{
 			ServiceProviderProperties: &networkmgmt.ExpressRouteCircuitServiceProviderProperties{

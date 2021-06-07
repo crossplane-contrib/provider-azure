@@ -254,7 +254,7 @@ type SKU struct {
 	Family string `json:"family,omitempty"`
 }
 
-// A ExpressRouteCircuitsSpec defines the desired state of a Subnet.
+// A ExpressRouteCircuitsSpec defines the desired state of a ExpressRouteCircuits.
 type ExpressRouteCircuitsSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
 
@@ -271,30 +271,30 @@ type ExpressRouteCircuitsSpec struct {
 	// CircuitName - Name of the expressroutecircuit
 	CircuitName string `json:"circuitName,omitempty"`
 
-	// ResourceGroupName - Name of the Subnet's resource group.
+	// ResourceGroupName - Name of the ExpressRouteCircuits's resource group.
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
 
-	// ResourceGroupNameRef - Name of the Subnet's resource group.
+	// ResourceGroupNameRef - Name of the ExpressRouteCircuits's resource group.
 	ResourceGroupNameRef string `json:"resourceGroupNameRef,omitempty"`
 
 	// ExpressRouteCircuitsPropertiesFormat - Properties of the subnet.
 	ExpressRouteCircuitsPropertiesFormat `json:"properties"`
 }
 
-// A ExpressRouteCircuitsStatus represents the observed state of a Subnet.
+// A ExpressRouteCircuitsStatus represents the observed state of a ExpressRouteCircuits.
 type ExpressRouteCircuitsStatus struct {
 	xpv1.ResourceStatus `json:",inline"`
 
 	// State of this ExpressRouteCircuits.
 	State string `json:"state,omitempty"`
 
-	// A Message providing detail about the state of this Subnet, if any.
+	// A Message providing detail about the state of this ExpressRouteCircuits, if any.
 	Message string `json:"message,omitempty"`
 
 	// Etag - A unique string that changes whenever the resource is updated.
 	Etag string `json:"etag,omitempty"`
 
-	// ID of this Subnet.
+	// ID of this ExpressRouteCircuits.
 	ID string `json:"id,omitempty"`
 
 	// Purpose - A string identifying the intention of use for this subnet based
