@@ -1,0 +1,18 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: ExpressRouteCircuits
+metadata:
+  name: example-vn
+spec:
+  resourceGroupName: test-exp
+  location: West US 2
+  properties:
+    allowClassicOperations: False
+    bandwidthInMbps: 50
+    globalReachEnabled: True
+    peeringLocation: Chennai2
+    serviceProviderName: Airtel
+  sku:
+    family: MeteredData
+    tier: Standard  
+  providerConfigRef:
+    name: default

@@ -47,18 +47,37 @@ spec:
           spec:
             description: A ExpressRouteCircuitsSpec defines the desired state of a Subnet.
             properties:
+              circuitName:
+                description: CircuitName - Name of the expressroutecircuit
+                type: string
               deletionPolicy:
                 description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
                 enum:
                 - Orphan
                 - Delete
                 type: string
+              location:
+                description: Location - Location of the ExpressRouteCircuit.
+                type: string
               properties:
                 description: ExpressRouteCircuitsPropertiesFormat - Properties of the subnet.
                 properties:
+                  allowClassicOperations:
+                    description: AllowClassicOperations - Flag denotes allow classic operations.
+                    type: boolean
+                  bandwidthInMbps:
+                    description: BandwidthInMbps - Flag denotes bandwithwidth in Mbps.
+                    format: int32
+                    type: integer
                   globalReachEnabled:
                     description: GlobalReachEnabled - Flag denoting Global reach status.
                     type: boolean
+                  peeringLocation:
+                    description: PeeringLocation - Flag denotes peering location.
+                    type: string
+                  serviceProviderName:
+                    description: ServiceProviderName - Flag denoting service provider name.
+                    type: string
                 type: object
               providerConfigRef:
                 description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
@@ -77,6 +96,27 @@ spec:
                     type: string
                 required:
                 - name
+                type: object
+              resourceGroupName:
+                description: ResourceGroupName - Name of the Subnet's resource group.
+                type: string
+              resourceGroupNameRef:
+                description: ResourceGroupNameRef - Name of the Subnet's resource group.
+                type: string
+              sku:
+                description: SKU - SKU for ExpressRouteCircuit.
+                properties:
+                  family:
+                    description: 'Family - The family of the SKU. Possible values include: ''UnlimitedData'', ''MeteredData'''
+                    type: string
+                  tier:
+                    description: 'Tier - The tier of the SKU. Possible values include: ''ExpressRouteCircuitSkuTierStandard'', ''ExpressRouteCircuitSkuTierPremium'', ''ExpressRouteCircuitSkuTierBasic'', ''ExpressRouteCircuitSkuTierLocal'''
+                    type: string
+                type: object
+              tags:
+                additionalProperties:
+                  type: string
+                description: Tags - Resource tags.
                 type: object
               writeConnectionSecretToRef:
                 description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
@@ -138,7 +178,7 @@ spec:
                 description: Purpose - A string identifying the intention of use for this subnet based on delegations and other user-defined properties.
                 type: string
               state:
-                description: State of this Subnet.
+                description: State of this ExpressRouteCircuits.
                 type: string
             type: object
         required:

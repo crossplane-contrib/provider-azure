@@ -19,6 +19,7 @@ package network
 import (
 	"reflect"
 
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
@@ -105,4 +106,49 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.Etag = azure.ToString(az.Etag)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Purpose = azure.ToString(az.Purpose)
+}
+
+// NewExpressRouteCircuitsParameters returns an Azure ExpressRouteCircuits object from a expressroutecircuits spec
+func NewExpressRouteCircuitsParameters(d *v1alpha3.ExpressRouteCircuits) networkmgmt.ExpressRouteCircuit {
+	return networkmgmt.ExpressRouteCircuit{
+		Location: azure.ToStringPtr(d.Spec.Location),
+		Tags:     azure.ToStringPtrMap(d.Spec.Tags),
+		Sku: &networkmgmt.ExpressRouteCircuitSku{
+			Name:   azure.ToStringPtr(d.Spec.Sku.Tier + "_" + d.Spec.Sku.Family),
+			Tier:   network.ExpressRouteCircuitSkuTier(d.Spec.Sku.Tier),
+			Family: network.ExpressRouteCircuitSkuFamily(d.Spec.Sku.Family),
+		},
+		ExpressRouteCircuitPropertiesFormat: &networkmgmt.ExpressRouteCircuitPropertiesFormat{
+			ServiceProviderProperties: &networkmgmt.ExpressRouteCircuitServiceProviderProperties{
+				ServiceProviderName: d.Spec.ExpressRouteCircuitsPropertiesFormat.ServiceProviderName,
+				BandwidthInMbps:     d.Spec.ExpressRouteCircuitsPropertiesFormat.BandwidthInMbps,
+				PeeringLocation:     d.Spec.ExpressRouteCircuitsPropertiesFormat.PeeringLocation,
+			},
+			GlobalReachEnabled:     d.Spec.ExpressRouteCircuitsPropertiesFormat.GlobalReachEnabled,
+			AllowClassicOperations: d.Spec.ExpressRouteCircuitsPropertiesFormat.AllowClassicOperations,
+		},
+	}
+}
+
+// UpdateExpressRouteCircuitStatusFromAzure updates the status related to the external
+func UpdateExpressRouteCircuitStatusFromAzure(v *v1alpha3.ExpressRouteCircuits, az networkmgmt.ExpressRouteCircuit) {
+	v.Status.State = azure.ToString(az.ExpressRouteCircuitPropertiesFormat.ProvisioningState)
+	v.Status.Etag = azure.ToString(az.Etag)
+	v.Status.ID = azure.ToString(az.ID)
+}
+
+// ExpressRouteCircuitNeedsUpdate determines if a express route circuit needs to be updated
+func ExpressRouteCircuitNeedsUpdate(kube *v1alpha3.ExpressRouteCircuits, az networkmgmt.ExpressRouteCircuit) bool {
+	up := NewExpressRouteCircuitsParameters(kube)
+	switch {
+	case !reflect.DeepEqual(up.ExpressRouteCircuitPropertiesFormat.AllowClassicOperations, az.ExpressRouteCircuitPropertiesFormat.AllowClassicOperations):
+		return true
+	case !reflect.DeepEqual(up.Sku.Tier, az.Sku.Tier):
+		return true
+	case !reflect.DeepEqual(up.Sku.Family, az.Sku.Family):
+		return true
+	case !reflect.DeepEqual(up.ExpressRouteCircuitPropertiesFormat.ServiceProviderProperties.BandwidthInMbps, az.ExpressRouteCircuitPropertiesFormat.ServiceProviderProperties.BandwidthInMbps):
+		return true
+	}
+	return false
 }

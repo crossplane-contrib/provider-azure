@@ -87,12 +87,13 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	s, ok := mg.(*v1alpha3.ExpressRouteCircuits)
+	exp, ok := mg.(*v1alpha3.ExpressRouteCircuits)
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotExpressRouteCircuits)
 	}
 
-	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), "")
+	az, err := e.client.Get(ctx, exp.Spec.ResourceGroupName, meta.GetExternalName(exp))
+
 	if azureclients.IsNotFound(err) {
 		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
@@ -100,8 +101,8 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(err, errGetExpressRouteCircuits)
 	}
 
-	network.UpdateSubnetStatusFromAzure(s, az)
-	s.SetConditions(xpv1.Available())
+	network.UpdateExpressRouteCircuitStatusFromAzure(exp, az)
+	exp.SetConditions(xpv1.Available())
 
 	o := managed.ExternalObservation{
 		ResourceExists:    true,
@@ -112,15 +113,15 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	s, ok := mg.(*v1alpha3.ExpressRouteCircuits)
+	exp, ok := mg.(*v1alpha3.ExpressRouteCircuits)
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotExpressRouteCircuits)
 	}
 
-	s.Status.SetConditions(xpv1.Creating())
+	exp.Status.SetConditions(xpv1.Creating())
 
-	snet := network.NewSubnetParameters(s)
-	if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), snet); err != nil {
+	ercParams := network.NewExpressRouteCircuitsParameters(exp)
+	if _, err := e.client.CreateOrUpdate(ctx, exp.Spec.ResourceGroupName, meta.GetExternalName(exp), ercParams); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateExpressRouteCircuits)
 	}
 
@@ -128,19 +129,19 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	s, ok := mg.(*v1alpha3.Subnet)
+	exp, ok := mg.(*v1alpha3.ExpressRouteCircuits)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotExpressRouteCircuits)
 	}
 
-	az, err := e.client.Get(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), "")
+	az, err := e.client.Get(ctx, exp.Spec.ResourceGroupName, meta.GetExternalName(exp))
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetExpressRouteCircuits)
 	}
 
-	if network.SubnetNeedsUpdate(s, az) {
-		snet := network.NewSubnetParameters(s)
-		if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s), snet); err != nil {
+	if network.ExpressRouteCircuitNeedsUpdate(exp, az) {
+		ercParams := network.NewExpressRouteCircuitsParameters(exp)
+		if _, err := e.client.CreateOrUpdate(ctx, exp.Spec.ResourceGroupName, meta.GetExternalName(exp), ercParams); err != nil {
 			return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateExpressRouteCircuits)
 		}
 	}
@@ -148,13 +149,13 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	s, ok := mg.(*v1alpha3.Subnet)
+	exp, ok := mg.(*v1alpha3.ExpressRouteCircuits)
 	if !ok {
 		return errors.New(errNotExpressRouteCircuits)
 	}
 
 	mg.SetConditions(xpv1.Deleting())
 
-	_, err := e.client.Delete(ctx, s.Spec.ResourceGroupName, s.Spec.VirtualNetworkName, meta.GetExternalName(s))
+	_, err := e.client.Delete(ctx, exp.Spec.ResourceGroupName, meta.GetExternalName(exp))
 	return errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errDeleteExpressRouteCircuits)
 }
