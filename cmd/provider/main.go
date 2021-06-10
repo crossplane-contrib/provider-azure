@@ -33,10 +33,12 @@ import (
 
 func main() {
 	var (
-		app            = kingpin.New(filepath.Base(os.Args[0]), "Azure support for Crossplane.").DefaultEnvars()
-		debug          = app.Flag("debug", "Run with debug logging.").Short('d').Bool()
-		syncPeriod     = app.Flag("sync", "Controller manager sync period duration such as 300ms, 1.5h or 2h45m").Short('s').Default("1h").Duration()
-		leaderElection = app.Flag("leader-election", "Use leader election for the conroller manager.").Short('l').Default("false").OverrideDefaultFromEnvar("LEADER_ELECTION").Bool()
+		app              = kingpin.New(filepath.Base(os.Args[0]), "Azure support for Crossplane.").DefaultEnvars()
+		debug            = app.Flag("debug", "Run with debug logging.").Short('d').Bool()
+		syncPeriod       = app.Flag("sync", "Controller manager sync period duration such as 300ms, 1.5h or 2h45m").Short('s').Default("1h").Duration()
+		leaderElection   = app.Flag("leader-election", "Use leader election for the conroller manager.").Short('l').Default("false").OverrideDefaultFromEnvar("LEADER_ELECTION").Bool()
+		kubernetesMaster = app.Flag("kubernetes-master", "Override kubernetes master for the conroller manager.").OverrideDefaultFromEnvar("KUBERNETES_MASTER").String()
+		kubeconfig       = app.Flag("kubeconfig", "Override path to kubeconfig file for the conroller manager.").String()
 	)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -51,9 +53,14 @@ func main() {
 
 	log.Debug("Starting", "sync-period", syncPeriod.String())
 
+	if kubernetesMaster != nil && *kubernetesMaster != "" {
+		ctrl.ConfigFile().AtPath(*kubeconfig)
+	}
 	cfg, err := ctrl.GetConfig()
 	kingpin.FatalIfError(err, "Cannot get API server rest config")
-
+	if kubernetesMaster != nil && *kubernetesMaster != "" {
+		cfg.Host = *kubernetesMaster
+	}
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		LeaderElection:   *leaderElection,
 		LeaderElectionID: "crossplane-leader-election-provider-azure",
