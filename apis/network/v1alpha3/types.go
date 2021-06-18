@@ -226,3 +226,107 @@ type SubnetList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Subnet `json:"items"`
 }
+
+// A PublicIPAddressSpec defines the desired state of a PublicIPAddress.
+type PublicIPAddressSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// ResourceGroupName - Name of the Public IP address's resource group.
+	// +immutable
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to the the Public IP address's resource
+	// group.
+	// +immutable
+	// +optional
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Select a reference to the Public IP address's
+	// resource group.
+	// +optional
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
+
+	// PublicIPAddressFormat - Properties of the PublicIPAddress.
+	// +kubebuilder:validation:Required
+	PublicIPAddressFormat PublicIPAddressFormat `json:"properties"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]*string `json:"tags,omitempty"`
+}
+
+// PublicIPAddressFormat defines properties of the PublicIPAddress.
+type PublicIPAddressFormat struct {
+	// PublicIPAllocationMethod - The public IP address allocation method. Possible values include: 'Static', 'Dynamic'
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=Static;Dynamic
+	PublicIPAllocationMethod string `json:"allocationMethod"`
+
+	// PublicIPAllocationMethod - The public IP address version. Possible values include: 'IPV4', 'IPV6'
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=IPV4;IPV6
+	PublicIPAddressVersion string `json:"version"`
+
+	// Location - Resource location.
+	// +optional
+	Location *string `json:"location,omitempty"`
+
+	// SKU of PublicIPAddress
+	// +optional
+	SKU *SKU `json:"sku,omitempty"`
+}
+
+// SKU of PublicIPAddress
+type SKU struct {
+	// Name - Name of sku. Possible values include: ['Standard', 'Basic']
+	// +kubebuilder:validation:Enum=Standard;Basic
+	Name string `json:"name,omitempty"`
+}
+
+// A PublicIPAddressStatus represents the observed state of a PublicIPAddress.
+type PublicIPAddressStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// State of this PublicIPAddress.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this PublicIPAddress, if any.
+	Message string `json:"message,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this PublicIPAddress.
+	ID string `json:"id,omitempty"`
+
+	// Address - A string identifying address of PublicIPAddress resource
+	Address string `json:"address"`
+}
+
+// +kubebuilder:object:root=true
+
+// A PublicIPAddress is a managed resource that represents an Azure PublicIPAddress.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.properties.location"
+// +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".status.address"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type PublicIPAddress struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   PublicIPAddressSpec   `json:"spec"`
+	Status PublicIPAddressStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// PublicIPAddressList contains a list of PublicIPAddress items
+type PublicIPAddressList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []PublicIPAddress `json:"items"`
+}
