@@ -78,6 +78,28 @@ func NewSubnetParameters(s *v1alpha3.Subnet) networkmgmt.Subnet {
 	}
 }
 
+// NewPublicIPAddressParameters returns an Azure PublicIPAddress object from a public ip address spec
+func NewPublicIPAddressParameters(s *v1alpha3.PublicIPAddress) networkmgmt.PublicIPAddress {
+	return networkmgmt.PublicIPAddress{
+		Sku: NewPublicIPAddressSKU(s.Spec.ForProvider.SKU),
+		PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
+			PublicIPAllocationMethod: networkmgmt.IPAllocationMethod(s.Spec.ForProvider.PublicIPAllocationMethod),
+			PublicIPAddressVersion:   networkmgmt.IPVersion(s.Spec.ForProvider.PublicIPAddressVersion),
+		},
+		Location: s.Spec.ForProvider.Location,
+	}
+}
+
+// NewPublicIPAddressSKU returns an Azure PublicIPAddressSku object from a public ip address sku
+func NewPublicIPAddressSKU(s *v1alpha3.SKU) *networkmgmt.PublicIPAddressSku {
+	if s == nil {
+		return nil
+	}
+	return &networkmgmt.PublicIPAddressSku{
+		Name: networkmgmt.PublicIPAddressSkuName(s.Name),
+	}
+}
+
 // NewServiceEndpoints converts to Azure ServiceEndpointPropertiesFormat
 func NewServiceEndpoints(e []v1alpha3.ServiceEndpointPropertiesFormat) *[]networkmgmt.ServiceEndpointPropertiesFormat {
 	endpoints := make([]networkmgmt.ServiceEndpointPropertiesFormat, len(e))
@@ -105,4 +127,13 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.Etag = azure.ToString(az.Etag)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Purpose = azure.ToString(az.Purpose)
+}
+
+// UpdatePublicIPAddressStatusFromAzure updates the status related to the external
+// Azure public ip address in the PublicIPAddressStatus
+func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networkmgmt.PublicIPAddress) {
+	v.Status.State = azure.ToString(az.ProvisioningState)
+	v.Status.Etag = azure.ToString(az.Etag)
+	v.Status.ID = azure.ToString(az.ID)
+	v.Status.Address = azure.ToString(az.IPAddress)
 }

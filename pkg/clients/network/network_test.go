@@ -45,6 +45,7 @@ var (
 	etag         = "a-very-cool-etag"
 	resourceType = "resource-type"
 	purpose      = "cool-purpose"
+	address      = "20.46.134.23"
 )
 
 func TestNewVirtualNetworkParameters(t *testing.T) {
@@ -390,6 +391,40 @@ func TestNewSubnetParameters(t *testing.T) {
 	}
 }
 
+func TestNewPublicIPAddressParameters(t *testing.T) {
+	cases := []struct {
+		name string
+		r    *v1alpha3.PublicIPAddress
+		want networkmgmt.PublicIPAddress
+	}{
+		{
+			name: "Successful",
+			r: &v1alpha3.PublicIPAddress{
+				ObjectMeta: metav1.ObjectMeta{UID: uid},
+				Spec: v1alpha3.PublicIPAddressSpec{
+					ForProvider: v1alpha3.PublicIPAddressFormat{
+						PublicIPAllocationMethod: "static",
+					},
+				},
+			},
+			want: networkmgmt.PublicIPAddress{
+				PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
+					PublicIPAllocationMethod: "static",
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := NewPublicIPAddressParameters(tc.r)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("NewSubnetParameters(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestNewServiceEndpoints(t *testing.T) {
 	cases := []struct {
 		name string
@@ -528,6 +563,76 @@ func TestUpdateSubnetStatusFromAzure(t *testing.T) {
 			}
 
 			UpdateSubnetStatusFromAzure(v, tc.r)
+
+			// make sure that internal resource status hasn't changed
+			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {
+				t.Errorf("UpdateSubnetStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+
+			// make sure that other resource parameters are updated
+			tc.want.ResourceStatus = resourceStatus
+			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
+				t.Errorf("UpdateSubnetStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
+	mockCondition := xpv1.Condition{Message: "mockMessage"}
+	resourceStatus := xpv1.ResourceStatus{
+		ConditionedStatus: xpv1.ConditionedStatus{
+			Conditions: []xpv1.Condition{mockCondition},
+		},
+	}
+
+	cases := []struct {
+		name string
+		r    networkmgmt.PublicIPAddress
+		want v1alpha3.PublicIPAddressStatus
+	}{
+		{
+			name: "SuccessfulFull",
+			r: networkmgmt.PublicIPAddress{
+				Etag: azure.ToStringPtr(etag),
+				ID:   azure.ToStringPtr(id),
+				PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
+					IPAddress:         azure.ToStringPtr(address),
+					ProvisioningState: azure.ToStringPtr("Succeeded"),
+				},
+			},
+			want: v1alpha3.PublicIPAddressStatus{
+				State:   string(networkmgmt.Succeeded),
+				ID:      id,
+				Etag:    etag,
+				Address: address,
+			},
+		},
+		{
+			name: "SuccessfulPartial",
+			r: networkmgmt.PublicIPAddress{
+				ID: azure.ToStringPtr(id),
+				PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
+					ProvisioningState: azure.ToStringPtr("Succeeded"),
+				},
+			},
+			want: v1alpha3.PublicIPAddressStatus{
+				State: string(networkmgmt.Succeeded),
+				ID:    id,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			v := &v1alpha3.PublicIPAddress{
+				Status: v1alpha3.PublicIPAddressStatus{
+					ResourceStatus: resourceStatus,
+				},
+			}
+
+			UpdatePublicIPAddressStatusFromAzure(v, tc.r)
 
 			// make sure that internal resource status hasn't changed
 			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {

@@ -20,6 +20,62 @@ package v1alpha3
 
 import xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
+// GetCondition of this PublicIPAddress.
+func (mg *PublicIPAddress) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetDeletionPolicy of this PublicIPAddress.
+func (mg *PublicIPAddress) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this PublicIPAddress.
+func (mg *PublicIPAddress) GetProviderConfigReference() *xpv1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this PublicIPAddress.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *PublicIPAddress) GetProviderReference() *xpv1.Reference {
+	return mg.Spec.ProviderReference
+}
+
+// GetWriteConnectionSecretToReference of this PublicIPAddress.
+func (mg *PublicIPAddress) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetConditions of this PublicIPAddress.
+func (mg *PublicIPAddress) SetConditions(c ...xpv1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetDeletionPolicy of this PublicIPAddress.
+func (mg *PublicIPAddress) SetDeletionPolicy(r xpv1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this PublicIPAddress.
+func (mg *PublicIPAddress) SetProviderConfigReference(r *xpv1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this PublicIPAddress.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *PublicIPAddress) SetProviderReference(r *xpv1.Reference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetWriteConnectionSecretToReference of this PublicIPAddress.
+func (mg *PublicIPAddress) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetCondition of this Subnet.
 func (mg *Subnet) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
 	return mg.Status.GetCondition(ct)
