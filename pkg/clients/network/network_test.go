@@ -425,6 +425,43 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 	}
 }
 
+func TestNewNetworkInterfaceParameters(t *testing.T) {
+	cases := []struct {
+		name string
+		r    *v1alpha3.NetworkInterface
+		want networkmgmt.Interface
+	}{
+		{
+			name: "Successful",
+			r: &v1alpha3.NetworkInterface{
+				ObjectMeta: metav1.ObjectMeta{UID: uid},
+				Spec: v1alpha3.NetworkInterfaceSpec{
+					NetworkInterfaceFormat: v1alpha3.NetworkInterfaceFormat{
+						Location:         "West US 2",
+						IPConfigurations: make([]*v1alpha3.InterfaceIPConfiguration, 0),
+					},
+				},
+			},
+			want: networkmgmt.Interface{
+				InterfacePropertiesFormat: &networkmgmt.InterfacePropertiesFormat{
+					IPConfigurations: &[]networkmgmt.InterfaceIPConfiguration{},
+					Primary:          azure.ToBoolPtr(true),
+				},
+				Location: azure.ToStringPtr("West US 2"),
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := NewNetworkInterfaceParameters(tc.r)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("NewNetworkInterfaceParameters(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestNewServiceEndpoints(t *testing.T) {
 	cases := []struct {
 		name string
@@ -643,6 +680,70 @@ func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
 			tc.want.ResourceStatus = resourceStatus
 			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
 				t.Errorf("UpdateSubnetStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestUpdateNetworkInterfaceStatusFromAzure(t *testing.T) {
+	mockCondition := xpv1.Condition{Message: "mockMessage"}
+	resourceStatus := xpv1.ResourceStatus{
+		ConditionedStatus: xpv1.ConditionedStatus{
+			Conditions: []xpv1.Condition{mockCondition},
+		},
+	}
+
+	cases := []struct {
+		name string
+		r    networkmgmt.Interface
+		want v1alpha3.NetworkInterfaceStatus
+	}{
+		{
+			name: "SuccessfulFull",
+			r: networkmgmt.Interface{
+				InterfacePropertiesFormat: &networkmgmt.InterfacePropertiesFormat{ProvisioningState: azure.ToStringPtr("Succeeded")},
+				Etag:                      azure.ToStringPtr(etag),
+				ID:                        azure.ToStringPtr(id),
+			},
+			want: v1alpha3.NetworkInterfaceStatus{
+				State: string(networkmgmt.Succeeded),
+				ID:    id,
+				Etag:  etag,
+			},
+		},
+		{
+			name: "SuccessfulPartial",
+			r: networkmgmt.Interface{
+				InterfacePropertiesFormat: &networkmgmt.InterfacePropertiesFormat{ProvisioningState: azure.ToStringPtr("Succeeded")},
+				ID:                        azure.ToStringPtr(id),
+			},
+			want: v1alpha3.NetworkInterfaceStatus{
+				State: string(networkmgmt.Succeeded),
+				ID:    id,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			v := &v1alpha3.NetworkInterface{
+				Status: v1alpha3.NetworkInterfaceStatus{
+					ResourceStatus: resourceStatus,
+				},
+			}
+
+			UpdateNetworkInterfaceStatusFromAzure(v, tc.r)
+
+			// make sure that internal resource status hasn't changed
+			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {
+				t.Errorf("UpdateNetworkInterfaceStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+
+			// make sure that other resource parameters are updated
+			tc.want.ResourceStatus = resourceStatus
+			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
+				t.Errorf("UpdateNetworkInterfaceStatusFromAzure(...): -want, +got\n%s", diff)
 			}
 		})
 	}

@@ -32,6 +32,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/network/networkinterface"
 	"github.com/crossplane/provider-azure/pkg/controller/network/publicipaddress"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
@@ -54,6 +55,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 		postgresqlservervirtualnetworkrule.Setup,
 		cosmosdb.Setup,
 		publicipaddress.Setup,
+		networkinterface.Setup,
 		virtualnetwork.Setup,
 		subnet.Setup,
 		resourcegroup.Setup,
