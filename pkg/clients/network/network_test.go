@@ -99,7 +99,7 @@ func TestNewVirtualNetworkParameters(t *testing.T) {
 				Tags:     azure.ToStringPtrMap(nil),
 				VirtualNetworkPropertiesFormat: &networkmgmt.VirtualNetworkPropertiesFormat{
 					EnableDdosProtection: to.BoolPtr(enableDDOSProtection),
-					EnableVMProtection:   to.BoolPtr(false),
+					EnableVMProtection:   nil,
 					AddressSpace: &networkmgmt.AddressSpace{
 						AddressPrefixes: &addressPrefixes,
 					},
