@@ -1,11 +1,11 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    htcp://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,63 +14,53 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package compute
+package agentpool
 
 import (
 	"context"
 	"net/http"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-03-01/containerservice"
+	"github.com/Azure/azure-sdk-for-go/profiles/latest/containerservice/mgmt/containerservice"
+	original "github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-03-01/containerservice"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
-
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
 
 	"github.com/crossplane/provider-azure/apis/compute/v1alpha3"
-	"github.com/crossplane/provider-azure/pkg/clients/compute/fake"
+	"github.com/crossplane/provider-azure/pkg/clients/compute/agentpool"
 )
 
-type modifier func(*v1alpha3.AKSCluster)
+type modifier func(*v1alpha3.AgentPool)
 
 func withState(state string) modifier {
-	return func(c *v1alpha3.AKSCluster) {
+	return func(c *v1alpha3.AgentPool) {
 		c.Status.State = state
 	}
 }
 
 func withProviderID(id string) modifier {
-	return func(c *v1alpha3.AKSCluster) {
+	return func(c *v1alpha3.AgentPool) {
 		c.Status.ProviderID = id
 	}
 }
 
-func withEndpoint(ep string) modifier {
-	return func(c *v1alpha3.AKSCluster) {
-		c.Status.Endpoint = ep
-	}
-}
-
-func aksCluster(m ...modifier) *v1alpha3.AKSCluster {
-	ac := &v1alpha3.AKSCluster{}
-
+func pool(m ...modifier) *v1alpha3.AgentPool {
+	ac := &v1alpha3.AgentPool{}
 	for _, mod := range m {
 		mod(ac)
 	}
-
 	return ac
 }
 
 func TestObserve(t *testing.T) {
 	errBoom := errors.New("boom")
 	id := "koolAD"
-	stateSucceeded := "Succeeded"
 	stateWat := "Wat"
-	endpoint := "http://wat.example.org"
 
 	type args struct {
 		ctx context.Context
@@ -87,58 +77,57 @@ func TestObserve(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAKSCluster": {
+		"ErrNotAgentPool": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotAKSCluster),
+				err: errors.New(errNotAgentPool),
 			},
 		},
-		"ErrClusterNotFound": {
+		"ErrAgentPoolNotFound": {
 			e: &external{
-				client: fake.AKSClient{
-					MockGetManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
-						return containerservice.ManagedCluster{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
+				c: &agentpool.Mock{
+					MockGet: func(ctx context.Context, resourceGroupName string, resourceName string, agentPoolName string) (result containerservice.AgentPool, err error) {
+						return containerservice.AgentPool{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(),
+				mg:  pool(),
 			},
 			want: want{
 				eo: managed.ExternalObservation{ResourceExists: false},
-				mg: aksCluster(),
+				mg: pool(),
 			},
 		},
-		"ErrGetCluster": {
+		"ErrGetAgentPool": {
 			e: &external{
-				client: fake.AKSClient{
-					MockGetManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
-						return containerservice.ManagedCluster{}, errBoom
+				c: &agentpool.Mock{
+					MockGet: func(ctx context.Context, resourceGroupName string, resourceName string, agentPoolName string) (result containerservice.AgentPool, err error) {
+						return containerservice.AgentPool{}, errBoom
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(),
+				mg:  pool(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errGetAKSCluster),
-				mg:  aksCluster(),
+				err: errors.Wrap(errBoom, errGetAgentPool),
+				mg:  pool(),
 			},
 		},
 		"NotReady": {
 			e: &external{
-				client: fake.AKSClient{
-					MockGetManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
-						return containerservice.ManagedCluster{
+				c: &agentpool.Mock{
+					MockGet: func(ctx context.Context, resourceGroupName string, resourceName string, agentPoolName string) (result containerservice.AgentPool, err error) {
+						return containerservice.AgentPool{
 							ID: to.StringPtr(id),
-							ManagedClusterProperties: &containerservice.ManagedClusterProperties{
+							ManagedClusterAgentPoolProfileProperties: &containerservice.ManagedClusterAgentPoolProfileProperties{
 								ProvisioningState: to.StringPtr(stateWat),
-								Fqdn:              to.StringPtr(endpoint),
 							},
 						}, nil
 					},
@@ -146,39 +135,14 @@ func TestObserve(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(),
+				mg:  pool(),
 			},
 			want: want{
-				eo: managed.ExternalObservation{ResourceExists: true, ResourceUpToDate: true},
-				mg: aksCluster(
+				eo: managed.ExternalObservation{ResourceExists: true},
+				mg: pool(
 					withProviderID(id),
 					withState(stateWat),
-					withEndpoint(endpoint),
 				),
-			},
-		},
-		"ErrGetKubeConfig": {
-			e: &external{
-				client: fake.AKSClient{
-					MockGetManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
-						return containerservice.ManagedCluster{ManagedClusterProperties: &containerservice.ManagedClusterProperties{
-							ProvisioningState: to.StringPtr(stateSucceeded),
-						}}, nil
-					},
-					MockGetKubeConfig: func(_ context.Context, _ *v1alpha3.AKSCluster) ([]byte, error) {
-						return nil, errBoom
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  aksCluster(),
-			},
-			want: want{
-				mg: aksCluster(
-					withState(stateSucceeded),
-				),
-				err: errors.Wrap(errBoom, errGetKubeConfig),
 			},
 		},
 	}
@@ -202,7 +166,6 @@ func TestObserve(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	errBoom := errors.New("boom")
-	// password := "verysecure"
 
 	type args struct {
 		ctx context.Context
@@ -218,42 +181,29 @@ func TestCreate(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAKSCluster": {
+		"ErrNotAgentPool": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotAKSCluster),
+				err: errors.New(errNotAgentPool),
 			},
 		},
-		"ErrGeneratePassword": {
+		"ErrCreateAgentPool": {
 			e: &external{
-				newPasswordFn: func() (string, error) { return "", errBoom },
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  aksCluster(),
-			},
-			want: want{
-				err: errors.Wrap(errBoom, errGenPassword),
-			},
-		},
-		"ErrEnsureCluster": {
-			e: &external{
-				newPasswordFn: func() (string, error) { return "", nil },
-				client: fake.AKSClient{
-					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster, _ string) error {
-						return errBoom
+				c: &agentpool.Mock{
+					MockCreateOrUpdate: func(ctx context.Context, resourceGroupName string, resourceName string, agentPoolName string, parameters original.AgentPool) (result original.AgentPoolsCreateOrUpdateFuture, err error) {
+						return original.AgentPoolsCreateOrUpdateFuture{}, errBoom
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(),
+				mg:  pool(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errCreateAKSCluster),
+				err: errors.Wrap(errBoom, errCreateAgentPool),
 			},
 		},
 	}
@@ -285,27 +235,24 @@ func TestDelete(t *testing.T) {
 		args args
 		want error
 	}{
-		"ErrNotAKSCluster": {
+		"ErrNotAgentPool": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
-			want: errors.New(errNotAKSCluster),
+			want: errors.New(errNotAgentPool),
 		},
-		"ErrDeleteCluster": {
+		"ErrDeleteAgentPool": {
 			e: &external{
-				newPasswordFn: func() (string, error) { return "", nil },
-				client: fake.AKSClient{
-					MockDeleteManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) error {
-						return errBoom
-					},
-				},
+				c: &agentpool.Mock{MockDelete: func(ctx context.Context, resourceGroupName string, resourceName string, agentPoolName string) (result original.AgentPoolsDeleteFuture, err error) {
+					return original.AgentPoolsDeleteFuture{}, errBoom
+				}},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  aksCluster(),
+				mg:  pool(),
 			},
-			want: errors.Wrap(errBoom, errDeleteAKSCluster),
+			want: errors.Wrap(errBoom, errDeleteAgentPool),
 		},
 	}
 

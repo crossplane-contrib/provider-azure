@@ -43,8 +43,14 @@ var (
 	AKSClusterGroupKind        = schema.GroupKind{Group: Group, Kind: AKSClusterKind}.String()
 	AKSClusterKindAPIVersion   = AKSClusterKind + "." + SchemeGroupVersion.String()
 	AKSClusterGroupVersionKind = SchemeGroupVersion.WithKind(AKSClusterKind)
+
+	AgentPoolKind             = reflect.TypeOf(AgentPool{}).Name()
+	AgentPoolGroupKind        = schema.GroupKind{Group: Group, Kind: AgentPoolKind}.String()
+	AgentPoolKindAPIVersion   = AgentPoolKind + "." + SchemeGroupVersion.String()
+	AgentPoolGroupVersionKind = SchemeGroupVersion.WithKind(AgentPoolKind)
 )
 
 func init() {
 	SchemeBuilder.Register(&AKSCluster{}, &AKSClusterList{})
+	SchemeBuilder.Register(&AgentPool{}, &AgentPoolList{})
 }
