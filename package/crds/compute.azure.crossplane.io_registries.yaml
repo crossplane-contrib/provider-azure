@@ -1,0 +1,189 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.0
+  creationTimestamp: null
+  name: registries.compute.azure.crossplane.io
+spec:
+  group: compute.azure.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - azure
+    kind: Registry
+    listKind: RegistryList
+    plural: registries
+    singular: registry
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .spec.location
+      name: LOCATION
+      type: string
+    - jsonPath: .status.state
+      name: STATE
+      type: string
+    - jsonPath: .status.loginServer
+      name: URL
+      type: date
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha3
+    schema:
+      openAPIV3Schema:
+        description: Registry an object that represents a container registry.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: An RegistrySpec defines the desired state of a Registry.
+            properties:
+              adminUserEnabled:
+                description: AdminUserEnabled - The value that indicates whether the admin user is enabled.
+                type: boolean
+              deletionPolicy:
+                description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              location:
+                description: Location - The location of the resource. This cannot be changed after the resource is created.
+                type: string
+              providerConfigRef:
+                description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              providerRef:
+                description: 'ProviderReference specifies the provider that will be used to create, observe, update, and delete this managed resource. Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              resourceGroupName:
+                description: ResourceGroupName is the name of the resource group that the cluster will be created in
+                type: string
+              resourceGroupNameRef:
+                description: ResourceGroupNameRef - A reference to a ResourceGroup to retrieve its name
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              resourceGroupNameSelector:
+                description: ResourceGroupNameSelector - Select a reference to a ResourceGroup to retrieve its name
+                properties:
+                  matchControllerRef:
+                    description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+                    type: boolean
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: MatchLabels ensures an object with matching labels is selected.
+                    type: object
+                type: object
+              sku:
+                description: Sku - The SKU of the container registry.
+                type: string
+              writeConnectionSecretToRef:
+                description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            required:
+            - location
+            - sku
+            type: object
+          status:
+            description: An RegistryStatus represents the observed state of an Registry.
+            properties:
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time this condition transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A Message containing details about this condition's last transition from one status to another, if any.
+                      type: string
+                    reason:
+                      description: A Reason for this condition's last transition from one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True, False, or Unknown?
+                      type: string
+                    type:
+                      description: Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              loginServer:
+                description: LoginServer - The URL that can be used to log into the container registry.
+                type: string
+              providerID:
+                description: ProviderID - The resource external ID.
+                type: string
+              state:
+                description: 'State - The provisioning state of the container registry at the time the operation was called. Possible values include: ''Creating'', ''Updating'', ''Deleting'', ''Succeeded'', ''Failed'', ''Canceled'''
+                type: string
+              status:
+                description: Status the status of an Azure resource at the time the operation was called.
+                type: string
+              statusMessage:
+                description: StatusMessage - The detailed message for the status, including alerts and error messages.
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
