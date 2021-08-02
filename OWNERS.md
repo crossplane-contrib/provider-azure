@@ -15,3 +15,6 @@ guidelines and responsibilities for the steering committee and maintainers.
 * Muvaffak Onus <monus@upbound.io> ([muvaf](https://github.com/muvaf))
 * Jared Watts <jared@upbound.io> ([jbw976](https://github.com/jbw976))
 * Artur Souza <artursouza.ms@outlook.com> ([artursouza](https://github.com/artursouza))
+* Hasan Türken <hasan@upbound.io> ([turkenh](https://github.com/turkenh))
+* Alper Rifat Uluçınar <alper@upbound.io> ([ulucinar](https://github.com/ulucinar))
+* Aaron Eaton <aaron@upbound.io>  ([AaronME](https://github.com/AaronME))
