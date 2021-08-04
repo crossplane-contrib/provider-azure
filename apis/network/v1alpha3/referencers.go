@@ -40,6 +40,18 @@ func SubnetID() reference.ExtractValueFn {
 	}
 }
 
+// NetworkInterfaceID extracts status.ID from the supplied managed resource, which must be
+// a NetworkInterface.
+func NetworkInterfaceID() reference.ExtractValueFn {
+	return func(mg resource.Managed) string {
+		s, ok := mg.(*NetworkInterface)
+		if !ok {
+			return ""
+		}
+		return s.Status.ID
+	}
+}
+
 // PublicIPAddressID extracts status.ID from the supplied managed resource, which must be
 // a PublicIPAddress.
 func PublicIPAddressID() reference.ExtractValueFn {

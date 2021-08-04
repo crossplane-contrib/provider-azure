@@ -1,0 +1,32 @@
+apiVersion: compute.azure.crossplane.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: example-vm
+spec:
+  resourceGroupNameRef:
+    name: example-rg
+  providerConfigRef:
+    name: example
+  properties:
+    location: West US 2
+    hardwareProfile:
+      vmSize: Standard_B1s
+    storageProfile:
+      imageReference:
+        publisher: Canonical
+        offer: UbuntuServer
+        sku: 16.04-LTS
+        version: latest
+    osProfile:
+      computerName: example-vm
+      adminUsername: exampleuser
+      adminPassword: exAmpl2-user
+      linuxConfiguration:
+        ssh:
+          publicKeys:
+            - path: /home/exampleuser/.ssh/authorized_keys
+              keyData: SSH_KEY
+    networkProfile:
+      networkInterfaces:
+        - networkInterfaceIDRef:
+            name: example-network-interface
