@@ -18,6 +18,7 @@ package compute
 
 import (
 	"context"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
@@ -52,7 +53,7 @@ const (
 )
 
 // SetupAKSCluster adds a controller that reconciles AKSClusters.
-func SetupAKSCluster(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func SetupAKSCluster(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1alpha3.AKSClusterGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -65,6 +66,7 @@ func SetupAKSCluster(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimite
 			resource.ManagedKind(v1alpha3.AKSClusterGroupVersionKind),
 			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
+			managed.WithPollInterval(poll),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
