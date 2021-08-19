@@ -5,6 +5,10 @@ PROJECT_NAME := provider-azure
 PROJECT_REPO := github.com/crossplane/$(PROJECT_NAME)
 
 PLATFORMS ?= linux_amd64 linux_arm64
+
+# kind-related versions
+KIND_VERSION ?= v0.11.1
+KIND_NODE_IMAGE_TAG ?= v1.19.11
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse
@@ -92,7 +96,7 @@ e2e.run: test-integration
 # Run integration tests.
 test-integration: $(KIND) $(KUBECTL) $(HELM3)
 	@$(INFO) running integration tests using kind $(KIND_VERSION)
-	@$(ROOT_DIR)/cluster/local/integration_tests.sh || $(FAIL)
+	@KIND_NODE_IMAGE_TAG=${KIND_NODE_IMAGE_TAG} KIND_VERSION=${KIND_VERSION} $(ROOT_DIR)/cluster/local/integration_tests.sh || $(FAIL)
 	@$(OK) integration tests passed
 
 # Update the submodules, such as the common build scripts.
@@ -115,6 +119,8 @@ manifests:
 # using unit tests.
 KUBEBUILDER_VERSION ?= 1.0.8
 KUBEBUILDER := $(TOOLS_HOST_DIR)/kubebuilder-$(KUBEBUILDER_VERSION)
+KUBEBUILDER_OS ?= $(GOHOSTOS)
+KUBEBUILDER_ARCH ?= $(GOHOSTARCH)
 TEST_ASSET_KUBE_APISERVER := $(KUBEBUILDER)/kube-apiserver
 TEST_ASSET_ETCD := $(KUBEBUILDER)/etcd
 export TEST_ASSET_KUBE_APISERVER TEST_ASSET_ETCD
@@ -150,7 +156,7 @@ help-special: crossplane.help
 $(KUBEBUILDER):
 	@$(INFO) installing kubebuilder $(KUBEBUILDER_VERSION)
 	@mkdir -p $(TOOLS_HOST_DIR)/tmp || $(FAIL)
-	@curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOHOSTOS)_$(GOHOSTARCH).tar.gz | tar -xz -C $(TOOLS_HOST_DIR)/tmp  || $(FAIL)
-	@mv $(TOOLS_HOST_DIR)/tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOHOSTOS)_$(GOHOSTARCH)/bin $(KUBEBUILDER) || $(FAIL)
+	@curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(KUBEBUILDER_VERSION)_$(KUBEBUILDER_OS)_$(KUBEBUILDER_ARCH).tar.gz | tar -xz -C $(TOOLS_HOST_DIR)/tmp  || $(FAIL)
+	@mv $(TOOLS_HOST_DIR)/tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(KUBEBUILDER_OS)_$(KUBEBUILDER_ARCH)/bin $(KUBEBUILDER) || $(FAIL)
 	@rm -fr $(TOOLS_HOST_DIR)/tmp
 	@$(OK) installing kubebuilder $(KUBEBUILDER_VERSION)
