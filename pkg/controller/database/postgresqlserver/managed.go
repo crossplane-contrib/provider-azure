@@ -150,7 +150,8 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (e *external) getPassword(ctx context.Context, cr *v1beta1.PostgreSQLServer) (string, error) {
-	if cr == nil || cr.Spec.WriteConnectionSecretToReference.Name == "" || cr.Spec.WriteConnectionSecretToReference.Namespace == "" {
+	if cr.Spec.WriteConnectionSecretToReference == nil ||
+		cr.Spec.WriteConnectionSecretToReference.Name == "" || cr.Spec.WriteConnectionSecretToReference.Namespace == "" {
 		return "", nil
 	}
 
@@ -179,9 +180,9 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	}
 	if pw == "" {
 		pw, err = e.newPasswordFn()
-	}
-	if err != nil {
-		return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
+		if err != nil {
+			return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
+		}
 	}
 	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
