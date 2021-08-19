@@ -50,8 +50,7 @@ const (
 	controllerName = "container.storage.azure.crossplane.io"
 	finalizer      = "finalizer." + controllerName
 
-	reconcileTimeout      = 2 * time.Minute
-	requeueAfterOnSuccess = 1 * time.Minute
+	reconcileTimeout = 2 * time.Minute
 )
 
 // Error strings
@@ -60,8 +59,7 @@ const (
 )
 
 var (
-	resultRequeue    = reconcile.Result{Requeue: true}
-	requeueOnSuccess = reconcile.Result{RequeueAfter: requeueAfterOnSuccess}
+	resultRequeue = reconcile.Result{Requeue: true}
 )
 
 // Reconciler reconciles an Azure storage container
@@ -71,17 +69,20 @@ type Reconciler struct {
 	managed.ReferenceResolver
 	managed.Initializer
 
+	poll time.Duration
+
 	log logging.Logger
 }
 
 // Setup adds a controller that reconciles Containers.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1alpha3.ContainerGroupKind)
 
 	r := &Reconciler{
 		Client:           mgr.GetClient(),
 		syncdeleterMaker: &containerSyncdeleterMaker{mgr.GetClient()},
 		Initializer:      managed.NewNameAsExternalName(mgr.GetClient()),
+		poll:             poll,
 		log:              l.WithValues("controller", name),
 	}
 
@@ -110,7 +111,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	sd, err := r.newSyncdeleter(ctx, c)
+	sd, err := r.newSyncdeleter(ctx, c, r.poll)
 	if err != nil {
 		c.Status.SetConditions(xpv1.ReconcileError(err))
 		return resultRequeue, r.Status().Update(ctx, c)
@@ -125,14 +126,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 }
 
 type syncdeleterMaker interface {
-	newSyncdeleter(context.Context, *v1alpha3.Container) (syncdeleter, error)
+	newSyncdeleter(context.Context, *v1alpha3.Container, time.Duration) (syncdeleter, error)
 }
 
 type containerSyncdeleterMaker struct {
 	client.Client
 }
 
-func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) { // nolint:gocyclo
+func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container, poll time.Duration) (syncdeleter, error) { // nolint:gocyclo
 	nn := types.NamespacedName{}
 	switch {
 	case c.GetProviderConfigReference() != nil && c.GetProviderConfigReference().Name != "":
@@ -191,6 +192,7 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 			ContainerOperations: ch,
 			kube:                m.Client,
 			container:           c,
+			poll:                poll,
 		},
 		ContainerOperations: ch,
 		kube:                m.Client,
@@ -266,6 +268,7 @@ type containerCreateUpdater struct {
 	storage.ContainerOperations
 	kube      client.Client
 	container *v1alpha3.Container
+	poll      time.Duration
 }
 
 var _ createupdater = &containerCreateUpdater{}
@@ -301,5 +304,5 @@ func (ccu *containerCreateUpdater) update(ctx context.Context, accessType *azblo
 	}
 
 	container.Status.SetConditions(xpv1.Available(), xpv1.ReconcileSuccess())
-	return requeueOnSuccess, ccu.kube.Status().Update(ctx, ccu.container)
+	return reconcile.Result{RequeueAfter: ccu.poll}, ccu.kube.Status().Update(ctx, ccu.container)
 }

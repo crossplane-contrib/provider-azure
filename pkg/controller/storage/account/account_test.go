@@ -79,13 +79,13 @@ type MockAccountCreateUpdater struct {
 	MockUpdate func(context.Context, *storage.Account) (reconcile.Result, error)
 }
 
-func newMockAccountCreateUpdater() *MockAccountCreateUpdater {
+func newMockAccountCreateUpdater(poll time.Duration) *MockAccountCreateUpdater {
 	return &MockAccountCreateUpdater{
 		MockUpdate: func(i context.Context, acct *storage.Account) (result reconcile.Result, e error) {
-			return requeueOnSuccess, nil
+			return reconcile.Result{RequeueAfter: poll}, nil
 		},
 		MockCreate: func(i context.Context) (result reconcile.Result, e error) {
-			return requeueOnSuccess, nil
+			return reconcile.Result{RequeueAfter: poll}, nil
 		},
 	}
 }
@@ -105,10 +105,10 @@ type MockAccountSyncDeleter struct {
 	MockSync   func(context.Context) (reconcile.Result, error)
 }
 
-func newMockAccountSyncDeleter() *MockAccountSyncDeleter {
+func newMockAccountSyncDeleter(poll time.Duration) *MockAccountSyncDeleter {
 	return &MockAccountSyncDeleter{
 		MockSync: func(i context.Context) (result reconcile.Result, e error) {
-			return requeueOnSuccess, nil
+			return reconcile.Result{RequeueAfter: poll}, nil
 		},
 		MockDelete: func(i context.Context) (result reconcile.Result, e error) {
 			return result, nil
@@ -130,7 +130,7 @@ type MockAccountHandleMaker struct {
 	MockNew func(context.Context, *v1alpha3.Account) (syncdeleter, error)
 }
 
-func newMockAccountHandleMaker(rh syncdeleter, err error) *MockAccountHandleMaker {
+func newMockAccountHandleMaker(rh syncdeleter, err error, _ time.Duration) *MockAccountHandleMaker {
 	return &MockAccountHandleMaker{
 		MockNew: func(i context.Context, bucket *v1alpha3.Account) (handler syncdeleter, e error) {
 			return rh, err
@@ -138,7 +138,7 @@ func newMockAccountHandleMaker(rh syncdeleter, err error) *MockAccountHandleMake
 	}
 }
 
-func (m *MockAccountHandleMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account) (syncdeleter, error) {
+func (m *MockAccountHandleMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account, _ time.Duration) (syncdeleter, error) {
 	return m.MockNew(ctx, b)
 }
 
@@ -227,7 +227,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "AccountHandlerError",
 			fields: fields{
 				client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockAccount(name).WithFinalizer("foo.bar").Account).Build(),
-				maker:  newMockAccountHandleMaker(nil, errBoom),
+				maker:  newMockAccountHandleMaker(nil, errBoom, time.Minute),
 			},
 			want: want{
 				res: resultRequeue,
@@ -243,7 +243,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			fields: fields{
 				client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockAccount(name).
 					WithDeleteTimestamp(metav1.NewTime(time.Now())).Account).Build(),
-				maker: newMockAccountHandleMaker(newMockAccountSyncDeleter(), nil),
+				maker: newMockAccountHandleMaker(newMockAccountSyncDeleter(time.Minute), nil, time.Minute),
 			},
 			want: want{res: rsDone},
 		},
@@ -251,9 +251,9 @@ func TestReconciler_Reconcile(t *testing.T) {
 			name: "ReconcileSync",
 			fields: fields{
 				client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockAccount(name).Account).Build(),
-				maker:  newMockAccountHandleMaker(newMockAccountSyncDeleter(), nil),
+				maker:  newMockAccountHandleMaker(newMockAccountSyncDeleter(time.Hour), nil, time.Minute),
 			},
-			want: want{res: requeueOnSuccess},
+			want: want{res: reconcile.Result{RequeueAfter: time.Hour}},
 		},
 	}
 
@@ -299,6 +299,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 		ao   azurestorage.AccountOperations
 		cc   client.Client
 		acct *v1alpha3.Account
+		poll time.Duration
 	}
 	type want struct {
 		err  error
@@ -407,7 +408,7 @@ func Test_syncdeleter_delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			bh := newAccountSyncDeleter(tt.fields.ao, tt.fields.cc, tt.fields.acct)
+			bh := newAccountSyncDeleter(tt.fields.ao, tt.fields.cc, tt.fields.acct, tt.fields.poll)
 			got, err := bh.delete(ctx)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("accountSyncDeleter.delete(): -want error, +got error: \n%s", diff)
@@ -431,6 +432,7 @@ func Test_syncdeleter_sync(t *testing.T) {
 		ao   azurestorage.AccountOperations
 		kube client.Client
 		acct *v1alpha3.Account
+		poll time.Duration
 	}
 	type want struct {
 		err  error
@@ -480,9 +482,10 @@ func Test_syncdeleter_sync(t *testing.T) {
 					},
 				},
 				acct: v1alpha3test.NewMockAccount(name).WithUID("test-uid").Account,
+				poll: time.Minute,
 			},
 			want: want{
-				res:  requeueOnSuccess,
+				res:  reconcile.Result{RequeueAfter: time.Minute},
 				acct: v1alpha3test.NewMockAccount(name).WithUID("test-uid").Account,
 			},
 		},
@@ -498,9 +501,10 @@ func Test_syncdeleter_sync(t *testing.T) {
 					},
 				},
 				acct: v1alpha3test.NewMockAccount(name).WithUID("test-uid").Account,
+				poll: time.Minute,
 			},
 			want: want{
-				res:  requeueOnSuccess,
+				res:  reconcile.Result{RequeueAfter: time.Minute},
 				acct: v1alpha3test.NewMockAccount(name).WithUID("test-uid").Account,
 			},
 		},
@@ -508,7 +512,7 @@ func Test_syncdeleter_sync(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bh := &accountSyncDeleter{
-				createupdater:     newMockAccountCreateUpdater(),
+				createupdater:     newMockAccountCreateUpdater(tt.fields.poll),
 				AccountOperations: tt.fields.ao,
 				kube:              tt.fields.kube,
 				acct:              tt.fields.acct,
@@ -633,6 +637,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 		ao   azurestorage.AccountOperations
 		kube client.Client
 		acct *v1alpha3.Account
+		poll time.Duration
 	}
 	type want struct {
 		res  reconcile.Result
@@ -653,12 +658,13 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 			fields: fields{
 				sb: &MockAccountSyncbacker{
 					MockSyncback: func(ctx context.Context, a *storage.Account) (result reconcile.Result, e error) {
-						return requeueOnSuccess, nil
+						return reconcile.Result{RequeueAfter: time.Minute}, nil
 					},
 				},
+				poll: time.Minute,
 			},
 			want: want{
-				res: requeueOnSuccess,
+				res: reconcile.Result{RequeueAfter: time.Minute},
 			},
 		},
 		{
@@ -671,9 +677,10 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
 					Account,
 				kube: test.NewMockClient(),
+				poll: time.Minute,
 			},
 			want: want{
-				res: requeueOnSuccess,
+				res: reconcile.Result{RequeueAfter: time.Minute},
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
 					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
@@ -714,7 +721,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 			fields: fields{
 				sb: &MockAccountSyncbacker{
 					MockSyncback: func(ctx context.Context, a *storage.Account) (result reconcile.Result, e error) {
-						return requeueOnSuccess, nil
+						return reconcile.Result{RequeueAfter: time.Minute}, nil
 					},
 				},
 				acct: v1alpha3test.NewMockAccount(name).WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).Account,
@@ -724,9 +731,10 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 					},
 				},
 				kube: test.NewMockClient(),
+				poll: time.Minute,
 			},
 			want: want{
-				res: requeueOnSuccess,
+				res: reconcile.Result{RequeueAfter: time.Minute},
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStorageAccountSpec(newStoragAccountSpecWithProperties()).
 					WithStatusConditions(xpv1.Available()).
@@ -741,6 +749,7 @@ func Test_bucketCreateUpdater_update(t *testing.T) {
 				AccountOperations: tt.fields.ao,
 				kube:              tt.fields.kube,
 				acct:              tt.fields.acct,
+				poll:              tt.fields.poll,
 			}
 			got, err := bh.update(ctx, tt.attrs)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
@@ -768,6 +777,7 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 		secretupdater secretupdater
 		kube          client.Client
 		acct          *v1alpha3.Account
+		poll          time.Duration
 	}
 	type want struct {
 		res  reconcile.Result
@@ -844,10 +854,11 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 					WithSpecStorageAccountSpec(v1alpha3.NewStorageAccountSpec(&storage.Account{})).
 					Account,
 				kube: test.NewMockClient(),
+				poll: time.Minute,
 			},
 			acct: &storage.Account{AccountProperties: &storage.AccountProperties{ProvisioningState: storage.Succeeded}},
 			want: want{
-				res: requeueOnSuccess,
+				res: reconcile.Result{RequeueAfter: time.Minute},
 				acct: v1alpha3test.NewMockAccount(name).
 					WithSpecStatusFromProperties(&storage.AccountProperties{ProvisioningState: storage.Succeeded}).
 					WithStatusConditions(xpv1.ReconcileSuccess()).
@@ -861,6 +872,7 @@ func Test_accountSyncBacker_syncback(t *testing.T) {
 				secretupdater: tt.fields.secretupdater,
 				kube:          tt.fields.kube,
 				acct:          tt.fields.acct,
+				poll:          tt.fields.poll,
 			}
 			got, err := acu.syncback(ctx, tt.acct)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {

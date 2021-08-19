@@ -35,7 +35,8 @@ func main() {
 	var (
 		app            = kingpin.New(filepath.Base(os.Args[0]), "Azure support for Crossplane.").DefaultEnvars()
 		debug          = app.Flag("debug", "Run with debug logging.").Short('d').Bool()
-		syncPeriod     = app.Flag("sync", "Controller manager sync period duration such as 300ms, 1.5h or 2h45m").Short('s').Default("1h").Duration()
+		syncInterval   = app.Flag("sync", "Sync interval controls how often all resources will be double checked for drift.").Short('s').Default("1h").Duration()
+		pollInterval   = app.Flag("poll", "Poll interval controls how often an individual resource should be checked for drift.").Default("1m").Duration()
 		leaderElection = app.Flag("leader-election", "Use leader election for the conroller manager.").Short('l').Default("false").OverrideDefaultFromEnvar("LEADER_ELECTION").Bool()
 	)
 	kingpin.MustParse(app.Parse(os.Args[1:]))
@@ -49,7 +50,7 @@ func main() {
 		ctrl.SetLogger(zl)
 	}
 
-	log.Debug("Starting", "sync-period", syncPeriod.String())
+	log.Debug("Starting", "sync-period", syncInterval.String())
 
 	cfg, err := ctrl.GetConfig()
 	kingpin.FatalIfError(err, "Cannot get API server rest config")
@@ -57,12 +58,12 @@ func main() {
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		LeaderElection:   *leaderElection,
 		LeaderElectionID: "crossplane-leader-election-provider-azure",
-		SyncPeriod:       syncPeriod,
+		SyncPeriod:       syncInterval,
 	})
 	kingpin.FatalIfError(err, "Cannot create controller manager")
 
 	kingpin.FatalIfError(apis.AddToScheme(mgr.GetScheme()), "Cannot add Azure APIs to scheme")
-	kingpin.FatalIfError(controller.Setup(mgr, log, ratelimiter.NewDefaultProviderRateLimiter(ratelimiter.DefaultProviderRPS)), "Cannot setup Azure controllers")
+	kingpin.FatalIfError(controller.Setup(mgr, log, ratelimiter.NewDefaultProviderRateLimiter(ratelimiter.DefaultProviderRPS), *pollInterval), "Cannot setup Azure controllers")
 	kingpin.FatalIfError(mgr.Start(ctrl.SetupSignalHandler()), "Cannot start controller manager")
 
 }

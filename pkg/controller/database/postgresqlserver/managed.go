@@ -19,6 +19,7 @@ package postgresqlserver
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	v1 "k8s.io/api/core/v1"
@@ -58,7 +59,7 @@ const (
 )
 
 // Setup adds a controller that reconciles PostgreSQLInstances.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1beta1.PostgreSQLServerGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -71,6 +72,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 			resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
 			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
+			managed.WithPollInterval(poll),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }

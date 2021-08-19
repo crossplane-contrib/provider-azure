@@ -19,6 +19,7 @@ package cache
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis"
 	"github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis/redisapi"
@@ -54,7 +55,7 @@ const (
 )
 
 // SetupRedis adds a controller that reconciles Redis resources.
-func SetupRedis(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func SetupRedis(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1beta1.RedisGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -67,6 +68,7 @@ func SetupRedis(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) er
 			resource.ManagedKind(v1beta1.RedisGroupVersionKind),
 			managed.WithExternalConnecter(&connector{kube: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
+			managed.WithPollInterval(poll),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }

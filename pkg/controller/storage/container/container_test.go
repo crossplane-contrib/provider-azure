@@ -97,11 +97,11 @@ func (m *mockSyncdeleter) sync(ctx context.Context) (reconcile.Result, error) {
 var _ syncdeleter = &mockSyncdeleter{}
 
 type mockSyncdeleteMaker struct {
-	mockNewSyncdeleter func(context.Context, *v1alpha3.Container) (syncdeleter, error)
+	mockNewSyncdeleter func(context.Context, *v1alpha3.Container, time.Duration) (syncdeleter, error)
 }
 
-func (m *mockSyncdeleteMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
-	return m.mockNewSyncdeleter(ctx, c)
+func (m *mockSyncdeleteMaker) newSyncdeleter(ctx context.Context, c *v1alpha3.Container, poll time.Duration) (syncdeleter, error) {
+	return m.mockNewSyncdeleter(ctx, c, poll)
 }
 
 var _ syncdeleterMaker = &mockSyncdeleteMaker{}
@@ -196,7 +196,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockContainer(testContainerName).
 					WithFinalizer("foo.bar").Container).Build(),
 				syncdeleterMaker: &mockSyncdeleteMaker{
-					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
+					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container, _ time.Duration) (syncdeleter, error) {
 						return nil, errBoom
 					},
 				},
@@ -217,7 +217,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockContainer(testContainerName).
 					WithDeleteTimestamp(time.Now()).Container).Build(),
 				syncdeleterMaker: &mockSyncdeleteMaker{
-					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
+					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container, _ time.Duration) (syncdeleter, error) {
 						return &mockSyncdeleter{
 							mockDelete: func(ctx context.Context) (reconcile.Result, error) {
 								return reconcile.Result{}, nil
@@ -235,7 +235,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 			fields: fields{
 				Client: fake.NewClientBuilder().WithObjects(v1alpha3test.NewMockContainer(testContainerName).Container).Build(),
 				syncdeleterMaker: &mockSyncdeleteMaker{
-					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container) (syncdeleter, error) {
+					mockNewSyncdeleter: func(ctx context.Context, c *v1alpha3.Container, _ time.Duration) (syncdeleter, error) {
 						return &mockSyncdeleter{
 							mockSync: func(ctx context.Context) (reconcile.Result, error) {
 								return reconcile.Result{}, nil
@@ -438,7 +438,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			m := &containerSyncdeleterMaker{
 				Client: tt.fields.Client,
 			}
-			got, err := m.newSyncdeleter(tt.args.ctx, tt.args.c)
+			got, err := m.newSyncdeleter(tt.args.ctx, tt.args.c, time.Minute)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("containerSyncdeleterMaker.newSyncdeleter(): -got error, +want error: \n%s", diff)
 			}
@@ -814,6 +814,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 		ContainerOperations storage.ContainerOperations
 		kube                client.Client
 		container           *v1alpha3.Container
+		poll                time.Duration
 	}
 	type args struct {
 		ctx        context.Context
@@ -837,13 +838,14 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				container: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).Container,
 				kube: test.NewMockClient(),
+				poll: time.Minute,
 			},
 			args: args{
 				ctx:        ctx,
 				accessType: azurestoragefake.PublicAccessTypePtr(azblob.PublicAccessContainer),
 			},
 			want: want{
-				res: requeueOnSuccess,
+				res: reconcile.Result{RequeueAfter: time.Minute},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
 					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
@@ -887,6 +889,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 					Container,
 				ContainerOperations: azurestoragefake.NewMockContainerOperations(),
 				kube:                test.NewMockClient(),
+				poll:                time.Minute,
 			},
 			args: args{
 				ctx:        ctx,
@@ -896,7 +899,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				},
 			},
 			want: want{
-				res: requeueOnSuccess,
+				res: reconcile.Result{RequeueAfter: time.Minute},
 				cont: v1alpha3test.NewMockContainer(testContainerName).
 					WithSpecPAC(azblob.PublicAccessContainer).
 					WithStatusConditions(xpv1.Available(), xpv1.ReconcileSuccess()).
@@ -910,6 +913,7 @@ func Test_containerCreateUpdater_update(t *testing.T) {
 				ContainerOperations: tt.fields.ContainerOperations,
 				kube:                tt.fields.kube,
 				container:           tt.fields.container,
+				poll:                tt.fields.poll,
 			}
 			got, err := ccu.update(tt.args.ctx, tt.args.accessType, tt.args.meta)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {

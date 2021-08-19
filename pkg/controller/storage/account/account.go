@@ -49,15 +49,13 @@ const (
 	controllerName = "account.storage.azure.crossplane.io"
 	finalizer      = "finalizer." + controllerName
 
-	reconcileTimeout      = 2 * time.Minute
-	requeueAfterOnSuccess = 1 * time.Minute
-	requeueAfterOnWait    = 30 * time.Second
+	reconcileTimeout   = 2 * time.Minute
+	requeueAfterOnWait = 30 * time.Second
 )
 
 var (
-	resultRequeue    = reconcile.Result{Requeue: true}
-	requeueOnSuccess = reconcile.Result{RequeueAfter: requeueAfterOnSuccess}
-	requeueOnWait    = reconcile.Result{RequeueAfter: requeueAfterOnWait}
+	resultRequeue = reconcile.Result{Requeue: true}
+	requeueOnWait = reconcile.Result{RequeueAfter: requeueAfterOnWait}
 )
 
 // Reconciler reconciles an Azure storage account
@@ -67,17 +65,20 @@ type Reconciler struct {
 	managed.ReferenceResolver
 	managed.Initializer
 
+	poll time.Duration
+
 	log logging.Logger
 }
 
 // Setup adds a controller that reconciles Accounts.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1alpha3.AccountGroupKind)
 
 	r := &Reconciler{
 		Client:           mgr.GetClient(),
 		syncdeleterMaker: &accountSyncdeleterMaker{mgr.GetClient()},
 		Initializer:      managed.NewNameAsExternalName(mgr.GetClient()),
+		poll:             poll,
 		log:              l.WithValues("controller", name),
 	}
 
@@ -110,7 +111,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 		return reconcile.Result{}, err
 	}
 
-	bh, err := r.newSyncdeleter(ctx, b)
+	bh, err := r.newSyncdeleter(ctx, b, r.poll)
 	if err != nil {
 		b.Status.SetConditions(xpv1.ReconcileError(err))
 		return resultRequeue, r.Status().Update(ctx, b)
@@ -125,14 +126,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, request reconcile.Request) (
 }
 
 type syncdeleterMaker interface {
-	newSyncdeleter(context.Context, *v1alpha3.Account) (syncdeleter, error)
+	newSyncdeleter(context.Context, *v1alpha3.Account, time.Duration) (syncdeleter, error)
 }
 
 type accountSyncdeleterMaker struct {
 	client.Client
 }
 
-func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account) (syncdeleter, error) {
+func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account, poll time.Duration) (syncdeleter, error) {
 	creds, auth, err := azure.GetAuthInfo(ctx, m.Client, b)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get auth information")
@@ -143,7 +144,7 @@ func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha
 
 	return newAccountSyncDeleter(
 		azurestorage.NewAccountHandle(&cl, b.Spec.ResourceGroupName, meta.GetExternalName(b)),
-		m.Client, b), nil
+		m.Client, b, poll), nil
 }
 
 type deleter interface {
@@ -182,9 +183,9 @@ type accountSyncDeleter struct {
 	acct *v1alpha3.Account
 }
 
-func newAccountSyncDeleter(ao azurestorage.AccountOperations, kube client.Client, b *v1alpha3.Account) *accountSyncDeleter {
+func newAccountSyncDeleter(ao azurestorage.AccountOperations, kube client.Client, b *v1alpha3.Account, poll time.Duration) *accountSyncDeleter {
 	return &accountSyncDeleter{
-		createupdater:     newAccountCreateUpdater(ao, kube, b),
+		createupdater:     newAccountCreateUpdater(ao, kube, b, poll),
 		AccountOperations: ao,
 		kube:              kube,
 		acct:              b,
@@ -238,16 +239,18 @@ type accountCreateUpdater struct {
 	azurestorage.AccountOperations
 	kube      client.Client
 	acct      *v1alpha3.Account
+	poll      time.Duration
 	projectID string
 }
 
 // newAccountCreateUpdater new instance of accountCreateUpdater
-func newAccountCreateUpdater(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha3.Account) *accountCreateUpdater {
+func newAccountCreateUpdater(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha3.Account, poll time.Duration) *accountCreateUpdater {
 	return &accountCreateUpdater{
-		syncbacker:        newAccountSyncBacker(ao, kube, acct),
+		syncbacker:        newAccountSyncBacker(ao, kube, acct, poll),
 		AccountOperations: ao,
 		kube:              kube,
 		acct:              acct,
+		poll:              poll,
 	}
 }
 
@@ -275,7 +278,7 @@ func (acu *accountCreateUpdater) update(ctx context.Context, account *storage.Ac
 		current := v1alpha3.NewStorageAccountSpec(account)
 		if reflect.DeepEqual(current, acu.acct.Spec.StorageAccountSpec) {
 			acu.acct.Status.SetConditions(xpv1.ReconcileSuccess())
-			return requeueOnSuccess, acu.kube.Status().Update(ctx, acu.acct)
+			return reconcile.Result{RequeueAfter: acu.poll}, acu.kube.Status().Update(ctx, acu.acct)
 		}
 
 		a, err := acu.Update(ctx, v1alpha3.ToStorageAccountUpdate(acu.acct.Spec.StorageAccountSpec))
@@ -293,13 +296,15 @@ type accountSyncbacker struct {
 	secretupdater
 	acct *v1alpha3.Account
 	kube client.Client
+	poll time.Duration
 }
 
-func newAccountSyncBacker(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha3.Account) *accountSyncbacker {
+func newAccountSyncBacker(ao azurestorage.AccountOperations, kube client.Client, acct *v1alpha3.Account, poll time.Duration) *accountSyncbacker {
 	return &accountSyncbacker{
 		secretupdater: newAccountSecretUpdater(ao, kube, acct),
 		kube:          kube,
 		acct:          acct,
+		poll:          poll,
 	}
 }
 
@@ -322,7 +327,7 @@ func (asb *accountSyncbacker) syncback(ctx context.Context, acct *storage.Accoun
 	}
 
 	asb.acct.Status.SetConditions(xpv1.ReconcileSuccess())
-	return requeueOnSuccess, asb.kube.Status().Update(ctx, asb.acct)
+	return reconcile.Result{RequeueAfter: asb.poll}, asb.kube.Status().Update(ctx, asb.acct)
 }
 
 type accountSecretUpdater struct {
