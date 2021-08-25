@@ -32,6 +32,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
+	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverconfiguration"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
@@ -52,6 +53,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll ti
 		postgresqlserver.Setup,
 		postgresqlserverfirewallrule.Setup,
 		postgresqlservervirtualnetworkrule.Setup,
+		postgresqlserverconfiguration.Setup,
 		cosmosdb.Setup,
 		virtualnetwork.Setup,
 		subnet.Setup,
