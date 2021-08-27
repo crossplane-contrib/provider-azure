@@ -108,8 +108,10 @@ spec:
                         type: object
                     type: object
                   value:
-                    description: Value - Configuration value to be applied
+                    description: Value - Configuration value to be applied Can be left unset to read the current value as a result of late-initialization.
                     type: string
+                required:
+                - name
                 type: object
               providerConfigRef:
                 description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.

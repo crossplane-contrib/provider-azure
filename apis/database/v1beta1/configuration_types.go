@@ -87,9 +87,11 @@ type SQLServerConfigurationParameters struct {
 	// Name - Configuration name to be applied
 	// +kubebuilder:validation:Required
 	// +immutable
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 
 	// Value - Configuration value to be applied
+	// Can be left unset to read the current value
+	// as a result of late-initialization.
 	// +kubebuilder:validation:Optional
 	Value *string `json:"value,omitempty"`
 }

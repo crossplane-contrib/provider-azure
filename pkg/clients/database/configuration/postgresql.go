@@ -78,6 +78,10 @@ func (c *PostgreSQLConfigurationClient) CreateOrUpdate(ctx context.Context, cr *
 // Delete deletes the given PostgreSQL Server Configuration
 func (c *PostgreSQLConfigurationClient) Delete(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServerConfiguration) error {
 	source := SourceSystemManaged
+	// we are mimicking Terraform behavior here: when the configuration object
+	// is deleted, we are resetting its value to the system default,
+	// and updating its source to "system-default" to declare that
+	// we are no longer managing it.
 	return c.update(ctx, cr, &cr.Status.AtProvider.DefaultValue, &source)
 }
 
@@ -89,7 +93,7 @@ func (c *PostgreSQLConfigurationClient) update(ctx context.Context, cr *azuredbv
 			Source: source,
 		},
 	}
-	op, err := c.ConfigurationsClient.CreateOrUpdate(ctx, s.ResourceGroupName, s.ServerName, s.Name, config)
+	op, err := c.ConfigurationsClient.CreateOrUpdate(ctx, s.ResourceGroupName, cr.Spec.ForProvider.ServerName, cr.Spec.ForProvider.Name, config)
 	if err != nil {
 		return err
 	}

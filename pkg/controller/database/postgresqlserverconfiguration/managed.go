@@ -98,7 +98,7 @@ type external struct {
 	subscriptionID string
 }
 
-func (e external) getExternalName(resourceGroupName, serverName, configName string) string {
+func (e external) generateExtName(resourceGroupName, serverName, configName string) string {
 	return fmt.Sprintf(fmtExternalName, e.subscriptionID, resourceGroupName, serverName, configName)
 }
 
@@ -133,7 +133,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 	// it's possible that external.Create has never been called, thus set ext. name if not set
 	if meta.GetExternalName(cr) == "" {
-		meta.SetExternalName(cr, e.getExternalName(cr.Spec.ForProvider.ResourceGroupName,
+		meta.SetExternalName(cr, e.generateExtName(cr.Spec.ForProvider.ResourceGroupName,
 			cr.Spec.ForProvider.ServerName, cr.Spec.ForProvider.Name))
 	}
 
@@ -174,7 +174,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServerConfig)
 	}
 	// no error if ext name does not match
-	meta.SetExternalName(cr, e.getExternalName(cr.Spec.ForProvider.ResourceGroupName,
+	meta.SetExternalName(cr, e.generateExtName(cr.Spec.ForProvider.ResourceGroupName,
 		cr.Spec.ForProvider.ServerName, cr.Spec.ForProvider.Name))
 
 	return managed.ExternalCreation{
