@@ -4,7 +4,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
-  name: postgresqlservers.database.azure.crossplane.io
+  name: postgresqlserverconfigurations.database.azure.crossplane.io
 spec:
   group: database.azure.crossplane.io
   names:
@@ -12,10 +12,10 @@ spec:
     - crossplane
     - managed
     - azure
-    kind: PostgreSQLServer
-    listKind: PostgreSQLServerList
-    plural: postgresqlservers
-    singular: postgresqlserver
+    kind: PostgreSQLServerConfiguration
+    listKind: PostgreSQLServerConfigurationList
+    plural: postgresqlserverconfigurations
+    singular: postgresqlserverconfiguration
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,7 +34,7 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: A PostgreSQLServer is a managed resource that represents an Azure PostgreSQL Database Server.
+        description: A PostgreSQLServerConfiguration is a managed resource that represents an Azure PostgreSQL Server Configuration.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -45,7 +45,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: A SQLServerSpec defines the desired state of a SQLServer.
+            description: A SQLServerConfigurationSpec defines the desired state of a SQLServer Configuration.
             properties:
               deletionPolicy:
                 default: Delete
@@ -55,24 +55,10 @@ spec:
                 - Delete
                 type: string
               forProvider:
-                description: SQLServerParameters define the desired state of an Azure SQL Database, either PostgreSQL or MySQL.
+                description: SQLServerConfigurationParameters define the desired state of an Azure SQL Database Server Configuration, either PostgreSQL or MySQL Configuration.
                 properties:
-                  administratorLogin:
-                    description: AdministratorLogin - The administrator's login name of a server. Can only be specified when the server is being created (and is required for creation).
-                    type: string
-                  createMode:
-                    description: 'CreateMode - Possible values include: ''CreateModeDefault'', ''CreateModePointInTimeRestore'', ''CreateModeGeoRestore'', ''CreateModeReplica'''
-                    enum:
-                    - Default
-                    - GeoRestore
-                    - PointInTimeRestore
-                    - Replica
-                    type: string
-                  location:
-                    description: Location specifies the location of this SQLServer.
-                    type: string
-                  minimalTlsVersion:
-                    description: MinimalTLSVersion - control TLS connection policy
+                  name:
+                    description: Name - Configuration name to be applied
                     type: string
                   resourceGroupName:
                     description: ResourceGroupName specifies the name of the resource group that should contain this SQLServer.
@@ -98,82 +84,35 @@ spec:
                         description: MatchLabels ensures an object with matching labels is selected.
                         type: object
                     type: object
-                  restorePointInTime:
-                    description: RestorePointInTime - Restore point creation time (RFC3339 format), specifying the time to restore from.
-                    format: date-time
+                  serverName:
+                    description: ServerName specifies the name of the server that this configuration applies to.
                     type: string
-                  sku:
-                    description: SKU is the billing information related properties of the server.
+                  serverNameRef:
+                    description: ServerNameRef - A reference to a PostgreSQLServer object to retrieve its name
                     properties:
-                      capacity:
-                        description: Capacity - The scale up/out capacity, representing server's compute units.
-                        type: integer
-                      family:
-                        description: Family - The family of hardware.
-                        type: string
-                      size:
-                        description: Size - The size code, to be interpreted by resource as appropriate.
-                        type: string
-                      tier:
-                        description: 'Tier - The tier of the particular SKU. Possible values include: ''Basic'', ''GeneralPurpose'', ''MemoryOptimized'''
-                        enum:
-                        - Basic
-                        - GeneralPurpose
-                        - MemoryOptimized
+                      name:
+                        description: Name of the referenced object.
                         type: string
                     required:
-                    - capacity
-                    - family
-                    - tier
+                    - name
                     type: object
-                  sourceServerID:
-                    description: SourceServerID - The server to restore from when restoring or creating replicas
-                    type: string
-                  sslEnforcement:
-                    description: 'SSLEnforcement - Enable ssl enforcement or not when connect to server. Possible values include: ''Enabled'', ''Disabled'''
-                    enum:
-                    - Enabled
-                    - Disabled
-                    type: string
-                  storageProfile:
-                    description: StorageProfile - Storage profile of a server.
+                  serverNameSelector:
+                    description: ServerNameSelector - A selector for a PostgreSQLServer object to retrieve its name
                     properties:
-                      backupRetentionDays:
-                        description: BackupRetentionDays - Backup retention days for the server.
-                        type: integer
-                      geoRedundantBackup:
-                        description: 'GeoRedundantBackup - Enable Geo-redundant or not for server backup. Possible values include: ''Enabled'', ''Disabled'''
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
-                      storageAutogrow:
-                        description: 'StorageAutogrow - Enable Storage Auto Grow. Possible values include: ''Enabled'', ''Disabled'''
-                        enum:
-                        - Enabled
-                        - Disabled
-                        type: string
-                      storageMB:
-                        description: StorageMB - Max storage allowed for a server.
-                        type: integer
-                    required:
-                    - storageMB
+                      matchControllerRef:
+                        description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+                        type: boolean
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: MatchLabels ensures an object with matching labels is selected.
+                        type: object
                     type: object
-                  tags:
-                    additionalProperties:
-                      type: string
-                    description: Tags - Application-specific metadata in the form of key-value pairs.
-                    type: object
-                  version:
-                    description: Version - Server version.
+                  value:
+                    description: Value - Configuration value to be applied Can be left unset to read the current value as a result of late-initialization.
                     type: string
                 required:
-                - administratorLogin
-                - location
-                - sku
-                - sslEnforcement
-                - storageProfile
-                - version
+                - name
                 type: object
               providerConfigRef:
                 default:
@@ -212,13 +151,19 @@ spec:
             - forProvider
             type: object
           status:
-            description: A SQLServerStatus represents the observed state of a SQLServer.
+            description: A SQLServerConfigurationStatus represents the observed state of a SQLServerConfiguration.
             properties:
               atProvider:
-                description: SQLServerObservation represents the current state of Azure SQL resource.
+                description: SQLServerConfigurationObservation represents the current state of Azure SQL resource.
                 properties:
-                  fullyQualifiedDomainName:
-                    description: FullyQualifiedDomainName - The fully qualified domain name of a server.
+                  dataType:
+                    description: DataType - Data type for the configuration
+                    type: string
+                  defaultValue:
+                    description: DefaultValue - Default value for this configuration
+                    type: string
+                  description:
+                    description: Description - Description for the configuration
                     type: string
                   id:
                     description: ID - Resource ID
@@ -239,17 +184,17 @@ spec:
                         description: Status represents the status of the operation.
                         type: string
                     type: object
-                  masterServerId:
-                    description: MasterServerID - The master server id of a replica server.
-                    type: string
                   name:
                     description: Name - Resource name.
+                    type: string
+                  source:
+                    description: Source - Applied configuration source
                     type: string
                   type:
                     description: Type - Resource type.
                     type: string
-                  userVisibleState:
-                    description: UserVisibleState - A state of a server that is visible to user.
+                  value:
+                    description: Value - Applied configuration value
                     type: string
                 type: object
               conditions:

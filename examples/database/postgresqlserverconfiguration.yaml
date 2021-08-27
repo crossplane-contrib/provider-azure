@@ -1,0 +1,14 @@
+apiVersion: database.azure.crossplane.io/v1beta1
+kind: PostgreSQLServerConfiguration
+metadata:
+  name: example-psql-configuration
+spec:
+  providerConfigRef:
+    name: example
+  forProvider:
+    resourceGroupNameRef:
+      name: example-rg
+    serverNameRef:
+      name: example-psql
+    name: max_wal_senders
+    value: "12"
