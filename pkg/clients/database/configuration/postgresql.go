@@ -116,12 +116,6 @@ func UpdatePostgreSQLConfigurationObservation(o *azuredbv1beta1.SQLServerConfigu
 	o.Description = azure.ToString(in.Description)
 }
 
-// LateInitializePostgreSQLConfiguration fills the empty values of SQLServerConfigurationParameters with the
-// ones that are retrieved from the Azure API.
-func LateInitializePostgreSQLConfiguration(p *azuredbv1beta1.SQLServerConfigurationParameters, in postgresql.Configuration) {
-	p.Value = azure.LateInitializeStringPtrFromPtr(p.Value, in.Value)
-}
-
 // IsPostgreSQLConfigurationUpToDate is used to report whether given postgresql.Configuration is in
 // sync with the SQLServerConfigurationParameters that user desires.
 func IsPostgreSQLConfigurationUpToDate(p azuredbv1beta1.SQLServerConfigurationParameters, in postgresql.Configuration) bool {

@@ -43,7 +43,6 @@ import (
 
 const (
 	// error messages
-	errUpdateCR                     = "cannot update PostgreSQLServerConfiguration custom resource"
 	errNotPostgreSQLServerConfig    = "managed resource is not a PostgreSQLServerConfiguration"
 	errCreatePostgreSQLServerConfig = "cannot create PostgreSQLServerConfiguration"
 	errUpdatePostgreSQLServerConfig = "cannot update PostgreSQLServerConfiguration"
@@ -137,10 +136,9 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 			cr.Spec.ForProvider.ServerName, cr.Spec.ForProvider.Name))
 	}
 
-	configuration.LateInitializePostgreSQLConfiguration(&cr.Spec.ForProvider, config)
-	if err := e.kube.Update(ctx, cr); err != nil {
-		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
-	}
+	l := resource.NewLateInitializer()
+	cr.Spec.ForProvider.Value = l.LateInitializeStringPtr(cr.Spec.ForProvider.Value, config.Value)
+
 	configuration.UpdatePostgreSQLConfigurationObservation(&cr.Status.AtProvider, config)
 	// We make this call after kube.Update since it doesn't update the
 	// status subresource but fetches the whole object after it's done. So,
@@ -156,12 +154,11 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		cr.SetConditions(xpv1.Unavailable())
 	}
 
-	o := managed.ExternalObservation{
-		ResourceExists:   true,
-		ResourceUpToDate: configuration.IsPostgreSQLConfigurationUpToDate(cr.Spec.ForProvider, config),
-	}
-
-	return o, nil
+	return managed.ExternalObservation{
+		ResourceExists:          true,
+		ResourceUpToDate:        configuration.IsPostgreSQLConfigurationUpToDate(cr.Spec.ForProvider, config),
+		ResourceLateInitialized: l.IsChanged(),
+	}, nil
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
