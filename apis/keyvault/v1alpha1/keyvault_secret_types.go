@@ -77,7 +77,7 @@ const (
 	RecoverablePurgeable DeletionRecoveryLevel = "Recoverable+Purgeable"
 )
 
-type SecretAttributes struct {
+type KeyVaultSecretAttributes struct {
 	// RecoverableDays - READ-ONLY; softDelete data retention days. Value should be >=7 and <=90 when softDelete enabled, otherwise 0.
 	RecoverableDays *int32 `json:"recoverableDays,omitempty"`
 
@@ -100,9 +100,12 @@ type SecretAttributes struct {
 	Updated *metav1.Time `json:"updated,omitempty"`
 }
 
-// SecretParameters define the desired state of an Azure Key Vault Secret.
+// KeyVaultSecretParameters define the desired state of an Azure Key Vault Secret.
 // https://docs.microsoft.com/en-us/rest/api/keyvault/#secret-operations
-type SecretParameters struct {
+type KeyVaultSecretParameters struct {
+	// VaultBaseURL - The vault name, for example https://myvault.vault.azure.net.
+	VaultBaseURL string `json:"vaultBaseUrl"`
+
 	// Name - The name of the secret
 	Name string `json:"name"`
 
@@ -115,21 +118,21 @@ type SecretParameters struct {
 
 	// SecretAttributes - The secret management attributes
 	// +optional
-	SecretAttributes *SecretAttributes `json:"attributes,omitempty"`
+	SecretAttributes *KeyVaultSecretAttributes `json:"attributes,omitempty"`
 
 	// Tags - Application-specific metadata in the form of key-value pairs
 	// +optional
 	Tags map[string]string `json:"tags"`
 }
 
-// A SecretSpec defines the desired state of a Secret.
-type SecretSpec struct {
+// A KeyVaultSecretSpec defines the desired state of a Secret.
+type KeyVaultSecretSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       SecretParameters `json:"forProvider"`
+	ForProvider       KeyVaultSecretParameters `json:"forProvider"`
 }
 
-// SecretObservation represents the observed state of the Secret object in Azure.
-type SecretObservation struct {
+// KeyVaultSecretObservation represents the observed state of the Secret object in Azure.
+type KeyVaultSecretObservation struct {
 	// ID - The secret id.
 	ID string `json:"id,omitempty"`
 
@@ -140,45 +143,42 @@ type SecretObservation struct {
 	ContentType string `json:"contentType,omitempty"`
 
 	// Attributes - The secret management attributes.
-	Attributes SecretAttributes `json:"attributes,omitempty"`
+	Attributes *KeyVaultSecretAttributes `json:"attributes,omitempty"`
 
 	// Kid - READ-ONLY; If this is a secret backing a KV certificate, then this field specifies the corresponding key backing the KV certificate.
 	Kid string `json:"kid,omitempty"`
 
 	// Managed - READ-ONLY; True if the secret's lifetime is managed by key vault. If this is a secret backing a certificate, then managed will be true.
 	Managed bool `json:"managed,omitempty"`
-
-	// Tags - Application specific metadata in the form of key-value pairs.
-	Tags map[string]string `json:"tags"`
 }
 
-// A SecretStatus represents the observed state of a Secret.
-type SecretStatus struct {
+// A KeyVaultSecretStatus represents the observed state of a Secret.
+type KeyVaultSecretStatus struct {
 	xpv1.ResourceStatus `json:",inline"`
-	AtProvider          SecretObservation `json:"atProvider,omitempty"`
+	AtProvider          KeyVaultSecretObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// A Secret is a managed resource that represents an Azure Secret cluster.
+// A KeyVaultSecret is a managed resource that represents an Azure KeyVaultSecret cluster.
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
-type Secret struct {
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure},shortName=kvsecret
+type KeyVaultSecret struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SecretSpec   `json:"spec"`
-	Status SecretStatus `json:"status,omitempty"`
+	Spec   KeyVaultSecretSpec   `json:"spec"`
+	Status KeyVaultSecretStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// SecretList contains a list of Secret.
-type SecretList struct {
+// KeyVaultSecretList contains a list of Secret.
+type KeyVaultSecretList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Secret `json:"items"`
+	Items           []KeyVaultSecret `json:"items"`
 }

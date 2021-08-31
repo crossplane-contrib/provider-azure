@@ -37,14 +37,14 @@ var (
 	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
 )
 
-// Secret type metadata.
+// KeyVaultSecret type metadata.
 var (
-	SecretKind             = reflect.TypeOf(Secret{}).Name()
-	SecretGroupKind        = schema.GroupKind{Group: Group, Kind: SecretKind}.String()
-	SecretKindAPIVersion   = SecretKind + "." + SchemeGroupVersion.String()
-	SecretGroupVersionKind = SchemeGroupVersion.WithKind(SecretKind)
+	KeyVaultSecretKind             = reflect.TypeOf(KeyVaultSecret{}).Name()
+	KeyVaultSecretGroupKind        = schema.GroupKind{Group: Group, Kind: KeyVaultSecretKind}.String()
+	KeyVaultSecretKindAPIVersion   = KeyVaultSecretKind + "." + SchemeGroupVersion.String()
+	KeyVaultSecretGroupVersionKind = SchemeGroupVersion.WithKind(KeyVaultSecretKind)
 )
 
 func init() {
-	SchemeBuilder.Register(&Secret{}, &SecretList{})
+	SchemeBuilder.Register(&KeyVaultSecret{}, &KeyVaultSecretList{})
 }

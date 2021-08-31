@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cache
+package secret
 
 import (
 	"context"
@@ -54,18 +54,18 @@ const (
 	errDeleteFailed         = "cannot delete the Key Vault Secret"
 )
 
-// SetupRedis adds a controller that reconciles Redis resources.
-func SetupRedis(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
-	name := managed.ControllerName(v1alpha1.SecretGroupKind)
+// SetupSecret adds a controller that reconciles KeyVaultSecret resources.
+func SetupSecret(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
+	name := managed.ControllerName(v1alpha1.KeyVaultSecretGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		WithOptions(controller.Options{
 			RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
 		}).
-		For(&v1alpha1.Secret{}).
+		For(&v1alpha1.KeyVaultSecret{}).
 		Complete(managed.NewReconciler(mgr,
-			resource.ManagedKind(v1alpha1.SecretGroupVersionKind),
+			resource.ManagedKind(v1alpha1.KeyVaultSecretGroupVersionKind),
 			managed.WithExternalConnecter(&connector{kube: mgr.GetClient()}),
 			managed.WithPollInterval(poll),
 			managed.WithLogger(l.WithValues("controller", name)),
@@ -92,13 +92,12 @@ type external struct {
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	cr, ok := mg.(*v1alpha1.Secret)
+	cr, ok := mg.(*v1alpha1.KeyVaultSecret)
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotSecret)
 	}
 
-	secret, err := c.client.GetSecret(ctx, cr.Spec.ForProvider.Name, cr.Spec.ForProvider.VaultBaseURL, "" /* latest */)
-
+	secret, err := c.client.GetSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name, "" /* latest */)
 	if err != nil {
 		return managed.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(azure.IsNotFound, err), errGetFailed)
 	}
@@ -113,11 +112,10 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		lateInit = true
 	}
 
-	cr.Status.AtProvider = secretclients.GenerateObservation(secret)
 	cr.Status.SetConditions(xpv1.Available())
+	cr.Status.AtProvider = secretclients.GenerateObservation(secret)
 
-	isUpToDate, err := secretclients.IsUpToDate(cr.Spec.ForProvider, secret)
-
+	isUpToDate, err := secretclients.IsUpToDate(cr.Spec.ForProvider, &secret)
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errCheckUpToDate)
 	}
@@ -130,7 +128,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	cr, ok := mg.(*v1alpha1.Secret)
+	cr, ok := mg.(*v1alpha1.KeyVaultSecret)
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotSecret)
 	}
@@ -141,7 +139,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		Value:            azure.ToStringPtr(cr.Spec.ForProvider.Value),
 		Tags:             azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
 		ContentType:      cr.Spec.ForProvider.ContentType,
-		SecretAttributes: secretclients.GenerateSecretAttributes(cr.Spec.ForProvider.SecretAttributes),
+		SecretAttributes: secretclients.GenerateAttributes(cr.Spec.ForProvider.SecretAttributes),
 	})
 
 	if err != nil {
@@ -152,7 +150,7 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	cr, ok := mg.(*v1alpha1.Secret)
+	cr, ok := mg.(*v1alpha1.KeyVaultSecret)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotSecret)
 	}
@@ -160,18 +158,18 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		Value:            azure.ToStringPtr(cr.Spec.ForProvider.Value),
 		Tags:             azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
 		ContentType:      cr.Spec.ForProvider.ContentType,
-		SecretAttributes: secretclients.GenerateSecretAttributes(cr.Spec.ForProvider.SecretAttributes),
+		SecretAttributes: secretclients.GenerateAttributes(cr.Spec.ForProvider.SecretAttributes),
 	})
 
 	if err != nil {
-		return managed.ExternalUpdate{}, errors.Wrap(err, errCreateFailed)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 	}
 
 	return managed.ExternalUpdate{}, nil
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
-	cr, ok := mg.(*v1alpha1.Secret)
+	cr, ok := mg.(*v1alpha1.KeyVaultSecret)
 	if !ok {
 		return errors.New(errNotSecret)
 	}
