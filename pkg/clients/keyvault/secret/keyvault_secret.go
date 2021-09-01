@@ -19,18 +19,30 @@ const (
 	errCheckUpToDate = "unable to determine if external resource is up to date"
 )
 
-// GenerateObservation produces a RedisObservation object from the redis.ResourceType
+// GenerateObservation produces a KeyVaultSecretObservation object from the keyvault.SecretBundle
 // received from Azure.
 func GenerateObservation(az keyvault.SecretBundle) v1alpha1.KeyVaultSecretObservation {
 	o := v1alpha1.KeyVaultSecretObservation{
 		ID:          azure.ToString(az.ID),
 		Value:       azure.ToString(az.Value),
-		ContentType: azure.ToString(az.ContentType),
-		Kid:         azure.ToString(az.Kid),
-		Managed:     azure.ToBool(az.Managed),
+		ContentType: az.ContentType,
+		Kid:         az.Kid,
+		Managed:     az.Managed,
 	}
 	o.Attributes = generateKeyVaultSecretAttributes(az.Attributes)
 	return o
+}
+
+func unixTimeComparer() cmp.Option {
+	return cmp.Comparer(func(x, y *date.UnixTime) bool {
+		if x == nil {
+			return y == nil
+		}
+		if y == nil {
+			return false
+		}
+		return time.Time(*x).Equal(time.Time(*y))
+	})
 }
 
 // IsUpToDate checks whether SecretBundle is configured with given KeyVaultSecretParameters.
@@ -53,15 +65,7 @@ func IsUpToDate(spec v1alpha1.KeyVaultSecretParameters, observed *keyvault.Secre
 		desired,
 		*observed,
 		cmpopts.IgnoreFields(keyvault.SecretBundle{}, "Response"),
-		cmp.Comparer(func(x, y *date.UnixTime) bool {
-			if x == nil {
-				return y == nil
-			}
-			if y == nil {
-				return false
-			}
-			return time.Time(*x).Equal(time.Time(*y))
-		}),
+		unixTimeComparer(),
 	), nil
 }
 
@@ -87,6 +91,9 @@ func LateInitialize(spec *v1alpha1.KeyVaultSecretParameters, az keyvault.SecretB
 }
 
 func lateInitializeSecretAttributes(sa *v1alpha1.KeyVaultSecretAttributes, az *keyvault.SecretAttributes) *v1alpha1.KeyVaultSecretAttributes {
+	if az == nil {
+		return sa
+	}
 	if sa == nil {
 		sa = &v1alpha1.KeyVaultSecretAttributes{}
 	}
@@ -160,8 +167,7 @@ func generateKeyVaultSecretAttributes(az *keyvault.SecretAttributes) *v1alpha1.K
 	}
 
 	return &v1alpha1.KeyVaultSecretAttributes{
-		// TODO(G5Olivieri): Update Azure SDK package or install latest Azure Keyvault SDK and
-		// add RecoverableDays field
+		// TODO(G5Olivieri): Update Azure SDK package or install latest Azure Keyvault SDK and add RecoverableDays field
 		RecoveryLevel: v1alpha1.DeletionRecoveryLevel(az.RecoveryLevel),
 		Enabled:       az.Enabled,
 		Created:       unixTimeToMetav1Time(az.Created),

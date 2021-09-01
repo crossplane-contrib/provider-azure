@@ -140,16 +140,16 @@ type KeyVaultSecretObservation struct {
 	Value string `json:"value,omitempty"`
 
 	// ContentType - The content type of the secret.
-	ContentType string `json:"contentType,omitempty"`
+	ContentType *string `json:"contentType,omitempty"`
 
 	// Attributes - The secret management attributes.
 	Attributes *KeyVaultSecretAttributes `json:"attributes,omitempty"`
 
 	// Kid - READ-ONLY; If this is a secret backing a KV certificate, then this field specifies the corresponding key backing the KV certificate.
-	Kid string `json:"kid,omitempty"`
+	Kid *string `json:"kid,omitempty"`
 
 	// Managed - READ-ONLY; True if the secret's lifetime is managed by key vault. If this is a secret backing a certificate, then managed will be true.
-	Managed bool `json:"managed,omitempty"`
+	Managed *bool `json:"managed,omitempty"`
 }
 
 // A KeyVaultSecretStatus represents the observed state of a Secret.
