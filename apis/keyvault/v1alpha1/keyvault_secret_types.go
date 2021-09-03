@@ -77,13 +77,9 @@ const (
 	RecoverablePurgeable DeletionRecoveryLevel = "Recoverable+Purgeable"
 )
 
-type KeyVaultSecretAttributes struct {
-	// RecoverableDays - READ-ONLY; softDelete data retention days. Value should be >=7 and <=90 when softDelete enabled, otherwise 0.
-	RecoverableDays *int32 `json:"recoverableDays,omitempty"`
-
-	// RecoveryLevel - READ-ONLY; Reflects the deletion recovery level currently in effect for secrets in the current vault. If it contains 'Purgeable', the secret can be permanently deleted by a privileged user; otherwise, only the system can purge the secret, at the end of the retention interval. Possible values include: 'Purgeable', 'RecoverablePurgeable', 'Recoverable', 'RecoverableProtectedSubscription', 'CustomizedRecoverablePurgeable', 'CustomizedRecoverable', 'CustomizedRecoverableProtectedSubscription'
-	RecoveryLevel DeletionRecoveryLevel `json:"recoveryLevel,omitempty"`
-
+// KeyVaultSecretAttributesParameters defines the desired state of an Azure Key Vault Secret Attributes.
+// KeyVaultSecretAttributesParameters contains WRITE-ONLY fields.
+type KeyVaultSecretAttributesParameters struct {
 	// Enabled - Determines whether the object is enabled.
 	Enabled *bool `json:"enabled,omitempty"`
 
@@ -92,15 +88,9 @@ type KeyVaultSecretAttributes struct {
 
 	// Expires - Expiry date in UTC.
 	Expires *metav1.Time `json:"exp,omitempty"`
-
-	// Created - READ-ONLY; Creation time in UTC.
-	Created *metav1.Time `json:"created,omitempty"`
-
-	// Updated - READ-ONLY; Last updated time in UTC.
-	Updated *metav1.Time `json:"updated,omitempty"`
 }
 
-// KeyVaultSecretParameters define the desired state of an Azure Key Vault Secret.
+// KeyVaultSecretParameters defines the desired state of an Azure Key Vault Secret.
 // https://docs.microsoft.com/en-us/rest/api/keyvault/#secret-operations
 type KeyVaultSecretParameters struct {
 	// VaultBaseURL - The vault name, for example https://myvault.vault.azure.net.
@@ -118,7 +108,7 @@ type KeyVaultSecretParameters struct {
 
 	// SecretAttributes - The secret management attributes
 	// +optional
-	SecretAttributes *KeyVaultSecretAttributes `json:"attributes,omitempty"`
+	SecretAttributes *KeyVaultSecretAttributesParameters `json:"attributes,omitempty"`
 
 	// Tags - Application-specific metadata in the form of key-value pairs
 	// +optional
@@ -131,19 +121,28 @@ type KeyVaultSecretSpec struct {
 	ForProvider       KeyVaultSecretParameters `json:"forProvider"`
 }
 
+// KeyVaultSecretAttributesObservation represents the observed state of an Azure Key Vault Secret Attributes.
+// KeyVaultSecretAttributesObservation contains READ-ONLY fields.
+type KeyVaultSecretAttributesObservation struct {
+	// TODO(G5Olivieri): support RecoverableDays
+
+	// RecoveryLevel - READ-ONLY; Reflects the deletion recovery level currently in effect for secrets in the current vault. If it contains 'Purgeable', the secret can be permanently deleted by a privileged user; otherwise, only the system can purge the secret, at the end of the retention interval. Possible values include: 'Purgeable', 'RecoverablePurgeable', 'Recoverable', 'RecoverableProtectedSubscription', 'CustomizedRecoverablePurgeable', 'CustomizedRecoverable', 'CustomizedRecoverableProtectedSubscription'
+	RecoveryLevel DeletionRecoveryLevel `json:"recoveryLevel,omitempty"`
+
+	// Created - READ-ONLY; Creation time in UTC.
+	Created *metav1.Time `json:"created,omitempty"`
+
+	// Updated - READ-ONLY; Last updated time in UTC.
+	Updated *metav1.Time `json:"updated,omitempty"`
+}
+
 // KeyVaultSecretObservation represents the observed state of the Secret object in Azure.
 type KeyVaultSecretObservation struct {
 	// ID - The secret id.
 	ID string `json:"id,omitempty"`
 
-	// Value - The secret value.
-	Value string `json:"value,omitempty"`
-
-	// ContentType - The content type of the secret.
-	ContentType *string `json:"contentType,omitempty"`
-
 	// Attributes - The secret management attributes.
-	Attributes *KeyVaultSecretAttributes `json:"attributes,omitempty"`
+	Attributes *KeyVaultSecretAttributesObservation `json:"attributes,omitempty"`
 
 	// Kid - READ-ONLY; If this is a secret backing a KV certificate, then this field specifies the corresponding key backing the KV certificate.
 	Kid *string `json:"kid,omitempty"`

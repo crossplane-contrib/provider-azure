@@ -6,13 +6,14 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 	"github.com/Azure/go-autorest/autorest/date"
-	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mitchellh/copystructure"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 const (
@@ -23,11 +24,9 @@ const (
 // received from Azure.
 func GenerateObservation(az keyvault.SecretBundle) v1alpha1.KeyVaultSecretObservation {
 	o := v1alpha1.KeyVaultSecretObservation{
-		ID:          azure.ToString(az.ID),
-		Value:       azure.ToString(az.Value),
-		ContentType: az.ContentType,
-		Kid:         az.Kid,
-		Managed:     az.Managed,
+		ID:      azure.ToString(az.ID),
+		Kid:     az.Kid,
+		Managed: az.Managed,
 	}
 	o.Attributes = generateKeyVaultSecretAttributes(az.Attributes)
 	return o
@@ -69,8 +68,8 @@ func IsUpToDate(spec v1alpha1.KeyVaultSecretParameters, observed *keyvault.Secre
 	), nil
 }
 
-// GenerateAttributes creates *keyvault.SecretAttributes from *v1alpha1.KeyVaultSecretAttributes without READ-ONLY fields
-func GenerateAttributes(spec *v1alpha1.KeyVaultSecretAttributes) *keyvault.SecretAttributes {
+// GenerateAttributes creates *keyvault.KeyVaultSecretAttributesParameters from *v1alpha1.KeyVaultSecretAttributes.
+func GenerateAttributes(spec *v1alpha1.KeyVaultSecretAttributesParameters) *keyvault.SecretAttributes {
 	if spec == nil {
 		return nil
 	}
@@ -90,12 +89,12 @@ func LateInitialize(spec *v1alpha1.KeyVaultSecretParameters, az keyvault.SecretB
 	spec.SecretAttributes = lateInitializeSecretAttributes(spec.SecretAttributes, az.Attributes)
 }
 
-func lateInitializeSecretAttributes(sa *v1alpha1.KeyVaultSecretAttributes, az *keyvault.SecretAttributes) *v1alpha1.KeyVaultSecretAttributes {
+func lateInitializeSecretAttributes(sa *v1alpha1.KeyVaultSecretAttributesParameters, az *keyvault.SecretAttributes) *v1alpha1.KeyVaultSecretAttributesParameters {
 	if az == nil {
 		return sa
 	}
 	if sa == nil {
-		sa = &v1alpha1.KeyVaultSecretAttributes{}
+		sa = &v1alpha1.KeyVaultSecretAttributesParameters{}
 	}
 	sa.Expires = lateInitializeTimePtrFromUnixTimePtr(sa.Expires, az.Expires)
 	sa.NotBefore = lateInitializeTimePtrFromUnixTimePtr(sa.NotBefore, az.NotBefore)
@@ -161,18 +160,14 @@ func unixTimeCopier(v interface{}) (interface{}, error) {
 	return v.(date.UnixTime), nil
 }
 
-func generateKeyVaultSecretAttributes(az *keyvault.SecretAttributes) *v1alpha1.KeyVaultSecretAttributes {
+func generateKeyVaultSecretAttributes(az *keyvault.SecretAttributes) *v1alpha1.KeyVaultSecretAttributesObservation {
 	if az == nil {
 		return nil
 	}
 
-	return &v1alpha1.KeyVaultSecretAttributes{
-		// TODO(G5Olivieri): Update Azure SDK package or install latest Azure Keyvault SDK and add RecoverableDays field
+	return &v1alpha1.KeyVaultSecretAttributesObservation{
 		RecoveryLevel: v1alpha1.DeletionRecoveryLevel(az.RecoveryLevel),
-		Enabled:       az.Enabled,
 		Created:       unixTimeToMetav1Time(az.Created),
 		Updated:       unixTimeToMetav1Time(az.Updated),
-		Expires:       unixTimeToMetav1Time(az.Expires),
-		NotBefore:     unixTimeToMetav1Time(az.NotBefore),
 	}
 }

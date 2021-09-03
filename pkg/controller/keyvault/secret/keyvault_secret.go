@@ -46,12 +46,11 @@ const (
 	errUpdateSecretCRFailed = "cannot update Secret custom resource instance"
 	errCheckUpToDate        = "unable to determine if external resource is up to date"
 
-	errConnectFailed        = "cannot connect to Azure API"
-	errGetFailed            = "cannot get Key Vault Secret from Azure API"
-	errListAccessKeysFailed = "cannot get access key list"
-	errCreateFailed         = "cannot create the Key Vault Secret"
-	errUpdateFailed         = "cannot update the Key Vault Secret"
-	errDeleteFailed         = "cannot delete the Key Vault Secret"
+	errConnectFailed = "cannot connect to Azure API"
+	errGetFailed     = "cannot get Key Vault Secret from Azure API"
+	errCreateFailed  = "cannot create the Key Vault Secret"
+	errUpdateFailed  = "cannot update the Key Vault Secret"
+	errDeleteFailed  = "cannot delete the Key Vault Secret"
 )
 
 // SetupSecret adds a controller that reconciles KeyVaultSecret resources.
@@ -177,5 +176,5 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 
 	_, err := c.client.DeleteSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name)
 
-	return err
+	return errors.Wrap(resource.Ignore(azure.IsNotFound, err), errDeleteFailed)
 }

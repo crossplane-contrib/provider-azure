@@ -6,10 +6,11 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 	"github.com/Azure/go-autorest/autorest/date"
-	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
+	azure "github.com/crossplane/provider-azure/pkg/clients"
 )
 
 var (
@@ -52,16 +53,11 @@ func TestGenerateObservation(t *testing.T) {
 				},
 			},
 			want: v1alpha1.KeyVaultSecretObservation{
-				ContentType: contentType,
-				ID:          ID,
-				Kid:         kid,
-				Managed:     managed,
-				Value:       value,
-				Attributes: &v1alpha1.KeyVaultSecretAttributes{
+				ID:      ID,
+				Kid:     kid,
+				Managed: managed,
+				Attributes: &v1alpha1.KeyVaultSecretAttributesObservation{
 					Created:       created,
-					Enabled:       enabled,
-					Expires:       expires,
-					NotBefore:     notBefore,
 					RecoveryLevel: v1alpha1.RecoverablePurgeable,
 					Updated:       updated,
 				},
@@ -69,12 +65,10 @@ func TestGenerateObservation(t *testing.T) {
 		},
 		"RequiredConversion": {
 			arg: keyvault.SecretBundle{
-				ID:    azure.ToStringPtr(ID),
-				Value: azure.ToStringPtr(value),
+				ID: azure.ToStringPtr(ID),
 			},
 			want: v1alpha1.KeyVaultSecretObservation{
-				ID:    ID,
-				Value: value,
+				ID: ID,
 			},
 		},
 	}
@@ -91,11 +85,11 @@ func TestGenerateObservation(t *testing.T) {
 
 func TestGenerateAttributes(t *testing.T) {
 	cases := map[string]struct {
-		arg  *v1alpha1.KeyVaultSecretAttributes
+		arg  *v1alpha1.KeyVaultSecretAttributesParameters
 		want *keyvault.SecretAttributes
 	}{
 		"FullConversion": {
-			arg: &v1alpha1.KeyVaultSecretAttributes{
+			arg: &v1alpha1.KeyVaultSecretAttributesParameters{
 				Enabled:   enabled,
 				NotBefore: notBefore,
 				Expires:   expires,
@@ -136,7 +130,7 @@ func TestLateInitialize(t *testing.T) {
 				spec: &v1alpha1.KeyVaultSecretParameters{
 					Tags:        tags,
 					ContentType: contentType,
-					SecretAttributes: &v1alpha1.KeyVaultSecretAttributes{
+					SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
 						Enabled:   enabled,
 						Expires:   expires,
 						NotBefore: notBefore,
@@ -155,7 +149,7 @@ func TestLateInitialize(t *testing.T) {
 			want: &v1alpha1.KeyVaultSecretParameters{
 				Tags:        tags,
 				ContentType: contentType,
-				SecretAttributes: &v1alpha1.KeyVaultSecretAttributes{
+				SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
 					Enabled:   enabled,
 					Expires:   expires,
 					NotBefore: notBefore,
@@ -178,7 +172,7 @@ func TestLateInitialize(t *testing.T) {
 			want: &v1alpha1.KeyVaultSecretParameters{
 				ContentType: contentType,
 				Tags:        tags,
-				SecretAttributes: &v1alpha1.KeyVaultSecretAttributes{
+				SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
 					Enabled:   enabled,
 					Expires:   expires,
 					NotBefore: notBefore,
@@ -235,7 +229,7 @@ func TestIsUpToDate(t *testing.T) {
 			args: args{
 				spec: v1alpha1.KeyVaultSecretParameters{
 					Value: value,
-					SecretAttributes: &v1alpha1.KeyVaultSecretAttributes{
+					SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
 						Enabled: enabled,
 					},
 				},
@@ -263,7 +257,7 @@ func TestIsUpToDate(t *testing.T) {
 			args: args{
 				spec: v1alpha1.KeyVaultSecretParameters{
 					Value: value,
-					SecretAttributes: &v1alpha1.KeyVaultSecretAttributes{
+					SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
 						Expires: expires,
 					},
 				},
