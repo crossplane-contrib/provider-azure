@@ -13,6 +13,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -27,10 +28,15 @@ var (
 	enabled     = azure.ToBoolPtr(true)
 	expires     = &metav1.Time{Time: time.Now()}
 	notBefore   = &metav1.Time{Time: time.Now()}
-	// created      = &metav1.Time{Time: time.Now()}
-	// updated      = &metav1.Time{Time: time.Now()}
-	ID               = "ID"
-	value            = "the-secret-value"
+	ID          = "ID"
+	secretValue = []byte("secret-value")
+	value       = xpv1.SecretKeySelector{
+		SecretReference: xpv1.SecretReference{
+			Name:      "secret-name",
+			Namespace: "secret-namespace",
+		},
+		Key: "secret-key",
+	}
 	vaultBaseURL     = "https://myvault.vault.azure.net"
 	name             = "the-secret-name"
 	unexpectedObject resource.Managed
@@ -109,12 +115,20 @@ func TestObserve(t *testing.T) {
 				cr: instance(),
 				kube: &test.MockClient{
 					MockUpdate: test.NewMockUpdateFn(nil),
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
 				},
 				kv: &fake.MockClient{
 					MockGetSecret: func(ctx context.Context, vaultBaseURL string, secretName string, secretVersion string) (keyvault.SecretBundle, error) {
 						return keyvault.SecretBundle{
 							ID:    azure.ToStringPtr(ID),
-							Value: azure.ToStringPtr(value),
+							Value: azure.ToStringPtr(string(secretValue)),
 						}, nil
 					},
 				},
@@ -153,6 +167,14 @@ func TestObserve(t *testing.T) {
 				),
 				kube: &test.MockClient{
 					MockUpdate: test.NewMockUpdateFn(nil),
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
 				},
 				kv: &fake.MockClient{
 					MockGetSecret: func(_ context.Context, _ string, _ string, _ string) (keyvault.SecretBundle, error) {
@@ -220,8 +242,9 @@ func TestObserve(t *testing.T) {
 
 func TestCreate(t *testing.T) {
 	type args struct {
-		cr resource.Managed
-		kv keyvaultapi.BaseClientAPI
+		cr   resource.Managed
+		kube client.Client
+		kv   keyvaultapi.BaseClientAPI
 	}
 	type want struct {
 		cr  resource.Managed
@@ -245,6 +268,16 @@ func TestCreate(t *testing.T) {
 		"Successful": {
 			args: args{
 				cr: instance(),
+				kube: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				kv: &fake.MockClient{
 					MockSetSecret: func(ctx context.Context, vaultBaseURL, secretName string, parameters keyvault.SecretSetParameters) (keyvault.SecretBundle, error) {
 						return keyvault.SecretBundle{}, nil
@@ -261,6 +294,16 @@ func TestCreate(t *testing.T) {
 		"Failed": {
 			args: args{
 				cr: instance(),
+				kube: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				kv: &fake.MockClient{
 					MockSetSecret: func(ctx context.Context, vaultBaseURL, secretName string, parameters keyvault.SecretSetParameters) (keyvault.SecretBundle, error) {
 						return keyvault.SecretBundle{}, errorBoom
@@ -279,7 +322,7 @@ func TestCreate(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			e := external{client: tc.args.kv}
+			e := external{client: tc.args.kv, kube: tc.args.kube}
 
 			c, err := e.Create(context.Background(), tc.args.cr)
 			if diff := cmp.Diff(tc.want.cr, tc.args.cr); diff != "" {
@@ -297,8 +340,9 @@ func TestCreate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	type args struct {
-		cr resource.Managed
-		kv keyvaultapi.BaseClientAPI
+		cr   resource.Managed
+		kube client.Client
+		kv   keyvaultapi.BaseClientAPI
 	}
 	type want struct {
 		cr  resource.Managed
@@ -322,6 +366,16 @@ func TestUpdate(t *testing.T) {
 		"Successful": {
 			args: args{
 				cr: instance(),
+				kube: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				kv: &fake.MockClient{
 					MockSetSecret: func(ctx context.Context, vaultBaseURL, secretName string, parameters keyvault.SecretSetParameters) (keyvault.SecretBundle, error) {
 						return keyvault.SecretBundle{}, nil
@@ -336,6 +390,16 @@ func TestUpdate(t *testing.T) {
 		"Failed": {
 			args: args{
 				cr: instance(),
+				kube: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				kv: &fake.MockClient{
 					MockSetSecret: func(ctx context.Context, vaultBaseURL, secretName string, parameters keyvault.SecretSetParameters) (keyvault.SecretBundle, error) {
 						return keyvault.SecretBundle{}, errorBoom
@@ -352,7 +416,7 @@ func TestUpdate(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			e := external{client: tc.args.kv}
+			e := external{client: tc.args.kv, kube: tc.args.kube}
 
 			c, err := e.Update(context.Background(), tc.args.cr)
 			if diff := cmp.Diff(tc.want.cr, tc.args.cr); diff != "" {

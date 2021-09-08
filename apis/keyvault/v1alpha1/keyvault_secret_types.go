@@ -100,7 +100,7 @@ type KeyVaultSecretParameters struct {
 	Name string `json:"name"`
 
 	// Value - The value of the secret
-	Value string `json:"value"`
+	Value xpv1.SecretKeySelector `json:"value"`
 
 	// ContentType - Type of the secret value such as a password
 	// +optional

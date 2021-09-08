@@ -1,16 +1,20 @@
 package secret
 
 import (
+	"context"
 	"reflect"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 	"github.com/Azure/go-autorest/autorest/date"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mitchellh/copystructure"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -45,7 +49,7 @@ func unixTimeComparer() cmp.Option {
 }
 
 // IsUpToDate checks whether SecretBundle is configured with given KeyVaultSecretParameters.
-func IsUpToDate(spec v1alpha1.KeyVaultSecretParameters, observed *keyvault.SecretBundle) (bool, error) {
+func IsUpToDate(ctx context.Context, client client.Client, spec v1alpha1.KeyVaultSecretParameters, observed *keyvault.SecretBundle) (bool, error) {
 	// Add unixTimeCopier to copystructure to copy date.UnixTime correctly
 	copystructure.Copiers[reflect.TypeOf(date.UnixTime{})] = unixTimeCopier
 
@@ -57,8 +61,12 @@ func IsUpToDate(spec v1alpha1.KeyVaultSecretParameters, observed *keyvault.Secre
 	if !ok {
 		return true, errors.New(errCheckUpToDate)
 	}
+	val, err := ExtractSecretValue(ctx, client, &spec.Value)
+	if err != nil {
+		return true, err
+	}
 
-	desired := overrideParameters(spec, *clone)
+	desired := overrideParameters(spec, *clone, val)
 
 	return cmp.Equal(
 		desired,
@@ -79,6 +87,14 @@ func GenerateAttributes(spec *v1alpha1.KeyVaultSecretAttributesParameters) *keyv
 		NotBefore: metav1TimeToUnixTime(spec.NotBefore),
 		Expires:   metav1TimeToUnixTime(spec.Expires),
 	}
+}
+
+// ExtractSecretValue extracts secret value from secretRef.
+func ExtractSecretValue(ctx context.Context, client client.Client, value *xpv1.SecretKeySelector) (string, error) {
+	ref := xpv1.CommonCredentialSelectors{SecretRef: value}
+	val, err := resource.ExtractSecret(ctx, client, ref)
+
+	return string(val), err
 }
 
 // LateInitialize fills the spec values that user did not fill with their
@@ -124,8 +140,8 @@ func metav1TimeToUnixTime(t *metav1.Time) *date.UnixTime {
 	return (*date.UnixTime)(&t.Time)
 }
 
-func overrideParameters(sp v1alpha1.KeyVaultSecretParameters, sb keyvault.SecretBundle) keyvault.SecretBundle {
-	sb.Value = azure.ToStringPtr(sp.Value)
+func overrideParameters(sp v1alpha1.KeyVaultSecretParameters, sb keyvault.SecretBundle, val string) keyvault.SecretBundle {
+	sb.Value = azure.ToStringPtr(val)
 
 	if sp.ContentType != nil {
 		sb.ContentType = sp.ContentType

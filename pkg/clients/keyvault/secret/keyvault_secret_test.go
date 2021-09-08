@@ -1,13 +1,19 @@
 package secret
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.0/keyvault"
 	"github.com/Azure/go-autorest/autorest/date"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -21,10 +27,18 @@ var (
 	notBefore   = &metav1.Time{Time: time.Now()}
 	created     = &metav1.Time{Time: time.Now()}
 	updated     = &metav1.Time{Time: time.Now()}
-	value       = "the-secret-value"
-	ID          = "ID"
-	kid         = azure.ToStringPtr("Kid")
-	managed     = azure.ToBoolPtr(true)
+	secretValue = []byte("secret-value")
+	value       = xpv1.SecretKeySelector{
+		SecretReference: xpv1.SecretReference{
+			Name:      "secret-name",
+			Namespace: "secret-namespace",
+		},
+		Key: "secret-key",
+	}
+	ID      = "ID"
+	kid     = azure.ToStringPtr("Kid")
+	managed = azure.ToBoolPtr(true)
+	errBoom = errors.New("boom")
 )
 
 func toTimePtr(t time.Time) *time.Time {
@@ -42,7 +56,7 @@ func TestGenerateObservation(t *testing.T) {
 				ID:          azure.ToStringPtr(ID),
 				Kid:         kid,
 				Managed:     managed,
-				Value:       azure.ToStringPtr(value),
+				Value:       azure.ToStringPtr(string(secretValue)),
 				Attributes: &keyvault.SecretAttributes{
 					Created:       metav1TimeToUnixTime(created),
 					Enabled:       enabled,
@@ -193,18 +207,28 @@ func TestLateInitialize(t *testing.T) {
 
 func TestIsUpToDate(t *testing.T) {
 	type args struct {
-		az   *keyvault.SecretBundle
-		spec v1alpha1.KeyVaultSecretParameters
+		client client.Client
+		az     *keyvault.SecretBundle
+		spec   v1alpha1.KeyVaultSecretParameters
 	}
 	cases := map[string]struct {
 		args
 		want bool
-		err  error
 	}{
 		"NotUpToDate": {
 			args: args{
 				spec: v1alpha1.KeyVaultSecretParameters{
 					Value: value,
+				},
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
 				},
 				az: &keyvault.SecretBundle{
 					Value: azure.ToStringPtr("other value"),
@@ -218,8 +242,18 @@ func TestIsUpToDate(t *testing.T) {
 					Value: value,
 					Tags:  tags,
 				},
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				az: &keyvault.SecretBundle{
-					Value: azure.ToStringPtr(value),
+					Value: azure.ToStringPtr(string(secretValue)),
 					Tags:  azure.ToStringPtrMap(map[string]string{"created_by": "somebody"}),
 				},
 			},
@@ -233,8 +267,18 @@ func TestIsUpToDate(t *testing.T) {
 						Enabled: enabled,
 					},
 				},
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				az: &keyvault.SecretBundle{
-					Value: azure.ToStringPtr(value),
+					Value: azure.ToStringPtr(string(secretValue)),
 					Attributes: &keyvault.SecretAttributes{
 						Enabled: azure.ToBoolPtr(!(*enabled)),
 					},
@@ -247,13 +291,23 @@ func TestIsUpToDate(t *testing.T) {
 				spec: v1alpha1.KeyVaultSecretParameters{
 					Value: value,
 				},
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				az: &keyvault.SecretBundle{
-					Value: azure.ToStringPtr(value),
+					Value: azure.ToStringPtr(string(secretValue)),
 				},
 			},
 			want: true,
 		},
-		"Same expires dates": {
+		"SameExpiresDates": {
 			args: args{
 				spec: v1alpha1.KeyVaultSecretParameters{
 					Value: value,
@@ -261,8 +315,18 @@ func TestIsUpToDate(t *testing.T) {
 						Expires: expires,
 					},
 				},
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
 				az: &keyvault.SecretBundle{
-					Value: azure.ToStringPtr(value),
+					Value: azure.ToStringPtr(string(secretValue)),
 					Attributes: &keyvault.SecretAttributes{
 						Expires: metav1TimeToUnixTime(expires),
 					},
@@ -274,9 +338,69 @@ func TestIsUpToDate(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			got, _ := IsUpToDate(tc.args.spec, tc.args.az)
+			got, _ := IsUpToDate(context.Background(), tc.args.client, tc.args.spec, tc.args.az)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("IsUpToDate(...): -want, +got:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestExtractSecretValue(t *testing.T) {
+	type args struct {
+		client client.Client
+		value  xpv1.SecretKeySelector
+	}
+
+	type want struct {
+		value string
+		err   error
+	}
+	cases := map[string]struct {
+		args
+		want
+	}{
+		"Successful": {
+			args: args{
+				value: value,
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(nil, func(obj client.Object) error {
+						s, _ := obj.(*corev1.Secret)
+						s.Data = map[string][]byte{
+							"secret-key": secretValue,
+						}
+
+						return nil
+					}),
+				},
+			},
+			want: want{
+				value: string(secretValue),
+			},
+		},
+		"Failure": {
+			args: args{
+				value: value,
+				client: &test.MockClient{
+					MockGet: test.NewMockGetFn(errBoom),
+				},
+			},
+			want: want{
+				value: "",
+				err:   errors.Wrap(errBoom, "cannot get credentials secret"),
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got, err := ExtractSecretValue(context.Background(), tc.args.client, &tc.args.value)
+			if diff := cmp.Diff(tc.want.value, got); diff != "" {
+				t.Errorf("IsUpToDate(...): -want, +got:\n%s", diff)
+			}
+
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("IsUpToDate(...): -want error, +got error:\n%s", diff)
 			}
 		})
 	}

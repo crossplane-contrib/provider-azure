@@ -114,7 +114,8 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	cr.Status.SetConditions(xpv1.Available())
 	cr.Status.AtProvider = secretclients.GenerateObservation(secret)
 
-	isUpToDate, err := secretclients.IsUpToDate(cr.Spec.ForProvider, &secret)
+	isUpToDate, err := secretclients.IsUpToDate(ctx, c.kube, cr.Spec.ForProvider, &secret)
+
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errCheckUpToDate)
 	}
@@ -134,8 +135,13 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	cr.Status.SetConditions(xpv1.Creating())
 
-	_, err := c.client.SetSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name, keyvault.SecretSetParameters{
-		Value:            azure.ToStringPtr(cr.Spec.ForProvider.Value),
+	val, err := secretclients.ExtractSecretValue(ctx, c.kube, &cr.Spec.ForProvider.Value)
+	if err != nil {
+		return managed.ExternalCreation{}, err
+	}
+
+	_, err = c.client.SetSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name, keyvault.SecretSetParameters{
+		Value:            azure.ToStringPtr(val),
 		Tags:             azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
 		ContentType:      cr.Spec.ForProvider.ContentType,
 		SecretAttributes: secretclients.GenerateAttributes(cr.Spec.ForProvider.SecretAttributes),
@@ -153,8 +159,14 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotSecret)
 	}
-	_, err := c.client.SetSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name, keyvault.SecretSetParameters{
-		Value:            azure.ToStringPtr(cr.Spec.ForProvider.Value),
+
+	val, err := secretclients.ExtractSecretValue(ctx, c.kube, &cr.Spec.ForProvider.Value)
+	if err != nil {
+		return managed.ExternalUpdate{}, err
+	}
+
+	_, err = c.client.SetSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name, keyvault.SecretSetParameters{
+		Value:            azure.ToStringPtr(val),
 		Tags:             azure.ToStringPtrMap(cr.Spec.ForProvider.Tags),
 		ContentType:      cr.Spec.ForProvider.ContentType,
 		SecretAttributes: secretclients.GenerateAttributes(cr.Spec.ForProvider.SecretAttributes),
