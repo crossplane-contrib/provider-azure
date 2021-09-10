@@ -73,6 +73,12 @@ spec:
                   minimalTlsVersion:
                     description: MinimalTLSVersion - control TLS connection policy
                     type: string
+                  publicNetworkAccess:
+                    description: PublicNetworkAccess - Whether or not public network access is allowed for this server. Value is optional but if passed in, must be 'Enabled' or 'Disabled'.
+                    enum:
+                    - Enabled
+                    - Disabled
+                    type: string
                   resourceGroupName:
                     description: ResourceGroupName specifies the name of the resource group that should contain this SQLServer.
                     type: string

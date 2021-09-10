@@ -164,7 +164,12 @@ type SQLServerParameters struct {
 
 	// TODO(hasheddan): support InfrastructureEncryption
 
-	// TODO(hasheddan): support PublicNetworkAccess
+	// PublicNetworkAccess - Whether or not public network access is allowed for
+	// this server. Value is optional but if passed in,
+	// must be 'Enabled' or 'Disabled'.
+	// +kubebuilder:validation:Enum=Enabled;Disabled
+	// +optional
+	PublicNetworkAccess string `json:"publicNetworkAccess,omitempty"`
 
 	// CreateMode - Possible values include: 'CreateModeDefault', 'CreateModePointInTimeRestore', 'CreateModeGeoRestore', 'CreateModeReplica'
 	// +optional
