@@ -75,18 +75,19 @@ func (c *PostgreSQLServerClient) GetServer(ctx context.Context, cr *azuredbv1bet
 	return c.ServersClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr))
 }
 
-// toMySQLProperties converts the CrossPlane ForProvider object to a PostgreSQL Azure properties object
+// toPGSQLProperties converts the CrossPlane ForProvider object to a PostgreSQL Azure properties object
 func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) postgresql.BasicServerPropertiesForCreate {
 	createMode := pointerToCreateMode(s.CreateMode)
 	switch createMode {
 	case azuredbv1beta1.CreateModePointInTimeRestore:
 		return &postgresql.ServerPropertiesForRestore{
-			MinimalTLSVersion:  postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-			Version:            postgresql.ServerVersion(s.Version),
-			SslEnforcement:     postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:         postgresql.CreateModePointInTimeRestore,
-			RestorePointInTime: safeDate(s.RestorePointInTime),
-			SourceServerID:     s.SourceServerID,
+			MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:             postgresql.ServerVersion(s.Version),
+			SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			CreateMode:          postgresql.CreateModePointInTimeRestore,
+			RestorePointInTime:  safeDate(s.RestorePointInTime),
+			SourceServerID:      s.SourceServerID,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -96,11 +97,12 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 		}
 	case azuredbv1beta1.CreateModeGeoRestore:
 		return &postgresql.ServerPropertiesForGeoRestore{
-			MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-			Version:           postgresql.ServerVersion(s.Version),
-			SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			SourceServerID:    s.SourceServerID,
-			CreateMode:        postgresql.CreateModeGeoRestore,
+			MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:             postgresql.ServerVersion(s.Version),
+			SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			SourceServerID:      s.SourceServerID,
+			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			CreateMode:          postgresql.CreateModeGeoRestore,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -110,11 +112,12 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 		}
 	case azuredbv1beta1.CreateModeReplica:
 		return &postgresql.ServerPropertiesForReplica{
-			MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-			Version:           postgresql.ServerVersion(s.Version),
-			SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:        postgresql.CreateModeReplica,
-			SourceServerID:    s.SourceServerID,
+			MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:             postgresql.ServerVersion(s.Version),
+			SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			CreateMode:          postgresql.CreateModeReplica,
+			SourceServerID:      s.SourceServerID,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -131,6 +134,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			AdministratorLoginPassword: &adminPassword,
 			Version:                    postgresql.ServerVersion(s.Version),
 			SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
+			PublicNetworkAccess:        postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
 			CreateMode:                 postgresql.CreateModeDefault,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
@@ -172,9 +176,10 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 	// we don't support that.
 	s := cr.Spec.ForProvider
 	properties := &postgresql.ServerUpdateParametersProperties{
-		Version:           postgresql.ServerVersion(s.Version),
-		MinimalTLSVersion: postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-		SslEnforcement:    postgresql.SslEnforcementEnum(s.SSLEnforcement),
+		Version:             postgresql.ServerVersion(s.Version),
+		MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+		SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
+		PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
 		StorageProfile: &postgresql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -313,6 +318,10 @@ func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgres
 	if p.SSLEnforcement == "" {
 		p.SSLEnforcement = string(in.SslEnforcement)
 	}
+
+	if p.PublicNetworkAccess == "" {
+		p.PublicNetworkAccess = string(in.PublicNetworkAccess)
+	}
 }
 
 // IsPostgreSQLUpToDate is used to report whether given postgresql.Server is in
@@ -343,6 +352,8 @@ func IsPostgreSQLUpToDate(p azuredbv1beta1.SQLServerParameters, in postgresql.Se
 	case p.StorageProfile.StorageMB != azure.ToInt(in.StorageProfile.StorageMB):
 		return false
 	case azure.ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
+		return false
+	case p.PublicNetworkAccess != string(in.PublicNetworkAccess):
 		return false
 	}
 	return true
