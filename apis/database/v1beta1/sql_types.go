@@ -199,7 +199,7 @@ type SQLServerParameters struct {
 }
 
 // CreateMode controls the creation behaviour
-// Keep synced with "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql".MinimalTLSVersionEnum
+// Keep synced with "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql".CreateMode
 // +kubebuilder:validation:Enum=Default;GeoRestore;PointInTimeRestore;Replica
 type CreateMode string
 
