@@ -467,33 +467,43 @@ func TestIsPostgreSQLUpToDate(t *testing.T) {
 						Capacity: 2,
 						Family:   "Gen5",
 					},
-					PublicNetworkAccess: "Enabled",
+					PublicNetworkAccess: azure.ToStringPtr("Enabled"),
 					StorageProfile: v1beta1.StorageProfile{
-						StorageMB:       20480,
-						StorageAutogrow: azure.ToStringPtr("Enabled"),
+						StorageMB:           20480,
+						StorageAutogrow:     azure.ToStringPtr("Enabled"),
+						BackupRetentionDays: to.IntPtr(5),
+						GeoRedundantBackup:  azure.ToStringPtr("Disabled"),
 					},
 				},
 				in: postgresql.Server{
+					Tags: map[string]*string{
+						"created_by": azure.ToStringPtr("crossplane"),
+					},
 					Sku: &postgresql.Sku{
 						Tier:     postgresql.GeneralPurpose,
 						Capacity: azure.ToInt32Ptr(2),
 						Family:   azure.ToStringPtr("Gen5"),
 					},
 					ServerProperties: &postgresql.ServerProperties{
+						Version: "9.6",
 						StorageProfile: &postgresql.StorageProfile{
-							StorageMB:       azure.ToInt32Ptr(20480),
-							StorageAutogrow: postgresql.StorageAutogrowEnabled,
+							StorageMB:           azure.ToInt32Ptr(20480),
+							StorageAutogrow:     postgresql.StorageAutogrowEnabled,
+							BackupRetentionDays: azure.ToInt32Ptr(5),
+							GeoRedundantBackup:  postgresql.Disabled,
 						},
+						SslEnforcement:      postgresql.SslEnforcementEnumEnabled,
 						MinimalTLSVersion:   postgresql.TLS12,
 						PublicNetworkAccess: postgresql.PublicNetworkAccessEnumEnabled,
 					},
 				},
 			},
+			want: true,
 		},
 		"IsNotUpToDate": {
 			args: args{
 				p: v1beta1.SQLServerParameters{
-					PublicNetworkAccess: "Disabled",
+					PublicNetworkAccess: azure.ToStringPtr("Disabled"),
 				},
 				in: postgresql.Server{
 					Sku: &postgresql.Sku{},
@@ -548,7 +558,7 @@ func TestLateInitializePostgreSQL(t *testing.T) {
 				},
 			},
 			want: &v1beta1.SQLServerParameters{
-				PublicNetworkAccess: "Enabled",
+				PublicNetworkAccess: azure.ToStringPtr("Enabled"),
 			},
 		},
 	}

@@ -193,6 +193,11 @@ func (in *SQLServerParameters) DeepCopyInto(out *SQLServerParameters) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.SKU.DeepCopyInto(&out.SKU)
+	if in.PublicNetworkAccess != nil {
+		in, out := &in.PublicNetworkAccess, &out.PublicNetworkAccess
+		*out = new(string)
+		**out = **in
+	}
 	if in.CreateMode != nil {
 		in, out := &in.CreateMode, &out.CreateMode
 		*out = new(CreateMode)

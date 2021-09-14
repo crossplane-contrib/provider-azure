@@ -84,7 +84,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:             postgresql.ServerVersion(s.Version),
 			SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			CreateMode:          postgresql.CreateModePointInTimeRestore,
 			RestorePointInTime:  safeDate(s.RestorePointInTime),
 			SourceServerID:      s.SourceServerID,
@@ -101,7 +101,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			Version:             postgresql.ServerVersion(s.Version),
 			SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
 			SourceServerID:      s.SourceServerID,
-			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			CreateMode:          postgresql.CreateModeGeoRestore,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
@@ -115,7 +115,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 			Version:             postgresql.ServerVersion(s.Version),
 			SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			CreateMode:          postgresql.CreateModeReplica,
 			SourceServerID:      s.SourceServerID,
 			StorageProfile: &postgresql.StorageProfile{
@@ -134,7 +134,7 @@ func toPGSQLProperties(s v1beta1.SQLServerParameters, adminPassword string) post
 			AdministratorLoginPassword: &adminPassword,
 			Version:                    postgresql.ServerVersion(s.Version),
 			SslEnforcement:             postgresql.SslEnforcementEnum(s.SSLEnforcement),
-			PublicNetworkAccess:        postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+			PublicNetworkAccess:        postgresql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			CreateMode:                 postgresql.CreateModeDefault,
 			StorageProfile: &postgresql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
@@ -179,7 +179,7 @@ func (c *PostgreSQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1
 		Version:             postgresql.ServerVersion(s.Version),
 		MinimalTLSVersion:   postgresql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
 		SslEnforcement:      postgresql.SslEnforcementEnum(s.SSLEnforcement),
-		PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(s.PublicNetworkAccess),
+		PublicNetworkAccess: postgresql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 		StorageProfile: &postgresql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  postgresql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -319,8 +319,8 @@ func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgres
 		p.SSLEnforcement = string(in.SslEnforcement)
 	}
 
-	if p.PublicNetworkAccess == "" {
-		p.PublicNetworkAccess = string(in.PublicNetworkAccess)
+	if p.PublicNetworkAccess == nil {
+		p.PublicNetworkAccess = azure.ToStringPtr(string(in.PublicNetworkAccess))
 	}
 }
 
@@ -353,7 +353,7 @@ func IsPostgreSQLUpToDate(p azuredbv1beta1.SQLServerParameters, in postgresql.Se
 		return false
 	case azure.ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
 		return false
-	case p.PublicNetworkAccess != string(in.PublicNetworkAccess):
+	case azure.ToString(p.PublicNetworkAccess) != string(in.PublicNetworkAccess):
 		return false
 	}
 	return true

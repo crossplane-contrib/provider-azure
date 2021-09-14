@@ -169,7 +169,7 @@ type SQLServerParameters struct {
 	// must be 'Enabled' or 'Disabled'.
 	// +kubebuilder:validation:Enum=Enabled;Disabled
 	// +optional
-	PublicNetworkAccess string `json:"publicNetworkAccess,omitempty"`
+	PublicNetworkAccess *string `json:"publicNetworkAccess,omitempty"`
 
 	// CreateMode - Possible values include: 'CreateModeDefault', 'CreateModePointInTimeRestore', 'CreateModeGeoRestore', 'CreateModeReplica'
 	// +optional
