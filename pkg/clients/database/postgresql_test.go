@@ -431,3 +431,143 @@ func TestPostgreSQLServerFirewallRuleIsUpToDate(t *testing.T) {
 		})
 	}
 }
+
+func TestIsPostgreSQLUpToDate(t *testing.T) {
+	type args struct {
+		p  v1beta1.SQLServerParameters
+		in postgresql.Server
+	}
+	cases := map[string]struct {
+		args
+		want bool
+	}{
+		"IsUpToDateWithAllDefault": {
+			args: args{
+				p: v1beta1.SQLServerParameters{},
+				in: postgresql.Server{
+					Sku: &postgresql.Sku{},
+					ServerProperties: &postgresql.ServerProperties{
+						StorageProfile: &postgresql.StorageProfile{},
+					},
+				},
+			},
+			want: true,
+		},
+		"IsUpToDate": {
+			args: args{
+				p: v1beta1.SQLServerParameters{
+					MinimalTLSVersion: "TLS1_2",
+					SSLEnforcement:    "Enabled",
+					Version:           "9.6",
+					Tags: map[string]string{
+						"created_by": "crossplane",
+					},
+					SKU: v1beta1.SKU{
+						Tier:     "GeneralPurpose",
+						Capacity: 2,
+						Family:   "Gen5",
+					},
+					PublicNetworkAccess: azure.ToStringPtr("Enabled"),
+					StorageProfile: v1beta1.StorageProfile{
+						StorageMB:           20480,
+						StorageAutogrow:     azure.ToStringPtr("Enabled"),
+						BackupRetentionDays: to.IntPtr(5),
+						GeoRedundantBackup:  azure.ToStringPtr("Disabled"),
+					},
+				},
+				in: postgresql.Server{
+					Tags: map[string]*string{
+						"created_by": azure.ToStringPtr("crossplane"),
+					},
+					Sku: &postgresql.Sku{
+						Tier:     postgresql.GeneralPurpose,
+						Capacity: azure.ToInt32Ptr(2),
+						Family:   azure.ToStringPtr("Gen5"),
+					},
+					ServerProperties: &postgresql.ServerProperties{
+						Version: "9.6",
+						StorageProfile: &postgresql.StorageProfile{
+							StorageMB:           azure.ToInt32Ptr(20480),
+							StorageAutogrow:     postgresql.StorageAutogrowEnabled,
+							BackupRetentionDays: azure.ToInt32Ptr(5),
+							GeoRedundantBackup:  postgresql.Disabled,
+						},
+						SslEnforcement:      postgresql.SslEnforcementEnumEnabled,
+						MinimalTLSVersion:   postgresql.TLS12,
+						PublicNetworkAccess: postgresql.PublicNetworkAccessEnumEnabled,
+					},
+				},
+			},
+			want: true,
+		},
+		"IsNotUpToDate": {
+			args: args{
+				p: v1beta1.SQLServerParameters{
+					PublicNetworkAccess: azure.ToStringPtr("Disabled"),
+				},
+				in: postgresql.Server{
+					Sku: &postgresql.Sku{},
+					ServerProperties: &postgresql.ServerProperties{
+						StorageProfile:      &postgresql.StorageProfile{},
+						PublicNetworkAccess: postgresql.PublicNetworkAccessEnumEnabled,
+					},
+				},
+			},
+			want: false,
+		},
+		"IsNotUpToDateWithServerWithoutSku": {
+			args: args{
+				p: v1beta1.SQLServerParameters{},
+				in: postgresql.Server{
+					ServerProperties: &postgresql.ServerProperties{
+						StorageProfile: &postgresql.StorageProfile{},
+					},
+				},
+			},
+			want: false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got := IsPostgreSQLUpToDate(tc.args.p, tc.args.in)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("IsPostgreSQLUpToDate(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestLateInitializePostgreSQL(t *testing.T) {
+	type args struct {
+		p  *v1beta1.SQLServerParameters
+		in postgresql.Server
+	}
+	cases := map[string]struct {
+		args
+		want *v1beta1.SQLServerParameters
+	}{
+		"PublicNetworkAccessLateInitialize": {
+			args: args{
+				p: &v1beta1.SQLServerParameters{},
+				in: postgresql.Server{
+					Sku: &postgresql.Sku{},
+					ServerProperties: &postgresql.ServerProperties{
+						PublicNetworkAccess: postgresql.PublicNetworkAccessEnumEnabled,
+					},
+				},
+			},
+			want: &v1beta1.SQLServerParameters{
+				PublicNetworkAccess: azure.ToStringPtr("Enabled"),
+			},
+		},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			LateInitializePostgreSQL(tc.args.p, tc.args.in)
+			if diff := cmp.Diff(tc.want, tc.args.p); diff != "" {
+				t.Errorf("LateInitializePostgreSQL(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
