@@ -226,3 +226,201 @@ type SubnetList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Subnet `json:"items"`
 }
+
+// A PublicIPAddressSpec defines the desired state of a PublicIPAddress.
+type PublicIPAddressSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// ResourceGroupName - Name of the Public IP address's resource group.
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to the the Public IP address's resource
+	// group.
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Select a reference to the the Public IP address's
+	// resource group.
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
+
+	// PublicIPAddressFormat - Properties of the PublicIPAddress.
+	PublicIPAddressFormat PublicIPAddressFormat `json:"properties"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]*string `json:"tags,omitempty"`
+}
+
+// PublicIPAddressFormat defines properties of the PublicIPAddress.
+type PublicIPAddressFormat struct {
+	// PublicIPAllocationMethod - The public IP address allocation method. Possible values include: 'Static', 'Dynamic'
+	PublicIPAllocationMethod string `json:"allocationMethod"`
+
+	// PublicIPAllocationMethod - The public IP address version. Possible values include: 'IPV4', 'IPV6'
+	PublicIPAddressVersion string `json:"version"`
+
+	// Location - Resource location.
+	Location string `json:"location"`
+
+	// SKU of PublicIPAddress
+	SKU SKU `json:"sku"`
+}
+
+// SKU of PublicIPAddress
+type SKU struct {
+	// Name - Name of sku. Possible values include: 'Standard'
+	Name string `json:"name"`
+}
+
+// A PublicIPAddressStatus represents the observed state of a PublicIPAddress.
+type PublicIPAddressStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// State of this PublicIPAddress.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this PublicIPAddress, if any.
+	Message string `json:"message,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this PublicIPAddress.
+	ID string `json:"id,omitempty"`
+
+	// Address - A string identifying address of PublicIPAddress resource
+	Address string `json:"address"`
+}
+
+// +kubebuilder:object:root=true
+
+// A PublicIPAddress is a managed resource that represents an Azure PublicIPAddress.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.properties.location"
+// +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".status.address"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type PublicIPAddress struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   PublicIPAddressSpec   `json:"spec"`
+	Status PublicIPAddressStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// PublicIPAddressList contains a list of PublicIPAddress items
+type PublicIPAddressList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []PublicIPAddress `json:"items"`
+}
+
+// A NetworkInterfaceSpec defines the desired state of a NetworkInterface.
+type NetworkInterfaceSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// ResourceGroupName - Name of the Public IP address's resource group.
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to the the Public IP address's resource
+	// group.
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Select a reference to the the Public IP address's
+	// resource group.
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
+
+	// NetworkInterfaceFormat - Properties of the NetworkInterface.
+	NetworkInterfaceFormat NetworkInterfaceFormat `json:"properties"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]*string `json:"tags,omitempty"`
+}
+
+// NetworkInterfaceFormat defines properties of the NetworkInterface.
+type NetworkInterfaceFormat struct {
+	// Location - Resource location.
+	Location string `json:"location"`
+
+	// IPConfigurations - A list of IPConfigurations of the network interface.
+	IPConfigurations []*InterfaceIPConfiguration `json:"iPConfigurations"`
+}
+
+// A NetworkInterfaceStatus represents the observed state of a NetworkInterface.
+type NetworkInterfaceStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// State of this PublicIPAddress.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this PublicIPAddress, if any.
+	Message string `json:"message,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this PublicIPAddress.
+	ID string `json:"id,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// A NetworkInterface is a managed resource that represents an Azure NetworkInterface.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.properties.location"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type NetworkInterface struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   NetworkInterfaceSpec   `json:"spec"`
+	Status NetworkInterfaceStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// NetworkInterfaceList contains a list of NetworkInterface items
+type NetworkInterfaceList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []NetworkInterface `json:"items"`
+}
+
+// InterfaceIPConfiguration defines properties of a service endpoint.
+type InterfaceIPConfiguration struct {
+	Name string `json:"name"`
+
+	// PublicIPAddressID - ID of the Network Interface's Public IP address.
+	PublicIPAddressID string `json:"publicIPAddressID,omitempty"`
+
+	// PublicIPAddressIDRef - A reference to the the Network Interface's Public IP address.
+	PublicIPAddressIDRef *xpv1.Reference `json:"publicIPAddressIDRef,omitempty"`
+
+	// PublicIPAddressIDSelector - Select a reference to the Network Interface's Public IP address.
+	PublicIPAddressIDSelector *xpv1.Selector `json:"publicIPAddressIDSelector,omitempty"`
+
+	// SubnetID - Name of the Network Interface's Subnet.
+	SubnetID string `json:"subnetID,omitempty"`
+
+	// SubnetIDRef - A reference to the the Network Interface's Subnet.
+	SubnetIDRef *xpv1.Reference `json:"subnetIDRef,omitempty"`
+
+	// SubnetIDSelector - Select a reference to the Network Interface's Subnet.
+	SubnetIDSelector *xpv1.Selector `json:"subnetIDSelector,omitempty"`
+
+	// Primary - Gets whether this is a primary customer address on the network interface.
+	Primary bool `json:"primary,omitempty"`
+
+	// ProvisioningState - The provisioning state of the resource.
+	// +optional
+	ProvisioningState string `json:"provisioningState,omitempty"`
+}

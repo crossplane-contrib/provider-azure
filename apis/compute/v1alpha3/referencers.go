@@ -62,3 +62,42 @@ func (mg *AKSCluster) ResolveReferences(ctx context.Context, c client.Reader) er
 
 	return nil
 }
+
+// ResolveReferences of this VirtualMachine.
+func (mg *VirtualMachine) ResolveReferences(ctx context.Context, c client.Reader) error {
+	r := reference.NewAPIResolver(c, mg)
+
+	// Resolve spec.resourceGroupName
+	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ResourceGroupName,
+		Reference:    mg.Spec.ResourceGroupNameRef,
+		Selector:     mg.Spec.ResourceGroupNameSelector,
+		To:           reference.To{Managed: &v1alpha3.ResourceGroup{}, List: &v1alpha3.ResourceGroupList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return errors.Wrap(err, "spec.resourceGroupName")
+	}
+	mg.Spec.ResourceGroupName = rsp.ResolvedValue
+	mg.Spec.ResourceGroupNameRef = rsp.ResolvedReference
+
+	if mg.Spec.VirtualMachineParameters != nil && mg.Spec.VirtualMachineParameters.NetworkProfile != nil {
+		netProf := mg.Spec.VirtualMachineParameters.NetworkProfile
+		for _, networkInterface := range netProf.NetworkInterfaces {
+			// Resolve spec.properties.networkProfile.networkInterfaces[].networkInterfaceID
+			rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
+				CurrentValue: networkInterface.NetworkInterfaceID,
+				Reference:    networkInterface.NetworkInterfaceIDRef,
+				Selector:     networkInterface.NetworkInterfaceIDSelector,
+				To:           reference.To{Managed: &networkv1alpha3.NetworkInterface{}, List: &networkv1alpha3.NetworkInterfaceList{}},
+				Extract:      networkv1alpha3.NetworkInterfaceID(),
+			})
+			if err != nil {
+				return errors.Wrap(err, "spec.properties.networkProfile.networkInterfaces[].networkInterfaceID")
+			}
+			networkInterface.NetworkInterfaceID = rsp.ResolvedValue
+			networkInterface.NetworkInterfaceIDRef = rsp.ResolvedReference
+		}
+	}
+	return nil
+}

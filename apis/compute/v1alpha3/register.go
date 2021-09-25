@@ -45,6 +45,15 @@ var (
 	AKSClusterGroupVersionKind = SchemeGroupVersion.WithKind(AKSClusterKind)
 )
 
+// VirtualMachine type metadata.
+var (
+	VirtualMachineKind             = reflect.TypeOf(VirtualMachine{}).Name()
+	VirtualMachineGroupKind        = schema.GroupKind{Group: Group, Kind: VirtualMachineKind}.String()
+	VirtualMachineKindAPIVersion   = VirtualMachineKind + "." + SchemeGroupVersion.String()
+	VirtualMachineGroupVersionKind = SchemeGroupVersion.WithKind(VirtualMachineKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&AKSCluster{}, &AKSClusterList{})
+	SchemeBuilder.Register(&VirtualMachine{}, &VirtualMachineList{})
 }

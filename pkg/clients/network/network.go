@@ -78,6 +78,28 @@ func NewSubnetParameters(s *v1alpha3.Subnet) networkmgmt.Subnet {
 	}
 }
 
+// NewPublicIPAddressParameters returns an Azure PublicIPAddress object from a public ip address spec
+func NewPublicIPAddressParameters(s *v1alpha3.PublicIPAddress) networkmgmt.PublicIPAddress {
+	return networkmgmt.PublicIPAddress{
+		PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
+			PublicIPAllocationMethod: networkmgmt.IPAllocationMethod(s.Spec.PublicIPAddressFormat.PublicIPAllocationMethod),
+			PublicIPAddressVersion:   networkmgmt.IPVersion(s.Spec.PublicIPAddressFormat.PublicIPAddressVersion),
+		},
+		Location: azure.ToStringPtr(s.Spec.PublicIPAddressFormat.Location),
+	}
+}
+
+// NewNetworkInterfaceParameters returns an Azure NetworkInterface object from a network interface
+func NewNetworkInterfaceParameters(s *v1alpha3.NetworkInterface) networkmgmt.Interface {
+	return networkmgmt.Interface{
+		InterfacePropertiesFormat: &networkmgmt.InterfacePropertiesFormat{
+			Primary:          azure.ToBoolPtr(true),
+			IPConfigurations: NewInterfaceIPConfiguration(s),
+		},
+		Location: azure.ToStringPtr(s.Spec.NetworkInterfaceFormat.Location),
+	}
+}
+
 // NewServiceEndpoints converts to Azure ServiceEndpointPropertiesFormat
 func NewServiceEndpoints(e []v1alpha3.ServiceEndpointPropertiesFormat) *[]networkmgmt.ServiceEndpointPropertiesFormat {
 	endpoints := make([]networkmgmt.ServiceEndpointPropertiesFormat, len(e))
@@ -89,6 +111,29 @@ func NewServiceEndpoints(e []v1alpha3.ServiceEndpointPropertiesFormat) *[]networ
 	}
 
 	return &endpoints
+}
+
+// NewInterfaceIPConfiguration converts to Azure InterfaceIPConfiguration
+func NewInterfaceIPConfiguration(s *v1alpha3.NetworkInterface) *[]networkmgmt.InterfaceIPConfiguration {
+	ifaces := s.Spec.NetworkInterfaceFormat.IPConfigurations
+	interfaces := make([]networkmgmt.InterfaceIPConfiguration, len(ifaces))
+
+	for i, iface := range ifaces {
+		var publicIP *networkmgmt.PublicIPAddress
+		if iface.PublicIPAddressID != "" {
+			publicIP = &networkmgmt.PublicIPAddress{ID: azure.ToStringPtr(iface.PublicIPAddressID)}
+		}
+		interfaces[i] = networkmgmt.InterfaceIPConfiguration{
+			Name: azure.ToStringPtr(iface.Name),
+			InterfaceIPConfigurationPropertiesFormat: &networkmgmt.InterfaceIPConfigurationPropertiesFormat{
+				Primary:         azure.ToBoolPtr(iface.Primary),
+				Subnet:          &networkmgmt.Subnet{ID: azure.ToStringPtr(iface.SubnetID)},
+				PublicIPAddress: publicIP,
+			},
+		}
+	}
+
+	return &interfaces
 }
 
 // SubnetNeedsUpdate determines if a virtual network need to be updated
@@ -105,4 +150,21 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.Etag = azure.ToString(az.Etag)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Purpose = azure.ToString(az.Purpose)
+}
+
+// UpdatePublicIPAddressStatusFromAzure updates the status related to the external
+// Azure public ip address in the PublicIPAddressStatus
+func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networkmgmt.PublicIPAddress) {
+	v.Status.State = azure.ToString(az.ProvisioningState)
+	v.Status.Etag = azure.ToString(az.Etag)
+	v.Status.ID = azure.ToString(az.ID)
+	v.Status.Address = azure.ToString(az.IPAddress)
+}
+
+// UpdateNetworkInterfaceStatusFromAzure updates the status related to the external
+// Azure network interface in the NetworkInterfaceStatus
+func UpdateNetworkInterfaceStatusFromAzure(v *v1alpha3.NetworkInterface, az networkmgmt.Interface) {
+	v.Status.State = azure.ToString(az.InterfacePropertiesFormat.ProvisioningState)
+	v.Status.Etag = azure.ToString(az.Etag)
+	v.Status.ID = azure.ToString(az.ID)
 }
