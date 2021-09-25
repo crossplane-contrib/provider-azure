@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,16 @@ var (
 	SubnetGroupVersionKind = SchemeGroupVersion.WithKind(SubnetKind)
 )
 
+// DdosProtectionPlan type metadata.
+var (
+	DdosProtectionPlanKind             = reflect.TypeOf(DdosProtectionPlan{}).Name()
+	DdosProtectionPlanGroupKind        = schema.GroupKind{Group: Group, Kind: DdosProtectionPlanKind}.String()
+	DdosProtectionPlanKindAPIVersion   = DdosProtectionPlanKind + "." + SchemeGroupVersion.String()
+	DdosProtectionPlanGroupVersionKind = SchemeGroupVersion.WithKind(DdosProtectionPlanKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&VirtualNetwork{}, &VirtualNetworkList{})
 	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
+	SchemeBuilder.Register(&DdosProtectionPlan{}, &DdosProtectionPlanList{})
 }

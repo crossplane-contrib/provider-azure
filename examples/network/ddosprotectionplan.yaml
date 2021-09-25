@@ -1,0 +1,11 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: DdosProtectionPlan
+metadata:
+  name: example-ddos-protection-plan
+spec:
+  resourceGroupName: example-rg
+  location: eastus
+  tags:
+    a: b
+  providerConfigRef:
+    name: default 

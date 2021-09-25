@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -105,4 +105,51 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.Etag = azure.ToString(az.Etag)
 	v.Status.ID = azure.ToString(az.ID)
 	v.Status.Purpose = azure.ToString(az.Purpose)
+}
+
+// NewDdosProtectionPlanParameters returns an Azure DdosProtectionPlan object from a ddosProtectionPlan spec
+func NewDdosProtectionPlanParameters(d *v1alpha3.DdosProtectionPlan) networkmgmt.DdosProtectionPlan {
+	return networkmgmt.DdosProtectionPlan{
+		Location: azure.ToStringPtr(d.Spec.Location),
+		Tags:     azure.ToStringPtrMap(d.Spec.Tags),
+		DdosProtectionPlanPropertiesFormat: &networkmgmt.DdosProtectionPlanPropertiesFormat{
+			ProvisioningState: d.Spec.DdosProtectionPlanPropertiesFormat.ProvisioningState,
+		},
+	}
+}
+
+// IsDdosProtectionPlanUpToDate determines if a ddos protection plan is up to date or not.
+func IsDdosProtectionPlanUpToDate(kube *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) bool {
+	up := NewDdosProtectionPlanParameters(kube)
+	switch {
+	case !reflect.DeepEqual(up.Name, az.Name):
+		return false
+	case !reflect.DeepEqual(up.Location, az.Location):
+		return false
+	case !reflect.DeepEqual(up.Tags, az.Tags):
+		return false
+	}
+	return true
+}
+
+// UpdateDdosProtectionPlanStatusFromAzure updates the status related to the external
+// Azure DdosProtectionPlan in the DdosProtectionPlanStatus
+func UpdateDdosProtectionPlanStatusFromAzure(d *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) {
+	d.Status.Etag = azure.ToString(az.Etag)
+	d.Status.ID = azure.ToString(az.ID)
+	d.Status.Type = azure.ToString(az.Type)
+	d.Status.Tags = azure.ToStringMap(az.Tags)
+	d.Status.State = azure.ToString(az.DdosProtectionPlanPropertiesFormat.ProvisioningState)
+	d.Status.Location = azure.ToString(az.Location)
+}
+
+// LateInitializeDdos updates the Tags from the external
+// Azure DdosProtectionPlan in the DdosProtectionPlan
+func LateInitializeDdos(d *v1alpha3.DdosProtectionPlan, az networkmgmt.DdosProtectionPlan) {
+	if len(d.Spec.Tags) == 0 && len(az.Tags) != 0 {
+		d.Spec.Tags = make(map[string]string)
+		for k, v := range az.Tags {
+			d.Spec.Tags[k] = *v
+		}
+	}
 }

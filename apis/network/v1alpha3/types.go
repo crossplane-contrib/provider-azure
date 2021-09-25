@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -225,4 +225,94 @@ type SubnetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Subnet `json:"items"`
+}
+
+// DdosProtectionPlanPropertiesFormat defines properties of a DdosProtectionPlan..
+type DdosProtectionPlanPropertiesFormat struct {
+	// ResourceGUID - The resource GUID property of the DDoS protection plan resource.
+	// +optional
+	ResourceGUID *string `json:"resourceGuid,omitempty"`
+
+	// ProvisioningState - The provisioning state of the DDoS protection plan resource.
+	// +optional
+	ProvisioningState *string `json:"provisioningState,omitempty"`
+}
+
+// A DdosProtectionPlanSpec defines the desired state of a DdosProtectionPlan.
+type DdosProtectionPlanSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// Location - Location of the DdosProtectionPlan.
+	Location string `json:"location,omitempty"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// DdosProtectionPlanPropertiesFormat - Properties of the ddos protection plan.
+	// +optional
+	DdosProtectionPlanPropertiesFormat `json:"properties,omitempty"`
+
+	// ResourceGroupName - Name of the Ddos Protection Plan's resource group.
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - A reference to the the Ddos Protection Plan's resource group.
+	ResourceGroupNameRef *xpv1.Reference `json:"resourceGroupNameRef,omitempty"`
+
+	// ResourceGroupNameSelector - Selects a reference to the the Ddos Protection Plan's
+	// resource group.
+	ResourceGroupNameSelector *xpv1.Selector `json:"resourceGroupNameSelector,omitempty"`
+}
+
+// A DdosProtectionPlanStatus represents the observed state of a DdosProtectionPlan.
+type DdosProtectionPlanStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// State of this DdosProtectionPlan.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this DdosProtectionPlan, if any.
+	Message string `json:"message,omitempty"`
+
+	// Type - A unique string that changes whenever the resource is updated.
+	Type string `json:"type,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this DdosProtectionPlan.
+	ID string `json:"id,omitempty"`
+
+	// Tags of this DdosProtectionPlan..
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// Location of the DdosProtectionPlan.
+	Location string `json:"location,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// A DdosProtectionPlan is a managed resource that represents an Azure DDoS Protection Plan.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".status.location"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type DdosProtectionPlan struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   DdosProtectionPlanSpec   `json:"spec"`
+	Status DdosProtectionPlanStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// DdosProtectionPlanList contains a list of DdosProtectionPlan items
+type DdosProtectionPlanList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []DdosProtectionPlan `json:"items"`
 }

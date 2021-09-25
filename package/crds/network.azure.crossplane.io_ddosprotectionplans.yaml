@@ -1,0 +1,200 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.0
+  creationTimestamp: null
+  name: ddosprotectionplans.network.azure.crossplane.io
+spec:
+  group: network.azure.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - azure
+    kind: DdosProtectionPlan
+    listKind: DdosProtectionPlanList
+    plural: ddosprotectionplans
+    singular: ddosprotectionplan
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .status.state
+      name: STATE
+      type: string
+    - jsonPath: .status.location
+      name: LOCATION
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha3
+    schema:
+      openAPIV3Schema:
+        description: A DdosProtectionPlan is a managed resource that represents an Azure DDoS Protection Plan.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: A DdosProtectionPlanSpec defines the desired state of a DdosProtectionPlan.
+            properties:
+              deletionPolicy:
+                description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              location:
+                description: Location - Location of the DdosProtectionPlan.
+                type: string
+              properties:
+                description: DdosProtectionPlanPropertiesFormat - Properties of the ddos protection plan.
+                properties:
+                  provisioningState:
+                    description: ProvisioningState - The provisioning state of the DDoS protection plan resource.
+                    type: string
+                  resourceGuid:
+                    description: ResourceGUID - The resource GUID property of the DDoS protection plan resource.
+                    type: string
+                type: object
+              providerConfigRef:
+                description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              providerRef:
+                description: 'ProviderReference specifies the provider that will be used to create, observe, update, and delete this managed resource. Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              resourceGroupName:
+                description: ResourceGroupName - Name of the Ddos Protection Plan's resource group.
+                type: string
+              resourceGroupNameRef:
+                description: ResourceGroupNameRef - A reference to the the Ddos Protection Plan's resource group.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              resourceGroupNameSelector:
+                description: ResourceGroupNameSelector - Selects a reference to the the Ddos Protection Plan's resource group.
+                properties:
+                  matchControllerRef:
+                    description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
+                    type: boolean
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: MatchLabels ensures an object with matching labels is selected.
+                    type: object
+                type: object
+              tags:
+                additionalProperties:
+                  type: string
+                description: Tags - Resource tags.
+                type: object
+              writeConnectionSecretToRef:
+                description: WriteConnectionSecretToReference specifies the namespace and name of a Secret to which any connection details for this managed resource should be written. Connection details frequently include the endpoint, username, and password required to connect to the managed resource.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            type: object
+          status:
+            description: A DdosProtectionPlanStatus represents the observed state of a DdosProtectionPlan.
+            properties:
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time this condition transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A Message containing details about this condition's last transition from one status to another, if any.
+                      type: string
+                    reason:
+                      description: A Reason for this condition's last transition from one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True, False, or Unknown?
+                      type: string
+                    type:
+                      description: Type of this condition. At most one of each condition type may apply to a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              etag:
+                description: Etag - A unique string that changes whenever the resource is updated.
+                type: string
+              id:
+                description: ID of this DdosProtectionPlan.
+                type: string
+              location:
+                description: Location of the DdosProtectionPlan.
+                type: string
+              message:
+                description: A Message providing detail about the state of this DdosProtectionPlan, if any.
+                type: string
+              state:
+                description: State of this DdosProtectionPlan.
+                type: string
+              tags:
+                additionalProperties:
+                  type: string
+                description: Tags of this DdosProtectionPlan..
+                type: object
+              type:
+                description: Type - A unique string that changes whenever the resource is updated.
+                type: string
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

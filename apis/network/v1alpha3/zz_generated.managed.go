@@ -20,6 +20,62 @@ package v1alpha3
 
 import xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
+// GetCondition of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetDeletionPolicy of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) GetProviderConfigReference() *xpv1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this DdosProtectionPlan.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *DdosProtectionPlan) GetProviderReference() *xpv1.Reference {
+	return mg.Spec.ProviderReference
+}
+
+// GetWriteConnectionSecretToReference of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetConditions of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) SetConditions(c ...xpv1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetDeletionPolicy of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) SetDeletionPolicy(r xpv1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) SetProviderConfigReference(r *xpv1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this DdosProtectionPlan.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *DdosProtectionPlan) SetProviderReference(r *xpv1.Reference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetWriteConnectionSecretToReference of this DdosProtectionPlan.
+func (mg *DdosProtectionPlan) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetCondition of this Subnet.
 func (mg *Subnet) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
 	return mg.Status.GetCondition(ct)
