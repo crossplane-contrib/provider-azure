@@ -53,7 +53,16 @@ var (
 	SubnetGroupVersionKind = SchemeGroupVersion.WithKind(SubnetKind)
 )
 
+// ExpressRouteCircuits type metadata.
+var (
+	ExpressRouteCircuitsKind             = reflect.TypeOf(ExpressRouteCircuits{}).Name()
+	ExpressRouteCircuitsGroupKind        = schema.GroupKind{Group: Group, Kind: ExpressRouteCircuitsKind}.String()
+	ExpressRouteCircuitsKindAPIVersion   = ExpressRouteCircuitsKind + "." + SchemeGroupVersion.String()
+	ExpressRouteCircuitsGroupVersionKind = SchemeGroupVersion.WithKind(ExpressRouteCircuitsKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&VirtualNetwork{}, &VirtualNetworkList{})
 	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
+	SchemeBuilder.Register(&ExpressRouteCircuits{}, &ExpressRouteCircuitsList{})
 }

@@ -35,6 +35,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverconfiguration"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/network/expressroutecircuits"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
 	"github.com/crossplane/provider-azure/pkg/controller/resourcegroup"
@@ -47,6 +48,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll ti
 	for _, setup := range []func(ctrl.Manager, logging.Logger, workqueue.RateLimiter, time.Duration) error{
 		cache.SetupRedis,
 		compute.SetupAKSCluster,
+		expressroutecircuits.Setup,
 		mysqlserver.Setup,
 		mysqlserverfirewallrule.Setup,
 		mysqlservervirtualnetworkrule.Setup,

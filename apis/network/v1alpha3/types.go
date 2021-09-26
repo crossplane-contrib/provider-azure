@@ -226,3 +226,104 @@ type SubnetList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Subnet `json:"items"`
 }
+
+// ExpressRouteCircuitsPropertiesFormat defines properties of a ExpressRouteCircuits.
+type ExpressRouteCircuitsPropertiesFormat struct {
+
+	// ServiceProviderName - Flag denoting service provider name.
+	ServiceProviderName *string `json:"serviceProviderName,omitempty"`
+
+	// BandwidthInMbps - Flag denotes bandwithwidth in Mbps.
+	BandwidthInMbps *int32 `json:"bandwidthInMbps,omitempty"`
+
+	// PeeringLocation - Flag denotes peering location.
+	PeeringLocation *string `json:"peeringLocation,omitempty"`
+
+	// AllowClassicOperations - Flag denotes allow classic operations.
+	AllowClassicOperations *bool `json:"allowClassicOperations,omitempty"`
+
+	// GlobalReachEnabled - Flag denoting Global reach status.
+	GlobalReachEnabled *bool `json:"globalReachEnabled,omitempty"`
+}
+
+// SKU contains SKU in an ExpressRouteCircuit.
+type SKU struct {
+	// Tier - The tier of the SKU. Possible values include: 'ExpressRouteCircuitSkuTierStandard', 'ExpressRouteCircuitSkuTierPremium', 'ExpressRouteCircuitSkuTierBasic', 'ExpressRouteCircuitSkuTierLocal'
+	Tier string `json:"tier,omitempty"`
+	// Family - The family of the SKU. Possible values include: 'UnlimitedData', 'MeteredData'
+	Family string `json:"family,omitempty"`
+}
+
+// A ExpressRouteCircuitsSpec defines the desired state of a ExpressRouteCircuits.
+type ExpressRouteCircuitsSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+
+	// Location - Location of the ExpressRouteCircuit.
+	Location string `json:"location,omitempty"`
+
+	// SKU - SKU for ExpressRouteCircuit.
+	Sku SKU `json:"sku,omitempty"`
+
+	// Tags - Resource tags.
+	// +optional
+	Tags map[string]string `json:"tags,omitempty"`
+
+	// CircuitName - Name of the expressroutecircuit
+	CircuitName string `json:"circuitName,omitempty"`
+
+	// ResourceGroupName - Name of the ExpressRouteCircuits's resource group.
+	ResourceGroupName string `json:"resourceGroupName,omitempty"`
+
+	// ResourceGroupNameRef - Name of the ExpressRouteCircuits's resource group.
+	ResourceGroupNameRef string `json:"resourceGroupNameRef,omitempty"`
+
+	// ExpressRouteCircuitsPropertiesFormat - Properties of the subnet.
+	ExpressRouteCircuitsPropertiesFormat `json:"properties"`
+}
+
+// A ExpressRouteCircuitsStatus represents the observed state of a ExpressRouteCircuits.
+type ExpressRouteCircuitsStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+
+	// State of this ExpressRouteCircuits.
+	State string `json:"state,omitempty"`
+
+	// A Message providing detail about the state of this ExpressRouteCircuits, if any.
+	Message string `json:"message,omitempty"`
+
+	// Etag - A unique string that changes whenever the resource is updated.
+	Etag string `json:"etag,omitempty"`
+
+	// ID of this ExpressRouteCircuits.
+	ID string `json:"id,omitempty"`
+
+	// Purpose - A string identifying the intention of use for this subnet based
+	// on delegations and other user-defined properties.
+	Purpose string `json:"purpose,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// A ExpressRouteCircuits is a managed resource that represents an Azure ExpressRouteCircuits.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type ExpressRouteCircuits struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ExpressRouteCircuitsSpec   `json:"spec"`
+	Status ExpressRouteCircuitsStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// ExpressRouteCircuitsList contains a list of ExpressRouteCircuits items
+type ExpressRouteCircuitsList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []ExpressRouteCircuits `json:"items"`
+}

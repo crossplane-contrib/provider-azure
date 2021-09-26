@@ -20,6 +20,62 @@ package v1alpha3
 
 import xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
+// GetCondition of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetDeletionPolicy of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) GetProviderConfigReference() *xpv1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this ExpressRouteCircuits.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *ExpressRouteCircuits) GetProviderReference() *xpv1.Reference {
+	return mg.Spec.ProviderReference
+}
+
+// GetWriteConnectionSecretToReference of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetConditions of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) SetConditions(c ...xpv1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetDeletionPolicy of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) SetDeletionPolicy(r xpv1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) SetProviderConfigReference(r *xpv1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this ExpressRouteCircuits.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *ExpressRouteCircuits) SetProviderReference(r *xpv1.Reference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetWriteConnectionSecretToReference of this ExpressRouteCircuits.
+func (mg *ExpressRouteCircuits) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetCondition of this Subnet.
 func (mg *Subnet) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
 	return mg.Status.GetCondition(ct)
