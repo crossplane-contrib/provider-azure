@@ -4,7 +4,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
-  name: postgresqlserverfirewallrules.database.azure.crossplane.io
+  name: postgresqlserverconfigurations.database.azure.crossplane.io
 spec:
   group: database.azure.crossplane.io
   names:
@@ -12,10 +12,10 @@ spec:
     - crossplane
     - managed
     - azure
-    kind: PostgreSQLServerFirewallRule
-    listKind: PostgreSQLServerFirewallRuleList
-    plural: postgresqlserverfirewallrules
-    singular: postgresqlserverfirewallrule
+    kind: PostgreSQLServerConfiguration
+    listKind: PostgreSQLServerConfigurationList
+    plural: postgresqlserverconfigurations
+    singular: postgresqlserverconfiguration
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -25,16 +25,16 @@ spec:
     - jsonPath: .status.conditions[?(@.type=='Synced')].status
       name: SYNCED
       type: string
-    - jsonPath: .status.state
-      name: STATE
+    - jsonPath: .spec.forProvider.version
+      name: VERSION
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
-    name: v1alpha3
+    name: v1beta1
     schema:
       openAPIV3Schema:
-        description: A PostgreSQLServerFirewallRule is a managed resource that represents an Azure PostgreSQL firewall rule.
+        description: A PostgreSQLServerConfiguration is a managed resource that represents an Azure PostgreSQL Server Configuration.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -45,7 +45,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: A FirewallRuleSpec defines the desired state of an Azure SQL firewall rule.
+            description: A SQLServerConfigurationSpec defines the desired state of a SQLServer Configuration.
             properties:
               deletionPolicy:
                 default: Delete
@@ -55,23 +55,13 @@ spec:
                 - Delete
                 type: string
               forProvider:
-                description: FirewallRuleParameters define the desired state of an Azure SQL firewall rule.
+                description: SQLServerConfigurationParameters define the desired state of an Azure SQL Database Server Configuration, either PostgreSQL or MySQL Configuration.
                 properties:
-                  properties:
-                    description: FirewallRuleProperties - Resource properties.
-                    properties:
-                      endIpAddress:
-                        description: EndIPAddress of the IP range this firewall rule allows.
-                        type: string
-                      startIpAddress:
-                        description: StartIPAddress of the IP range this firewall rule allows.
-                        type: string
-                    required:
-                    - endIpAddress
-                    - startIpAddress
-                    type: object
+                  name:
+                    description: Name - Configuration name to be applied
+                    type: string
                   resourceGroupName:
-                    description: ResourceGroupName - Name of the Firewall Rule's resource group.
+                    description: ResourceGroupName specifies the name of the resource group that should contain this SQLServer.
                     type: string
                   resourceGroupNameRef:
                     description: ResourceGroupNameRef - A reference to a ResourceGroup object to retrieve its name
@@ -83,7 +73,7 @@ spec:
                     - name
                     type: object
                   resourceGroupNameSelector:
-                    description: ResourceGroupNameSelector - Selects a ResourceGroup to reference.
+                    description: ResourceGroupNameSelector - A selector for a ResourceGroup object to retrieve its name
                     properties:
                       matchControllerRef:
                         description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
@@ -95,10 +85,10 @@ spec:
                         type: object
                     type: object
                   serverName:
-                    description: ServerName - Name of the Firewall Rule's server.
+                    description: ServerName specifies the name of the server that this configuration applies to.
                     type: string
                   serverNameRef:
-                    description: ServerNameRef - A reference to the Firewall Rule's MySQLServer.
+                    description: ServerNameRef - A reference to a PostgreSQLServer object to retrieve its name
                     properties:
                       name:
                         description: Name of the referenced object.
@@ -107,7 +97,7 @@ spec:
                     - name
                     type: object
                   serverNameSelector:
-                    description: ServerNameSelector - Selects a MySQLServer to reference.
+                    description: ServerNameSelector - A selector for a PostgreSQLServer object to retrieve its name
                     properties:
                       matchControllerRef:
                         description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
@@ -118,8 +108,11 @@ spec:
                         description: MatchLabels ensures an object with matching labels is selected.
                         type: object
                     type: object
+                  value:
+                    description: Value - Configuration value to be applied Can be left unset to read the current value as a result of late-initialization.
+                    type: string
                 required:
-                - properties
+                - name
                 type: object
               providerConfigRef:
                 default:
@@ -158,16 +151,50 @@ spec:
             - forProvider
             type: object
           status:
-            description: A FirewallRuleStatus represents the status of an Azure SQL firewall rule.
+            description: A SQLServerConfigurationStatus represents the observed state of a SQLServerConfiguration.
             properties:
               atProvider:
-                description: A FirewallRuleObservation represents the observed state of an Azure SQL firewall rule.
+                description: SQLServerConfigurationObservation represents the current state of Azure SQL resource.
                 properties:
+                  dataType:
+                    description: DataType - Data type for the configuration
+                    type: string
+                  defaultValue:
+                    description: DefaultValue - Default value for this configuration
+                    type: string
+                  description:
+                    description: Description - Description for the configuration
+                    type: string
                   id:
                     description: ID - Resource ID
                     type: string
+                  lastOperation:
+                    description: LastOperation represents the state of the last operation started by the controller.
+                    properties:
+                      errorMessage:
+                        description: ErrorMessage represents the error that occurred during the operation.
+                        type: string
+                      method:
+                        description: Method is HTTP method that the initial request is made with.
+                        type: string
+                      pollingUrl:
+                        description: PollingURL is used to fetch the status of the given operation.
+                        type: string
+                      status:
+                        description: Status represents the status of the operation.
+                        type: string
+                    type: object
+                  name:
+                    description: Name - Resource name.
+                    type: string
+                  source:
+                    description: Source - Applied configuration source
+                    type: string
                   type:
                     description: Type - Resource type.
+                    type: string
+                  value:
+                    description: Value - Applied configuration value
                     type: string
                 type: object
               conditions:

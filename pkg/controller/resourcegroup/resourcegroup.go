@@ -19,6 +19,7 @@ package resourcegroup
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"k8s.io/client-go/util/workqueue"
@@ -53,7 +54,7 @@ const (
 )
 
 // Setup adds a controller that reconciles ResourceGroups.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1alpha3.ResourceGroupGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -66,6 +67,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 			resource.ManagedKind(v1alpha3.ResourceGroupGroupVersionKind),
 			managed.WithConnectionPublishers(),
 			managed.WithExternalConnecter(&connecter{kube: mgr.GetClient()}),
+			managed.WithPollInterval(poll),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }

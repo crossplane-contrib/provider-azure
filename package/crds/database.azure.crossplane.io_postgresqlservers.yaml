@@ -48,7 +48,8 @@ spec:
             description: A SQLServerSpec defines the desired state of a SQLServer.
             properties:
               deletionPolicy:
-                description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource. The "Delete" policy is the default when no policy is specified.
+                default: Delete
+                description: DeletionPolicy specifies what will happen to the underlying external when this managed resource is deleted - either "Delete" or "Orphan" the external resource.
                 enum:
                 - Orphan
                 - Delete
@@ -72,6 +73,12 @@ spec:
                     type: string
                   minimalTlsVersion:
                     description: MinimalTLSVersion - control TLS connection policy
+                    type: string
+                  publicNetworkAccess:
+                    description: PublicNetworkAccess - Whether or not public network access is allowed for this server. Value is optional but if passed in, must be 'Enabled' or 'Disabled'.
+                    enum:
+                    - Enabled
+                    - Disabled
                     type: string
                   resourceGroupName:
                     description: ResourceGroupName specifies the name of the resource group that should contain this SQLServer.
@@ -175,6 +182,8 @@ spec:
                 - version
                 type: object
               providerConfigRef:
+                default:
+                  name: default
                 description: ProviderConfigReference specifies how the provider that will be used to create, observe, update, and delete this managed resource should be configured.
                 properties:
                   name:

@@ -11,7 +11,7 @@ spec:
   vnetSubnetIDRef:
     name: example-sub
   location: West US 2
-  version: "1.20.2"
+  version: "1.19.11"
   nodeCount: 1
   nodeVMSize: Standard_B2s
   dnsNamePrefix: crossplane-aks

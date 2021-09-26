@@ -17,6 +17,8 @@ limitations under the License.
 package controller
 
 import (
+	"time"
+
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -30,6 +32,7 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/mysqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserver"
+	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverconfiguration"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
 	"github.com/crossplane/provider-azure/pkg/controller/network/expressroutecircuits"
@@ -41,9 +44,8 @@ import (
 )
 
 // Setup Azure controllers.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
-	for _, setup := range []func(ctrl.Manager, logging.Logger, workqueue.RateLimiter) error{
-		config.Setup,
+func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
+	for _, setup := range []func(ctrl.Manager, logging.Logger, workqueue.RateLimiter, time.Duration) error{
 		cache.SetupRedis,
 		compute.SetupAKSCluster,
 		expressroutecircuits.Setup,
@@ -53,6 +55,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 		postgresqlserver.Setup,
 		postgresqlserverfirewallrule.Setup,
 		postgresqlservervirtualnetworkrule.Setup,
+		postgresqlserverconfiguration.Setup,
 		cosmosdb.Setup,
 		virtualnetwork.Setup,
 		subnet.Setup,
@@ -60,9 +63,9 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 		account.Setup,
 		container.Setup,
 	} {
-		if err := setup(mgr, l, rl); err != nil {
+		if err := setup(mgr, l, rl, poll); err != nil {
 			return err
 		}
 	}
-	return nil
+	return config.Setup(mgr, l, rl)
 }

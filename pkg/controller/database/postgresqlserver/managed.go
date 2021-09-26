@@ -19,8 +19,11 @@ package postgresqlserver
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/workqueue"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
@@ -52,10 +55,11 @@ const (
 	errGetPostgreSQLServer    = "cannot get PostgreSQLServer"
 	errDeletePostgreSQLServer = "cannot delete PostgreSQLServer"
 	errFetchLastOperation     = "cannot fetch last operation"
+	errGetConnSecret          = "cannot get connection secret"
 )
 
 // Setup adds a controller that reconciles PostgreSQLInstances.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
+func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
 	name := managed.ControllerName(v1beta1.PostgreSQLServerGroupKind)
 
 	return ctrl.NewControllerManagedBy(mgr).
@@ -68,6 +72,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 			resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
 			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
+			managed.WithPollInterval(poll),
 			managed.WithLogger(l.WithValues("controller", name)),
 			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
 }
@@ -146,6 +151,23 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	return o, nil
 }
 
+func (e *external) getPassword(ctx context.Context, cr *v1beta1.PostgreSQLServer) (string, error) {
+	if cr.Spec.WriteConnectionSecretToReference == nil ||
+		cr.Spec.WriteConnectionSecretToReference.Name == "" || cr.Spec.WriteConnectionSecretToReference.Namespace == "" {
+		return "", nil
+	}
+
+	s := &v1.Secret{}
+	if err := e.kube.Get(ctx, types.NamespacedName{
+		Namespace: cr.Spec.WriteConnectionSecretToReference.Namespace,
+		Name:      cr.Spec.WriteConnectionSecretToReference.Name,
+	}, s); err != nil {
+		return "", errors.Wrap(err, errGetConnSecret)
+	}
+
+	return string(s.Data[xpv1.ResourceCredentialsSecretPasswordKey]), nil
+}
+
 func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
 	cr, ok := mg.(*v1beta1.PostgreSQLServer)
 	if !ok {
@@ -154,9 +176,15 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	cr.SetConditions(xpv1.Creating())
 
-	pw, err := e.newPasswordFn()
+	pw, err := e.getPassword(ctx, cr)
 	if err != nil {
-		return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
+		return managed.ExternalCreation{}, err
+	}
+	if pw == "" {
+		pw, err = e.newPasswordFn()
+		if err != nil {
+			return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
+		}
 	}
 	if err := e.client.CreateServer(ctx, cr, pw); err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
