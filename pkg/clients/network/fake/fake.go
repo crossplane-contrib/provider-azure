@@ -118,3 +118,35 @@ func (c *MockPublicIPAddressClient) Get(ctx context.Context, resourceGroupName s
 func (c *MockPublicIPAddressClient) List(ctx context.Context, resourceGroupName string) (result network.PublicIPAddressListResultPage, err error) {
 	return c.MockList(ctx, resourceGroupName)
 }
+
+var _ networkapi.InterfacesClientAPI = &MockNetworkInterfaceClient{}
+
+// MockNetworkInterfaceClient is a fake implementation of network.PublicIPAddressClient.
+type MockNetworkInterfaceClient struct {
+	networkapi.InterfacesClientAPI
+
+	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, networkInterfaceName string, parameters network.Interface) (result network.InterfacesCreateOrUpdateFuture, err error)
+	MockDelete         func(ctx context.Context, resourceGroupName string, networkInterfaceName string) (result network.InterfacesDeleteFuture, err error)
+	MockGet            func(ctx context.Context, resourceGroupName string, networkInterfaceName string, expand string) (result network.Interface, err error)
+	MockList           func(ctx context.Context, resourceGroupName string) (result network.InterfaceListResultPage, err error)
+}
+
+// CreateOrUpdate calls the MockNetworkInterfaceClient's MockCreateOrUpdate method.
+func (c *MockNetworkInterfaceClient) CreateOrUpdate(ctx context.Context, resourceGroupName string, networkInterfaceName string, parameters network.Interface) (result network.InterfacesCreateOrUpdateFuture, err error) {
+	return c.MockCreateOrUpdate(ctx, resourceGroupName, networkInterfaceName, parameters)
+}
+
+// Delete calls the MockNetworkInterfaceClient's MockDelete method.
+func (c *MockNetworkInterfaceClient) Delete(ctx context.Context, resourceGroupName string, networkInterfaceName string) (result network.InterfacesDeleteFuture, err error) {
+	return c.MockDelete(ctx, resourceGroupName, networkInterfaceName)
+}
+
+// Get calls the MockNetworkInterfaceClient's MockGet method.
+func (c *MockNetworkInterfaceClient) Get(ctx context.Context, resourceGroupName string, publicIPAddressName string, expand string) (result network.Interface, err error) {
+	return c.MockGet(ctx, resourceGroupName, publicIPAddressName, expand)
+}
+
+// List calls the MockNetworkInterfaceClient's MockListKeys method.
+func (c *MockNetworkInterfaceClient) List(ctx context.Context, resourceGroupName string) (result network.InterfaceListResultPage, err error) {
+	return c.MockList(ctx, resourceGroupName)
+}
