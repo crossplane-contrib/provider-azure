@@ -86,9 +86,9 @@ func instance(rm ...keyvaulSecretResourceModifier) *v1alpha1.KeyVaultSecret {
 				ContentType:  contentType,
 				Tags:         tags,
 				SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
-					Enabled:   enabled,
-					NotBefore: notBefore,
-					Expires:   expires,
+					Enabled:        enabled,
+					NotBeforeDate:  notBefore,
+					ExpirationDate: expires,
 				},
 			},
 		},

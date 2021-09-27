@@ -82,12 +82,12 @@ func (in *KeyVaultSecretAttributesParameters) DeepCopyInto(out *KeyVaultSecretAt
 		*out = new(bool)
 		**out = **in
 	}
-	if in.NotBefore != nil {
-		in, out := &in.NotBefore, &out.NotBefore
+	if in.NotBeforeDate != nil {
+		in, out := &in.NotBeforeDate, &out.NotBeforeDate
 		*out = (*in).DeepCopy()
 	}
-	if in.Expires != nil {
-		in, out := &in.Expires, &out.Expires
+	if in.ExpirationDate != nil {
+		in, out := &in.ExpirationDate, &out.ExpirationDate
 		*out = (*in).DeepCopy()
 	}
 }

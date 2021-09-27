@@ -120,9 +120,9 @@ func TestGenerateAttributes(t *testing.T) {
 	}{
 		"FullConversion": {
 			arg: &v1alpha1.KeyVaultSecretAttributesParameters{
-				Enabled:   enabled,
-				NotBefore: notBefore,
-				Expires:   expires,
+				Enabled:        enabled,
+				NotBeforeDate:  notBefore,
+				ExpirationDate: expires,
 			},
 			want: &keyvault.SecretAttributes{
 				Enabled:   enabled,
@@ -161,9 +161,9 @@ func TestLateInitialize(t *testing.T) {
 					Tags:        tags,
 					ContentType: contentType,
 					SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
-						Enabled:   enabled,
-						Expires:   expires,
-						NotBefore: notBefore,
+						Enabled:        enabled,
+						ExpirationDate: expires,
+						NotBeforeDate:  notBefore,
 					},
 				},
 				az: keyvault.SecretBundle{
@@ -180,9 +180,9 @@ func TestLateInitialize(t *testing.T) {
 				Tags:        tags,
 				ContentType: contentType,
 				SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
-					Enabled:   enabled,
-					Expires:   expires,
-					NotBefore: notBefore,
+					Enabled:        enabled,
+					ExpirationDate: expires,
+					NotBeforeDate:  notBefore,
 				},
 			},
 		},
@@ -203,9 +203,9 @@ func TestLateInitialize(t *testing.T) {
 				ContentType: contentType,
 				Tags:        tags,
 				SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
-					Enabled:   enabled,
-					Expires:   expires,
-					NotBefore: notBefore,
+					Enabled:        enabled,
+					ExpirationDate: expires,
+					NotBeforeDate:  notBefore,
 				},
 			},
 		},
@@ -328,7 +328,7 @@ func TestIsUpToDate(t *testing.T) {
 				spec: v1alpha1.KeyVaultSecretParameters{
 					Value: value,
 					SecretAttributes: &v1alpha1.KeyVaultSecretAttributesParameters{
-						Expires: expires,
+						ExpirationDate: expires,
 					},
 				},
 				client: &test.MockClient{

@@ -100,8 +100,8 @@ func GenerateAttributes(spec *v1alpha1.KeyVaultSecretAttributesParameters) *keyv
 
 	return &keyvault.SecretAttributes{
 		Enabled:   spec.Enabled,
-		NotBefore: metav1TimeToUnixTime(spec.NotBefore),
-		Expires:   metav1TimeToUnixTime(spec.Expires),
+		NotBefore: metav1TimeToUnixTime(spec.NotBeforeDate),
+		Expires:   metav1TimeToUnixTime(spec.ExpirationDate),
 	}
 }
 
@@ -128,8 +128,8 @@ func lateInitializeSecretAttributes(sa *v1alpha1.KeyVaultSecretAttributesParamet
 	if sa == nil {
 		sa = &v1alpha1.KeyVaultSecretAttributesParameters{}
 	}
-	sa.Expires = lateInitializeTimePtrFromUnixTimePtr(sa.Expires, az.Expires)
-	sa.NotBefore = lateInitializeTimePtrFromUnixTimePtr(sa.NotBefore, az.NotBefore)
+	sa.ExpirationDate = lateInitializeTimePtrFromUnixTimePtr(sa.ExpirationDate, az.Expires)
+	sa.NotBeforeDate = lateInitializeTimePtrFromUnixTimePtr(sa.NotBeforeDate, az.NotBefore)
 	sa.Enabled = azure.LateInitializeBoolPtrFromPtr(sa.Enabled, az.Enabled)
 	return sa
 }

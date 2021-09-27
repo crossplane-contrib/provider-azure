@@ -28,11 +28,11 @@ type KeyVaultSecretAttributesParameters struct {
 	// Enabled - Determines whether the object is enabled.
 	Enabled *bool `json:"enabled,omitempty"`
 
-	// NotBefore - Not before date in UTC.
-	NotBefore *metav1.Time `json:"nbf,omitempty"`
+	// NotBeforeDate - Not before date in UTC (RFC3339 format).
+	NotBeforeDate *metav1.Time `json:"notBeforeDate,omitempty"`
 
-	// Expires - Expiry date in UTC.
-	Expires *metav1.Time `json:"exp,omitempty"`
+	// Expires - Expiry date in UTC (RFC3339 format).
+	ExpirationDate *metav1.Time `json:"expirationDate,omitempty"`
 }
 
 // KeyVaultSecretParameters defines the desired state of an Azure Key Vault Secret.
