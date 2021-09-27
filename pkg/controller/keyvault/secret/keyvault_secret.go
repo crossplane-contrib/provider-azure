@@ -42,15 +42,14 @@ import (
 )
 
 const (
-	errNotSecret            = "the custom resource is not a Secret instance"
-	errUpdateSecretCRFailed = "cannot update Secret custom resource instance"
-	errCheckUpToDate        = "unable to determine if external resource is up to date"
+	errNotSecret     = "the custom resource is not a Secret instance"
+	errCheckUpToDate = "cannot determine if infrastructure vault secret is up-to-date"
 
 	errConnectFailed = "cannot connect to Azure API"
-	errGetFailed     = "cannot get Key Vault Secret from Azure API"
-	errCreateFailed  = "cannot create the Key Vault Secret"
-	errUpdateFailed  = "cannot update the Key Vault Secret"
-	errDeleteFailed  = "cannot delete the Key Vault Secret"
+	errGetFailed     = "cannot get vault secret from Azure API"
+	errCreateFailed  = "cannot create the vault secret"
+	errUpdateFailed  = "cannot update the vault secret"
+	errDeleteFailed  = "cannot delete the vault secret"
 )
 
 // SetupSecret adds a controller that reconciles KeyVaultSecret resources.
@@ -105,9 +104,6 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	currentSpec := cr.Spec.ForProvider.DeepCopy()
 	secretclients.LateInitialize(&cr.Spec.ForProvider, secret)
 	if !cmp.Equal(currentSpec, &cr.Spec.ForProvider) {
-		if err := c.kube.Update(ctx, cr); err != nil {
-			return managed.ExternalObservation{}, errors.Wrap(err, errUpdateSecretCRFailed)
-		}
 		lateInit = true
 	}
 
@@ -132,8 +128,6 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotSecret)
 	}
-
-	cr.Status.SetConditions(xpv1.Creating())
 
 	val, err := secretclients.ExtractSecretValue(ctx, c.kube, &cr.Spec.ForProvider.Value)
 	if err != nil {
@@ -184,7 +178,6 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if !ok {
 		return errors.New(errNotSecret)
 	}
-	cr.Status.SetConditions(xpv1.Deleting())
 
 	_, err := c.client.DeleteSecret(ctx, cr.Spec.ForProvider.VaultBaseURL, cr.Spec.ForProvider.Name)
 

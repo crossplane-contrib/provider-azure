@@ -213,27 +213,6 @@ func TestObserve(t *testing.T) {
 				err: nil,
 			},
 		},
-		"KubeUpdateFailed": {
-			args: args{
-				cr: instance(
-					withoutContentType(),
-				),
-				kube: &test.MockClient{
-					MockUpdate: test.NewMockUpdateFn(errorBoom),
-				},
-				kv: &fake.MockClient{
-					MockGetSecret: func(_ context.Context, _ string, _ string, _ string) (keyvault.SecretBundle, error) {
-						return keyvault.SecretBundle{
-							ContentType: contentType,
-						}, nil
-					},
-				},
-			},
-			want: want{
-				cr:  instance(),
-				err: errors.Wrap(errorBoom, errUpdateSecretCRFailed),
-			},
-		},
 	}
 
 	for name, tc := range cases {
@@ -301,10 +280,8 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			want: want{
-				o: managed.ExternalCreation{},
-				cr: instance(
-					withConditions(xpv1.Creating()),
-				),
+				o:  managed.ExternalCreation{},
+				cr: instance(),
 			},
 		},
 		"Failed": {
@@ -327,9 +304,7 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			want: want{
-				cr: instance(
-					withConditions(xpv1.Creating()),
-				),
+				cr:  instance(),
 				o:   managed.ExternalCreation{},
 				err: errors.Wrap(errorBoom, errCreateFailed),
 			},
@@ -480,9 +455,7 @@ func TestDelete(t *testing.T) {
 				},
 			},
 			want: want{
-				cr: instance(
-					withConditions(xpv1.Deleting()),
-				),
+				cr: instance(),
 			},
 		},
 		"Failed": {
@@ -495,9 +468,7 @@ func TestDelete(t *testing.T) {
 				},
 			},
 			want: want{
-				cr: instance(
-					withConditions(xpv1.Deleting()),
-				),
+				cr:  instance(),
 				err: errors.Wrap(errorBoom, errDeleteFailed),
 			},
 		},
