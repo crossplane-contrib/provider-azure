@@ -1,0 +1,18 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: NetworkInterface
+metadata:
+  name: example-network-interface
+spec:
+  resourceGroupNameRef:
+    name: example-rg
+  properties:
+    iPConfigurations:
+      - name: example-ip-conf
+        primary: true
+        subnetIDRef:
+          name: example-sub
+        publicIPAddressIDRef:
+          name: example-public-ip-address
+    location: West US 2
+  providerConfigRef:
+    name: example
