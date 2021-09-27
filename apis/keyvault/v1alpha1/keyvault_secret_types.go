@@ -22,61 +22,6 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-const (
-	// SupportedSecretVersion is the only minor version of Secret currently
-	// supported by Azure Cache for Secret. The version cannot be specified at
-	// creation time.
-	SupportedSecretVersion = "3.2"
-)
-
-// DeletionRecoveryLevel enumerates the values for deletion recovery level.
-type DeletionRecoveryLevel string
-
-const (
-	// CustomizedRecoverable Denotes a vault state in which deletion is recoverable without the possibility for
-	// immediate and permanent deletion (i.e. purge when 7<= SoftDeleteRetentionInDays < 90).This level
-	// guarantees the recoverability of the deleted entity during the retention interval and while the
-	// subscription is still available.
-	CustomizedRecoverable DeletionRecoveryLevel = "CustomizedRecoverable"
-
-	// CustomizedRecoverableProtectedSubscription Denotes a vault and subscription state in which deletion is
-	// recoverable, immediate and permanent deletion (i.e. purge) is not permitted, and in which the
-	// subscription itself cannot be permanently canceled when 7<= SoftDeleteRetentionInDays < 90. This level
-	// guarantees the recoverability of the deleted entity during the retention interval, and also reflects the
-	// fact that the subscription itself cannot be cancelled.
-	CustomizedRecoverableProtectedSubscription DeletionRecoveryLevel = "CustomizedRecoverable+ProtectedSubscription"
-
-	// CustomizedRecoverablePurgeable Denotes a vault state in which deletion is recoverable, and which also
-	// permits immediate and permanent deletion (i.e. purge when 7<= SoftDeleteRetentionInDays < 90). This
-	// level guarantees the recoverability of the deleted entity during the retention interval, unless a Purge
-	// operation is requested, or the subscription is cancelled.
-	CustomizedRecoverablePurgeable DeletionRecoveryLevel = "CustomizedRecoverable+Purgeable"
-
-	// Purgeable Denotes a vault state in which deletion is an irreversible operation, without the possibility
-	// for recovery. This level corresponds to no protection being available against a Delete operation; the
-	// data is irretrievably lost upon accepting a Delete operation at the entity level or higher (vault,
-	// resource group, subscription etc.)
-	Purgeable DeletionRecoveryLevel = "Purgeable"
-
-	// Recoverable Denotes a vault state in which deletion is recoverable without the possibility for immediate
-	// and permanent deletion (i.e. purge). This level guarantees the recoverability of the deleted entity
-	// during the retention interval(90 days) and while the subscription is still available. System wil
-	// permanently delete it after 90 days, if not recovered
-	Recoverable DeletionRecoveryLevel = "Recoverable"
-
-	// RecoverableProtectedSubscription Denotes a vault and subscription state in which deletion is recoverable
-	// within retention interval (90 days), immediate and permanent deletion (i.e. purge) is not permitted, and
-	// in which the subscription itself  cannot be permanently canceled. System wil permanently delete it after
-	// 90 days, if not recovered
-	RecoverableProtectedSubscription DeletionRecoveryLevel = "Recoverable+ProtectedSubscription"
-
-	// RecoverablePurgeable Denotes a vault state in which deletion is recoverable, and which also permits
-	// immediate and permanent deletion (i.e. purge). This level guarantees the recoverability of the deleted
-	// entity during the retention interval (90 days), unless a Purge operation is requested, or the
-	// subscription is cancelled. System wil permanently delete it after 90 days, if not recovered
-	RecoverablePurgeable DeletionRecoveryLevel = "Recoverable+Purgeable"
-)
-
 // KeyVaultSecretAttributesParameters defines the desired state of an Azure Key Vault Secret Attributes.
 // KeyVaultSecretAttributesParameters contains WRITE-ONLY fields.
 type KeyVaultSecretAttributesParameters struct {
@@ -126,8 +71,20 @@ type KeyVaultSecretSpec struct {
 type KeyVaultSecretAttributesObservation struct {
 	// TODO(G5Olivieri): support RecoverableDays
 
-	// RecoveryLevel - READ-ONLY; Reflects the deletion recovery level currently in effect for secrets in the current vault. If it contains 'Purgeable', the secret can be permanently deleted by a privileged user; otherwise, only the system can purge the secret, at the end of the retention interval. Possible values include: 'Purgeable', 'RecoverablePurgeable', 'Recoverable', 'RecoverableProtectedSubscription', 'CustomizedRecoverablePurgeable', 'CustomizedRecoverable', 'CustomizedRecoverableProtectedSubscription'
-	RecoveryLevel DeletionRecoveryLevel `json:"recoveryLevel,omitempty"`
+	// RecoveryLevel - READ-ONLY;
+	// Reflects the deletion recovery level currently in effect for secrets in the
+	// current vault. If it contains 'Purgeable', the secret can be permanently
+	// deleted by a privileged user; otherwise, only the system can purge the secret,
+	// at the end of the retention interval.
+	// Possible values include:
+	// 'Purgeable',
+	// 'RecoverablePurgeable',
+	// 'Recoverable',
+	// 'RecoverableProtectedSubscription',
+	// 'CustomizedRecoverablePurgeable',
+	// 'CustomizedRecoverable',
+	// 'CustomizedRecoverableProtectedSubscription'
+	RecoveryLevel string `json:"recoveryLevel,omitempty"`
 
 	// Created - READ-ONLY; Creation time in UTC.
 	Created *metav1.Time `json:"created,omitempty"`

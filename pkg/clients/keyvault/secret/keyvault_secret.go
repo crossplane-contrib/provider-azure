@@ -198,7 +198,7 @@ func generateKeyVaultSecretAttributes(az *keyvault.SecretAttributes) *v1alpha1.K
 	}
 
 	return &v1alpha1.KeyVaultSecretAttributesObservation{
-		RecoveryLevel: v1alpha1.DeletionRecoveryLevel(az.RecoveryLevel),
+		RecoveryLevel: string(az.RecoveryLevel),
 		Created:       unixTimeToMetav1Time(az.Created),
 		Updated:       unixTimeToMetav1Time(az.Updated),
 	}

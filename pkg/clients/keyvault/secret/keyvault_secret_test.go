@@ -88,7 +88,7 @@ func TestGenerateObservation(t *testing.T) {
 				Managed: managed,
 				Attributes: &v1alpha1.KeyVaultSecretAttributesObservation{
 					Created:       created,
-					RecoveryLevel: v1alpha1.RecoverablePurgeable,
+					RecoveryLevel: string(keyvault.RecoverablePurgeable),
 					Updated:       updated,
 				},
 			},
