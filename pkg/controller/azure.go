@@ -38,6 +38,9 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/keyvault/secret"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane/provider-azure/pkg/controller/network/virtualnetwork"
+	"github.com/crossplane/provider-azure/pkg/controller/rbac/application"
+	"github.com/crossplane/provider-azure/pkg/controller/rbac/roleassignment"
+	"github.com/crossplane/provider-azure/pkg/controller/rbac/serviceprincipal"
 	"github.com/crossplane/provider-azure/pkg/controller/resourcegroup"
 	"github.com/crossplane/provider-azure/pkg/controller/storage/account"
 	"github.com/crossplane/provider-azure/pkg/controller/storage/container"
@@ -58,6 +61,9 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll ti
 		cosmosdb.Setup,
 		virtualnetwork.Setup,
 		subnet.Setup,
+		application.Setup,
+		roleassignment.Setup,
+		serviceprincipal.Setup,
 		resourcegroup.Setup,
 		account.Setup,
 		container.Setup,

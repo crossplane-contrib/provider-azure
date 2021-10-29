@@ -1,0 +1,11 @@
+apiVersion: rbac.azure.crossplane.io/v1alpha1
+kind: ServicePrincipal
+metadata:
+  name: example-sp
+spec:
+  forProvider:
+    applicationIDRef:
+      name: example-app
+    accountEnabled: true
+  providerConfigRef:
+    name: example

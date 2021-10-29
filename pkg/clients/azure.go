@@ -113,12 +113,24 @@ func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (con
 	if err := json.Unmarshal(s.Data[ref.Key], &m); err != nil {
 		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
 	}
-	cfg := auth.NewClientCredentialsConfig(m[CredentialsKeyClientID], m[CredentialsKeyClientSecret], m[CredentialsKeyTenantID])
-	cfg.AADEndpoint = m[CredentialsKeyActiveDirectoryEndpointURL]
-	cfg.Resource = m[CredentialsKeyResourceManagerEndpointURL]
-
-	a, err := cfg.Authorizer()
+	a, err := NewResourceManagerAuthorizer(m)
 	return m, a, errors.Wrap(err, errGetAuthorizer)
+}
+
+// NewADGraphResourceIDAuthorizer creates new authorizer with ActiveDirectoryGraph
+func NewADGraphResourceIDAuthorizer(creds map[string]string) (autorest.Authorizer, error) {
+	cfg := auth.NewClientCredentialsConfig(creds[CredentialsKeyClientID], creds[CredentialsKeyClientSecret], creds[CredentialsKeyTenantID])
+	cfg.AADEndpoint = creds[CredentialsKeyActiveDirectoryEndpointURL]
+	cfg.Resource = creds[CredentialsKeyActiveDirectoryGraphResourceID]
+	return cfg.Authorizer()
+}
+
+// NewResourceManagerAuthorizer creates new authorizer with ResourceManager
+func NewResourceManagerAuthorizer(creds map[string]string) (autorest.Authorizer, error) {
+	cfg := auth.NewClientCredentialsConfig(creds[CredentialsKeyClientID], creds[CredentialsKeyClientSecret], creds[CredentialsKeyTenantID])
+	cfg.AADEndpoint = creds[CredentialsKeyActiveDirectoryEndpointURL]
+	cfg.Resource = creds[CredentialsKeyResourceManagerEndpointURL]
+	return cfg.Authorizer()
 }
 
 // UseProviderConfig to return the necessary information to construct an Azure

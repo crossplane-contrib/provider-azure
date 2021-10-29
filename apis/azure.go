@@ -26,6 +26,7 @@ import (
 	databasev1beta1 "github.com/crossplane/provider-azure/apis/database/v1beta1"
 	keyvaultv1alpha1 "github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
 	networkv1alpha3 "github.com/crossplane/provider-azure/apis/network/v1alpha3"
+	rbacv1alpha1 "github.com/crossplane/provider-azure/apis/rbac/v1alpha1"
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
 	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azurev1beta1 "github.com/crossplane/provider-azure/apis/v1beta1"
@@ -42,6 +43,7 @@ func init() {
 		databasev1beta1.SchemeBuilder.AddToScheme,
 		keyvaultv1alpha1.SchemeBuilder.AddToScheme,
 		networkv1alpha3.SchemeBuilder.AddToScheme,
+		rbacv1alpha1.SchemeBuilder.AddToScheme,
 		storagev1alpha3.SchemeBuilder.AddToScheme,
 	)
 }
