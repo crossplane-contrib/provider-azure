@@ -19,23 +19,23 @@ package configuration
 import (
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
+	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/crossplane/provider-azure/apis/database/v1beta1"
+	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/database/v1beta1"
 )
 
-type postgresqlConfigurationModifier func(configuration *postgresql.Configuration)
+type mysqlConfigurationModifier func(configuration *mysql.Configuration)
 
-func postgresqlConfigurationWithValue(v *string) postgresqlConfigurationModifier {
-	return func(configuration *postgresql.Configuration) {
+func mysqlConfigurationWithValue(v *string) mysqlConfigurationModifier {
+	return func(configuration *mysql.Configuration) {
 		configuration.Value = v
 	}
 }
 
-func postgresqlConfiguration(cm ...postgresqlConfigurationModifier) *postgresql.Configuration {
-	c := &postgresql.Configuration{
-		ConfigurationProperties: &postgresql.ConfigurationProperties{},
+func mysqlConfiguration(cm ...mysqlConfigurationModifier) *mysql.Configuration {
+	c := &mysql.Configuration{
+		ConfigurationProperties: &mysql.ConfigurationProperties{},
 	}
 	for _, m := range cm {
 		m(c)
@@ -43,11 +43,11 @@ func postgresqlConfiguration(cm ...postgresqlConfigurationModifier) *postgresql.
 	return c
 }
 
-func TestIsPostgreSQLConfigurationUpToDate(t *testing.T) {
+func TestIsMySQLConfigurationUpToDate(t *testing.T) {
 	val1, val2 := testValue1, testValue2
 	type args struct {
-		p  v1beta1.SQLServerConfigurationParameters
-		in postgresql.Configuration
+		p  azuredbv1beta1.SQLServerConfigurationParameters
+		in mysql.Configuration
 	}
 	tests := map[string]struct {
 		args args
@@ -57,7 +57,7 @@ func TestIsPostgreSQLConfigurationUpToDate(t *testing.T) {
 			args: args{
 				p: *sqlServerConfigurationParameters(
 					sqlServerConfigurationParametersWithValue(&val1)),
-				in: *postgresqlConfiguration(postgresqlConfigurationWithValue(&val1)),
+				in: *mysqlConfiguration(mysqlConfigurationWithValue(&val1)),
 			},
 			want: true,
 		},
@@ -65,16 +65,16 @@ func TestIsPostgreSQLConfigurationUpToDate(t *testing.T) {
 			args: args{
 				p: *sqlServerConfigurationParameters(
 					sqlServerConfigurationParametersWithValue(&val1)),
-				in: *postgresqlConfiguration(postgresqlConfigurationWithValue(&val2)),
+				in: *mysqlConfiguration(mysqlConfigurationWithValue(&val2)),
 			},
 			want: false,
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := IsPostgreSQLConfigurationUpToDate(tt.args.p, tt.args.in)
+			got := IsMySQLConfigurationUpToDate(tt.args.p, tt.args.in)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("IsPostgreSQLConfigurationUpToDate(...): -want, +got\n%s", diff)
+				t.Errorf("IsMySQLConfigurationUpToDate(...): -want, +got\n%s", diff)
 			}
 		})
 	}

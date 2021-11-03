@@ -76,6 +76,62 @@ func (mg *MySQLServer) SetWriteConnectionSecretToReference(r *xpv1.SecretReferen
 	mg.Spec.WriteConnectionSecretToReference = r
 }
 
+// GetCondition of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetDeletionPolicy of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetProviderConfigReference of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) GetProviderConfigReference() *xpv1.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+/*
+GetProviderReference of this MySQLServerConfiguration.
+Deprecated: Use GetProviderConfigReference.
+*/
+func (mg *MySQLServerConfiguration) GetProviderReference() *xpv1.Reference {
+	return mg.Spec.ProviderReference
+}
+
+// GetWriteConnectionSecretToReference of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetConditions of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) SetConditions(c ...xpv1.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetDeletionPolicy of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) SetDeletionPolicy(r xpv1.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetProviderConfigReference of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) SetProviderConfigReference(r *xpv1.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+/*
+SetProviderReference of this MySQLServerConfiguration.
+Deprecated: Use SetProviderConfigReference.
+*/
+func (mg *MySQLServerConfiguration) SetProviderReference(r *xpv1.Reference) {
+	mg.Spec.ProviderReference = r
+}
+
+// SetWriteConnectionSecretToReference of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetCondition of this PostgreSQLServer.
 func (mg *PostgreSQLServer) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
 	return mg.Status.GetCondition(ct)

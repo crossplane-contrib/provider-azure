@@ -45,6 +45,14 @@ var (
 	MySQLServerGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerKind)
 )
 
+// MySQLServerConfiguration type metadata.
+var (
+	MySQLServerConfigurationKind             = reflect.TypeOf(MySQLServerConfiguration{}).Name()
+	MySQLServerConfigurationGroupKind        = schema.GroupKind{Group: Group, Kind: MySQLServerConfigurationKind}.String()
+	MySQLServerConfigurationKindAPIVersion   = MySQLServerConfigurationKind + "." + SchemeGroupVersion.String()
+	MySQLServerConfigurationGroupVersionKind = SchemeGroupVersion.WithKind(MySQLServerConfigurationKind)
+)
+
 // PostgreSQLServer type metadata.
 var (
 	PostgreSQLServerKind             = reflect.TypeOf(PostgreSQLServer{}).Name()
@@ -63,6 +71,7 @@ var (
 
 func init() {
 	SchemeBuilder.Register(&MySQLServer{}, &MySQLServerList{})
+	SchemeBuilder.Register(&MySQLServerConfiguration{}, &MySQLServerConfigurationList{})
 	SchemeBuilder.Register(&PostgreSQLServer{}, &PostgreSQLServerList{})
 	SchemeBuilder.Register(&PostgreSQLServerConfiguration{}, &PostgreSQLServerConfigurationList{})
 }

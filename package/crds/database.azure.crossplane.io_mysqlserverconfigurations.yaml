@@ -4,7 +4,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.0
   creationTimestamp: null
-  name: postgresqlserverconfigurations.database.azure.crossplane.io
+  name: mysqlserverconfigurations.database.azure.crossplane.io
 spec:
   group: database.azure.crossplane.io
   names:
@@ -12,10 +12,10 @@ spec:
     - crossplane
     - managed
     - azure
-    kind: PostgreSQLServerConfiguration
-    listKind: PostgreSQLServerConfigurationList
-    plural: postgresqlserverconfigurations
-    singular: postgresqlserverconfiguration
+    kind: MySQLServerConfiguration
+    listKind: MySQLServerConfigurationList
+    plural: mysqlserverconfigurations
+    singular: mysqlserverconfiguration
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,7 +34,7 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
-        description: A PostgreSQLServerConfiguration is a managed resource that represents an Azure PostgreSQL Server Configuration.
+        description: A MySQLServerConfiguration is a managed resource that represents an Azure MySQL Server Configuration.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'

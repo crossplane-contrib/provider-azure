@@ -48,6 +48,41 @@ func (mg *MySQLServer) ResolveReferences(ctx context.Context, c client.Reader) e
 	return nil
 }
 
+// ResolveReferences of this MySQLServerConfiguration.
+func (mg *MySQLServerConfiguration) ResolveReferences(ctx context.Context, c client.Reader) error {
+	r := reference.NewAPIResolver(c, mg)
+
+	// Resolve spec.forProvider.resourceGroupName
+	rsp, err := r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ResourceGroupName,
+		Reference:    mg.Spec.ForProvider.ResourceGroupNameRef,
+		Selector:     mg.Spec.ForProvider.ResourceGroupNameSelector,
+		To:           reference.To{Managed: &v1alpha3.ResourceGroup{}, List: &v1alpha3.ResourceGroupList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return errors.Wrap(err, "spec.forProvider.resourceGroupName")
+	}
+	mg.Spec.ForProvider.ResourceGroupName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ResourceGroupNameRef = rsp.ResolvedReference
+
+	// Resolve spec.forProvider.resourceGroupName
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: mg.Spec.ForProvider.ServerName,
+		Reference:    mg.Spec.ForProvider.ServerNameRef,
+		Selector:     mg.Spec.ForProvider.ServerNameSelector,
+		To:           reference.To{Managed: &MySQLServer{}, List: &MySQLServerList{}},
+		Extract:      reference.ExternalName(),
+	})
+	if err != nil {
+		return errors.Wrap(err, "spec.forProvider.serverName")
+	}
+	mg.Spec.ForProvider.ServerName = rsp.ResolvedValue
+	mg.Spec.ForProvider.ServerNameRef = rsp.ResolvedReference
+
+	return nil
+}
+
 // ResolveReferences of this PostgreSQLServer.
 func (mg *PostgreSQLServer) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)

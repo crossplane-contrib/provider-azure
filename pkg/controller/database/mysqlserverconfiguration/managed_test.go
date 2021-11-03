@@ -14,73 +14,71 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package postgresqlserverconfiguration
+package mysqlserverconfiguration
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
-	"strings"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
+	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
+
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
-	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	"github.com/crossplane/provider-azure/apis/database/v1beta1"
 	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 )
 
 const (
-	inProgress         = "InProgress"
-	inProgressResponse = `{"status": "InProgress"}`
-	subscriptID        = "subscription-id"
+	inProgress  = "InProgress"
+	subscriptID = "subscription-id"
 )
 
-type MockPostgreSQLConfigurationAPI struct {
-	MockGet            func(ctx context.Context, s *v1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error)
-	MockCreateOrUpdate func(ctx context.Context, s *v1beta1.PostgreSQLServerConfiguration) error
-	MockDelete         func(ctx context.Context, s *v1beta1.PostgreSQLServerConfiguration) error
+type MockMySQLConfigurationAPI struct {
+	MockGet            func(ctx context.Context, s *v1beta1.MySQLServerConfiguration) (mysql.Configuration, error)
+	MockCreateOrUpdate func(ctx context.Context, s *v1beta1.MySQLServerConfiguration) error
+	MockDelete         func(ctx context.Context, s *v1beta1.MySQLServerConfiguration) error
 	MockGetRESTClient  func() autorest.Sender
 }
 
-func (m *MockPostgreSQLConfigurationAPI) Get(ctx context.Context, s *v1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error) {
+func (m *MockMySQLConfigurationAPI) Get(ctx context.Context, s *v1beta1.MySQLServerConfiguration) (mysql.Configuration, error) {
 	return m.MockGet(ctx, s)
 }
 
-func (m *MockPostgreSQLConfigurationAPI) CreateOrUpdate(ctx context.Context, s *v1beta1.PostgreSQLServerConfiguration) error {
+func (m *MockMySQLConfigurationAPI) CreateOrUpdate(ctx context.Context, s *v1beta1.MySQLServerConfiguration) error {
 	return m.MockCreateOrUpdate(ctx, s)
 }
 
-func (m *MockPostgreSQLConfigurationAPI) Delete(ctx context.Context, s *v1beta1.PostgreSQLServerConfiguration) error {
+func (m *MockMySQLConfigurationAPI) Delete(ctx context.Context, s *v1beta1.MySQLServerConfiguration) error {
 	return m.MockDelete(ctx, s)
 }
 
-func (m *MockPostgreSQLConfigurationAPI) GetRESTClient() autorest.Sender {
+func (m *MockMySQLConfigurationAPI) GetRESTClient() autorest.Sender {
 	return m.MockGetRESTClient()
 }
 
-type modifier func(configuration *v1beta1.PostgreSQLServerConfiguration)
+type modifier func(configuration *v1beta1.MySQLServerConfiguration)
 
 func withLastOperation(op azurev1alpha3.AsyncOperation) modifier {
-	return func(p *v1beta1.PostgreSQLServerConfiguration) {
+	return func(p *v1beta1.MySQLServerConfiguration) {
 		p.Status.AtProvider.LastOperation = op
 	}
 }
 
 func withExternalName(name string) modifier {
-	return func(p *v1beta1.PostgreSQLServerConfiguration) {
+	return func(p *v1beta1.MySQLServerConfiguration) {
 		meta.SetExternalName(p, name)
 	}
 }
 
-func postgresqlserverconfiguration(m ...modifier) *v1beta1.PostgreSQLServerConfiguration {
-	p := &v1beta1.PostgreSQLServerConfiguration{}
+func mysqlserverconfiguration(m ...modifier) *v1beta1.MySQLServerConfiguration {
+	p := &v1beta1.MySQLServerConfiguration{}
 
 	for _, mod := range m {
 		mod(p)
@@ -106,64 +104,55 @@ func TestObserve(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAPostgreSQLServerConfiguration": {
+		"ErrNotAMySQLServerConfiguration": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotPostgreSQLServerConfig),
+				err: errors.New(errNotMySQLServerConfig),
 			},
 		},
 		"ErrGetServer": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockGet: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error) {
-						return postgresql.Configuration{}, errBoom
+				client: &MockMySQLConfigurationAPI{
+					MockGet: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) (mysql.Configuration, error) {
+						return mysql.Configuration{}, errBoom
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errGetPostgreSQLServerConfig),
+				err: errors.Wrap(errBoom, errGetMySQLServerConfig),
 			},
 		},
 		"ServerCreating": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockGet: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error) {
-						return postgresql.Configuration{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
-					},
-					MockGetRESTClient: func() autorest.Sender {
-						return autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
-							return &http.Response{
-								Request:       req,
-								StatusCode:    http.StatusAccepted,
-								Body:          ioutil.NopCloser(strings.NewReader(inProgressResponse)),
-								ContentLength: int64(len([]byte(inProgressResponse))),
-							}, nil
-						})
+				client: &MockMySQLConfigurationAPI{
+					MockGet: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) (mysql.Configuration, error) {
+						return mysql.Configuration{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(withLastOperation(azurev1alpha3.AsyncOperation{Method: http.MethodPut, PollingURL: "crossplane.io"})),
+				mg:  mysqlserverconfiguration(withLastOperation(azurev1alpha3.AsyncOperation{Method: http.MethodPut, PollingURL: "crossplane.io"})),
 			},
 			want: want{
 				eo: managed.ExternalObservation{
-					ResourceExists: true,
+					ResourceExists: false,
 				},
+				err: errors.Wrap(autorest.DetailedError{StatusCode: http.StatusNotFound}, errNotFoundMySQLServerConfig),
 			},
 		},
 		"ServerNotFound": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockGet: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error) {
-						return postgresql.Configuration{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
+				client: &MockMySQLConfigurationAPI{
+					MockGet: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) (mysql.Configuration, error) {
+						return mysql.Configuration{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
 					},
 					MockGetRESTClient: func() autorest.Sender {
 						return nil
@@ -172,12 +161,13 @@ func TestObserve(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: want{
 				eo: managed.ExternalObservation{
 					ResourceExists: false,
 				},
+				err: errors.Wrap(autorest.DetailedError{StatusCode: http.StatusNotFound}, errNotFoundMySQLServerConfig),
 			},
 		},
 		"ServerAvailable": {
@@ -185,10 +175,10 @@ func TestObserve(t *testing.T) {
 				kube: &test.MockClient{
 					MockUpdate: test.NewMockUpdateFn(nil),
 				},
-				client: &MockPostgreSQLConfigurationAPI{
-					MockGet: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error) {
-						return postgresql.Configuration{
-							ConfigurationProperties: &postgresql.ConfigurationProperties{},
+				client: &MockMySQLConfigurationAPI{
+					MockGet: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) (mysql.Configuration, error) {
+						return mysql.Configuration{
+							ConfigurationProperties: &mysql.ConfigurationProperties{},
 						}, nil
 					},
 					MockGetRESTClient: func() autorest.Sender {
@@ -200,7 +190,7 @@ func TestObserve(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg: postgresqlserverconfiguration(
+				mg: mysqlserverconfiguration(
 					withExternalName(name),
 				),
 			},
@@ -244,34 +234,34 @@ func TestCreate(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAPostgreSQLServerConfiguration": {
+		"ErrNotAMySQLServerConfiguration": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotPostgreSQLServerConfig),
+				err: errors.New(errNotMySQLServerConfig),
 			},
 		},
 		"ErrCreateServer": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) error { return errBoom },
+				client: &MockMySQLConfigurationAPI{
+					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) error { return errBoom },
 				},
 				subscriptionID: subscriptID,
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errCreatePostgreSQLServerConfig),
+				err: errors.Wrap(errBoom, errCreateMySQLServerConfig),
 			},
 		},
 		"Successful": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) error { return nil },
+				client: &MockMySQLConfigurationAPI{
+					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) error { return nil },
 					MockGetRESTClient: func() autorest.Sender {
 						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
 							return nil, nil
@@ -282,7 +272,7 @@ func TestCreate(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: want{
 				ec: managed.ExternalCreation{
@@ -319,29 +309,29 @@ func TestDelete(t *testing.T) {
 		args args
 		want error
 	}{
-		"ErrNotAPostgreSQLServerConfiguration": {
+		"ErrNotAMySQLServerConfiguration": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
-			want: errors.New(errNotPostgreSQLServerConfig),
+			want: errors.New(errNotMySQLServerConfig),
 		},
 		"ErrDeleteServer": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockDelete: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) error { return errBoom },
+				client: &MockMySQLConfigurationAPI{
+					MockDelete: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) error { return errBoom },
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
-			want: errors.Wrap(errBoom, errDeletePostgreSQLServerConfig),
+			want: errors.Wrap(errBoom, errDeleteMySQLServerConfig),
 		},
 		"Successful": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockDelete: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) error { return nil },
+				client: &MockMySQLConfigurationAPI{
+					MockDelete: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) error { return nil },
 					MockGetRESTClient: func() autorest.Sender {
 						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
 							return nil, nil
@@ -351,7 +341,7 @@ func TestDelete(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: nil,
 		},
@@ -386,20 +376,20 @@ func TestUpdate(t *testing.T) {
 		args args
 		want want
 	}{
-		"ErrNotAPostgreSQLServerConfiguration": {
+		"ErrNotAMySQLServerConfiguration": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
 			},
 			want: want{
-				err: errors.New(errNotPostgreSQLServerConfig),
+				err: errors.New(errNotMySQLServerConfig),
 			},
 		},
 		"ServerUpdating": {
 			e: &external{},
 			args: args{
 				ctx: context.Background(),
-				mg: postgresqlserverconfiguration(withLastOperation(azurev1alpha3.AsyncOperation{
+				mg: mysqlserverconfiguration(withLastOperation(azurev1alpha3.AsyncOperation{
 					Method: http.MethodPatch, PollingURL: "crossplane.io", Status: inProgress})),
 			},
 			want: want{
@@ -408,23 +398,23 @@ func TestUpdate(t *testing.T) {
 		},
 		"ErrUpdateServer": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) error { return errBoom },
+				client: &MockMySQLConfigurationAPI{
+					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) error { return errBoom },
 				},
 				subscriptionID: subscriptID,
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: want{
-				err: errors.Wrap(errBoom, errUpdatePostgreSQLServerConfig),
+				err: errors.Wrap(errBoom, errUpdateMySQLServerConfig),
 			},
 		},
 		"Successful": {
 			e: &external{
-				client: &MockPostgreSQLConfigurationAPI{
-					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.PostgreSQLServerConfiguration) error { return nil },
+				client: &MockMySQLConfigurationAPI{
+					MockCreateOrUpdate: func(_ context.Context, _ *v1beta1.MySQLServerConfiguration) error { return nil },
 					MockGetRESTClient: func() autorest.Sender {
 						return autorest.SenderFunc(func(*http.Request) (*http.Response, error) {
 							return nil, nil
@@ -435,7 +425,7 @@ func TestUpdate(t *testing.T) {
 			},
 			args: args{
 				ctx: context.Background(),
-				mg:  postgresqlserverconfiguration(),
+				mg:  mysqlserverconfiguration(),
 			},
 			want: want{
 				err: nil,
