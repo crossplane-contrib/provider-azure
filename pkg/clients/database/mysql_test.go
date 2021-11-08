@@ -443,3 +443,143 @@ func TestMySQLServerFirewallRuleIsUpToDate(t *testing.T) {
 		})
 	}
 }
+
+func TestIsMysqlUpToDate(t *testing.T) {
+	type args struct {
+		p  v1beta1.SQLServerParameters
+		in mysql.Server
+	}
+	cases := map[string]struct {
+		args
+		want bool
+	}{
+		"IsUpToDateWithAllDefault": {
+			args: args{
+				p: v1beta1.SQLServerParameters{},
+				in: mysql.Server{
+					Sku: &mysql.Sku{},
+					ServerProperties: &mysql.ServerProperties{
+						StorageProfile: &mysql.StorageProfile{},
+					},
+				},
+			},
+			want: true,
+		},
+		"IsUpToDate": {
+			args: args{
+				p: v1beta1.SQLServerParameters{
+					MinimalTLSVersion: "TLS1_2",
+					SSLEnforcement:    "Enabled",
+					Version:           "8.0.15",
+					Tags: map[string]string{
+						"created_by": "crossplane",
+					},
+					SKU: v1beta1.SKU{
+						Tier:     "GeneralPurpose",
+						Capacity: 2,
+						Family:   "Gen5",
+					},
+					PublicNetworkAccess: azure.ToStringPtr("Enabled"),
+					StorageProfile: v1beta1.StorageProfile{
+						StorageMB:           20480,
+						StorageAutogrow:     azure.ToStringPtr("Enabled"),
+						BackupRetentionDays: to.IntPtr(5),
+						GeoRedundantBackup:  azure.ToStringPtr("Disabled"),
+					},
+				},
+				in: mysql.Server{
+					Tags: map[string]*string{
+						"created_by": azure.ToStringPtr("crossplane"),
+					},
+					Sku: &mysql.Sku{
+						Tier:     mysql.GeneralPurpose,
+						Capacity: azure.ToInt32Ptr(2),
+						Family:   azure.ToStringPtr("Gen5"),
+					},
+					ServerProperties: &mysql.ServerProperties{
+						Version: "8.0.15",
+						StorageProfile: &mysql.StorageProfile{
+							StorageMB:           azure.ToInt32Ptr(20480),
+							StorageAutogrow:     mysql.StorageAutogrowEnabled,
+							BackupRetentionDays: azure.ToInt32Ptr(5),
+							GeoRedundantBackup:  mysql.Disabled,
+						},
+						SslEnforcement:      mysql.SslEnforcementEnumEnabled,
+						MinimalTLSVersion:   mysql.TLS12,
+						PublicNetworkAccess: mysql.PublicNetworkAccessEnumEnabled,
+					},
+				},
+			},
+			want: true,
+		},
+		"IsNotUpToDate": {
+			args: args{
+				p: v1beta1.SQLServerParameters{
+					PublicNetworkAccess: azure.ToStringPtr("Disabled"),
+				},
+				in: mysql.Server{
+					Sku: &mysql.Sku{},
+					ServerProperties: &mysql.ServerProperties{
+						StorageProfile:      &mysql.StorageProfile{},
+						PublicNetworkAccess: mysql.PublicNetworkAccessEnumEnabled,
+					},
+				},
+			},
+			want: false,
+		},
+		"IsNotUpToDateWithServerWithoutSku": {
+			args: args{
+				p: v1beta1.SQLServerParameters{},
+				in: mysql.Server{
+					ServerProperties: &mysql.ServerProperties{
+						StorageProfile: &mysql.StorageProfile{},
+					},
+				},
+			},
+			want: false,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			got := IsMySQLUpToDate(tc.args.p, tc.args.in)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("IsMySQLUpToDate(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestLateInitializeMySQL(t *testing.T) {
+	type args struct {
+		p  *v1beta1.SQLServerParameters
+		in mysql.Server
+	}
+	cases := map[string]struct {
+		args
+		want *v1beta1.SQLServerParameters
+	}{
+		"PublicNetworkAccessLateInitialize": {
+			args: args{
+				p: &v1beta1.SQLServerParameters{},
+				in: mysql.Server{
+					Sku: &mysql.Sku{},
+					ServerProperties: &mysql.ServerProperties{
+						PublicNetworkAccess: mysql.PublicNetworkAccessEnumEnabled,
+					},
+				},
+			},
+			want: &v1beta1.SQLServerParameters{
+				PublicNetworkAccess: azure.ToStringPtr("Enabled"),
+			},
+		},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			LateInitializeMySQL(tc.args.p, tc.args.in)
+			if diff := cmp.Diff(tc.want, tc.args.p); diff != "" {
+				t.Errorf("TestLateInitializeMySQL(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
