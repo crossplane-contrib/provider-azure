@@ -314,7 +314,7 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 		want   want
 	}{
 		{
-			name: "FailedToGetAccountNotFoundNoDelete",
+			name: "FailedToGetAccountNotFoundNoDeleteProviderRef",
 			fields: fields{
 				Client: &test.MockClient{
 					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
@@ -325,6 +325,24 @@ func Test_containerSyncdeleterMaker_newSyncdeleter(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				c:   newCont().WithSpecProviderRef(testAccountName).WithFinalizer(finalizer).Container,
+			},
+			want: want{
+				err: errors.Wrapf(newAccountNotFoundError(testAccountName),
+					"failed to retrieve storage account: %s", testAccountName),
+			},
+		},
+		{
+			name: "FailedToGetAccountNotFoundNoDeleteProviderConfigRef",
+			fields: fields{
+				Client: &test.MockClient{
+					MockGet: func(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+						return newAccountNotFoundError(testAccountName)
+					},
+				},
+			},
+			args: args{
+				ctx: ctx,
+				c:   newCont().WithSpecProviderConfigRef(testAccountName).WithFinalizer(finalizer).Container,
 			},
 			want: want{
 				err: errors.Wrapf(newAccountNotFoundError(testAccountName),
