@@ -155,7 +155,7 @@ func (m *containerSyncdeleterMaker) newSyncdeleter(ctx context.Context, c *v1alp
 				return nil, errors.Wrapf(err, "failed to update after removing finalizer")
 			}
 		}
-		return nil, errors.Wrapf(err, "failed to retrieve storage account: %s", c.Spec.ProviderReference.Name)
+		return nil, errors.Wrapf(err, "failed to retrieve storage account: %s", nn.Name)
 	}
 
 	if acct.GetWriteConnectionSecretToReference() == nil {
