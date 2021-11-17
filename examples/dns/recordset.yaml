@@ -1,0 +1,17 @@
+apiVersion: dns.azure.crossplane.io/v1alpha1
+kind: RecordSet
+metadata:
+  name: example-rc
+spec:
+  forProvider:
+    resourceGroupNameRef:
+      name: example
+    zoneNameRef:
+      name: examplecrossplane.online
+    ttl: 360
+    recordType: A
+    aRecords:
+      - ipV4Address: 1.1.1.1
+      - ipV4Address: 2.2.2.2
+  providerConfigRef:
+    name: example
