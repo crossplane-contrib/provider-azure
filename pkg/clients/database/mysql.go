@@ -89,12 +89,13 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 	switch createMode {
 	case azuredbv1beta1.CreateModePointInTimeRestore:
 		return &mysql.ServerPropertiesForRestore{
-			MinimalTLSVersion:  mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-			Version:            mysql.ServerVersion(s.Version),
-			SslEnforcement:     mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:         mysql.CreateModePointInTimeRestore,
-			RestorePointInTime: safeDate(s.RestorePointInTime),
-			SourceServerID:     s.SourceServerID,
+			MinimalTLSVersion:   mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:             mysql.ServerVersion(s.Version),
+			SslEnforcement:      mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:          mysql.CreateModePointInTimeRestore,
+			RestorePointInTime:  safeDate(s.RestorePointInTime),
+			SourceServerID:      s.SourceServerID,
+			PublicNetworkAccess: mysql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -104,11 +105,12 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 		}
 	case azuredbv1beta1.CreateModeGeoRestore:
 		return &mysql.ServerPropertiesForGeoRestore{
-			MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-			Version:           mysql.ServerVersion(s.Version),
-			SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:        mysql.CreateModeGeoRestore,
-			SourceServerID:    s.SourceServerID,
+			MinimalTLSVersion:   mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:             mysql.ServerVersion(s.Version),
+			SslEnforcement:      mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:          mysql.CreateModeGeoRestore,
+			SourceServerID:      s.SourceServerID,
+			PublicNetworkAccess: mysql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -118,11 +120,12 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 		}
 	case azuredbv1beta1.CreateModeReplica:
 		return &mysql.ServerPropertiesForReplica{
-			MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-			Version:           mysql.ServerVersion(s.Version),
-			SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
-			CreateMode:        mysql.CreateModeReplica,
-			SourceServerID:    s.SourceServerID,
+			MinimalTLSVersion:   mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+			Version:             mysql.ServerVersion(s.Version),
+			SslEnforcement:      mysql.SslEnforcementEnum(s.SSLEnforcement),
+			CreateMode:          mysql.CreateModeReplica,
+			SourceServerID:      s.SourceServerID,
+			PublicNetworkAccess: mysql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -140,6 +143,7 @@ func toMySQLProperties(s v1beta1.SQLServerParameters, adminPassword string) mysq
 			Version:                    mysql.ServerVersion(s.Version),
 			SslEnforcement:             mysql.SslEnforcementEnum(s.SSLEnforcement),
 			CreateMode:                 mysql.CreateModeDefault,
+			PublicNetworkAccess:        mysql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 			StorageProfile: &mysql.StorageProfile{
 				BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 				GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -180,9 +184,10 @@ func (c *MySQLServerClient) UpdateServer(ctx context.Context, cr *azuredbv1beta1
 	// we don't support that.
 	s := cr.Spec.ForProvider
 	properties := &mysql.ServerUpdateParametersProperties{
-		Version:           mysql.ServerVersion(s.Version),
-		MinimalTLSVersion: mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
-		SslEnforcement:    mysql.SslEnforcementEnum(s.SSLEnforcement),
+		Version:             mysql.ServerVersion(s.Version),
+		MinimalTLSVersion:   mysql.MinimalTLSVersionEnum(s.MinimalTLSVersion),
+		SslEnforcement:      mysql.SslEnforcementEnum(s.SSLEnforcement),
+		PublicNetworkAccess: mysql.PublicNetworkAccessEnum(azure.ToString(s.PublicNetworkAccess)),
 		StorageProfile: &mysql.StorageProfile{
 			BackupRetentionDays: azure.ToInt32PtrFromIntPtr(s.StorageProfile.BackupRetentionDays),
 			GeoRedundantBackup:  mysql.GeoRedundantBackup(azure.ToString(s.StorageProfile.GeoRedundantBackup)),
@@ -321,6 +326,9 @@ func LateInitializeMySQL(p *azuredbv1beta1.SQLServerParameters, in mysql.Server)
 	if p.SSLEnforcement == "" {
 		p.SSLEnforcement = string(in.SslEnforcement)
 	}
+	if p.PublicNetworkAccess == nil {
+		p.PublicNetworkAccess = azure.ToStringPtr(string(in.PublicNetworkAccess))
+	}
 }
 
 // IsMySQLUpToDate is used to report whether given mysql.Server is in
@@ -351,6 +359,8 @@ func IsMySQLUpToDate(p azuredbv1beta1.SQLServerParameters, in mysql.Server) bool
 	case p.StorageProfile.StorageMB != azure.ToInt(in.StorageProfile.StorageMB):
 		return false
 	case azure.ToString(p.StorageProfile.StorageAutogrow) != string(in.StorageProfile.StorageAutogrow):
+		return false
+	case azure.ToString(p.PublicNetworkAccess) != string(in.PublicNetworkAccess):
 		return false
 	}
 	return true
