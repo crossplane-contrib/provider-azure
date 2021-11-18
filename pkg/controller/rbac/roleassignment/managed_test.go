@@ -28,7 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -57,17 +56,7 @@ type testCase struct {
 	wantErr error
 }
 
-type roleAssignmentModifier func(*v1alpha1.RoleAssignment)
-
-func withConditions(c ...xpv1.Condition) roleAssignmentModifier {
-	return func(r *v1alpha1.RoleAssignment) { r.Status.ConditionedStatus.Conditions = c }
-}
-
-func withExternalName(name string) roleAssignmentModifier {
-	return func(r *v1alpha1.RoleAssignment) { meta.SetExternalName(r, name) }
-}
-
-func roleAssignment(sm ...roleAssignmentModifier) *v1alpha1.RoleAssignment {
+func roleAssignment() *v1alpha1.RoleAssignment {
 	r := &v1alpha1.RoleAssignment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:       name,
@@ -85,10 +74,6 @@ func roleAssignment(sm ...roleAssignmentModifier) *v1alpha1.RoleAssignment {
 	}
 
 	meta.SetExternalName(r, "")
-
-	for _, m := range sm {
-		m(r)
-	}
 
 	return r
 }
