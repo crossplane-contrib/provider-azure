@@ -93,6 +93,12 @@ func (tc *MockContainer) WithSpecProviderRef(name string) *MockContainer {
 	return tc
 }
 
+// WithSpecProviderConfigRef sets spec account reference value
+func (tc *MockContainer) WithSpecProviderConfigRef(name string) *MockContainer {
+	tc.Container.Spec.ProviderConfigReference = &xpv1.Reference{Name: name}
+	return tc
+}
+
 // WithSpecDeletionPolicy sets spec deletion policy value
 func (tc *MockContainer) WithSpecDeletionPolicy(p xpv1.DeletionPolicy) *MockContainer {
 	tc.Container.Spec.DeletionPolicy = p
