@@ -1,0 +1,14 @@
+apiVersion: database.azure.crossplane.io/v1beta1
+kind: MySQLServerConfiguration
+metadata:
+  name: example-mysql-configuration
+spec:
+  providerConfigRef:
+    name: example
+  forProvider:
+    resourceGroupNameRef:
+      name: example-rg
+    serverNameRef:
+      name: example-mysql
+    name: connect_timeout
+    value: "15"

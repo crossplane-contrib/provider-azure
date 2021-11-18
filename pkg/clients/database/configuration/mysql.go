@@ -20,7 +20,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
+	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/Azure/go-autorest/autorest"
 
 	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/database/v1beta1"
@@ -35,43 +35,43 @@ import (
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/mysql/mgmt/2017-12-01/mysql/models.go
 // https://github.com/Azure/azure-sdk-for-go/blob/master/services/postgresql/mgmt/2017-12-01/postgresql/models.go
 
-// PostgreSQLConfigurationAPI represents the API interface for a PostgreSQL Server Configuration client
-type PostgreSQLConfigurationAPI interface {
-	Get(ctx context.Context, s *azuredbv1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error)
-	CreateOrUpdate(ctx context.Context, s *azuredbv1beta1.PostgreSQLServerConfiguration) error
-	Delete(ctx context.Context, s *azuredbv1beta1.PostgreSQLServerConfiguration) error
+// MySQLConfigurationAPI represents the API interface for a MySQL Server Configuration client
+type MySQLConfigurationAPI interface {
+	Get(ctx context.Context, s *azuredbv1beta1.MySQLServerConfiguration) (mysql.Configuration, error)
+	CreateOrUpdate(ctx context.Context, s *azuredbv1beta1.MySQLServerConfiguration) error
+	Delete(ctx context.Context, s *azuredbv1beta1.MySQLServerConfiguration) error
 	GetRESTClient() autorest.Sender
 }
 
-// PostgreSQLConfigurationClient is the concreate implementation of the PostgreSQLConfigurationAPI interface for PostgreSQL that calls Azure API.
-type PostgreSQLConfigurationClient struct {
-	postgresql.ConfigurationsClient
+// MySQLConfigurationClient is the concreate implementation of the MySQLConfigurationAPI interface for MySQL that calls Azure API.
+type MySQLConfigurationClient struct {
+	mysql.ConfigurationsClient
 }
 
-// NewPostgreSQLConfigurationClient creates and initializes a PostgreSQLConfigurationClient instance.
-func NewPostgreSQLConfigurationClient(cl postgresql.ConfigurationsClient) *PostgreSQLConfigurationClient {
-	return &PostgreSQLConfigurationClient{
+// NewMySQLConfigurationClient creates and initializes a MySQLConfigurationClient instance.
+func NewMySQLConfigurationClient(cl mysql.ConfigurationsClient) *MySQLConfigurationClient {
+	return &MySQLConfigurationClient{
 		ConfigurationsClient: cl,
 	}
 }
 
 // GetRESTClient returns the underlying REST client that the client object uses.
-func (c *PostgreSQLConfigurationClient) GetRESTClient() autorest.Sender {
+func (c *MySQLConfigurationClient) GetRESTClient() autorest.Sender {
 	return c.ConfigurationsClient.Client
 }
 
-// Get retrieves the requested PostgreSQL Configuration
-func (c *PostgreSQLConfigurationClient) Get(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServerConfiguration) (postgresql.Configuration, error) {
+// Get retrieves the requested MySQL Configuration
+func (c *MySQLConfigurationClient) Get(ctx context.Context, cr *azuredbv1beta1.MySQLServerConfiguration) (mysql.Configuration, error) {
 	return c.ConfigurationsClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupName, cr.Spec.ForProvider.ServerName, cr.Spec.ForProvider.Name)
 }
 
-// CreateOrUpdate creates or updates a PostgreSQL Server Configuration
-func (c *PostgreSQLConfigurationClient) CreateOrUpdate(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServerConfiguration) error {
+// CreateOrUpdate creates or updates a MySQL Server Configuration
+func (c *MySQLConfigurationClient) CreateOrUpdate(ctx context.Context, cr *azuredbv1beta1.MySQLServerConfiguration) error {
 	return c.update(ctx, cr, cr.Spec.ForProvider.Value, nil)
 }
 
-// Delete deletes the given PostgreSQL Server Configuration
-func (c *PostgreSQLConfigurationClient) Delete(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServerConfiguration) error {
+// Delete deletes the given MySQL Server Configuration
+func (c *MySQLConfigurationClient) Delete(ctx context.Context, cr *azuredbv1beta1.MySQLServerConfiguration) error {
 	source := SourceSystemManaged
 	// we are mimicking Terraform behavior here: when the configuration object
 	// is deleted, we are resetting its value to the system default,
@@ -80,10 +80,10 @@ func (c *PostgreSQLConfigurationClient) Delete(ctx context.Context, cr *azuredbv
 	return c.update(ctx, cr, &cr.Status.AtProvider.DefaultValue, &source)
 }
 
-func (c *PostgreSQLConfigurationClient) update(ctx context.Context, cr *azuredbv1beta1.PostgreSQLServerConfiguration, value, source *string) error {
+func (c *MySQLConfigurationClient) update(ctx context.Context, cr *azuredbv1beta1.MySQLServerConfiguration, value, source *string) error {
 	s := cr.Spec.ForProvider
-	config := postgresql.Configuration{
-		ConfigurationProperties: &postgresql.ConfigurationProperties{
+	config := mysql.Configuration{
+		ConfigurationProperties: &mysql.ConfigurationProperties{
 			Value:  value,
 			Source: source,
 		},
@@ -99,8 +99,8 @@ func (c *PostgreSQLConfigurationClient) update(ctx context.Context, cr *azuredbv
 	return nil
 }
 
-// UpdatePostgreSQLConfigurationObservation produces SQLServerConfigurationObservation from postgresql.Configuration.
-func UpdatePostgreSQLConfigurationObservation(o *azuredbv1beta1.SQLServerConfigurationObservation, in postgresql.Configuration) {
+// UpdateMySQLConfigurationObservation produces SQLServerConfigurationObservation from mysql.Configuration.
+func UpdateMySQLConfigurationObservation(o *azuredbv1beta1.SQLServerConfigurationObservation, in mysql.Configuration) {
 	o.ID = azure.ToString(in.ID)
 	o.Name = azure.ToString(in.Name)
 	o.Type = azure.ToString(in.Type)
@@ -111,8 +111,8 @@ func UpdatePostgreSQLConfigurationObservation(o *azuredbv1beta1.SQLServerConfigu
 	o.Description = azure.ToString(in.Description)
 }
 
-// IsPostgreSQLConfigurationUpToDate is used to report whether given postgresql.Configuration is in
+// IsMySQLConfigurationUpToDate is used to report whether given mysql.Configuration is in
 // sync with the SQLServerConfigurationParameters that user desires.
-func IsPostgreSQLConfigurationUpToDate(p azuredbv1beta1.SQLServerConfigurationParameters, in postgresql.Configuration) bool {
+func IsMySQLConfigurationUpToDate(p azuredbv1beta1.SQLServerConfigurationParameters, in mysql.Configuration) bool {
 	return azure.ToString(p.Value) == azure.ToString(in.Value)
 }

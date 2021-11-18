@@ -51,6 +51,33 @@ type PostgreSQLServerConfigurationList struct {
 	Items           []PostgreSQLServerConfiguration `json:"items"`
 }
 
+// +kubebuilder:object:root=true
+
+// A MySQLServerConfiguration is a managed resource that represents an Azure
+// MySQL Server Configuration.
+// +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
+// +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
+// +kubebuilder:printcolumn:name="VERSION",type="string",JSONPath=".spec.forProvider.version"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
+type MySQLServerConfiguration struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   SQLServerConfigurationSpec   `json:"spec"`
+	Status SQLServerConfigurationStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// MySQLServerConfigurationList contains a list of MySQLServerConfiguration.
+type MySQLServerConfigurationList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []MySQLServerConfiguration `json:"items"`
+}
+
 // SQLServerConfigurationParameters define the desired state of an Azure SQL
 // Database Server Configuration, either PostgreSQL or MySQL Configuration.
 type SQLServerConfigurationParameters struct {
@@ -74,12 +101,12 @@ type SQLServerConfigurationParameters struct {
 	// +immutable
 	ServerName string `json:"serverName,omitempty"`
 
-	// ServerNameRef - A reference to a PostgreSQLServer object to retrieve
+	// ServerNameRef - A reference to a server object to retrieve
 	// its name
 	// +immutable
 	ServerNameRef *xpv1.Reference `json:"serverNameRef,omitempty"`
 
-	// ServerNameSelector - A selector for a PostgreSQLServer object to
+	// ServerNameSelector - A selector for a server object to
 	// retrieve its name
 	// +immutable
 	ServerNameSelector *xpv1.Selector `json:"serverNameSelector,omitempty"`
