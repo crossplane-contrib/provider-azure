@@ -1,0 +1,15 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: PublicIPAddress
+metadata:
+  name: example-public-ip-address
+spec:
+  forProvider:
+    resourceGroupNameRef:
+      name: example-rg
+    allocationMethod: Static
+    version: IPV4
+    sku:
+      name: Standard
+    location: West US 2
+  providerConfigRef:
+    name: example
