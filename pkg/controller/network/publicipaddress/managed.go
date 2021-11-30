@@ -45,6 +45,7 @@ import (
 const (
 	errNotPublicIPAddress    = "managed resource is not a PublicIPAddress"
 	errCreatePublicIPAddress = "cannot create PublicIPAddress"
+	errUpdatePublicIPAddress = "cannot update PublicIPAddress"
 	errGetPublicIPAddress    = "cannot get PublicIPAddress"
 	errDeletePublicIPAddress = "cannot delete PublicIPAddress"
 )
@@ -121,8 +122,16 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	return managed.ExternalCreation{}, nil
 }
 
-func (e *external) Update(_ context.Context, _ resource.Managed) (managed.ExternalUpdate, error) {
-	// todo: support PublicIPAddress updates
+func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
+	s, ok := mg.(*v1alpha3.PublicIPAddress)
+	if !ok {
+		return managed.ExternalUpdate{}, errors.New(errNotPublicIPAddress)
+	}
+
+	snet := network.NewPublicIPAddressParameters(s)
+	if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), snet); err != nil {
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePublicIPAddress)
+	}
 	return managed.ExternalUpdate{}, nil
 }
 

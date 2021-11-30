@@ -88,7 +88,8 @@ func NewPublicIPAddressParameters(s *v1alpha3.PublicIPAddress) networkmgmt.Publi
 			PublicIPAllocationMethod: networkmgmt.IPAllocationMethod(s.Spec.ForProvider.PublicIPAllocationMethod),
 			PublicIPAddressVersion:   networkmgmt.IPVersion(s.Spec.ForProvider.PublicIPAddressVersion),
 		},
-		Location: s.Spec.ForProvider.Location,
+		Location: &s.Spec.ForProvider.Location,
+		Tags:     s.Spec.ForProvider.Tags,
 	}
 }
 
@@ -143,18 +144,5 @@ func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networ
 // IsPublicIPAddressUpToDate is used to report whether given network.PublicIPAddress is in
 // sync with the PublicIPAddressProperties that the user desires.
 func IsPublicIPAddressUpToDate(p v1alpha3.PublicIPAddressProperties, in networkmgmt.PublicIPAddress) bool {
-	if !cmp.Equal(p.Tags, in.Tags, cmpopts.EquateEmpty()) {
-		return false
-	}
-	if networkmgmt.IPVersion(p.PublicIPAddressVersion) != in.PublicIPAddressVersion {
-		return false
-	}
-	if networkmgmt.IPAllocationMethod(p.PublicIPAllocationMethod) != in.PublicIPAllocationMethod {
-		return false
-	}
-	if azure.ToString(p.Location) != azure.ToString(in.Location) {
-		return false
-	}
-
-	return true
+	return cmp.Equal(p.Tags, in.Tags, cmpopts.EquateEmpty())
 }

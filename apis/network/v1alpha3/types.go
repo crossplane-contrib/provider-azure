@@ -253,16 +253,19 @@ type PublicIPAddressProperties struct {
 	// PublicIPAllocationMethod - The public IP address allocation method. Possible values include: 'Static', 'Dynamic'
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=Static;Dynamic
+	// +immutable
 	PublicIPAllocationMethod string `json:"allocationMethod"`
 
 	// PublicIPAllocationMethod - The public IP address version. Possible values include: 'IPv4', 'IPv6'
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=IPv4;IPv6
+	// +immutable
 	PublicIPAddressVersion string `json:"version"`
 
 	// Location - Resource location.
-	// +optional
-	Location *string `json:"location,omitempty"`
+	// +kubebuilder:validation:MinLength:=1
+	// +immutable
+	Location string `json:"location"`
 
 	// SKU of PublicIPAddress
 	// +optional

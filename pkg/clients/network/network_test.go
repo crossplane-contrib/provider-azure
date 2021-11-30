@@ -392,6 +392,7 @@ func TestNewSubnetParameters(t *testing.T) {
 }
 
 func TestNewPublicIPAddressParameters(t *testing.T) {
+	locTest := "testLocation"
 	cases := []struct {
 		name string
 		r    *v1alpha3.PublicIPAddress
@@ -404,6 +405,7 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 				Spec: v1alpha3.PublicIPAddressSpec{
 					ForProvider: v1alpha3.PublicIPAddressProperties{
 						PublicIPAllocationMethod: "static",
+						Location:                 locTest,
 					},
 				},
 			},
@@ -411,6 +413,7 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 				PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
 					PublicIPAllocationMethod: "static",
 				},
+				Location: &locTest,
 			},
 		},
 	}
@@ -647,6 +650,66 @@ func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
 			tc.want.ResourceStatus = resourceStatus
 			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
 				t.Errorf("UpdateSubnetStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestIsPublicIPAddressUpToDate(t *testing.T) {
+	keyTest, valueTest, valueTest2 := "key", "value", "value2"
+	type args struct {
+		p  v1alpha3.PublicIPAddressProperties
+		in networkmgmt.PublicIPAddress
+	}
+	tests := map[string]struct {
+		args args
+		want bool
+	}{
+		"NoUpdatesBothNil": {
+			want: true,
+		},
+		"NoUpdatesSpecEmpty": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					Tags: map[string]*string{},
+				},
+			},
+			want: true,
+		},
+		"NoUpdatesSDKEmpty": {
+			args: args{
+				in: networkmgmt.PublicIPAddress{
+					Tags: map[string]*string{},
+				},
+			},
+			want: true,
+		},
+		"SameNonEmptyTags": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					Tags: map[string]*string{keyTest: &valueTest},
+				},
+				in: networkmgmt.PublicIPAddress{
+					Tags: map[string]*string{keyTest: &valueTest},
+				},
+			},
+			want: true,
+		},
+		"DifferingTags": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					Tags: map[string]*string{keyTest: &valueTest},
+				},
+				in: networkmgmt.PublicIPAddress{
+					Tags: map[string]*string{keyTest: &valueTest2},
+				},
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := IsPublicIPAddressUpToDate(tt.args.p, tt.args.in); got != tt.want {
+				t.Errorf("IsPublicIPAddressUpToDate() = %v, want %v", got, tt.want)
 			}
 		})
 	}

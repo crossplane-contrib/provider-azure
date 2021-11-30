@@ -132,11 +132,6 @@ func (in *PublicIPAddressProperties) DeepCopyInto(out *PublicIPAddressProperties
 		*out = new(v1.Selector)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Location != nil {
-		in, out := &in.Location, &out.Location
-		*out = new(string)
-		**out = **in
-	}
 	if in.SKU != nil {
 		in, out := &in.SKU, &out.SKU
 		*out = new(SKU)
