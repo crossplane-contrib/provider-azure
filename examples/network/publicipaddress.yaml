@@ -7,7 +7,7 @@ spec:
     resourceGroupNameRef:
       name: example-rg
     allocationMethod: Static
-    version: IPV4
+    version: IPv4
     sku:
       name: Standard
     location: West US 2

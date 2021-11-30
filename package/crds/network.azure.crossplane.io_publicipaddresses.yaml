@@ -114,10 +114,10 @@ spec:
                     description: Tags - Resource tags.
                     type: object
                   version:
-                    description: 'PublicIPAllocationMethod - The public IP address version. Possible values include: ''IPV4'', ''IPV6'''
+                    description: 'PublicIPAllocationMethod - The public IP address version. Possible values include: ''IPv4'', ''IPv6'''
                     enum:
-                    - IPV4
-                    - IPV6
+                    - IPv4
+                    - IPv6
                     type: string
                 required:
                 - allocationMethod

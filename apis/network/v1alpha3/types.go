@@ -255,9 +255,9 @@ type PublicIPAddressProperties struct {
 	// +kubebuilder:validation:Enum=Static;Dynamic
 	PublicIPAllocationMethod string `json:"allocationMethod"`
 
-	// PublicIPAllocationMethod - The public IP address version. Possible values include: 'IPV4', 'IPV6'
+	// PublicIPAllocationMethod - The public IP address version. Possible values include: 'IPv4', 'IPv6'
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:Enum=IPV4;IPV6
+	// +kubebuilder:validation:Enum=IPv4;IPv6
 	PublicIPAddressVersion string `json:"version"`
 
 	// Location - Resource location.
@@ -270,7 +270,7 @@ type PublicIPAddressProperties struct {
 
 	// Tags - Resource tags.
 	// +optional
-	Tags map[string]string `json:"tags,omitempty"`
+	Tags map[string]*string `json:"tags,omitempty"`
 }
 
 // SKU of PublicIPAddress
