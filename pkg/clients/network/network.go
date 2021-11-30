@@ -20,6 +20,8 @@ import (
 	"reflect"
 
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
 	azure "github.com/crossplane/provider-azure/pkg/clients"
@@ -136,4 +138,23 @@ func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networ
 	v.Status.AtProvider.Etag = azure.ToString(az.Etag)
 	v.Status.AtProvider.ID = azure.ToString(az.ID)
 	v.Status.AtProvider.Address = azure.ToString(az.IPAddress)
+}
+
+// IsPublicIPAddressUpToDate is used to report whether given network.PublicIPAddress is in
+// sync with the PublicIPAddressProperties that the user desires.
+func IsPublicIPAddressUpToDate(p v1alpha3.PublicIPAddressProperties, in networkmgmt.PublicIPAddress) bool {
+	if !cmp.Equal(p.Tags, in.Tags, cmpopts.EquateEmpty()) {
+		return false
+	}
+	if networkmgmt.IPVersion(p.PublicIPAddressVersion) != in.PublicIPAddressVersion {
+		return false
+	}
+	if networkmgmt.IPAllocationMethod(p.PublicIPAllocationMethod) != in.PublicIPAllocationMethod {
+		return false
+	}
+	if azure.ToString(p.Location) != azure.ToString(in.Location) {
+		return false
+	}
+
+	return true
 }

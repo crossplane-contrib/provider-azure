@@ -103,7 +103,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	return managed.ExternalObservation{
 		ResourceExists:   true,
-		ResourceUpToDate: true,
+		ResourceUpToDate: network.IsPublicIPAddressUpToDate(s.Spec.ForProvider, az),
 	}, nil
 }
 
