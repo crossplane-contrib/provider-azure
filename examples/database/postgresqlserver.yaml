@@ -11,8 +11,8 @@ spec:
     resourceGroupNameRef:
       name: example-rg
     location: West US 2
-    minimalTlsVersion: TLS12
-    sslEnforcement: Disabled
+    minimalTlsVersion: TLS1_2
+    sslEnforcement: Enabled
     version: "9.6"
     sku:
       # Note that Basic servers do not support virtual network rules

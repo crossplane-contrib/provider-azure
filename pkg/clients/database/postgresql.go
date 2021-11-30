@@ -331,7 +331,7 @@ func IsPostgreSQLUpToDate(p azuredbv1beta1.SQLServerParameters, in postgresql.Se
 		return false
 	}
 	switch {
-	case p.MinimalTLSVersion != string(in.MinimalTLSVersion):
+	case p.MinimalTLSVersion != string(in.MinimalTLSVersion) && p.SSLEnforcement != string(postgresql.SslEnforcementEnumDisabled):
 		return false
 	case p.SSLEnforcement != string(in.SslEnforcement):
 		return false
