@@ -46,6 +46,21 @@ var (
 	resourceType = "resource-type"
 	purpose      = "cool-purpose"
 	address      = "20.46.134.23"
+
+	ipVersion           = networkmgmt.IPv6
+	skuName             = string(networkmgmt.PublicIPAddressSkuNameStandard)
+	ipAllocMethod       = networkmgmt.Static
+	prefixID            = "/test-prefix-id"
+	dnsLabel            = "test-label"
+	fqdn                = "test.fqdn"
+	reverseFQDN         = "fqdn.reverse"
+	timeout       int32 = 1
+	ipTagType           = "FirstPartyUsage"
+	ipTag               = "SQL"
+	ipTagType2          = "FirstPartyUsage2"
+	ipTag2              = "SQL2"
+	tagKey              = "tagKey"
+	tagVal              = "tagValue"
 )
 
 func TestNewVirtualNetworkParameters(t *testing.T) {
@@ -392,7 +407,6 @@ func TestNewSubnetParameters(t *testing.T) {
 }
 
 func TestNewPublicIPAddressParameters(t *testing.T) {
-	locTest := "testLocation"
 	cases := []struct {
 		name string
 		r    *v1alpha3.PublicIPAddress
@@ -404,16 +418,58 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.PublicIPAddressSpec{
 					ForProvider: v1alpha3.PublicIPAddressProperties{
-						PublicIPAllocationMethod: "static",
-						Location:                 locTest,
+						PublicIPAllocationMethod: string(ipAllocMethod),
+						PublicIPAddressVersion:   string(ipVersion),
+						Location:                 location,
+						SKU: &v1alpha3.SKU{
+							Name: skuName,
+						},
+						PublicIPPrefixID: &prefixID,
+						PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
+							DomainNameLabel: &dnsLabel,
+							FQDN:            &fqdn,
+							ReverseFQDN:     &reverseFQDN,
+						},
+						TCPIdleTimeoutInMinutes: &timeout,
+						IPTags: []v1alpha3.IPTag{
+							{
+								IPTagType: ipTagType,
+								Tag:       ipTag,
+							},
+						},
+						Tags: map[string]string{
+							tagKey: tagVal,
+						},
 					},
 				},
 			},
 			want: networkmgmt.PublicIPAddress{
 				PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{
-					PublicIPAllocationMethod: "static",
+					PublicIPAllocationMethod: ipAllocMethod,
+					PublicIPAddressVersion:   ipVersion,
+					PublicIPPrefix: &networkmgmt.SubResource{
+						ID: &prefixID,
+					},
+					DNSSettings: &networkmgmt.PublicIPAddressDNSSettings{
+						DomainNameLabel: &dnsLabel,
+						Fqdn:            &fqdn,
+						ReverseFqdn:     &reverseFQDN,
+					},
+					IdleTimeoutInMinutes: &timeout,
+					IPTags: &[]networkmgmt.IPTag{
+						{
+							IPTagType: &ipTagType,
+							Tag:       &ipTag,
+						},
+					},
 				},
-				Location: &locTest,
+				Location: &location,
+				Sku: &networkmgmt.PublicIPAddressSku{
+					Name: networkmgmt.PublicIPAddressSkuName(skuName),
+				},
+				Tags: map[string]*string{
+					tagKey: &tagVal,
+				},
 			},
 		},
 	}
@@ -656,7 +712,7 @@ func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
 }
 
 func TestIsPublicIPAddressUpToDate(t *testing.T) {
-	keyTest, valueTest, valueTest2 := "key", "value", "value2"
+	tagValue2 := "value2"
 	type args struct {
 		p  v1alpha3.PublicIPAddressProperties
 		in networkmgmt.PublicIPAddress
@@ -665,51 +721,421 @@ func TestIsPublicIPAddressUpToDate(t *testing.T) {
 		args args
 		want bool
 	}{
-		"NoUpdatesBothNil": {
-			want: true,
-		},
-		"NoUpdatesSpecEmpty": {
+		"NoUpdatesBothEmpty": {
 			args: args{
-				p: v1alpha3.PublicIPAddressProperties{
-					Tags: map[string]*string{},
-				},
+				in: newSDKPublicIPAddress(),
 			},
 			want: true,
 		},
-		"NoUpdatesSDKEmpty": {
+		"NoUpdatesSpecEmptyTags": {
 			args: args{
-				in: networkmgmt.PublicIPAddress{
-					Tags: map[string]*string{},
+				p: v1alpha3.PublicIPAddressProperties{
+					Tags: map[string]string{},
 				},
+				in: newSDKPublicIPAddress(),
+			},
+			want: true,
+		},
+		"NoUpdatesSDKEmptyTags": {
+			args: args{
+				in: newSDKPublicIPAddress(withTags(map[string]*string{})),
 			},
 			want: true,
 		},
 		"SameNonEmptyTags": {
 			args: args{
 				p: v1alpha3.PublicIPAddressProperties{
-					Tags: map[string]*string{keyTest: &valueTest},
+					Tags: map[string]string{tagKey: tagVal},
 				},
-				in: networkmgmt.PublicIPAddress{
-					Tags: map[string]*string{keyTest: &valueTest},
-				},
+				in: newSDKPublicIPAddress(withTags(map[string]*string{tagKey: &tagVal})),
 			},
 			want: true,
 		},
 		"DifferingTags": {
 			args: args{
 				p: v1alpha3.PublicIPAddressProperties{
-					Tags: map[string]*string{keyTest: &valueTest},
+					Tags: map[string]string{tagKey: tagVal},
 				},
-				in: networkmgmt.PublicIPAddress{
-					Tags: map[string]*string{keyTest: &valueTest2},
-				},
+				in: newSDKPublicIPAddress(withTags(map[string]*string{tagKey: &tagValue2})),
 			},
+		},
+		"SameNonEmptyIPTagsInOrder": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					IPTags: []v1alpha3.IPTag{
+						{
+							IPTagType: ipTagType2,
+							Tag:       ipTag2,
+						},
+						{
+							IPTagType: ipTagType,
+							Tag:       ipTag,
+						},
+					},
+				},
+				in: newSDKPublicIPAddress(withIPTags([]networkmgmt.IPTag{
+					{
+						IPTagType: &ipTagType2,
+						Tag:       &ipTag2,
+					},
+					{
+						IPTagType: &ipTagType,
+						Tag:       &ipTag,
+					},
+				})),
+			},
+			want: true,
+		},
+		"SameNonEmptyIPTagsSpecNotInOrder": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					IPTags: []v1alpha3.IPTag{
+						{
+							IPTagType: ipTagType,
+							Tag:       ipTag,
+						},
+						{
+							IPTagType: ipTagType2,
+							Tag:       ipTag2,
+						},
+					},
+				},
+				in: newSDKPublicIPAddress(withIPTags([]networkmgmt.IPTag{
+					{
+						IPTagType: &ipTagType2,
+						Tag:       &ipTag2,
+					},
+					{
+						IPTagType: &ipTagType,
+						Tag:       &ipTag,
+					},
+				})),
+			},
+			want: true,
+		},
+		"DifferingNonEmptyIPTags": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					IPTags: []v1alpha3.IPTag{
+						{
+							IPTagType: ipTagType,
+							Tag:       ipTag,
+						},
+						{
+							IPTagType: ipTagType2,
+							Tag:       ipTag2,
+						},
+						{
+							IPTagType: ipTagType2,
+							Tag:       ipTag2,
+						},
+					},
+				},
+				in: newSDKPublicIPAddress(withIPTags([]networkmgmt.IPTag{
+					{
+						IPTagType: &ipTagType,
+						Tag:       &ipTag,
+					},
+					{
+						IPTagType: &ipTagType2,
+						Tag:       &ipTag2,
+					},
+				})),
+			},
+			want: false,
+		},
+		"SameKeyIPTags": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					IPTags: []v1alpha3.IPTag{
+						{
+							IPTagType: ipTagType,
+							Tag:       ipTag,
+						},
+						{
+							IPTagType: ipTagType,
+							Tag:       ipTag2,
+						},
+					},
+				},
+				in: newSDKPublicIPAddress(withIPTags([]networkmgmt.IPTag{
+					{
+						IPTagType: &ipTagType,
+						Tag:       &ipTag2,
+					},
+					{
+						IPTagType: &ipTagType,
+						Tag:       &ipTag,
+					},
+				})),
+			},
+			want: true,
+		},
+		"SameIdleTimeout": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					TCPIdleTimeoutInMinutes: &timeout,
+				},
+				in: newSDKPublicIPAddress(withIdleTimeout(timeout)),
+			},
+			want: true,
+		},
+		"DifferingTimeout": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					TCPIdleTimeoutInMinutes: &timeout,
+				},
+				in: newSDKPublicIPAddress(withIdleTimeout(2)),
+			},
+			want: false,
+		},
+		"SameDNSSettings": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
+						DomainNameLabel: &dnsLabel,
+						FQDN:            &fqdn,
+						ReverseFQDN:     &reverseFQDN,
+					},
+				},
+				in: newSDKPublicIPAddress(withDNSSettings(dnsLabel, fqdn, reverseFQDN)),
+			},
+			want: true,
+		},
+		"DifferingDNSSettings": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
+						DomainNameLabel: &dnsLabel,
+						FQDN:            &fqdn,
+						ReverseFQDN:     &reverseFQDN,
+					},
+				},
+				in: newSDKPublicIPAddress(withDNSSettings("test-label2", fqdn, reverseFQDN)),
+			},
+			want: false,
+		},
+		"SameIPPrefixID": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					PublicIPPrefixID: &prefixID,
+				},
+				in: newSDKPublicIPAddress(withIPPrefix(prefixID)),
+			},
+			want: true,
+		},
+		"DifferingIPPrefixID": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					PublicIPPrefixID: &prefixID,
+				},
+				in: newSDKPublicIPAddress(withIPPrefix(id)),
+			},
+			want: false,
+		},
+		"SameSKU": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					SKU: &v1alpha3.SKU{
+						Name: skuName,
+					},
+				},
+				in: newSDKPublicIPAddress(withSKU(skuName)),
+			},
+			want: true,
+		},
+		"DifferingSKU": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					SKU: &v1alpha3.SKU{
+						Name: skuName,
+					},
+				},
+				in: newSDKPublicIPAddress(withSKU("another-sku-basic")),
+			},
+			want: false,
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			if got := IsPublicIPAddressUpToDate(tt.args.p, tt.args.in); got != tt.want {
 				t.Errorf("IsPublicIPAddressUpToDate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type publicIPAddressOption func(*networkmgmt.PublicIPAddress)
+
+func newSDKPublicIPAddress(opts ...publicIPAddressOption) networkmgmt.PublicIPAddress {
+	result := networkmgmt.PublicIPAddress{
+		PublicIPAddressPropertiesFormat: &networkmgmt.PublicIPAddressPropertiesFormat{},
+	}
+	for _, o := range opts {
+		o(&result)
+	}
+	return result
+}
+
+func withTags(tags map[string]*string) publicIPAddressOption {
+	return func(in *networkmgmt.PublicIPAddress) {
+		in.Tags = tags
+	}
+}
+
+func withIPTags(ipTags []networkmgmt.IPTag) publicIPAddressOption {
+	return func(in *networkmgmt.PublicIPAddress) {
+		if ipTags == nil {
+			return
+		}
+		in.IPTags = &ipTags
+	}
+}
+
+func withIdleTimeout(to int32) publicIPAddressOption {
+	return func(in *networkmgmt.PublicIPAddress) {
+		in.IdleTimeoutInMinutes = &to
+	}
+}
+
+func withIPPrefix(id string) publicIPAddressOption {
+	return func(in *networkmgmt.PublicIPAddress) {
+		in.PublicIPPrefix = &networkmgmt.SubResource{ID: &id}
+	}
+}
+
+func withDNSSettings(label, fqdn, revFQDN string) publicIPAddressOption {
+	return func(in *networkmgmt.PublicIPAddress) {
+		in.DNSSettings = &networkmgmt.PublicIPAddressDNSSettings{
+			DomainNameLabel: &label,
+			Fqdn:            &fqdn,
+			ReverseFqdn:     &revFQDN,
+		}
+	}
+}
+
+func withSKU(name string) publicIPAddressOption {
+	return func(in *networkmgmt.PublicIPAddress) {
+		in.Sku = &networkmgmt.PublicIPAddressSku{
+			Name: networkmgmt.PublicIPAddressSkuName(name),
+		}
+	}
+}
+
+func TestLateInitializePublicIPAddress(t *testing.T) {
+	tagVal2 := "tagValue2"
+	type args struct {
+		p  v1alpha3.PublicIPAddressProperties
+		in networkmgmt.PublicIPAddress
+	}
+	tests := map[string]struct {
+		args args
+		want v1alpha3.PublicIPAddressProperties
+	}{
+		"LateInitializeEmptySpec": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{},
+				in: newSDKPublicIPAddress(
+					withTags(map[string]*string{tagKey: &tagVal}),
+					withIPTags([]networkmgmt.IPTag{
+						{
+							IPTagType: &ipTagType,
+							Tag:       &ipTag,
+						},
+					}),
+					withIdleTimeout(timeout),
+					withIPPrefix(prefixID),
+					withDNSSettings(dnsLabel, fqdn, reverseFQDN),
+					withSKU(skuName)),
+			},
+			want: v1alpha3.PublicIPAddressProperties{
+				PublicIPPrefixID: &prefixID,
+				PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
+					DomainNameLabel: &dnsLabel,
+					FQDN:            &fqdn,
+					ReverseFQDN:     &reverseFQDN,
+				},
+				TCPIdleTimeoutInMinutes: &timeout,
+				IPTags: []v1alpha3.IPTag{
+					{
+						IPTagType: ipTagType,
+						Tag:       ipTag,
+					},
+				},
+				Tags: map[string]string{
+					tagKey: tagVal,
+				},
+				SKU: &v1alpha3.SKU{
+					Name: skuName,
+				},
+			},
+		},
+		"LateInitializeNonEmptySpec": {
+			args: args{
+				p: v1alpha3.PublicIPAddressProperties{
+					// SKU:                        nil,
+					PublicIPPrefixID: &prefixID,
+					PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
+						DomainNameLabel: &dnsLabel,
+						FQDN:            &fqdn,
+						ReverseFQDN:     &reverseFQDN,
+					},
+					TCPIdleTimeoutInMinutes: &timeout,
+					IPTags: []v1alpha3.IPTag{
+						{
+							IPTagType: ipTagType,
+							Tag:       ipTag,
+						},
+					},
+					Tags: map[string]string{
+						tagKey: tagVal,
+					},
+					SKU: &v1alpha3.SKU{
+						Name: skuName,
+					},
+				},
+				in: newSDKPublicIPAddress(
+					withTags(map[string]*string{"tagKey2": &tagVal2}),
+					withIPTags([]networkmgmt.IPTag{
+						{
+							IPTagType: &ipTagType2,
+							Tag:       &ipTag2,
+						},
+					}),
+					withIdleTimeout(3),
+					withIPPrefix(id),
+					withDNSSettings("label2", "fqdn2", "fqdn.reverse2"),
+					withSKU("another-sku-basic")),
+			},
+			want: v1alpha3.PublicIPAddressProperties{
+				// SKU:                        nil,
+				PublicIPPrefixID: &prefixID,
+				PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
+					DomainNameLabel: &dnsLabel,
+					FQDN:            &fqdn,
+					ReverseFQDN:     &reverseFQDN,
+				},
+				TCPIdleTimeoutInMinutes: &timeout,
+				IPTags: []v1alpha3.IPTag{
+					{
+						IPTagType: ipTagType,
+						Tag:       ipTag,
+					},
+				},
+				Tags: map[string]string{
+					tagKey: tagVal,
+				},
+				SKU: &v1alpha3.SKU{
+					Name: skuName,
+				},
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			LateInitializePublicIPAddress(&tt.args.p, &tt.args.in)
+			if diff := cmp.Diff(tt.want, tt.args.p); diff != "" {
+				t.Errorf("LateInitializePublicIPAddress(tt.args.p, tt.args.in): -want, +got\n%s", diff)
 			}
 		})
 	}

@@ -43,6 +43,7 @@ import (
 
 // Error strings.
 const (
+	errUpdateCR              = "cannot update PublicIPAddress custom resource"
 	errNotPublicIPAddress    = "managed resource is not a PublicIPAddress"
 	errCreatePublicIPAddress = "cannot create PublicIPAddress"
 	errUpdatePublicIPAddress = "cannot update PublicIPAddress"
@@ -81,10 +82,11 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 	cl := azurenetwork.NewPublicIPAddressesClient(creds[azureclients.CredentialsKeySubscriptionID])
 	cl.Authorizer = auth
-	return &external{client: cl}, nil
+	return &external{kube: c.client, client: cl}, nil
 }
 
 type external struct {
+	kube   client.Client
 	client networkapi.PublicIPAddressesClientAPI
 }
 
@@ -97,6 +99,11 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	az, err := e.client.Get(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), "")
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errGetPublicIPAddress)
+	}
+
+	network.LateInitializePublicIPAddress(&s.Spec.ForProvider, &az)
+	if err := e.kube.Update(ctx, s); err != nil {
+		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
 
 	network.UpdatePublicIPAddressStatusFromAzure(s, az)

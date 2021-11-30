@@ -11,6 +11,8 @@ spec:
     sku:
       name: Standard
     location: West US 2
+    dnsSettings:
+      domainNameLabel: crossplane-example
     tags:
       application: crossplane
   providerConfigRef:

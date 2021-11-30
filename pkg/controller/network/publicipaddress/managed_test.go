@@ -62,7 +62,7 @@ func publicIPAddress(sm ...publicIPAddressModifier) *v1alpha3.PublicIPAddress {
 		Spec: v1alpha3.PublicIPAddressSpec{
 			ForProvider: v1alpha3.PublicIPAddressProperties{
 				ResourceGroupName: resourceGroupName,
-				Tags:              make(map[string]*string),
+				Tags:              make(map[string]string),
 			},
 		},
 		Status: v1alpha3.PublicIPAddressStatus{},
@@ -152,16 +152,20 @@ func TestObserve(t *testing.T) {
 		},
 		{
 			name: "SuccessfulObserveExists",
-			e: &external{client: &fake.MockPublicIPAddressClient{
-				MockGet: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, expand string) (result network.PublicIPAddress, err error) {
-					return network.PublicIPAddress{
-						PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-							PublicIPAllocationMethod: "static",
-							ProvisioningState:        azure.ToStringPtr(string(network.Available)),
-						},
-					}, nil
+			e: &external{
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
 				},
-			}},
+				client: &fake.MockPublicIPAddressClient{
+					MockGet: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, expand string) (result network.PublicIPAddress, err error) {
+						return network.PublicIPAddress{
+							PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+								PublicIPAllocationMethod: "static",
+								ProvisioningState:        azure.ToStringPtr(string(network.Available)),
+							},
+						}, nil
+					},
+				}},
 			r: publicIPAddress(),
 			want: publicIPAddress(
 				withConditions(xpv1.Available()),

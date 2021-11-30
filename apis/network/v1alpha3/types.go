@@ -233,6 +233,37 @@ type PublicIPAddressSpec struct {
 	ForProvider       PublicIPAddressProperties `json:"forProvider"`
 }
 
+// PublicIPAddressDNSSettings contains FQDN of the DNS record associated with the public IP address.
+type PublicIPAddressDNSSettings struct {
+	// DomainNameLabel -the Domain name label.
+	// The concatenation of the domain name label and the regionalized DNS zone
+	// make up the fully qualified domain name associated with
+	// the public IP address. If a domain name label is specified,
+	// an A DNS record is created for the public IP in
+	// the Microsoft Azure DNS system.
+	DomainNameLabel *string `json:"domainNameLabel,omitempty"`
+	// FQDN - Gets the FQDN, Fully qualified domain name of
+	// the A DNS record associated with the public IP.
+	// This is the concatenation of the domainNameLabel
+	// and the regionalized DNS zone.
+	FQDN *string `json:"fqdn,omitempty"`
+	// ReverseFQDN - Gets or Sets the Reverse FQDN.
+	// A user-visible, fully qualified domain name that
+	// resolves to this public IP address. If the reverseFqdn
+	// is specified, then a PTR DNS record is created pointing
+	// from the IP address in the in-addr.arpa domain to
+	// the reverse FQDN.
+	ReverseFQDN *string `json:"reverseFqdn,omitempty"`
+}
+
+// IPTag list of tags to be assigned to this public IP
+type IPTag struct {
+	// IPTagType - Type of the IP tag. Example: FirstPartyUsage.
+	IPTagType string `json:"ipTagType"`
+	// Tag - Value of the IpTag associated with the public IP. Example SQL, Storage etc.
+	Tag string `json:"tag"`
+}
+
 // PublicIPAddressProperties defines properties of the PublicIPAddress.
 type PublicIPAddressProperties struct {
 	// ResourceGroupName - Name of the Public IP address's resource group.
@@ -271,9 +302,26 @@ type PublicIPAddressProperties struct {
 	// +optional
 	SKU *SKU `json:"sku,omitempty"`
 
+	// PublicIPPrefixID - The Public IP Prefix this Public IP Address should be allocated from.
+	// +optional
+	PublicIPPrefixID *string `json:"publicIPPrefixID,omitempty"`
+
+	// PublicIPAddressDNSSettings - The FQDN of the DNS record associated with the public IP address.
+	// +optional
+	PublicIPAddressDNSSettings *PublicIPAddressDNSSettings `json:"dnsSettings,omitempty"`
+
+	// TCPIdleTimeoutInMinutes - Timeout in minutes for idle TCP connections
+	// +kubebuilder:validation:Minimum:=0
+	// +optional
+	TCPIdleTimeoutInMinutes *int32 `json:"tcpIdleTimeoutInMinutes,omitempty"`
+
+	// IPTags - IP tags to be assigned to this public IP address
+	// +optional
+	IPTags []IPTag `json:"ipTags,omitempty"`
+
 	// Tags - Resource tags.
 	// +optional
-	Tags map[string]*string `json:"tags,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // SKU of PublicIPAddress
@@ -282,6 +330,16 @@ type SKU struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=Standard;Basic
 	Name string `json:"name"`
+}
+
+// IPConfiguration properties of the observed IP configuration.
+type IPConfiguration struct {
+	// PrivateIPAddress - The private IP address of the IP configuration.
+	PrivateIPAddress *string `json:"privateIPAddress,omitempty"`
+	// PrivateIPAllocationMethod - The private IP address allocation method. Possible values include: 'Static', 'Dynamic'
+	PrivateIPAllocationMethod string `json:"privateIPAllocationMethod"`
+	// ProvisioningState - Gets the provisioning state of the public IP resource. Possible values are: 'Updating', 'Deleting', and 'Failed'.
+	ProvisioningState string `json:"provisioningState"`
 }
 
 // A PublicIPAddressObservation represents the observed state of a PublicIPAddress.
@@ -300,6 +358,15 @@ type PublicIPAddressObservation struct {
 
 	// Address - A string identifying address of PublicIPAddress resource
 	Address string `json:"address"`
+
+	// Version observed IP version
+	Version string `json:"version"`
+
+	// DNSSettings observed DNS settings of the IP address
+	DNSSettings *PublicIPAddressDNSSettings `json:"dnsSettings,omitempty"`
+
+	// IPConfiguration - The IP configuration associated with the public IP address
+	IPConfiguration *IPConfiguration `json:"ipConfiguration,omitempty"`
 }
 
 // A PublicIPAddressStatus represents the observed state of a SQLServer.
@@ -313,9 +380,8 @@ type PublicIPAddressStatus struct {
 // A PublicIPAddress is a managed resource that represents an Azure PublicIPAddress.
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
-// +kubebuilder:printcolumn:name="STATE",type="string",JSONPath=".status.state"
-// +kubebuilder:printcolumn:name="LOCATION",type="string",JSONPath=".spec.properties.location"
-// +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".status.address"
+// +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".status.atProvider.address"
+// +kubebuilder:printcolumn:name="FQDN",type="string",JSONPath=".status.atProvider.dnsSettings.fqdn"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,azure}
