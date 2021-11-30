@@ -132,8 +132,8 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 // UpdatePublicIPAddressStatusFromAzure updates the status related to the external
 // Azure public ip address in the PublicIPAddressStatus
 func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networkmgmt.PublicIPAddress) {
-	v.Status.State = azure.ToString(az.ProvisioningState)
-	v.Status.Etag = azure.ToString(az.Etag)
-	v.Status.ID = azure.ToString(az.ID)
-	v.Status.Address = azure.ToString(az.IPAddress)
+	v.Status.AtProvider.State = azure.ToString(az.ProvisioningState)
+	v.Status.AtProvider.Etag = azure.ToString(az.Etag)
+	v.Status.AtProvider.ID = azure.ToString(az.ID)
+	v.Status.AtProvider.Address = azure.ToString(az.IPAddress)
 }

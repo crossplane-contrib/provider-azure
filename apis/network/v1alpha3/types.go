@@ -281,10 +281,8 @@ type SKU struct {
 	Name string `json:"name"`
 }
 
-// A PublicIPAddressStatus represents the observed state of a PublicIPAddress.
-type PublicIPAddressStatus struct {
-	xpv1.ResourceStatus `json:",inline"`
-
+// A PublicIPAddressObservation represents the observed state of a PublicIPAddress.
+type PublicIPAddressObservation struct {
 	// State of this PublicIPAddress.
 	State string `json:"state,omitempty"`
 
@@ -299,6 +297,12 @@ type PublicIPAddressStatus struct {
 
 	// Address - A string identifying address of PublicIPAddress resource
 	Address string `json:"address"`
+}
+
+// A PublicIPAddressStatus represents the observed state of a SQLServer.
+type PublicIPAddressStatus struct {
+	xpv1.ResourceStatus `json:",inline"`
+	AtProvider          PublicIPAddressObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

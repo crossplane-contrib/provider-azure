@@ -11,5 +11,7 @@ spec:
     sku:
       name: Standard
     location: West US 2
+    tags:
+      application: crossplane
   providerConfigRef:
     name: example

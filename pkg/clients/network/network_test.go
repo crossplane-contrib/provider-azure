@@ -602,10 +602,12 @@ func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
 				},
 			},
 			want: v1alpha3.PublicIPAddressStatus{
-				State:   string(networkmgmt.Succeeded),
-				ID:      id,
-				Etag:    etag,
-				Address: address,
+				AtProvider: v1alpha3.PublicIPAddressObservation{
+					State:   string(networkmgmt.Succeeded),
+					ID:      id,
+					Etag:    etag,
+					Address: address,
+				},
 			},
 		},
 		{
@@ -617,8 +619,10 @@ func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
 				},
 			},
 			want: v1alpha3.PublicIPAddressStatus{
-				State: string(networkmgmt.Succeeded),
-				ID:    id,
+				AtProvider: v1alpha3.PublicIPAddressObservation{
+					State: string(networkmgmt.Succeeded),
+					ID:    id,
+				},
 			},
 		},
 	}

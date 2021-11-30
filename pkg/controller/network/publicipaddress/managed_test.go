@@ -49,7 +49,7 @@ func withConditions(c ...xpv1.Condition) publicIPAddressModifier {
 }
 
 func withState(s string) publicIPAddressModifier {
-	return func(r *v1alpha3.PublicIPAddress) { r.Status.State = s }
+	return func(r *v1alpha3.PublicIPAddress) { r.Status.AtProvider.State = s }
 }
 
 func publicIPAddress(sm ...publicIPAddressModifier) *v1alpha3.PublicIPAddress {
