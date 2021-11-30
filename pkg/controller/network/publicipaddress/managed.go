@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	return managed.ExternalCreation{}, nil
 }
 
-func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
+func (e *external) Update(_ context.Context, _ resource.Managed) (managed.ExternalUpdate, error) {
 	// todo: support PublicIPAddress updates
 	return managed.ExternalUpdate{}, nil
 }

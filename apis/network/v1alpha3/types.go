@@ -230,12 +230,11 @@ type SubnetList struct {
 // A PublicIPAddressSpec defines the desired state of a PublicIPAddress.
 type PublicIPAddressSpec struct {
 	xpv1.ResourceSpec `json:",inline"`
-	// +kubebuilder:validation:Required
-	ForProvider PublicIPAddressFormat `json:"properties"`
+	ForProvider       PublicIPAddressProperties `json:"forProvider"`
 }
 
-// PublicIPAddressFormat defines properties of the PublicIPAddress.
-type PublicIPAddressFormat struct {
+// PublicIPAddressProperties defines properties of the PublicIPAddress.
+type PublicIPAddressProperties struct {
 	// ResourceGroupName - Name of the Public IP address's resource group.
 	// +immutable
 	ResourceGroupName string `json:"resourceGroupName,omitempty"`
@@ -271,14 +270,15 @@ type PublicIPAddressFormat struct {
 
 	// Tags - Resource tags.
 	// +optional
-	Tags map[string]*string `json:"tags,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // SKU of PublicIPAddress
 type SKU struct {
 	// Name - Name of sku. Possible values include: ['Standard', 'Basic']
+	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Enum=Standard;Basic
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // A PublicIPAddressStatus represents the observed state of a PublicIPAddress.

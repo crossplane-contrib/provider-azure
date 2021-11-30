@@ -60,9 +60,9 @@ func publicIPAddress(sm ...publicIPAddressModifier) *v1alpha3.PublicIPAddress {
 			Finalizers: []string{},
 		},
 		Spec: v1alpha3.PublicIPAddressSpec{
-			ForProvider: v1alpha3.PublicIPAddressFormat{
+			ForProvider: v1alpha3.PublicIPAddressProperties{
 				ResourceGroupName: resourceGroupName,
-				Tags:              make(map[string]*string),
+				Tags:              make(map[string]string),
 			},
 		},
 		Status: v1alpha3.PublicIPAddressStatus{},

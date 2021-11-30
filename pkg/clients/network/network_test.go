@@ -402,7 +402,7 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 			r: &v1alpha3.PublicIPAddress{
 				ObjectMeta: metav1.ObjectMeta{UID: uid},
 				Spec: v1alpha3.PublicIPAddressSpec{
-					ForProvider: v1alpha3.PublicIPAddressFormat{
+					ForProvider: v1alpha3.PublicIPAddressProperties{
 						PublicIPAllocationMethod: "static",
 					},
 				},
