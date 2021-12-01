@@ -129,8 +129,7 @@ func newDNSSettings(s *v1alpha3.PublicIPAddressDNSSettings) *networkmgmt.PublicI
 		return nil
 	}
 	return &networkmgmt.PublicIPAddressDNSSettings{
-		DomainNameLabel: s.DomainNameLabel,
-		Fqdn:            s.FQDN,
+		DomainNameLabel: &s.DomainNameLabel,
 		ReverseFqdn:     s.ReverseFQDN,
 	}
 }
@@ -190,7 +189,7 @@ func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networ
 		}
 	}
 	if az.DNSSettings != nil {
-		v.Status.AtProvider.DNSSettings = &v1alpha3.PublicIPAddressDNSSettings{
+		v.Status.AtProvider.DNSSettings = &v1alpha3.PublicIPAddressDNSSettingsObservation{
 			DomainNameLabel: az.DNSSettings.DomainNameLabel,
 			FQDN:            az.DNSSettings.Fqdn,
 			ReverseFQDN:     az.DNSSettings.ReverseFqdn,
@@ -236,8 +235,9 @@ func lateInitializeDNSSettings(d *v1alpha3.PublicIPAddressDNSSettings, in *netwo
 	if d == nil {
 		d = &v1alpha3.PublicIPAddressDNSSettings{}
 	}
-	d.DomainNameLabel = azure.LateInitializeStringPtrFromPtr(d.DomainNameLabel, in.DomainNameLabel)
-	d.FQDN = azure.LateInitializeStringPtrFromPtr(d.FQDN, in.Fqdn)
+	if d.DomainNameLabel == "" {
+		d.DomainNameLabel = azure.ToString(in.DomainNameLabel)
+	}
 	d.ReverseFQDN = azure.LateInitializeStringPtrFromPtr(d.ReverseFQDN, in.ReverseFqdn)
 	return d
 }
@@ -275,8 +275,7 @@ func checkDNSSettings(d *v1alpha3.PublicIPAddressDNSSettings, in *networkmgmt.Pu
 	if in == nil {
 		in = &networkmgmt.PublicIPAddressDNSSettings{}
 	}
-	return azure.ToString(d.DomainNameLabel) == azure.ToString(in.DomainNameLabel) &&
-		azure.ToString(d.FQDN) == azure.ToString(in.Fqdn) &&
+	return d.DomainNameLabel == azure.ToString(in.DomainNameLabel) &&
 		azure.ToString(d.ReverseFQDN) == azure.ToString(in.ReverseFqdn)
 }
 

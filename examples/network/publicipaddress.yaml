@@ -11,8 +11,13 @@ spec:
     sku:
       name: Standard
     location: West US 2
+    tcpIdleTimeoutInMinutes: 5
     dnsSettings:
       domainNameLabel: crossplane-example
+# Looks like the following requires the feature "Microsoft.Network/AllowBringYourOwnPublicIpAddress" to be registered for the subscription
+#    ipTags:
+#      - ipTagType: FirstPartyUsage
+#        tag: Storage
     tags:
       application: crossplane
   providerConfigRef:

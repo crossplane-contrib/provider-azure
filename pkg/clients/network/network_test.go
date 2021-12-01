@@ -426,8 +426,7 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 						},
 						PublicIPPrefixID: &prefixID,
 						PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
-							DomainNameLabel: &dnsLabel,
-							FQDN:            &fqdn,
+							DomainNameLabel: dnsLabel,
 							ReverseFQDN:     &reverseFQDN,
 						},
 						TCPIdleTimeoutInMinutes: &timeout,
@@ -452,7 +451,6 @@ func TestNewPublicIPAddressParameters(t *testing.T) {
 					},
 					DNSSettings: &networkmgmt.PublicIPAddressDNSSettings{
 						DomainNameLabel: &dnsLabel,
-						Fqdn:            &fqdn,
 						ReverseFqdn:     &reverseFQDN,
 					},
 					IdleTimeoutInMinutes: &timeout,
@@ -893,8 +891,7 @@ func TestIsPublicIPAddressUpToDate(t *testing.T) {
 			args: args{
 				p: v1alpha3.PublicIPAddressProperties{
 					PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
-						DomainNameLabel: &dnsLabel,
-						FQDN:            &fqdn,
+						DomainNameLabel: dnsLabel,
 						ReverseFQDN:     &reverseFQDN,
 					},
 				},
@@ -906,8 +903,7 @@ func TestIsPublicIPAddressUpToDate(t *testing.T) {
 			args: args{
 				p: v1alpha3.PublicIPAddressProperties{
 					PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
-						DomainNameLabel: &dnsLabel,
-						FQDN:            &fqdn,
+						DomainNameLabel: dnsLabel,
 						ReverseFQDN:     &reverseFQDN,
 					},
 				},
@@ -1051,8 +1047,7 @@ func TestLateInitializePublicIPAddress(t *testing.T) {
 			want: v1alpha3.PublicIPAddressProperties{
 				PublicIPPrefixID: &prefixID,
 				PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
-					DomainNameLabel: &dnsLabel,
-					FQDN:            &fqdn,
+					DomainNameLabel: dnsLabel,
 					ReverseFQDN:     &reverseFQDN,
 				},
 				TCPIdleTimeoutInMinutes: &timeout,
@@ -1076,8 +1071,7 @@ func TestLateInitializePublicIPAddress(t *testing.T) {
 					// SKU:                        nil,
 					PublicIPPrefixID: &prefixID,
 					PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
-						DomainNameLabel: &dnsLabel,
-						FQDN:            &fqdn,
+						DomainNameLabel: dnsLabel,
 						ReverseFQDN:     &reverseFQDN,
 					},
 					TCPIdleTimeoutInMinutes: &timeout,
@@ -1111,8 +1105,7 @@ func TestLateInitializePublicIPAddress(t *testing.T) {
 				// SKU:                        nil,
 				PublicIPPrefixID: &prefixID,
 				PublicIPAddressDNSSettings: &v1alpha3.PublicIPAddressDNSSettings{
-					DomainNameLabel: &dnsLabel,
-					FQDN:            &fqdn,
+					DomainNameLabel: dnsLabel,
 					ReverseFQDN:     &reverseFQDN,
 				},
 				TCPIdleTimeoutInMinutes: &timeout,

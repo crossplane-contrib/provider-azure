@@ -241,18 +241,15 @@ type PublicIPAddressDNSSettings struct {
 	// the public IP address. If a domain name label is specified,
 	// an A DNS record is created for the public IP in
 	// the Microsoft Azure DNS system.
-	DomainNameLabel *string `json:"domainNameLabel,omitempty"`
-	// FQDN - Gets the FQDN, Fully qualified domain name of
-	// the A DNS record associated with the public IP.
-	// This is the concatenation of the domainNameLabel
-	// and the regionalized DNS zone.
-	FQDN *string `json:"fqdn,omitempty"`
+	// +kubebuilder:validation:MinLength:=1
+	DomainNameLabel string `json:"domainNameLabel"`
 	// ReverseFQDN - Gets or Sets the Reverse FQDN.
 	// A user-visible, fully qualified domain name that
 	// resolves to this public IP address. If the reverseFqdn
 	// is specified, then a PTR DNS record is created pointing
 	// from the IP address in the in-addr.arpa domain to
 	// the reverse FQDN.
+	// +optional
 	ReverseFQDN *string `json:"reverseFqdn,omitempty"`
 }
 
@@ -342,6 +339,32 @@ type IPConfiguration struct {
 	ProvisioningState string `json:"provisioningState"`
 }
 
+// PublicIPAddressDNSSettingsObservation represents observed DNS settings of
+// a public IP resource
+type PublicIPAddressDNSSettingsObservation struct {
+	// DomainNameLabel -the Domain name label.
+	// The concatenation of the domain name label and the regionalized DNS zone
+	// make up the fully qualified domain name associated with
+	// the public IP address. If a domain name label is specified,
+	// an A DNS record is created for the public IP in
+	// the Microsoft Azure DNS system.
+	// +optional
+	DomainNameLabel *string `json:"domainNameLabel,omitempty"`
+	// ReverseFQDN - Gets or Sets the Reverse FQDN.
+	// A user-visible, fully qualified domain name that
+	// resolves to this public IP address. If the reverseFqdn
+	// is specified, then a PTR DNS record is created pointing
+	// from the IP address in the in-addr.arpa domain to
+	// the reverse FQDN.
+	// +optional
+	ReverseFQDN *string `json:"reverseFqdn,omitempty"`
+	// FQDN - Gets the FQDN, Fully qualified domain name of
+	// the A DNS record associated with the public IP.
+	// This is the concatenation of the domainNameLabel
+	// and the regionalized DNS zone.
+	FQDN *string `json:"fqdn,omitempty"`
+}
+
 // A PublicIPAddressObservation represents the observed state of a PublicIPAddress.
 type PublicIPAddressObservation struct {
 	// State of this PublicIPAddress.
@@ -363,7 +386,7 @@ type PublicIPAddressObservation struct {
 	Version string `json:"version"`
 
 	// DNSSettings observed DNS settings of the IP address
-	DNSSettings *PublicIPAddressDNSSettings `json:"dnsSettings,omitempty"`
+	DNSSettings *PublicIPAddressDNSSettingsObservation `json:"dnsSettings,omitempty"`
 
 	// IPConfiguration - The IP configuration associated with the public IP address
 	IPConfiguration *IPConfiguration `json:"ipConfiguration,omitempty"`
