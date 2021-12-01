@@ -338,7 +338,7 @@ func IsMySQLUpToDate(p azuredbv1beta1.SQLServerParameters, in mysql.Server) bool
 		return false
 	}
 	switch {
-	case p.MinimalTLSVersion != string(in.MinimalTLSVersion):
+	case p.MinimalTLSVersion != string(in.MinimalTLSVersion) && p.SSLEnforcement != string(mysql.SslEnforcementEnumDisabled):
 		return false
 	case p.SSLEnforcement != string(in.SslEnforcement):
 		return false
