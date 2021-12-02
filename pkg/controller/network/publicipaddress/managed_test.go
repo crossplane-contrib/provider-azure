@@ -49,7 +49,7 @@ func withConditions(c ...xpv1.Condition) publicIPAddressModifier {
 }
 
 func withState(s string) publicIPAddressModifier {
-	return func(r *v1alpha3.PublicIPAddress) { r.Status.State = s }
+	return func(r *v1alpha3.PublicIPAddress) { r.Status.AtProvider.State = s }
 }
 
 func publicIPAddress(sm ...publicIPAddressModifier) *v1alpha3.PublicIPAddress {
@@ -60,9 +60,9 @@ func publicIPAddress(sm ...publicIPAddressModifier) *v1alpha3.PublicIPAddress {
 			Finalizers: []string{},
 		},
 		Spec: v1alpha3.PublicIPAddressSpec{
-			ForProvider: v1alpha3.PublicIPAddressFormat{
+			ForProvider: v1alpha3.PublicIPAddressProperties{
 				ResourceGroupName: resourceGroupName,
-				Tags:              make(map[string]*string),
+				Tags:              make(map[string]string),
 			},
 		},
 		Status: v1alpha3.PublicIPAddressStatus{},
@@ -152,16 +152,20 @@ func TestObserve(t *testing.T) {
 		},
 		{
 			name: "SuccessfulObserveExists",
-			e: &external{client: &fake.MockPublicIPAddressClient{
-				MockGet: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, expand string) (result network.PublicIPAddress, err error) {
-					return network.PublicIPAddress{
-						PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-							PublicIPAllocationMethod: "static",
-							ProvisioningState:        azure.ToStringPtr(string(network.Available)),
-						},
-					}, nil
+			e: &external{
+				kube: &test.MockClient{
+					MockUpdate: test.NewMockUpdateFn(nil),
 				},
-			}},
+				client: &fake.MockPublicIPAddressClient{
+					MockGet: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, expand string) (result network.PublicIPAddress, err error) {
+						return network.PublicIPAddress{
+							PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+								PublicIPAllocationMethod: "static",
+								ProvisioningState:        azure.ToStringPtr(string(network.Available)),
+							},
+						}, nil
+					},
+				}},
 			r: publicIPAddress(),
 			want: publicIPAddress(
 				withConditions(xpv1.Available()),
@@ -246,6 +250,53 @@ func TestDelete(t *testing.T) {
 
 			if diff := cmp.Diff(tc.wantErr, err, test.EquateErrors()); diff != "" {
 				t.Errorf("tc.e.Delete(...): want error != got error:\n%s", diff)
+			}
+
+			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	cases := []testCase{
+		{
+			name:    "NotPublicIPAddress",
+			e:       &external{client: &fake.MockPublicIPAddressClient{}},
+			r:       &v1alpha3.Subnet{},
+			want:    &v1alpha3.Subnet{},
+			wantErr: errors.New(errNotPublicIPAddress),
+		},
+		{
+			name: "SuccessfulUpdate",
+			e: &external{client: &fake.MockPublicIPAddressClient{
+				MockCreateOrUpdate: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, parameters network.PublicIPAddress) (result network.PublicIPAddressesCreateOrUpdateFuture, err error) {
+					return network.PublicIPAddressesCreateOrUpdateFuture{}, nil
+				},
+			}},
+			r:    publicIPAddress(),
+			want: publicIPAddress(),
+		},
+		{
+			name: "FailedUpdate",
+			e: &external{client: &fake.MockPublicIPAddressClient{
+				MockCreateOrUpdate: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, parameters network.PublicIPAddress) (result network.PublicIPAddressesCreateOrUpdateFuture, err error) {
+					return network.PublicIPAddressesCreateOrUpdateFuture{}, errorBoom
+				},
+			}},
+			r:       publicIPAddress(),
+			want:    publicIPAddress(),
+			wantErr: errors.Wrap(errorBoom, errUpdatePublicIPAddress),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.e.Update(ctx, tc.r)
+
+			if diff := cmp.Diff(tc.wantErr, err, test.EquateErrors()); diff != "" {
+				t.Errorf("tc.e.Create(...): want error != got error:\n%s", diff)
 			}
 
 			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {

@@ -414,6 +414,17 @@ func LateInitializeIntPtrFromInt32Ptr(in *int, from *int32) *int {
 	return nil
 }
 
+// LateInitializeInt32PtrFromInt32Ptr late-inits *int32
+func LateInitializeInt32PtrFromInt32Ptr(in *int32, from *int32) *int32 {
+	if in != nil {
+		return in
+	}
+	if from != nil {
+		return to.Int32Ptr(*from)
+	}
+	return nil
+}
+
 // LateInitializeStringValArrFromArrPtr late-inits []string
 func LateInitializeStringValArrFromArrPtr(in []string, from *[]string) []string {
 	if in != nil {

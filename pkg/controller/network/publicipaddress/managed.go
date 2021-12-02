@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,8 +43,10 @@ import (
 
 // Error strings.
 const (
+	errUpdateCR              = "cannot update PublicIPAddress custom resource"
 	errNotPublicIPAddress    = "managed resource is not a PublicIPAddress"
 	errCreatePublicIPAddress = "cannot create PublicIPAddress"
+	errUpdatePublicIPAddress = "cannot update PublicIPAddress"
 	errGetPublicIPAddress    = "cannot get PublicIPAddress"
 	errDeletePublicIPAddress = "cannot delete PublicIPAddress"
 )
@@ -80,10 +82,11 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 	cl := azurenetwork.NewPublicIPAddressesClient(creds[azureclients.CredentialsKeySubscriptionID])
 	cl.Authorizer = auth
-	return &external{client: cl}, nil
+	return &external{kube: c.client, client: cl}, nil
 }
 
 type external struct {
+	kube   client.Client
 	client networkapi.PublicIPAddressesClientAPI
 }
 
@@ -98,12 +101,17 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(resource.Ignore(azureclients.IsNotFound, err), errGetPublicIPAddress)
 	}
 
-	network.UpdatePublicIPAddressStatusFromAzure(s, az)
+	network.LateInitializePublicIPAddress(&s.Spec.ForProvider, &az)
+	if err := e.kube.Update(ctx, s); err != nil {
+		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
+	}
+
+	s.Status.AtProvider = *network.GeneratePublicIPAddressObservation(az)
 	s.SetConditions(xpv1.Available())
 
 	return managed.ExternalObservation{
 		ResourceExists:   true,
-		ResourceUpToDate: true,
+		ResourceUpToDate: network.IsPublicIPAddressUpToDate(s.Spec.ForProvider, az),
 	}, nil
 }
 
@@ -122,8 +130,14 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	// todo: support PublicIPAddress updates
-	return managed.ExternalUpdate{}, nil
+	cr, ok := mg.(*v1alpha3.PublicIPAddress)
+	if !ok {
+		return managed.ExternalUpdate{}, errors.New(errNotPublicIPAddress)
+	}
+
+	snet := network.NewPublicIPAddressParameters(cr)
+	_, err := e.client.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), snet)
+	return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePublicIPAddress)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
