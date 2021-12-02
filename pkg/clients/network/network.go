@@ -173,28 +173,30 @@ func UpdateSubnetStatusFromAzure(v *v1alpha3.Subnet, az networkmgmt.Subnet) {
 	v.Status.Purpose = azure.ToString(az.Purpose)
 }
 
-// UpdatePublicIPAddressStatusFromAzure updates the status related to the external
-// Azure public ip address in the PublicIPAddressStatus
-func UpdatePublicIPAddressStatusFromAzure(v *v1alpha3.PublicIPAddress, az networkmgmt.PublicIPAddress) {
-	v.Status.AtProvider.State = azure.ToString(az.ProvisioningState)
-	v.Status.AtProvider.Etag = azure.ToString(az.Etag)
-	v.Status.AtProvider.ID = azure.ToString(az.ID)
-	v.Status.AtProvider.Address = azure.ToString(az.IPAddress)
-	v.Status.AtProvider.Version = string(az.PublicIPAddressVersion)
+// GeneratePublicIPAddressObservation returns the observation object related to the external
+// Azure public IP address in the PublicIPAddressStatus
+func GeneratePublicIPAddressObservation(az networkmgmt.PublicIPAddress) *v1alpha3.PublicIPAddressObservation {
+	v := &v1alpha3.PublicIPAddressObservation{}
+	v.State = azure.ToString(az.ProvisioningState)
+	v.Etag = azure.ToString(az.Etag)
+	v.ID = azure.ToString(az.ID)
+	v.Address = azure.ToString(az.IPAddress)
+	v.Version = string(az.PublicIPAddressVersion)
 	if az.IPConfiguration != nil {
-		v.Status.AtProvider.IPConfiguration = &v1alpha3.IPConfiguration{
+		v.IPConfiguration = &v1alpha3.IPConfiguration{
 			PrivateIPAllocationMethod: string(az.IPConfiguration.PrivateIPAllocationMethod),
 			PrivateIPAddress:          az.IPConfiguration.PrivateIPAddress,
 			ProvisioningState:         azure.ToString(az.IPConfiguration.ProvisioningState),
 		}
 	}
 	if az.DNSSettings != nil {
-		v.Status.AtProvider.DNSSettings = &v1alpha3.PublicIPAddressDNSSettingsObservation{
+		v.DNSSettings = &v1alpha3.PublicIPAddressDNSSettingsObservation{
 			DomainNameLabel: az.DNSSettings.DomainNameLabel,
 			FQDN:            az.DNSSettings.Fqdn,
 			ReverseFQDN:     az.DNSSettings.ReverseFqdn,
 		}
 	}
+	return v
 }
 
 // LateInitializePublicIPAddress late-initilizes a PublicIPAddress resource
@@ -249,7 +251,7 @@ func IsPublicIPAddressUpToDate(p v1alpha3.PublicIPAddressProperties, in networkm
 		return false
 	}
 
-	if !checkIPPrefixID(p.PublicIPPrefixID, in.PublicIPPrefix) {
+	if !isIPPrefixIDUpToDate(p.PublicIPPrefixID, in.PublicIPPrefix) {
 		return false
 	}
 
@@ -257,18 +259,18 @@ func IsPublicIPAddressUpToDate(p v1alpha3.PublicIPAddressProperties, in networkm
 		return false
 	}
 
-	if !checkIPTags(p.IPTags, in.IPTags) {
+	if !isIPTagsUpToDate(p.IPTags, in.IPTags) {
 		return false
 	}
 
-	if !checkSKU(p.SKU, in.Sku) {
+	if !isSKUUpToDate(p.SKU, in.Sku) {
 		return false
 	}
 
-	return checkDNSSettings(p.PublicIPAddressDNSSettings, in.PublicIPAddressPropertiesFormat.DNSSettings)
+	return isDNSSettingsUpToDate(p.PublicIPAddressDNSSettings, in.PublicIPAddressPropertiesFormat.DNSSettings)
 }
 
-func checkDNSSettings(d *v1alpha3.PublicIPAddressDNSSettings, in *networkmgmt.PublicIPAddressDNSSettings) bool { // nolint:gocyclo
+func isDNSSettingsUpToDate(d *v1alpha3.PublicIPAddressDNSSettings, in *networkmgmt.PublicIPAddressDNSSettings) bool {
 	if d == nil {
 		d = &v1alpha3.PublicIPAddressDNSSettings{}
 	}
@@ -279,14 +281,14 @@ func checkDNSSettings(d *v1alpha3.PublicIPAddressDNSSettings, in *networkmgmt.Pu
 		azure.ToString(d.ReverseFQDN) == azure.ToString(in.ReverseFqdn)
 }
 
-func checkIPPrefixID(p *string, in *networkmgmt.SubResource) bool {
+func isIPPrefixIDUpToDate(p *string, in *networkmgmt.SubResource) bool {
 	if in == nil {
 		in = &networkmgmt.SubResource{}
 	}
 	return azure.ToString(p) == azure.ToString(in.ID)
 }
 
-func checkIPTags(t []v1alpha3.IPTag, in *[]networkmgmt.IPTag) bool {
+func isIPTagsUpToDate(t []v1alpha3.IPTag, in *[]networkmgmt.IPTag) bool {
 	if in == nil {
 		in = &[]networkmgmt.IPTag{}
 	}
@@ -319,7 +321,7 @@ func checkIPTags(t []v1alpha3.IPTag, in *[]networkmgmt.IPTag) bool {
 	return true
 }
 
-func checkSKU(s *v1alpha3.SKU, in *networkmgmt.PublicIPAddressSku) bool {
+func isSKUUpToDate(s *v1alpha3.SKU, in *networkmgmt.PublicIPAddressSku) bool {
 	if in == nil {
 		in = &networkmgmt.PublicIPAddressSku{}
 	}

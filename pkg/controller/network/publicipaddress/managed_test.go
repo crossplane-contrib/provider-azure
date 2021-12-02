@@ -258,3 +258,50 @@ func TestDelete(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdate(t *testing.T) {
+	cases := []testCase{
+		{
+			name:    "NotPublicIPAddress",
+			e:       &external{client: &fake.MockPublicIPAddressClient{}},
+			r:       &v1alpha3.Subnet{},
+			want:    &v1alpha3.Subnet{},
+			wantErr: errors.New(errNotPublicIPAddress),
+		},
+		{
+			name: "SuccessfulUpdate",
+			e: &external{client: &fake.MockPublicIPAddressClient{
+				MockCreateOrUpdate: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, parameters network.PublicIPAddress) (result network.PublicIPAddressesCreateOrUpdateFuture, err error) {
+					return network.PublicIPAddressesCreateOrUpdateFuture{}, nil
+				},
+			}},
+			r:    publicIPAddress(),
+			want: publicIPAddress(),
+		},
+		{
+			name: "FailedUpdate",
+			e: &external{client: &fake.MockPublicIPAddressClient{
+				MockCreateOrUpdate: func(ctx context.Context, resourceGroupName string, publicIPAddressName string, parameters network.PublicIPAddress) (result network.PublicIPAddressesCreateOrUpdateFuture, err error) {
+					return network.PublicIPAddressesCreateOrUpdateFuture{}, errorBoom
+				},
+			}},
+			r:       publicIPAddress(),
+			want:    publicIPAddress(),
+			wantErr: errors.Wrap(errorBoom, errUpdatePublicIPAddress),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.e.Update(ctx, tc.r)
+
+			if diff := cmp.Diff(tc.wantErr, err, test.EquateErrors()); diff != "" {
+				t.Errorf("tc.e.Create(...): want error != got error:\n%s", diff)
+			}
+
+			if diff := cmp.Diff(tc.want, tc.r, test.EquateConditions()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+		})
+	}
+}

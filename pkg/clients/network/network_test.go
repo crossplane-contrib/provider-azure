@@ -693,7 +693,7 @@ func TestUpdatePublicIPAddressStatusFromAzure(t *testing.T) {
 				},
 			}
 
-			UpdatePublicIPAddressStatusFromAzure(v, tc.r)
+			v.Status.AtProvider = *GeneratePublicIPAddressObservation(tc.r)
 
 			// make sure that internal resource status hasn't changed
 			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {

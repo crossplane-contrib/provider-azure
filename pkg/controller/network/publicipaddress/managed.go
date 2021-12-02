@@ -106,7 +106,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
 	}
 
-	network.UpdatePublicIPAddressStatusFromAzure(s, az)
+	s.Status.AtProvider = *network.GeneratePublicIPAddressObservation(az)
 	s.SetConditions(xpv1.Available())
 
 	return managed.ExternalObservation{
@@ -130,16 +130,14 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	s, ok := mg.(*v1alpha3.PublicIPAddress)
+	cr, ok := mg.(*v1alpha3.PublicIPAddress)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotPublicIPAddress)
 	}
 
-	snet := network.NewPublicIPAddressParameters(s)
-	if _, err := e.client.CreateOrUpdate(ctx, s.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(s), snet); err != nil {
-		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePublicIPAddress)
-	}
-	return managed.ExternalUpdate{}, nil
+	snet := network.NewPublicIPAddressParameters(cr)
+	_, err := e.client.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupName, meta.GetExternalName(cr), snet)
+	return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePublicIPAddress)
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
