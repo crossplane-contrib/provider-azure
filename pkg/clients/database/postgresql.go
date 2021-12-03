@@ -300,9 +300,11 @@ func UpdatePostgreSQLObservation(o *azuredbv1beta1.SQLServerObservation, in post
 	o.MasterServerID = azure.ToString(in.MasterServerID)
 }
 
-// LateInitializePostgreSQL fills the empty values of SQLServerParameters with the
-// ones that are retrieved from the Azure API.
-func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgresql.Server) {
+// LateInitializePostgreSQL fills the empty values of SQLServerParameters with
+// the ones that are retrieved from the Azure API. Returns true if the params
+// were late initialized.
+func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgresql.Server) bool {
+	before := p.DeepCopy()
 	if in.Sku != nil {
 		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
 	}
@@ -322,6 +324,8 @@ func LateInitializePostgreSQL(p *azuredbv1beta1.SQLServerParameters, in postgres
 	if p.PublicNetworkAccess == nil {
 		p.PublicNetworkAccess = azure.ToStringPtr(string(in.PublicNetworkAccess))
 	}
+
+	return !cmp.Equal(before, p)
 }
 
 // IsPostgreSQLUpToDate is used to report whether given postgresql.Server is in
