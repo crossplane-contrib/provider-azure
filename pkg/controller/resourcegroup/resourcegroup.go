@@ -27,7 +27,7 @@ import (
 	azure "github.com/crossplane/provider-azure/pkg/clients"
 
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/pkg/errors"
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 

@@ -21,8 +21,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 )
 
@@ -37,7 +37,7 @@ func TestNewStorageAccountClient(t *testing.T) {
 			name:    "EmptyData",
 			args:    []byte{},
 			wantRes: nil,
-			wantErr: errors.WithStack(errors.New("cannot unmarshal Azure client secret data: unexpected end of JSON input")),
+			wantErr: errors.Wrap(errors.New("unexpected end of JSON input"), "cannot unmarshal Azure client secret data"),
 		},
 		{
 			name: "Success",
