@@ -309,8 +309,11 @@ func UpdateMySQLObservation(o *azuredbv1beta1.SQLServerObservation, in mysql.Ser
 }
 
 // LateInitializeMySQL fills the empty values of SQLServerParameters with the
-// ones that are retrieved from the Azure API.
-func LateInitializeMySQL(p *azuredbv1beta1.SQLServerParameters, in mysql.Server) {
+// ones that are retrieved from the Azure API. Returns true if the params were
+// late initialized.
+func LateInitializeMySQL(p *azuredbv1beta1.SQLServerParameters, in mysql.Server) bool {
+	before := p.DeepCopy()
+
 	if in.Sku != nil {
 		p.SKU.Size = azure.LateInitializeStringPtrFromPtr(p.SKU.Size, in.Sku.Size)
 	}
@@ -329,6 +332,8 @@ func LateInitializeMySQL(p *azuredbv1beta1.SQLServerParameters, in mysql.Server)
 	if p.PublicNetworkAccess == nil {
 		p.PublicNetworkAccess = azure.ToStringPtr(string(in.PublicNetworkAccess))
 	}
+
+	return !cmp.Equal(before, p)
 }
 
 // IsMySQLUpToDate is used to report whether given mysql.Server is in

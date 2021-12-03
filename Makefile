@@ -80,16 +80,6 @@ crds.clean:
 
 generate: crds.clean
 
-# Ensure a PR is ready for review.
-reviewable: generate lint
-	@go mod tidy
-
-# Ensure branch is clean.
-check-diff: reviewable
-	@$(INFO) checking that branch is clean
-	@test -z "$$(git status --porcelain)" || $(FAIL)
-	@$(OK) branch is clean
-
 # integration tests
 e2e.run: test-integration
 
@@ -127,7 +117,7 @@ export TEST_ASSET_KUBE_APISERVER TEST_ASSET_ETCD
 
 test.init: $(KUBEBUILDER)
 
-.PHONY: cobertura reviewable submodules fallthrough test-integration run manifests crds.clean
+.PHONY: cobertura submodules fallthrough test-integration run manifests crds.clean
 
 # ====================================================================================
 # Special Targets
@@ -135,7 +125,6 @@ test.init: $(KUBEBUILDER)
 define CROSSPLANE_MAKE_HELP
 Crossplane Targets:
     cobertura             Generate a coverage report for cobertura applying exclusions on generated files.
-    reviewable            Ensure a PR is ready for review.
     submodules            Update the submodules, such as the common build scripts.
     run                   Run crossplane locally, out-of-cluster. Useful for development.
 

@@ -19,17 +19,15 @@ package postgresqlserver
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -152,34 +150,6 @@ func TestObserve(t *testing.T) {
 				err: errors.Wrap(errBoom, errGetPostgreSQLServer),
 			},
 		},
-		"ServerCreating": {
-			e: &external{
-				client: &MockPostgreSQLServerAPI{
-					MockGetServer: func(_ context.Context, _ *v1beta1.PostgreSQLServer) (postgresql.Server, error) {
-						return postgresql.Server{}, autorest.DetailedError{StatusCode: http.StatusNotFound}
-					},
-					MockGetRESTClient: func() autorest.Sender {
-						return autorest.SenderFunc(func(req *http.Request) (*http.Response, error) {
-							return &http.Response{
-								Request:       req,
-								StatusCode:    http.StatusAccepted,
-								Body:          ioutil.NopCloser(strings.NewReader(inProgressResponse)),
-								ContentLength: int64(len([]byte(inProgressResponse))),
-							}, nil
-						})
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  postgresqlserver(withLastOperation(azurev1alpha3.AsyncOperation{Method: http.MethodPut, PollingURL: "crossplane.io"})),
-			},
-			want: want{
-				eo: managed.ExternalObservation{
-					ResourceExists: true,
-				},
-			},
-		},
 		"ServerNotFound": {
 			e: &external{
 				client: &MockPostgreSQLServerAPI{
@@ -232,8 +202,9 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				eo: managed.ExternalObservation{
-					ResourceExists:   true,
-					ResourceUpToDate: true,
+					ResourceExists:          true,
+					ResourceUpToDate:        true,
+					ResourceLateInitialized: true,
 					ConnectionDetails: managed.ConnectionDetails{
 						xpv1.ResourceCredentialsSecretEndpointKey: []byte(endpoint),
 						xpv1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", admin, name)),

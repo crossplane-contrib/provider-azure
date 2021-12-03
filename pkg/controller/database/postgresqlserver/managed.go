@@ -24,16 +24,14 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/util/workqueue"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	"github.com/pkg/errors"
+	"github.com/crossplane/crossplane-runtime/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/password"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
@@ -47,34 +45,33 @@ import (
 
 // Error strings.
 const (
-	errUpdateCR               = "cannot update PostgreSQL custom resource"
 	errGenPassword            = "cannot generate admin password"
 	errNotPostgreSQLServer    = "managed resource is not a PostgreSQLServer"
 	errCreatePostgreSQLServer = "cannot create PostgreSQLServer"
 	errUpdatePostgreSQLServer = "cannot update PostgreSQLServer"
 	errGetPostgreSQLServer    = "cannot get PostgreSQLServer"
 	errDeletePostgreSQLServer = "cannot delete PostgreSQLServer"
-	errFetchLastOperation     = "cannot fetch last operation"
 	errGetConnSecret          = "cannot get connection secret"
 )
 
 // Setup adds a controller that reconciles PostgreSQLInstances.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
+func Setup(mgr ctrl.Manager, o controller.Options) error {
 	name := managed.ControllerName(v1beta1.PostgreSQLServerGroupKind)
+
+	r := managed.NewReconciler(mgr,
+		resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
+		managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
+		managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
+		managed.WithPollInterval(o.PollInterval),
+		managed.WithCreationGracePeriod(5*time.Minute), // TODO(negz): Tune me.
+		managed.WithLogger(o.Logger.WithValues("controller", name)),
+		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))))
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		WithOptions(controller.Options{
-			RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
-		}).
+		WithOptions(o.ForControllerRuntime()).
 		For(&v1beta1.PostgreSQLServer{}).
-		Complete(managed.NewReconciler(mgr,
-			resource.ManagedKind(v1beta1.PostgreSQLServerGroupVersionKind),
-			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
-			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
-			managed.WithPollInterval(poll),
-			managed.WithLogger(l.WithValues("controller", name)),
-			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
+		Complete(ratelimiter.NewReconciler(name, r, o.GlobalRateLimiter))
 }
 
 type connecter struct {
@@ -104,32 +101,20 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 	server, err := e.client.GetServer(ctx, cr)
 	if azure.IsNotFound(err) {
-		if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
-			return managed.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
-		}
-		// Azure returns NotFound for GET calls until creation is completed
-		// successfully and we cannot return `ResourceExists: false` during creation
-		// since this will cause `Create` to be called again and it's not idempotent.
-		// So, we check whether a creation operation in fact is in motion.
-		creating := cr.Status.AtProvider.LastOperation.Method == "PUT" &&
-			cr.Status.AtProvider.LastOperation.Status == azure.AsyncOperationStatusInProgress
-		return managed.ExternalObservation{ResourceExists: creating}, nil
+		return managed.ExternalObservation{ResourceExists: false}, nil
 	}
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errGetPostgreSQLServer)
 	}
-	database.LateInitializePostgreSQL(&cr.Spec.ForProvider, server)
-	if err := e.kube.Update(ctx, cr); err != nil {
-		return managed.ExternalObservation{}, errors.Wrap(err, errUpdateCR)
-	}
+
+	// NOTE(negz): We make a best effort attempt to fetch the async op for
+	// backward compatibility. We used to use this operation to determine
+	// whether we had requested the database be created and whether the
+	// creation was successful. Now we instead use a creation grace period.
+	_ = azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation)
+
 	database.UpdatePostgreSQLObservation(&cr.Status.AtProvider, server)
-	// We make this call after kube.Update since it doesn't update the
-	// status subresource but fetches the the whole object after it's done. So,
-	// changes to status has to be done after kube.Update in order not to get them
-	// lost.
-	if err := azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation); err != nil {
-		return managed.ExternalObservation{}, errors.Wrap(err, errFetchLastOperation)
-	}
+
 	// Any state beside 'ready' is considered unavailable.
 	switch server.UserVisibleState { //nolint:exhaustive
 	case v1beta1.StateReady:
@@ -139,8 +124,9 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 
 	o := managed.ExternalObservation{
-		ResourceExists:   true,
-		ResourceUpToDate: database.IsPostgreSQLUpToDate(cr.Spec.ForProvider, server), // NOTE(negz): We don't yet support updating Azure SQL servers.
+		ResourceExists:          true,
+		ResourceLateInitialized: database.LateInitializePostgreSQL(&cr.Spec.ForProvider, server),
+		ResourceUpToDate:        database.IsPostgreSQLUpToDate(cr.Spec.ForProvider, server),
 		ConnectionDetails: managed.ConnectionDetails{
 			xpv1.ResourceCredentialsSecretEndpointKey: []byte(cr.Status.AtProvider.FullyQualifiedDomainName),
 			xpv1.ResourceCredentialsSecretUserKey:     []byte(fmt.Sprintf("%s@%s", cr.Spec.ForProvider.AdministratorLogin, meta.GetExternalName(cr))),
@@ -190,13 +176,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreatePostgreSQLServer)
 	}
 
-	return managed.ExternalCreation{
-			ConnectionDetails: managed.ConnectionDetails{
-				xpv1.ResourceCredentialsSecretPasswordKey: []byte(pw),
-			},
-		}, errors.Wrap(
-			azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
-			errFetchLastOperation)
+	return managed.ExternalCreation{ConnectionDetails: managed.ConnectionDetails{xpv1.ResourceCredentialsSecretPasswordKey: []byte(pw)}}, nil
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
@@ -211,9 +191,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdatePostgreSQLServer)
 	}
 
-	return managed.ExternalUpdate{}, errors.Wrap(
-		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
-		errFetchLastOperation)
+	return managed.ExternalUpdate{}, nil
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
@@ -228,7 +206,5 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if err := e.client.DeleteServer(ctx, cr); resource.Ignore(azure.IsNotFound, err) != nil {
 		return errors.Wrap(err, errDeletePostgreSQLServer)
 	}
-	return errors.Wrap(
-		azure.FetchAsyncOperation(ctx, e.client.GetRESTClient(), &cr.Status.AtProvider.LastOperation),
-		errFetchLastOperation)
+	return nil
 }
