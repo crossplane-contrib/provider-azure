@@ -189,7 +189,7 @@ func (c AggregateClient) ensureApplication(ctx context.Context, name, secret str
 		return l.Value(), nil // nolint:staticcheck
 	}
 
-	url := fmt.Sprintf("https://%s.aks.crossplane.io", name)
+	url := fmt.Sprintf("api://%s.aks.crossplane.io", name)
 	p := graphrbac.ApplicationCreateParameters{
 		AvailableToOtherTenants: to.BoolPtr(false),
 		DisplayName:             to.StringPtr(name),
