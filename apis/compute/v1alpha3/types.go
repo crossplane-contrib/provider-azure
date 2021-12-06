@@ -52,10 +52,10 @@ type AKSClusterParameters struct {
 	// +optional
 	VnetSubnetID string `json:"vnetSubnetID,omitempty"`
 
-	// ResourceGroupNameRef - A reference to a Subnet to retrieve its ID
+	// VnetSubnetIDRef - A reference to a Subnet to retrieve its ID
 	VnetSubnetIDRef *xpv1.Reference `json:"vnetSubnetIDRef,omitempty"`
 
-	// ResourceGroupNameSelector - Select a reference to a Subnet to retrieve
+	// VnetSubnetIDSelector - Select a reference to a Subnet to retrieve
 	// its ID
 	VnetSubnetIDSelector *xpv1.Selector `json:"vnetSubnetIDSelector,omitempty"`
 

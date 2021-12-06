@@ -125,7 +125,7 @@ spec:
                 description: VnetSubnetID is the subnet to which the cluster will be deployed.
                 type: string
               vnetSubnetIDRef:
-                description: ResourceGroupNameRef - A reference to a Subnet to retrieve its ID
+                description: VnetSubnetIDRef - A reference to a Subnet to retrieve its ID
                 properties:
                   name:
                     description: Name of the referenced object.
@@ -134,7 +134,7 @@ spec:
                 - name
                 type: object
               vnetSubnetIDSelector:
-                description: ResourceGroupNameSelector - Select a reference to a Subnet to retrieve its ID
+                description: VnetSubnetIDSelector - Select a reference to a Subnet to retrieve its ID
                 properties:
                   matchControllerRef:
                     description: MatchControllerRef ensures an object with the same controller reference as the selecting object is selected.
