@@ -337,6 +337,14 @@ func ToStringArrayPtr(m []string) *[]string {
 	return &m
 }
 
+// ToStringArray converts *[]string to []string which is expected by Azure API.
+func ToStringArray(m *[]string) []string {
+	if m == nil {
+		return nil
+	}
+	return *m
+}
+
 // ToString converts the supplied pointer to string to a string, returning the
 // empty string if the pointer is nil.
 func ToString(s *string) string {
@@ -356,6 +364,21 @@ func ToInt32(i *int) *int32 {
 		return nil
 	}
 	return to.Int32Ptr(int32(*i))
+}
+
+// Int64ToInt converts the supplied pointer to int64 to an int, returning zero if the
+// pointer is nil,
+func Int64ToInt(i *int64) int {
+	return int(to.Int64(i))
+}
+
+// ToInt64 converts the supplied *int to *int64, while returning nil if the
+// supplied reference is nil.
+func ToInt64(i *int) *int64 {
+	if i == nil {
+		return nil
+	}
+	return to.Int64Ptr(int64(*i))
 }
 
 // ToBool converts the supplied pointer to bool to a bool, returning the

@@ -36,6 +36,8 @@ import (
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverconfiguration"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlserverfirewallrule"
 	"github.com/crossplane/provider-azure/pkg/controller/database/postgresqlservervirtualnetworkrule"
+	"github.com/crossplane/provider-azure/pkg/controller/dns/recordset"
+	"github.com/crossplane/provider-azure/pkg/controller/dns/zone"
 	"github.com/crossplane/provider-azure/pkg/controller/keyvault/secret"
 	"github.com/crossplane/provider-azure/pkg/controller/network/publicipaddress"
 	"github.com/crossplane/provider-azure/pkg/controller/network/subnet"
@@ -66,6 +68,8 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll ti
 		account.Setup,
 		container.Setup,
 		secret.SetupSecret,
+		zone.Setup,
+		recordset.Setup,
 	} {
 		if err := setup(mgr, l, rl, poll); err != nil {
 			return err

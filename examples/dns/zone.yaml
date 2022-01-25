@@ -1,0 +1,12 @@
+apiVersion: dns.azure.crossplane.io/v1alpha1
+kind: Zone
+metadata:
+  name: examplecrossplane.online
+spec:
+  forProvider:
+    resourceGroupNameRef:
+      name: example
+    zoneType: Public
+    location: global
+  providerConfigRef:
+    name: example
