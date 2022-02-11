@@ -19,8 +19,8 @@ package fake
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/latest/redis/mgmt/redis/redisapi"
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
+	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis/redisapi"
 )
 
 var _ redisapi.ClientAPI = &MockClient{}
