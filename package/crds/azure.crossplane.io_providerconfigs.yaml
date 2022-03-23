@@ -45,6 +45,12 @@ spec:
           spec:
             description: A ProviderConfigSpec defines the desired state of a ProviderConfig.
             properties:
+              clientID:
+                description: ClientID is the user-assigned managed identity's ID when
+                  Credentials.Source is `InjectedIdentity`. If unset and Credentials.Source
+                  is `InjectedIdentity`, then a system-assigned managed identity is
+                  used.
+                type: string
               credentials:
                 description: Credentials required to authenticate to this provider.
                 properties:

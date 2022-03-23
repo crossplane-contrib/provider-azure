@@ -26,6 +26,12 @@ import (
 type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
+	// ClientID is the user-assigned managed identity's ID
+	// when Credentials.Source is `InjectedIdentity`. If unset and
+	// Credentials.Source is `InjectedIdentity`, then a system-assigned
+	// managed identity is used.
+	// +optional
+	ClientID *string `json:"clientID,omitempty"`
 }
 
 // ProviderCredentials required to authenticate.
