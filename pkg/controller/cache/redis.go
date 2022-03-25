@@ -81,11 +81,11 @@ type connector struct {
 }
 
 func (c connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
 	if err != nil {
 		return nil, errors.Wrap(err, errConnectFailed)
 	}
-	cl := redis.NewClient(creds[azure.CredentialsKeySubscriptionID])
+	cl := redis.NewClient(subscriptionID)
 	cl.Authorizer = auth
 	return &external{kube: c.kube, client: cl}, nil
 }

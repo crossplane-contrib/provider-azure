@@ -82,11 +82,11 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl, err := compute.NewAggregateClient(creds, auth)
+	cl, err := compute.NewAggregateClient(subscriptionID, auth)
 	if err != nil {
 		return nil, err
 	}

@@ -30,8 +30,17 @@ type ProviderConfigSpec struct {
 	// when Credentials.Source is `InjectedIdentity`. If unset and
 	// Credentials.Source is `InjectedIdentity`, then a system-assigned
 	// managed identity is used.
-	// +optional
+	// +kubebuilder:validation:Optional
 	ClientID *string `json:"clientID,omitempty"`
+	// ARMEndpoint is the Azure Resource Manager endpoint to use.
+	// Defaults to ARM public cloud endpoint.
+	// +kubebuilder:validation:Optional
+	ARMEndpoint *string `json:"armEndpoint,omitempty"`
+	// SubscriptionID is the Azure subscription ID to be used.
+	// If unset, subscription ID from Credentials will be used.
+	// Required if Credentials.Source is not Secret.
+	// +kubebuilder:validation:Optional
+	SubscriptionID *string `json:"subscriptionID,omitempty"`
 }
 
 // ProviderCredentials required to authenticate.

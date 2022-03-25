@@ -64,9 +64,11 @@ const (
 	errGetProvider               = "cannot get referenced Provider"
 	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef was supplied"
 	errUnmarshalCredentialSecret = "cannot unmarshal the data in credentials secret"
+	errClientCredentials         = "cannot get credentials"
 	errClientSecretAuth          = "failed to initialize Azure identity client secret credential"
 	errDefaultAuth               = "failed to initialize Azure identity default credential"
 	errFetchAccessToken          = "failed to get Azure identity access token"
+	errSubscriptionIDNotSet      = "subscription ID must be set in ProviderConfig when credential source is not Secret"
 )
 
 // A FieldOption determines how common Go types are translated to the types
@@ -98,68 +100,84 @@ const (
 
 // GetAuthInfo figures out how to connect to Azure API and returns the necessary
 // information to be used for controllers to construct their specific clients.
-func GetAuthInfo(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
+func GetAuthInfo(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) {
 	switch {
 	case mg.GetProviderConfigReference() != nil:
 		return UseProviderConfig(ctx, c, mg)
 	case mg.GetProviderReference() != nil:
 		return UseProvider(ctx, c, mg)
 	default:
-		return nil, nil, errors.New(errNeitherPCNorPGiven)
+		return "", nil, errors.New(errNeitherPCNorPGiven)
 	}
 }
 
 // UseProvider to return the necessary information to construct an Azure client.
 // Deprecated: Use UseProviderConfig
-func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (map[string]string, autorest.Authorizer, error) {
+func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) {
 	p := &v1alpha3.Provider{}
 	if err := c.Get(ctx, types.NamespacedName{Name: mg.GetProviderReference().Name}, p); err != nil {
-		return nil, nil, errors.Wrap(err, errGetProvider)
+		return "", nil, errors.Wrap(err, errGetProvider)
 	}
 
 	ref := p.Spec.CredentialsSecretRef
 	s := &corev1.Secret{}
 	if err := c.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: ref.Namespace}, s); err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 	m := map[string]string{}
 	if err := json.Unmarshal(s.Data[ref.Key], &m); err != nil {
-		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
+		return "", nil, errors.Wrap(err, errUnmarshalCredentialSecret)
 	}
 	a, err := clientSecretAuth(ctx, m)
-	return m, a, err
+	return m[CredentialsKeySubscriptionID], a, err
 }
 
 // UseProviderConfig to return the necessary information to construct an Azure
 // client.
-func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (map[string]string, autorest.Authorizer, error) {
+func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) {
 	pc := &v1beta1.ProviderConfig{}
 	t := resource.NewProviderConfigUsageTracker(c, &v1beta1.ProviderConfigUsage{})
 	if err := t.Track(ctx, mg); err != nil {
-		return nil, nil, errors.Wrap(err, errTrackProviderConfigUsage)
+		return "", nil, errors.Wrap(err, errTrackProviderConfigUsage)
 	}
 	if err := c.Get(ctx, types.NamespacedName{Name: mg.GetProviderConfigReference().Name}, pc); err != nil {
-		return nil, nil, errors.Wrap(err, errGetProviderConfig)
+		return "", nil, errors.Wrap(err, errGetProviderConfig)
 	}
 
-	data, err := resource.CommonCredentialExtractor(ctx, pc.Spec.Credentials.Source, c, pc.Spec.Credentials.CommonCredentialSelectors)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot get credentials")
-	}
-	m := map[string]string{}
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
-	}
 	var authorizer autorest.Authorizer
+	var err error
+	subscriptionID := ""
 	switch pc.Spec.Credentials.Source {
 	case xpv1.CredentialsSourceSecret:
+		m, err := getCredentialsMap(ctx, pc, c)
+		if err != nil {
+			return "", nil, err
+		}
+		subscriptionID = m[CredentialsKeySubscriptionID]
 		authorizer, err = clientSecretAuth(ctx, m)
 	case xpv1.CredentialsSourceInjectedIdentity:
-		authorizer, err = managedIdentityAuth(ctx, m, pc.Spec.ClientID)
+		if pc.Spec.SubscriptionID == nil || len(*pc.Spec.SubscriptionID) == 0 {
+			return "", nil, errors.New(errSubscriptionIDNotSet)
+		}
+		subscriptionID = *pc.Spec.SubscriptionID
+		authorizer, err = managedIdentityAuth(ctx, pc.Spec.ClientID, pc.Spec.ARMEndpoint)
 	default:
-		authorizer, err = defaultAuth(ctx, m)
+		if pc.Spec.SubscriptionID == nil || len(*pc.Spec.SubscriptionID) == 0 {
+			return "", nil, errors.New(errSubscriptionIDNotSet)
+		}
+		subscriptionID = *pc.Spec.SubscriptionID
+		authorizer, err = defaultAuth(ctx)
 	}
-	return m, authorizer, err
+	return subscriptionID, authorizer, err
+}
+
+func getCredentialsMap(ctx context.Context, pc *v1beta1.ProviderConfig, c client.Client) (map[string]string, error) {
+	data, err := resource.CommonCredentialExtractor(ctx, pc.Spec.Credentials.Source, c, pc.Spec.Credentials.CommonCredentialSelectors)
+	if err != nil {
+		return nil, errors.Wrap(err, errClientCredentials)
+	}
+	m := map[string]string{}
+	return m, errors.Wrap(json.Unmarshal(data, &m), errUnmarshalCredentialSecret)
 }
 
 func clientSecretAuth(ctx context.Context, m map[string]string) (autorest.Authorizer, error) {
@@ -170,10 +188,10 @@ func clientSecretAuth(ctx context.Context, m map[string]string) (autorest.Author
 	if err != nil {
 		return nil, errors.Wrap(err, errClientSecretAuth)
 	}
-	return fetchAccessToken(ctx, cred, m)
+	return fetchAccessToken(ctx, cred, m[CredentialsKeyResourceManagerEndpointURL])
 }
 
-func managedIdentityAuth(ctx context.Context, m map[string]string, clientID *string) (autorest.Authorizer, error) {
+func managedIdentityAuth(ctx context.Context, clientID, armEndpoint *string) (autorest.Authorizer, error) {
 	var opts *azidentity.ManagedIdentityCredentialOptions
 	// if user-assigned managed identity
 	if clientID != nil && len(*clientID) != 0 {
@@ -185,23 +203,20 @@ func managedIdentityAuth(ctx context.Context, m map[string]string, clientID *str
 	if err != nil {
 		return nil, errors.Wrap(err, errClientSecretAuth)
 	}
-	return fetchAccessToken(ctx, cred, m)
+	return fetchAccessToken(ctx, cred, to.String(armEndpoint))
 }
 
-func defaultAuth(ctx context.Context, m map[string]string) (autorest.Authorizer, error) {
-	cred, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
-		AuthorityHost: azidentity.AuthorityHost(m[CredentialsKeyActiveDirectoryEndpointURL]),
-		TenantID:      m[CredentialsKeyTenantID],
-	})
+func defaultAuth(ctx context.Context) (autorest.Authorizer, error) {
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return nil, errors.Wrap(err, errDefaultAuth)
 	}
-	return fetchAccessToken(ctx, cred, m)
+	return fetchAccessToken(ctx, cred, "")
 }
 
-func fetchAccessToken(ctx context.Context, cred azcore.TokenCredential, m map[string]string) (autorest.Authorizer, error) {
+func fetchAccessToken(ctx context.Context, cred azcore.TokenCredential, armEndpoint string) (autorest.Authorizer, error) {
 	token, err := cred.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: []string{endpointToScope(m[CredentialsKeyResourceManagerEndpointURL])},
+		Scopes: []string{endpointToScope(armEndpoint)},
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, errFetchAccessToken)

@@ -79,11 +79,11 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azureclients.GetAuthInfo(ctx, c.client, mg)
+	subscriptionID, auth, err := azureclients.GetAuthInfo(ctx, c.client, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl := azurenetwork.NewPublicIPAddressesClient(creds[azureclients.CredentialsKeySubscriptionID])
+	cl := azurenetwork.NewPublicIPAddressesClient(subscriptionID)
 	cl.Authorizer = auth
 	return &external{kube: c.client, client: cl}, nil
 }

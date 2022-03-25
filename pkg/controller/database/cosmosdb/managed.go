@@ -77,11 +77,11 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl := documentdb.NewDatabaseAccountsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl := documentdb.NewDatabaseAccountsClient(subscriptionID)
 	cl.Authorizer = auth
 	return &external{kube: c.kube, client: cl}, nil
 }
