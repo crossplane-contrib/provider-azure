@@ -81,6 +81,24 @@ type AKSClusterParameters struct {
 	// cluster.
 	// +optional
 	DisableRBAC bool `json:"disableRBAC,omitempty"`
+
+	// Identity is the managed identity configuration for the control-plane.
+	// +kubebuilder:validation:Required
+	Identity Identity `json:"identity"`
+}
+
+type Identity struct {
+	// Type specifies the type of the managed identity to be used by
+	// the control-plane. Allowed values are: `SystemAssigned` or
+	// `UserAssigned`.
+	// +required
+	// +kubebuilder:validation:Enum=SystemAssigned;UserAssigned
+	Type string `json:"type"`
+	// IdentityNames are the names of the user-assigned managed identity
+	// resources to be used by the control-plane.
+	// Required if Type is `UserAssigned`.
+	// +optional
+	IdentityNames []string `json:"identityNames,omitempty"`
 }
 
 // An AKSClusterSpec defines the desired state of a AKSCluster.

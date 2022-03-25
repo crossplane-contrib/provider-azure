@@ -45,6 +45,10 @@ spec:
           spec:
             description: A ProviderConfigSpec defines the desired state of a ProviderConfig.
             properties:
+              armEndpoint:
+                description: ARMEndpoint is the Azure Resource Manager endpoint to
+                  use. Defaults to ARM public cloud endpoint.
+                type: string
               clientID:
                 description: ClientID is the user-assigned managed identity's ID when
                   Credentials.Source is `InjectedIdentity`. If unset and Credentials.Source
@@ -103,6 +107,11 @@ spec:
                 required:
                 - source
                 type: object
+              subscriptionID:
+                description: SubscriptionID is the Azure subscription ID to be used.
+                  If unset, subscription ID from Credentials will be used. Required
+                  if Credentials.Source is not Secret.
+                type: string
             required:
             - credentials
             type: object

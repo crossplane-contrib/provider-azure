@@ -74,6 +74,28 @@ spec:
                   to the Kubernetes API when managing containers after creating the
                   cluster.
                 type: string
+              identity:
+                description: Identity is the managed identity configuration for the
+                  control-plane.
+                properties:
+                  identityNames:
+                    description: IdentityNames are the names of the user-assigned
+                      managed identity resources to be used by the control-plane.
+                      Required if Type is `UserAssigned`.
+                    items:
+                      type: string
+                    type: array
+                  type:
+                    description: 'Type specifies the type of the managed identity
+                      to be used by the control-plane. Allowed values are: `SystemAssigned`
+                      or `UserAssigned`.'
+                    enum:
+                    - SystemAssigned
+                    - UserAssigned
+                    type: string
+                required:
+                - type
+                type: object
               location:
                 description: Location is the Azure location that the cluster will
                   be created in
@@ -193,6 +215,7 @@ spec:
                 - namespace
                 type: object
             required:
+            - identity
             - location
             - version
             type: object
