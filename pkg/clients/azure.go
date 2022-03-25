@@ -32,11 +32,12 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
@@ -86,16 +87,12 @@ const (
 
 // Credentials Secret content is a json whose keys are below.
 const (
-	CredentialsKeyClientID                       = "clientId"
-	CredentialsKeyClientSecret                   = "clientSecret"
-	CredentialsKeyTenantID                       = "tenantId"
-	CredentialsKeySubscriptionID                 = "subscriptionId"
-	CredentialsKeyActiveDirectoryEndpointURL     = "activeDirectoryEndpointUrl"
-	CredentialsKeyResourceManagerEndpointURL     = "resourceManagerEndpointUrl"
-	CredentialsKeyActiveDirectoryGraphResourceID = "activeDirectoryGraphResourceId"
-	CredentialsKeySQLManagementEndpointURL       = "sqlManagementEndpointUrl"
-	CredentialsKeyGalleryEndpointURL             = "galleryEndpointUrl"
-	CredentialsManagementEndpointURL             = "managementEndpointUrl"
+	CredentialsKeyClientID                   = "clientId"
+	CredentialsKeyClientSecret               = "clientSecret"
+	CredentialsKeyTenantID                   = "tenantId"
+	CredentialsKeySubscriptionID             = "subscriptionId"
+	CredentialsKeyActiveDirectoryEndpointURL = "activeDirectoryEndpointUrl"
+	CredentialsKeyResourceManagerEndpointURL = "resourceManagerEndpointUrl"
 )
 
 // GetAuthInfo figures out how to connect to Azure API and returns the necessary
@@ -134,7 +131,7 @@ func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (str
 
 // UseProviderConfig to return the necessary information to construct an Azure
 // client.
-func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) {
+func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) { //nolint:gocyclo
 	pc := &v1beta1.ProviderConfig{}
 	t := resource.NewProviderConfigUsageTracker(c, &v1beta1.ProviderConfigUsage{})
 	if err := t.Track(ctx, mg); err != nil {
@@ -147,10 +144,10 @@ func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed
 	var authorizer autorest.Authorizer
 	var err error
 	subscriptionID := ""
-	switch pc.Spec.Credentials.Source {
+	switch pc.Spec.Credentials.Source { //nolint:exhaustive
 	case xpv1.CredentialsSourceSecret:
-		m, err := getCredentialsMap(ctx, pc, c)
-		if err != nil {
+		m, mErr := getCredentialsMap(ctx, pc, c)
+		if mErr != nil {
 			return "", nil, err
 		}
 		subscriptionID = m[CredentialsKeySubscriptionID]
@@ -373,7 +370,7 @@ func ToInt32Ptr(i int, o ...FieldOption) *int32 {
 }
 
 // ToInt32PtrFromIntPtr converts the supplied int pointer for use with the Azure Go SDK.
-func ToInt32PtrFromIntPtr(i *int, o ...FieldOption) *int32 {
+func ToInt32PtrFromIntPtr(i *int, _ ...FieldOption) *int32 {
 	if i == nil {
 		return nil
 	}
@@ -559,5 +556,5 @@ func endpointToScope(endpoint string) string {
 	if endpoint[len(endpoint)-1] != '/' {
 		endpoint += "/"
 	}
-	return string(endpoint) + defaultScope
+	return endpoint + defaultScope
 }

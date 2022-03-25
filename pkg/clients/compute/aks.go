@@ -130,12 +130,14 @@ func newManagedCluster(c *v1alpha3.AKSCluster, subscriptionID string) (container
 					Name:   to.StringPtr(AgentPoolProfileName),
 					Count:  &nodeCount,
 					VMSize: to.StringPtr(c.Spec.NodeVMSize),
+					Mode:   containerservice.AgentPoolModeSystem,
 				},
 			},
 			EnableRBAC: to.BoolPtr(!c.Spec.DisableRBAC),
 		},
+		Identity: &containerservice.ManagedClusterIdentity{},
 	}
-	switch containerservice.ResourceIdentityType(c.Spec.Identity.Type) {
+	switch containerservice.ResourceIdentityType(c.Spec.Identity.Type) { //nolint:exhaustive
 	case containerservice.ResourceIdentityTypeSystemAssigned:
 		p.Identity.Type = containerservice.ResourceIdentityTypeSystemAssigned
 	case containerservice.ResourceIdentityTypeUserAssigned:

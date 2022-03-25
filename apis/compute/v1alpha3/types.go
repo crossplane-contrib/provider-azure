@@ -87,6 +87,8 @@ type AKSClusterParameters struct {
 	Identity Identity `json:"identity"`
 }
 
+// Identity represents a system-assigned or user-assigned managed identities
+// for the control-plane of the AKS cluster.
 type Identity struct {
 	// Type specifies the type of the managed identity to be used by
 	// the control-plane. Allowed values are: `SystemAssigned` or

@@ -30,7 +30,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
-	"github.com/crossplane/crossplane-runtime/pkg/password"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
@@ -43,13 +42,11 @@ import (
 
 // Error strings.
 const (
-	errGenPassword      = "cannot generate service principal secret"
 	errNotAKSCluster    = "managed resource is not a AKSCluster"
 	errCreateAKSCluster = "cannot create AKSCluster"
 	errGetAKSCluster    = "cannot get AKSCluster"
 	errGetKubeConfig    = "cannot get AKSCluster kubeconfig"
 	errDeleteAKSCluster = "cannot delete AKSCluster"
-	errGetConnSecret    = "cannot get connection secret"
 )
 
 // SetupAKSCluster adds a controller that reconciles AKSClusters.
@@ -88,13 +85,12 @@ func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	if err != nil {
 		return nil, err
 	}
-	return &external{kube: c.client, client: cl, newPasswordFn: password.Generate}, nil
+	return &external{kube: c.client, client: cl}, nil
 }
 
 type external struct {
-	kube          client.Client
-	client        compute.AKSClient
-	newPasswordFn func() (password string, err error)
+	kube   client.Client
+	client compute.AKSClient
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {

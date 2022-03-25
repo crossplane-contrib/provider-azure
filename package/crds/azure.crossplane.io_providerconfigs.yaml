@@ -103,6 +103,7 @@ spec:
                     - Secret
                     - Environment
                     - Filesystem
+                    - InjectedIdentity
                     type: string
                 required:
                 - source
