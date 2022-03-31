@@ -43,6 +43,11 @@ func (mg *CosmosDBAccount) GetProviderReference() *xpv1.Reference {
 	return mg.Spec.ProviderReference
 }
 
+// GetPublishConnectionDetailsTo of this CosmosDBAccount.
+func (mg *CosmosDBAccount) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return mg.Spec.PublishConnectionDetailsTo
+}
+
 // GetWriteConnectionSecretToReference of this CosmosDBAccount.
 func (mg *CosmosDBAccount) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
@@ -69,6 +74,11 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *CosmosDBAccount) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
+}
+
+// SetPublishConnectionDetailsTo of this CosmosDBAccount.
+func (mg *CosmosDBAccount) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	mg.Spec.PublishConnectionDetailsTo = r
 }
 
 // SetWriteConnectionSecretToReference of this CosmosDBAccount.
@@ -99,6 +109,11 @@ func (mg *MySQLServerFirewallRule) GetProviderReference() *xpv1.Reference {
 	return mg.Spec.ProviderReference
 }
 
+// GetPublishConnectionDetailsTo of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return mg.Spec.PublishConnectionDetailsTo
+}
+
 // GetWriteConnectionSecretToReference of this MySQLServerFirewallRule.
 func (mg *MySQLServerFirewallRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
@@ -125,6 +140,11 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *MySQLServerFirewallRule) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
+}
+
+// SetPublishConnectionDetailsTo of this MySQLServerFirewallRule.
+func (mg *MySQLServerFirewallRule) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	mg.Spec.PublishConnectionDetailsTo = r
 }
 
 // SetWriteConnectionSecretToReference of this MySQLServerFirewallRule.
@@ -155,6 +175,11 @@ func (mg *MySQLServerVirtualNetworkRule) GetProviderReference() *xpv1.Reference 
 	return mg.Spec.ProviderReference
 }
 
+// GetPublishConnectionDetailsTo of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return mg.Spec.PublishConnectionDetailsTo
+}
+
 // GetWriteConnectionSecretToReference of this MySQLServerVirtualNetworkRule.
 func (mg *MySQLServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
@@ -181,6 +206,11 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *MySQLServerVirtualNetworkRule) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
+}
+
+// SetPublishConnectionDetailsTo of this MySQLServerVirtualNetworkRule.
+func (mg *MySQLServerVirtualNetworkRule) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	mg.Spec.PublishConnectionDetailsTo = r
 }
 
 // SetWriteConnectionSecretToReference of this MySQLServerVirtualNetworkRule.
@@ -211,6 +241,11 @@ func (mg *PostgreSQLServerFirewallRule) GetProviderReference() *xpv1.Reference {
 	return mg.Spec.ProviderReference
 }
 
+// GetPublishConnectionDetailsTo of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return mg.Spec.PublishConnectionDetailsTo
+}
+
 // GetWriteConnectionSecretToReference of this PostgreSQLServerFirewallRule.
 func (mg *PostgreSQLServerFirewallRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
@@ -237,6 +272,11 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *PostgreSQLServerFirewallRule) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
+}
+
+// SetPublishConnectionDetailsTo of this PostgreSQLServerFirewallRule.
+func (mg *PostgreSQLServerFirewallRule) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	mg.Spec.PublishConnectionDetailsTo = r
 }
 
 // SetWriteConnectionSecretToReference of this PostgreSQLServerFirewallRule.
@@ -267,6 +307,11 @@ func (mg *PostgreSQLServerVirtualNetworkRule) GetProviderReference() *xpv1.Refer
 	return mg.Spec.ProviderReference
 }
 
+// GetPublishConnectionDetailsTo of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return mg.Spec.PublishConnectionDetailsTo
+}
+
 // GetWriteConnectionSecretToReference of this PostgreSQLServerVirtualNetworkRule.
 func (mg *PostgreSQLServerVirtualNetworkRule) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
@@ -293,6 +338,11 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *PostgreSQLServerVirtualNetworkRule) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
+}
+
+// SetPublishConnectionDetailsTo of this PostgreSQLServerVirtualNetworkRule.
+func (mg *PostgreSQLServerVirtualNetworkRule) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	mg.Spec.PublishConnectionDetailsTo = r
 }
 
 // SetWriteConnectionSecretToReference of this PostgreSQLServerVirtualNetworkRule.
