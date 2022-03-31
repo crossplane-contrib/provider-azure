@@ -43,6 +43,11 @@ func (mg *KeyVaultSecret) GetProviderReference() *xpv1.Reference {
 	return mg.Spec.ProviderReference
 }
 
+// GetPublishConnectionDetailsTo of this KeyVaultSecret.
+func (mg *KeyVaultSecret) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return mg.Spec.PublishConnectionDetailsTo
+}
+
 // GetWriteConnectionSecretToReference of this KeyVaultSecret.
 func (mg *KeyVaultSecret) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return mg.Spec.WriteConnectionSecretToReference
@@ -69,6 +74,11 @@ Deprecated: Use SetProviderConfigReference.
 */
 func (mg *KeyVaultSecret) SetProviderReference(r *xpv1.Reference) {
 	mg.Spec.ProviderReference = r
+}
+
+// SetPublishConnectionDetailsTo of this KeyVaultSecret.
+func (mg *KeyVaultSecret) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	mg.Spec.PublishConnectionDetailsTo = r
 }
 
 // SetWriteConnectionSecretToReference of this KeyVaultSecret.
