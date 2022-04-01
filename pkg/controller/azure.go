@@ -17,12 +17,9 @@ limitations under the License.
 package controller
 
 import (
-	"time"
-
-	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/controller"
 
 	"github.com/crossplane/provider-azure/pkg/controller/cache"
 	"github.com/crossplane/provider-azure/pkg/controller/compute"
@@ -48,8 +45,8 @@ import (
 )
 
 // Setup Azure controllers.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
-	for _, setup := range []func(ctrl.Manager, logging.Logger, workqueue.RateLimiter, time.Duration) error{
+func Setup(mgr ctrl.Manager, o controller.Options) error {
+	for _, setup := range []func(ctrl.Manager, controller.Options) error{
 		cache.SetupRedis,
 		compute.SetupAKSCluster,
 		mysqlserver.Setup,
@@ -71,9 +68,9 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll ti
 		zone.Setup,
 		recordset.Setup,
 	} {
-		if err := setup(mgr, l, rl, poll); err != nil {
+		if err := setup(mgr, o); err != nil {
 			return err
 		}
 	}
-	return config.Setup(mgr, l, rl)
+	return config.Setup(mgr, o)
 }
