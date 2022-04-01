@@ -28,6 +28,7 @@ import (
 	keyvaultv1alpha1 "github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
 	networkv1alpha3 "github.com/crossplane/provider-azure/apis/network/v1alpha3"
 	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
+	azurev1alpha1 "github.com/crossplane/provider-azure/apis/v1alpha1"
 	azurev1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
 	azurev1beta1 "github.com/crossplane/provider-azure/apis/v1beta1"
 )
@@ -35,6 +36,7 @@ import (
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
+		azurev1alpha1.SchemeBuilder.AddToScheme,
 		azurev1alpha3.SchemeBuilder.AddToScheme,
 		azurev1beta1.SchemeBuilder.AddToScheme,
 		cachev1beta1.SchemeBuilder.AddToScheme,
