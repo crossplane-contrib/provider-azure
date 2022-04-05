@@ -8,7 +8,7 @@ PLATFORMS ?= linux_amd64 linux_arm64
 
 # kind-related versions
 KIND_VERSION ?= v0.11.1
-KIND_NODE_IMAGE_TAG ?= v1.19.11
+KIND_NODE_IMAGE_TAG ?= v1.23.1
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse

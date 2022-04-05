@@ -137,13 +137,13 @@ echo "${PVC_YAML}" | "${KUBECTL}" create -f -
 
 # install crossplane from master channel
 echo_step "installing crossplane from master channel"
-"${HELM3}" repo add crossplane-master https://charts.crossplane.io/master/
-chart_version="$("${HELM3}" search repo crossplane-master/crossplane --devel | awk 'FNR == 2 {print $2}')"
-echo_info "using crossplane version ${chart_version}"
+"${HELM3}" repo add crossplane-stable https://charts.crossplane.io/stable
+# chart_version="$("${HELM3}" search repo crossplane-master/crossplane --devel | awk 'FNR == 2 {print $2}')"
+echo_info "using crossplane version 1.6.4"
 echo
 # we replace empty dir with our PVC so that the /cache dir in the kind node
 # container is exposed to the crossplane pod
-"${HELM3}" install crossplane --namespace crossplane-system crossplane-master/crossplane --version ${chart_version} --devel --wait --set packageCache.pvc=package-cache
+"${HELM3}" install crossplane --namespace crossplane-system crossplane-stable/crossplane --version 1.6.4 --wait --set packageCache.pvc=package-cache
 
 # ----------- integration tests
 echo_step "--- INTEGRATION TESTS ---"

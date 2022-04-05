@@ -10,7 +10,7 @@ on:
 
 env:
   # Common versions
-  GO_VERSION: '1.16'
+  GO_VERSION: '1.17'
   GOLANGCI_VERSION: 'v1.31'
   DOCKER_BUILDX_VERSION: 'v0.4.2'
 
@@ -75,6 +75,7 @@ jobs:
         uses: golangci/golangci-lint-action@v2
         with:
           version: ${{ env.GOLANGCI_VERSION }}
+          skip-go-installation: true
 
   check-diff:
     runs-on: ubuntu-18.04
