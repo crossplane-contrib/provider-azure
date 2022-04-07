@@ -18,25 +18,24 @@ package recordset
 
 import (
 	"context"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/dns/mgmt/2018-05-01/dns"
 	"github.com/pkg/errors"
-	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/connection"
+	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
-	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane/provider-azure/apis/dns/v1alpha1"
+	dnsv1alpha1 "github.com/crossplane/provider-azure/apis/dns/v1alpha1"
+	"github.com/crossplane/provider-azure/apis/v1alpha1"
 	azureclients "github.com/crossplane/provider-azure/pkg/clients"
 	dnsclients "github.com/crossplane/provider-azure/pkg/clients/dns"
+	"github.com/crossplane/provider-azure/pkg/features"
 )
 
 // Error strings.
@@ -49,23 +48,27 @@ const (
 )
 
 // Setup adds a controller that reconciles DNS RecordSets.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter, poll time.Duration) error {
-	name := managed.ControllerName(v1alpha1.RecordSetGroupKind)
+func Setup(mgr ctrl.Manager, o controller.Options) error {
+	name := managed.ControllerName(dnsv1alpha1.RecordSetGroupKind)
+
+	cps := []managed.ConnectionPublisher{managed.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme())}
+	if o.Features.Enabled(features.EnableAlphaExternalSecretStores) {
+		cps = append(cps, connection.NewDetailsManager(mgr.GetClient(), v1alpha1.StoreConfigGroupVersionKind))
+	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
-		WithOptions(controller.Options{
-			RateLimiter: ratelimiter.NewDefaultManagedRateLimiter(rl),
-		}).
-		For(&v1alpha1.RecordSet{}).
+		WithOptions(o.ForControllerRuntime()).
+		For(&dnsv1alpha1.RecordSet{}).
 		Complete(managed.NewReconciler(mgr,
-			resource.ManagedKind(v1alpha1.RecordSetGroupVersionKind),
+			resource.ManagedKind(dnsv1alpha1.RecordSetGroupVersionKind),
 			managed.WithConnectionPublishers(),
 			managed.WithExternalConnecter(&connecter{client: mgr.GetClient()}),
 			managed.WithReferenceResolver(managed.NewAPISimpleReferenceResolver(mgr.GetClient())),
-			managed.WithPollInterval(poll),
-			managed.WithLogger(l.WithValues("controller", name)),
-			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name)))))
+			managed.WithPollInterval(o.PollInterval),
+			managed.WithLogger(o.Logger.WithValues("controller", name)),
+			managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
+			managed.WithConnectionPublishers(cps...)))
 }
 
 type connecter struct {
@@ -89,7 +92,7 @@ type external struct {
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	r, ok := mg.(*v1alpha1.RecordSet)
+	r, ok := mg.(*dnsv1alpha1.RecordSet)
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotDNSRecordSet)
 	}
@@ -121,7 +124,7 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	r, ok := mg.(*v1alpha1.RecordSet)
+	r, ok := mg.(*dnsv1alpha1.RecordSet)
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotDNSRecordSet)
 	}
@@ -130,7 +133,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	r, ok := mg.(*v1alpha1.RecordSet)
+	r, ok := mg.(*dnsv1alpha1.RecordSet)
 	if !ok {
 		return managed.ExternalUpdate{}, errors.New(errNotDNSRecordSet)
 	}
@@ -146,7 +149,7 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	r, ok := mg.(*v1alpha1.RecordSet)
+	r, ok := mg.(*dnsv1alpha1.RecordSet)
 	if !ok {
 		return errors.New(errNotDNSRecordSet)
 	}
