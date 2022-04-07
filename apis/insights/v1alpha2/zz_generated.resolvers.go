@@ -19,13 +19,10 @@ package v1alpha2
 
 import (
 	"context"
-
+	reference "github.com/crossplane/crossplane-runtime/pkg/reference"
+	v1alpha2 "github.com/crossplane/provider-azure/apis/azure/v1alpha2"
 	errors "github.com/pkg/errors"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
-
-	reference "github.com/crossplane/crossplane-runtime/pkg/reference"
-
-	v1alpha2 "github.com/crossplane/provider-azure/apis/azure/v1alpha2"
 )
 
 // ResolveReferences of this MonitorMetricAlert.

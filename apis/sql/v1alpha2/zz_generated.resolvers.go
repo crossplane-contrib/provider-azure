@@ -19,15 +19,12 @@ package v1alpha2
 
 import (
 	"context"
-
-	errors "github.com/pkg/errors"
-	client "sigs.k8s.io/controller-runtime/pkg/client"
-
 	reference "github.com/crossplane/crossplane-runtime/pkg/reference"
-
 	v1alpha2 "github.com/crossplane/provider-azure/apis/azure/v1alpha2"
 	v1alpha21 "github.com/crossplane/provider-azure/apis/keyvault/v1alpha2"
 	rconfig "github.com/crossplane/provider-azure/apis/rconfig"
+	errors "github.com/pkg/errors"
+	client "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ResolveReferences of this MSSQLServer.
