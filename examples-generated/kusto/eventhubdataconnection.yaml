@@ -1,0 +1,21 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: kusto.azure.jet.crossplane.io/v1alpha1
+#kind: EventHubDataConnection
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    clusterName: kustocluster
+#    consumerGroup: acceptanceTestEventHubConsumerGroup
+#    dataFormat: JSON
+#    databaseName: my-kusto-database
+#    eventhubId: ${azurerm_eventhub.eventhub.id}
+#    location: West Europe
+#    mappingRuleName: my-table-mapping
+#    name: my-kusto-eventhub-data-connection
+#    resourceGroupNameRef:
+#      name: example
+#    tableName: my-table
+#  providerConfigRef:
+#    name: example

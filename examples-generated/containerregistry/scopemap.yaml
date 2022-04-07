@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: containerregistry.azure.jet.crossplane.io/v1alpha1
+#kind: ScopeMap
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    actions:
+#    - repositories/repo1/content/read
+#    - repositories/repo1/content/write
+#    containerRegistryName: containerRegistry1
+#    name: example-scope-map
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

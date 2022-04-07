@@ -1,0 +1,36 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datafactory.azure.jet.crossplane.io/v1alpha1
+#kind: LinkedServiceAzureDatabricks
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    adbDomain: https://${azurerm_databricks_workspace.example.workspace_url}
+#    dataFactoryName: example
+#    description: ADB Linked Service via MSI
+#    msiWorkSpaceResourceId: ${azurerm_databricks_workspace.example.id}
+#    name: ADBLinkedServiceViaMSI
+#    newClusterConfig:
+#    - clusterVersion: 5.5.x-gpu-scala2.11
+#      customTags:
+#        custom_tag1: sct_value_1
+#        custom_tag2: sct_value_2
+#      driverNodeType: Standard_NC12
+#      initScripts:
+#      - init.sh
+#      - init2.sh
+#      logDestination: dbfs:/logs
+#      maxNumberOfWorkers: 5
+#      minNumberOfWorkers: 1
+#      nodeType: Standard_NC12
+#      sparkConfig:
+#        config1: value1
+#        config2: value2
+#      sparkEnvironmentVariables:
+#        envVar1: value1
+#        envVar2: value2
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

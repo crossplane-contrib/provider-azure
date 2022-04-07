@@ -1,0 +1,37 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: compute.azure.jet.crossplane.io/v1alpha1
+#kind: WindowsVirtualMachineScaleSet
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    adminPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    adminUsername: adminuser
+#    instances: 1
+#    location: West Europe
+#    name: example-vmss
+#    networkInterface:
+#    - ipConfiguration:
+#      - name: internal
+#        primary: true
+#        subnetIdRef:
+#          name: example
+#      name: example
+#      primary: true
+#    osDisk:
+#    - caching: ReadWrite
+#      storageAccountType: Standard_LRS
+#    resourceGroupNameRef:
+#      name: example
+#    sku: Standard_F2
+#    sourceImageReference:
+#    - offer: WindowsServer
+#      publisher: MicrosoftWindowsServer
+#      sku: 2016-Datacenter-Server-Core
+#      version: latest
+#  providerConfigRef:
+#    name: example

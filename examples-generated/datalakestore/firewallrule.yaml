@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datalakestore.azure.jet.crossplane.io/v1alpha1
+#kind: FirewallRule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    accountName: consumptiondatalake
+#    endIpAddress: 2.3.4.5
+#    name: office-ip-range
+#    resourceGroupNameRef:
+#      name: example
+#    startIpAddress: 1.2.3.4
+#  providerConfigRef:
+#    name: example

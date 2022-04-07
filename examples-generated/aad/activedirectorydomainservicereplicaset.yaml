@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: aad.azure.jet.crossplane.io/v1alpha1
+#kind: ActiveDirectoryDomainServiceReplicaSet
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    domainServiceId: ${azurerm_active_directory_domain_service.example.id}
+#    location: West Europe
+#    subnetIdRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

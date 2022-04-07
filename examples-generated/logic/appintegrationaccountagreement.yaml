@@ -1,0 +1,24 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: logic.azure.jet.crossplane.io/v1alpha1
+#kind: AppIntegrationAccountAgreement
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    agreementType: AS2
+#    content: ${file("testdata/integration_account_agreement_content_as2.json")}
+#    guestIdentity:
+#    - qualifier: AS2Identity
+#      value: FabrikamDC
+#    guestPartnerName: example-iap
+#    hostIdentity:
+#    - qualifier: AS2Identity
+#      value: FabrikamNY
+#    hostPartnerName: example-iap
+#    integrationAccountName: example-ia
+#    name: example-agreement
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

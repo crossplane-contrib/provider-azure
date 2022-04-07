@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: cosmosdb.azure.jet.crossplane.io/v1alpha2
+#kind: Table
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    accountNameRef:
+#      name: example
+#    resourceGroupNameRef:
+#      name: example
+#    throughput: 400
+#  providerConfigRef:
+#    name: example

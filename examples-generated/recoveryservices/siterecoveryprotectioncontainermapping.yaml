@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: recoveryservices.azure.jet.crossplane.io/v1alpha1
+#kind: SiteRecoveryProtectionContainerMapping
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: container-mapping
+#    recoveryFabricName: primary-fabric
+#    recoveryReplicationPolicyId: ${azurerm_site_recovery_replication_policy.policy.id}
+#    recoverySourceProtectionContainerName: protection-container
+#    recoveryTargetProtectionContainerId: ${azurerm_site_recovery_protection_container.secondary.id}
+#    recoveryVaultName: example_recovery_vault
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: batch.azure.jet.crossplane.io/v1alpha1
+#kind: Account
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: testbatchaccount
+#    poolAllocationMode: BatchService
+#    resourceGroupNameRef:
+#      name: example
+#    storageAccountId: ${azurerm_storage_account.example.id}
+#    tags:
+#      env: test
+#  providerConfigRef:
+#    name: example

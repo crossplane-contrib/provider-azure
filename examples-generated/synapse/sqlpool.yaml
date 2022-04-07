@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: synapse.azure.jet.crossplane.io/v1alpha1
+#kind: SQLPool
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    createMode: Default
+#    name: examplesqlpool
+#    skuName: DW100c
+#    synapseWorkspaceId: ${azurerm_synapse_workspace.example.id}
+#  providerConfigRef:
+#    name: example

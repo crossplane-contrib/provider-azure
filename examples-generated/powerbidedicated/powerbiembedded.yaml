@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: powerbidedicated.azure.jet.crossplane.io/v1alpha1
+#kind: PowerBIEmbedded
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    administrators:
+#    - azsdktest@microsoft.com
+#    location: West Europe
+#    name: examplepowerbi
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: A1
+#  providerConfigRef:
+#    name: example

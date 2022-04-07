@@ -1,14 +1,16 @@
-apiVersion: network.azure.crossplane.io/v1alpha3
+apiVersion: network.azure.jet.crossplane.io/v1alpha2
 kind: VirtualNetwork
 metadata:
   name: example-vn
 spec:
-  resourceGroupNameRef:
-    name: example-rg
-  location: West US 2
-  properties:
+  forProvider:
+    location: "East US"
+    resourceGroupNameRef:
+      name: example
     addressSpace:
-      addressPrefixes:
-        - 10.2.0.0/16
+      - "10.0.0.0/16"
+    dnsServers:
+      - "10.0.0.4"
+      - "10.0.0.5"
   providerConfigRef:
     name: example

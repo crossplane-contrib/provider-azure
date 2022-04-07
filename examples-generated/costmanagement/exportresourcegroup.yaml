@@ -1,0 +1,23 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: costmanagement.azure.jet.crossplane.io/v1alpha1
+#kind: ExportResourceGroup
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    deliveryInfo:
+#    - containerName: examplecontainer
+#      rootFolderPath: /root/updated
+#      storageAccountId: ${azurerm_storage_account.example.id}
+#    name: example
+#    query:
+#    - timeFrame: WeekToDate
+#      type: Usage
+#    recurrencePeriodEnd: "2020-09-18T00:00:00Z"
+#    recurrencePeriodStart: "2020-08-18T00:00:00Z"
+#    recurrenceType: Monthly
+#    resourceGroupIdRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

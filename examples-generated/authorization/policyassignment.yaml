@@ -1,0 +1,25 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: authorization.azure.jet.crossplane.io/v1alpha1
+#kind: PolicyAssignment
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    description: Policy Assignment created via an Acceptance Test
+#    displayName: My Example Policy Assignment
+#    metadata: |2
+#          {
+#          "category": "General"
+#          }
+#    name: example-policy-assignment
+#    parameters: |
+#      {
+#        "allowedLocations": {
+#          "value": [ "West Europe" ]
+#        }
+#      }
+#    policyDefinitionId: ${azurerm_policy_definition.example.id}
+#    scope: ${azurerm_resource_group.example.id}
+#  providerConfigRef:
+#    name: example

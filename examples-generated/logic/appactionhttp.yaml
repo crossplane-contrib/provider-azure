@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: logic.azure.jet.crossplane.io/v1alpha1
+#kind: AppActionHTTP
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    logicAppId: ${azurerm_logic_app_workflow.example.id}
+#    method: GET
+#    name: webhook
+#    uri: http://example.com/some-webhook
+#  providerConfigRef:
+#    name: example

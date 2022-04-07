@@ -1,0 +1,42 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha1
+#kind: FrontDoor
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    backendPool:
+#    - backend:
+#      - address: www.bing.com
+#        hostHeader: www.bing.com
+#        httpPort: 80
+#        httpsPort: 443
+#      healthProbeName: exampleHealthProbeSetting1
+#      loadBalancingName: exampleLoadBalancingSettings1
+#      name: exampleBackendBing
+#    backendPoolHealthProbe:
+#    - name: exampleHealthProbeSetting1
+#    backendPoolLoadBalancing:
+#    - name: exampleLoadBalancingSettings1
+#    enforceBackendPoolsCertificateNameCheck: false
+#    frontendEndpoint:
+#    - hostName: example-FrontDoor.azurefd.net
+#      name: exampleFrontendEndpoint1
+#    name: example-FrontDoor
+#    resourceGroupNameRef:
+#      name: example
+#    routingRule:
+#    - acceptedProtocols:
+#      - Http
+#      - Https
+#      forwardingConfiguration:
+#      - backendPoolName: exampleBackendBing
+#        forwardingProtocol: MatchRequest
+#      frontendEndpoints:
+#      - exampleFrontendEndpoint1
+#      name: exampleRoutingRule1
+#      patternsToMatch:
+#      - /*
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbformariadb.azure.jet.crossplane.io/v1alpha1
+#kind: Database
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    charset: utf8
+#    collation: utf8_general_ci
+#    name: mariadb_database
+#    resourceGroupNameRef:
+#      name: example
+#    serverName: example-mariadb-server
+#  providerConfigRef:
+#    name: example

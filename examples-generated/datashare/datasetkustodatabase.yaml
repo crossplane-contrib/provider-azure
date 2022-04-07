@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datashare.azure.jet.crossplane.io/v1alpha1
+#kind: DataSetKustoDatabase
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    kustoDatabaseId: ${azurerm_kusto_database.example.id}
+#    name: example-dskd
+#    shareId: ${azurerm_data_share.example.id}
+#  providerConfigRef:
+#    name: example

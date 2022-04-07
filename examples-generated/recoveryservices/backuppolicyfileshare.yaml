@@ -1,0 +1,43 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: recoveryservices.azure.jet.crossplane.io/v1alpha1
+#kind: BackupPolicyFileShare
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    backup:
+#    - frequency: Daily
+#      time: "23:00"
+#    name: tfex-recovery-vault-policy
+#    recoveryVaultName: example_recovery_vault
+#    resourceGroupNameRef:
+#      name: example
+#    retentionDaily:
+#    - count: 10
+#    retentionMonthly:
+#    - count: 7
+#      weekdays:
+#      - Sunday
+#      - Wednesday
+#      weeks:
+#      - First
+#      - Last
+#    retentionWeekly:
+#    - count: 7
+#      weekdays:
+#      - Sunday
+#      - Wednesday
+#      - Friday
+#      - Saturday
+#    retentionYearly:
+#    - count: 7
+#      months:
+#      - January
+#      weekdays:
+#      - Sunday
+#      weeks:
+#      - Last
+#    timezone: UTC
+#  providerConfigRef:
+#    name: example

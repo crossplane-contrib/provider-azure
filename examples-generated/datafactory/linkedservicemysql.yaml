@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datafactory.azure.jet.crossplane.io/v1alpha1
+#kind: LinkedServiceMySQL
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    connectionString: Server=test;Port=3306;Database=test;User=test;SSLMode=1;UseSystemTrustStore=0;Password=test
+#    dataFactoryName: example
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: sql.azure.jet.crossplane.io/v1alpha1
+#kind: MSSQLDatabaseExtendedAuditingPolicy
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    databaseId: ${azurerm_mssql_database.example.id}
+#    retentionInDays: 6
+#    storageAccountAccessKeyIsSecondary: false
+#    storageAccountAccessKeySecretRef:
+#      key: attribute.primary_access_key
+#      name: example-storage-account
+#      namespace: crossplane-system
+#    storageEndpoint: ${azurerm_storage_account.example.primary_blob_endpoint}
+#  providerConfigRef:
+#    name: example

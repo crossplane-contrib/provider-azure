@@ -1,0 +1,38 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha1
+#kind: FrontdoorRulesEngine
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    frontdoorName: example-FrontDoor
+#    name: exampleRulesEngineConfig1
+#    resourceGroupNameRef:
+#      name: example
+#    rule:
+#    - action:
+#      - response_header_actions:
+#        - header_action_type: Append
+#          header_name: X-TEST-HEADER
+#          value: Append Header Rule
+#      name: debuggingoutput
+#      priority: 1
+#    - action:
+#      - responseHeader:
+#        - headerActionType: Overwrite
+#          headerName: Access-Control-Allow-Origin
+#          value: '*'
+#        - headerActionType: Overwrite
+#          headerName: Access-Control-Allow-Credentials
+#          value: "true"
+#      matchCondition:
+#      - operator: Equal
+#        value:
+#        - GET
+#        - POST
+#        variable: RequestMethod
+#      name: overwriteorigin
+#      priority: 2
+#  providerConfigRef:
+#    name: example

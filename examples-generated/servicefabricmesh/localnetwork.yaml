@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: servicefabricmesh.azure.jet.crossplane.io/v1alpha1
+#kind: LocalNetwork
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: example-mesh-local-network
+#    networkAddressPrefix: 10.0.0.0/22
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

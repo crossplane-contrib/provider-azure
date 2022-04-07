@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha1
+#kind: PrivateDNSTXTRecord
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: test
+#    record:
+#    - value: v=spf1 mx ~all
+#    resourceGroupNameRef:
+#      name: example
+#    ttl: 300
+#    zoneName: mydomain.com
+#  providerConfigRef:
+#    name: example

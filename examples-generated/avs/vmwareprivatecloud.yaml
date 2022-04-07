@@ -1,0 +1,27 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: avs.azure.jet.crossplane.io/v1alpha1
+#kind: VMwarePrivateCloud
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    internetConnectionEnabled: false
+#    location: West Europe
+#    managementCluster:
+#    - size: 3
+#    name: example-vmware-private-cloud
+#    networkSubnetCidr: 192.168.48.0/22
+#    nsxtPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: av36
+#    vcenterPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#  providerConfigRef:
+#    name: example

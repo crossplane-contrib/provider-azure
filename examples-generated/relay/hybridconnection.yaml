@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: relay.azure.jet.crossplane.io/v1alpha1
+#kind: HybridConnection
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: acctestrnhc-%d
+#    relayNamespaceName: example-relay
+#    requiresClientAuthorization: false
+#    resourceGroupNameRef:
+#      name: example
+#    userMetadata: testmetadata
+#  providerConfigRef:
+#    name: example

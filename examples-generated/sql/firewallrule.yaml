@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: sql.azure.jet.crossplane.io/v1alpha1
+#kind: FirewallRule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    endIpAddress: 10.0.17.62
+#    name: FirewallRule1
+#    resourceGroupNameRef:
+#      name: example
+#    serverName: ${azurerm_sql_server.example.name}
+#    startIpAddress: 10.0.17.62
+#  providerConfigRef:
+#    name: example

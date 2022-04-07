@@ -1,0 +1,19 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: operationalinsights.azure.jet.crossplane.io/v1alpha1
+#kind: LogAnalyticsSolution
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    plan:
+#    - product: OMSGallery/ContainerInsights
+#      publisher: Microsoft
+#    resourceGroupNameRef:
+#      name: example
+#    solutionName: ContainerInsights
+#    workspaceName: ${azurerm_log_analytics_workspace.example.name}
+#    workspaceResourceId: ${azurerm_log_analytics_workspace.example.id}
+#  providerConfigRef:
+#    name: example

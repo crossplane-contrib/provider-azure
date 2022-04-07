@@ -1,0 +1,20 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: media.azure.jet.crossplane.io/v1alpha1
+#kind: Transform
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    description: My transform description
+#    mediaServicesAccountName: examplemediaacc
+#    name: transform1
+#    output:
+#    - builtinPreset:
+#      - presetName: AACGoodQualityAudio
+#      onErrorAction: ContinueJob
+#      relativePriority: Normal
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

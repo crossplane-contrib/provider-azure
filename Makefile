@@ -1,14 +1,15 @@
 # ====================================================================================
 # Setup Project
 
-PROJECT_NAME := provider-azure
-PROJECT_REPO := github.com/crossplane/$(PROJECT_NAME)
+PROJECT_NAME := provider-jet-azure
+PROJECT_REPO := github.com/crossplane-contrib/$(PROJECT_NAME)
+
+export TERRAFORM_VERSION ?= 1.0.5
+export TERRAFORM_PROVIDER_SOURCE ?= hashicorp/azurerm
+export TERRAFORM_PROVIDER_VERSION ?= 2.78.0
 
 PLATFORMS ?= linux_amd64 linux_arm64
 
-# kind-related versions
-KIND_VERSION ?= v0.11.1
-KIND_NODE_IMAGE_TAG ?= v1.23.1
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse
@@ -32,10 +33,11 @@ NPROCS ?= 1
 # to half the number of CPU cores.
 GO_TEST_PARALLEL := $(shell echo $$(( $(NPROCS) / 2 )))
 
-GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/provider
-GO_LDFLAGS += -X $(GO_PROJECT)/pkg/version.Version=$(VERSION)
-GO_SUBDIRS += cmd pkg apis
+GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/provider $(GO_PROJECT)/cmd/generator
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.Version=$(VERSION)
+GO_SUBDIRS += cmd internal apis
 GO111MODULE = on
+GO_LINT_ARGS ?= --skip-files internal/controller/zz_setup.go --skip-files internal/controller/config/config.go --skip-files cmd/provider/main.go
 -include build/makelib/golang.mk
 
 # ====================================================================================
@@ -46,8 +48,8 @@ GO111MODULE = on
 # ====================================================================================
 # Setup Images
 
-DOCKER_REGISTRY = crossplane
-IMAGES = provider-azure provider-azure-controller
+DOCKER_REGISTRY ?= crossplane
+IMAGES = provider-jet-azure provider-jet-azure-controller
 -include build/makelib/image.mk
 
 # ====================================================================================
@@ -64,12 +66,12 @@ fallthrough: submodules
 	@echo Initial setup complete. Running make again . . .
 	@make
 
-# NOTE(hasheddan): the build submodule currently overrides XDG_CACHE_HOME in
-# order to force the Helm 3 to use the .work/helm directory. This causes Go on
-# Linux machines to use that directory as the build cache as well. We should
-# adjust this behavior in the build submodule because it is also causing Linux
-# users to duplicate their build cache, but for now we just make it easier to
-# identify its location in CI so that we cache between builds.
+# NOTE: the build submodule currently overrides XDG_CACHE_HOME in order to
+# force the Helm 3 to use the .work/helm directory. This causes Go on Linux
+# machines to use that directory as the build cache as well. We should adjust
+# this behavior in the build submodule because it is also causing Linux users
+# to duplicate their build cache, but for now we just make it easier to identify
+# its location in CI so that we cache between builds.
 go.cachedir:
 	@go env GOCACHE
 
@@ -79,25 +81,6 @@ cobertura:
 	@cat $(GO_TEST_OUTPUT)/coverage.txt | \
 		grep -v zz_generated.deepcopy | \
 		$(GOCOVER_COBERTURA) > $(GO_TEST_OUTPUT)/cobertura-coverage.xml
-
-# Ensure a PR is ready for review.
-reviewable: generate lint
-	@go mod tidy
-
-# Ensure branch is clean.
-check-diff: reviewable
-	@$(INFO) checking that branch is clean
-	@test -z "$$(git status --porcelain)" || $(FAIL)
-	@$(OK) branch is clean
-
-# integration tests
-e2e.run: test-integration
-
-# Run integration tests.
-test-integration: $(KIND) $(KUBECTL) $(HELM3)
-	@$(INFO) running integration tests using kind $(KIND_VERSION)
-	@KIND_NODE_IMAGE_TAG=${KIND_NODE_IMAGE_TAG} KIND_VERSION=${KIND_VERSION} $(ROOT_DIR)/cluster/local/integration_tests.sh || $(FAIL)
-	@$(OK) integration tests passed
 
 # Update the submodules, such as the common build scripts.
 submodules:
@@ -112,22 +95,49 @@ run: go.build
 	@# To see other arguments that can be provided, run the command with --help instead
 	$(GO_OUT_DIR)/provider --debug
 
-manifests:
-	@$(WARN) Deprecated. Please run make generate instead.
+go.build: prepare.azurerm
+reviewable: prepare.azurerm
+test: prepare.azurerm
+generate: codegen.pipeline
+build: prepare.azurerm
+provider-jet-azure.vendor: prepare.azurerm vendor
 
-# TODO(negz): This is only used for the AKS tests. Remove it once we test AKS
-# using unit tests.
-KUBEBUILDER_VERSION ?= 1.0.8
-KUBEBUILDER := $(TOOLS_HOST_DIR)/kubebuilder-$(KUBEBUILDER_VERSION)
-KUBEBUILDER_OS ?= $(GOHOSTOS)
-KUBEBUILDER_ARCH ?= $(GOHOSTARCH)
-TEST_ASSET_KUBE_APISERVER := $(KUBEBUILDER)/kube-apiserver
-TEST_ASSET_ETCD := $(KUBEBUILDER)/etcd
-export TEST_ASSET_KUBE_APISERVER TEST_ASSET_ETCD
+# must match Docker build file env. variable TERRAFORM_PROVIDER_AZURERM_VERSION in
+# cluster/images/provider-jet-azure-controller/Dockerfile
+prepare.azurerm:
+	@WORK_DIR=.work TERRAFORM_PROVIDER_VERSION=$(TERRAFORM_PROVIDER_VERSION) ./scripts/prepare_azurerm.sh
 
-test.init: $(KUBEBUILDER)
+codegen.pipeline: prepare.azurerm
+	@USE_INCLUDE_LIST=true go run cmd/generator/main.go
 
-.PHONY: cobertura reviewable submodules fallthrough test-integration run manifests crds.clean
+.PHONY: cobertura submodules fallthrough run crds.clean
+
+# ====================================================================================
+# Setup Terraform for fetching provider schema
+TERRAFORM := $(TOOLS_HOST_DIR)/terraform-$(TERRAFORM_VERSION)
+TERRAFORM_WORKDIR := $(WORK_DIR)/terraform
+TERRAFORM_PROVIDER_SCHEMA := config/schema.json
+
+$(TERRAFORM):
+	@$(INFO) installing terraform $(HOSTOS)-$(HOSTARCH)
+	@mkdir -p $(TOOLS_HOST_DIR)/tmp-terraform
+	@curl -fsSL https://releases.hashicorp.com/terraform/$(TERRAFORM_VERSION)/terraform_$(TERRAFORM_VERSION)_$(SAFEHOST_PLATFORM).zip -o $(TOOLS_HOST_DIR)/tmp-terraform/terraform.zip
+	@unzip $(TOOLS_HOST_DIR)/tmp-terraform/terraform.zip -d $(TOOLS_HOST_DIR)/tmp-terraform
+	@mv $(TOOLS_HOST_DIR)/tmp-terraform/terraform $(TERRAFORM)
+	@rm -fr $(TOOLS_HOST_DIR)/tmp-terraform
+	@$(OK) installing terraform $(HOSTOS)-$(HOSTARCH)
+
+$(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM)
+	@$(INFO) generating provider schema for $(TERRAFORM_PROVIDER_SOURCE) $(TERRAFORM_PROVIDER_VERSION)
+	@mkdir -p $(TERRAFORM_WORKDIR)
+	@echo '{"terraform":[{"required_providers":[{"provider":{"source":"'"$(TERRAFORM_PROVIDER_SOURCE)"'","version":"'"$(TERRAFORM_PROVIDER_VERSION)"'"}}],"required_version":"'"$(TERRAFORM_VERSION)"'"}]}' > $(TERRAFORM_WORKDIR)/main.tf.json
+	@$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) init > $(TERRAFORM_WORKDIR)/terraform-logs.txt 2>&1
+	@$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) providers schema -json=true > $(TERRAFORM_PROVIDER_SCHEMA) 2>> $(TERRAFORM_WORKDIR)/terraform-logs.txt
+	@$(OK) generating provider schema for $(TERRAFORM_PROVIDER_SOURCE) $(TERRAFORM_PROVIDER_VERSION)
+
+generate.init: $(TERRAFORM_PROVIDER_SCHEMA)
+
+.PHONY: $(TERRAFORM_PROVIDER_SCHEMA)
 
 # ====================================================================================
 # Special Targets
@@ -135,7 +145,6 @@ test.init: $(KUBEBUILDER)
 define CROSSPLANE_MAKE_HELP
 Crossplane Targets:
     cobertura             Generate a coverage report for cobertura applying exclusions on generated files.
-    reviewable            Ensure a PR is ready for review.
     submodules            Update the submodules, such as the common build scripts.
     run                   Run crossplane locally, out-of-cluster. Useful for development.
 
@@ -150,13 +159,3 @@ crossplane.help:
 help-special: crossplane.help
 
 .PHONY: crossplane.help help-special
-
-# TODO(negz): This is only used for the AKS tests. Remove it once we test AKS
-# using unit tests.
-$(KUBEBUILDER):
-	@$(INFO) installing kubebuilder $(KUBEBUILDER_VERSION)
-	@mkdir -p $(TOOLS_HOST_DIR)/tmp || $(FAIL)
-	@curl -fsSL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(KUBEBUILDER_VERSION)_$(KUBEBUILDER_OS)_$(KUBEBUILDER_ARCH).tar.gz | tar -xz -C $(TOOLS_HOST_DIR)/tmp  || $(FAIL)
-	@mv $(TOOLS_HOST_DIR)/tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(KUBEBUILDER_OS)_$(KUBEBUILDER_ARCH)/bin $(KUBEBUILDER) || $(FAIL)
-	@rm -fr $(TOOLS_HOST_DIR)/tmp
-	@$(OK) installing kubebuilder $(KUBEBUILDER_VERSION)

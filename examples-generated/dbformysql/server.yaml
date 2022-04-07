@@ -1,0 +1,29 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbformysql.azure.jet.crossplane.io/v1alpha1
+#kind: Server
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    administratorLogin: mysqladminun
+#    administratorLoginPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    autoGrowEnabled: true
+#    backupRetentionDays: 7
+#    geoRedundantBackupEnabled: false
+#    infrastructureEncryptionEnabled: false
+#    location: West Europe
+#    name: example-mysqlserver
+#    publicNetworkAccessEnabled: true
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: B_Gen5_2
+#    sslEnforcementEnabled: true
+#    sslMinimalTlsVersionEnforced: TLS1_2
+#    storageMb: 5120
+#    version: "5.7"
+#  providerConfigRef:
+#    name: example

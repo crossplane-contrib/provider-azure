@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: logic.azure.jet.crossplane.io/v1alpha1
+#kind: AppIntegrationAccountBatchConfiguration
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    batchGroupName: TestBatchGroup
+#    integrationAccountName: example-ia
+#    name: example-iabc
+#    releaseCriteria:
+#    - messageCount: 80
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

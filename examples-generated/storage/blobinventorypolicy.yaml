@@ -1,0 +1,21 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: storage.azure.jet.crossplane.io/v1alpha1
+#kind: BlobInventoryPolicy
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    rules:
+#    - filter:
+#      - blobTypes:
+#        - blockBlob
+#        includeBlobVersions: true
+#        includeSnapshots: true
+#        prefixMatch:
+#        - '*/example'
+#      name: rule1
+#    storageAccountId: ${azurerm_storage_account.example.id}
+#    storageContainerName: ${azurerm_storage_container.example.name}
+#  providerConfigRef:
+#    name: example

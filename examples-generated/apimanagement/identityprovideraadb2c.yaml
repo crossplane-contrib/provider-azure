@@ -1,0 +1,21 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: apimanagement.azure.jet.crossplane.io/v1alpha1
+#kind: IdentityProviderAADB2C
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    allowedTenant: myb2ctenant.onmicrosoft.com
+#    api_management_id: ${azurerm_api_management.example.id}
+#    authority: myb2ctenant.b2clogin.com
+#    clientId: ${azuread_application.example.application_id}
+#    clientSecretSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    signinPolicy: B2C_1_Login
+#    signinTenant: myb2ctenant.onmicrosoft.com
+#    signupPolicy: B2C_1_Signup
+#  providerConfigRef:
+#    name: example

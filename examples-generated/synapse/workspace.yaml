@@ -1,0 +1,26 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: synapse.azure.jet.crossplane.io/v1alpha1
+#kind: Workspace
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    aadAdmin:
+#    - login: AzureAD Admin
+#      objectId: 00000000-0000-0000-0000-000000000000
+#      tenantId: 00000000-0000-0000-0000-000000000000
+#    location: West Europe
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#    sqlAdministratorLogin: sqladminuser
+#    sqlAdministratorLoginPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    storageDataLakeGen2FilesystemId: ${azurerm_storage_data_lake_gen2_filesystem.example.id}
+#    tags:
+#      Env: production
+#  providerConfigRef:
+#    name: example

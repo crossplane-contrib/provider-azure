@@ -1,0 +1,19 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datashare.azure.jet.crossplane.io/v1alpha1
+#kind: DataSetBlobStorage
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    containerName: ${azurerm_storage_container.example.name}
+#    dataShareId: ${azurerm_data_share.example.id}
+#    filePath: myfile.txt
+#    name: example-dsbsds-file
+#    storageAccount:
+#    - name: ${azurerm_storage_account.example.name}
+#      resourceGroupNameRef:
+#        name: example
+#      subscriptionId: 00000000-0000-0000-0000-000000000000
+#  providerConfigRef:
+#    name: example

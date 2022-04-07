@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: media.azure.jet.crossplane.io/v1alpha1
+#kind: VideoAnalyzerEdgeModule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: example-edge-module
+#    resourceGroupNameRef:
+#      name: example
+#    videoAnalyzerName: exampleanalyzer
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: search.azure.jet.crossplane.io/v1alpha1
+#kind: Service
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: example-search-service
+#    resourceGroupNameRef:
+#      name: example
+#    sku: standard
+#  providerConfigRef:
+#    name: example

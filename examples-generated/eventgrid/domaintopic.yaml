@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: eventgrid.azure.jet.crossplane.io/v1alpha1
+#kind: DomainTopic
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    domainName: my-eventgrid-domain
+#    name: my-eventgrid-domain-topic
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

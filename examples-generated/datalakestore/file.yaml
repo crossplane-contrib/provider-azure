@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datalakestore.azure.jet.crossplane.io/v1alpha1
+#kind: File
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    localFilePath: /path/to/local/file
+#    remoteFilePath: /path/created/for/remote/file
+#    resource_group_name: ${azurerm_resource_group.example.name}
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: operationalinsights.azure.jet.crossplane.io/v1alpha1
+#kind: LogAnalyticsSavedSearch
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    category: exampleCategory
+#    displayName: exampleDisplayName
+#    logAnalyticsWorkspaceId: ${azurerm_log_analytics_workspace.test.id}
+#    name: exampleSavedSearch
+#    query: exampleQuery
+#  providerConfigRef:
+#    name: example

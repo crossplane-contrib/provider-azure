@@ -1,0 +1,21 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha2
+#kind: VirtualNetworkGatewayConnection
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    localNetworkGatewayId: ${azurerm_local_network_gateway.onpremise.id}
+#    location: West Europe
+#    resourceGroupNameRef:
+#      name: example
+#    sharedKeySecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    type: IPsec
+#    virtualNetworkGatewayIdRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

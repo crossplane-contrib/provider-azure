@@ -1,0 +1,27 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: streamanalytics.azure.jet.crossplane.io/v1alpha1
+#kind: Job
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    compatibilityLevel: "1.1"
+#    dataLocale: en-GB
+#    eventsLateArrivalMaxDelayInSeconds: 60
+#    eventsOutOfOrderMaxDelayInSeconds: 50
+#    eventsOutOfOrderPolicy: Adjust
+#    location: West Europe
+#    name: example-job
+#    outputErrorPolicy: Drop
+#    resourceGroupNameRef:
+#      name: example
+#    streamingUnits: 3
+#    tags:
+#      environment: Example
+#    transformationQuery: |2
+#          SELECT *
+#          INTO [YourOutputAlias]
+#          FROM [YourInputAlias]
+#  providerConfigRef:
+#    name: example

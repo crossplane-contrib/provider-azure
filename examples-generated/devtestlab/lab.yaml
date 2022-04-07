@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: devtestlab.azure.jet.crossplane.io/v1alpha1
+#kind: Lab
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: example-devtestlab
+#    resourceGroupNameRef:
+#      name: example
+#    tags:
+#      Sydney: Australia
+#  providerConfigRef:
+#    name: example

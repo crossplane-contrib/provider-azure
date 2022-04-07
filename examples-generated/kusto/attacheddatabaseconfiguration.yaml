@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: kusto.azure.jet.crossplane.io/v1alpha1
+#kind: AttachedDatabaseConfiguration
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    clusterName: kustocluster
+#    clusterResourceId: ${azurerm_kusto_cluster.followed_cluster.id}
+#    databaseName: '*'
+#    default_principal_modifications_kind: None
+#    location: West Europe
+#    name: configuration1
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

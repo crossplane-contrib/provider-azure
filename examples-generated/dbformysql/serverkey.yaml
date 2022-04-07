@@ -1,0 +1,12 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbformysql.azure.jet.crossplane.io/v1alpha1
+#kind: ServerKey
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    keyVaultKeyId: ${azurerm_key_vault_key.example.id}
+#    serverId: ${azurerm_mysql_server.example.id}
+#  providerConfigRef:
+#    name: example

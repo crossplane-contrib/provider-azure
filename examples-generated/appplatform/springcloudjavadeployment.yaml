@@ -1,0 +1,20 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: appplatform.azure.jet.crossplane.io/v1alpha1
+#kind: SpringCloudJavaDeployment
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    cpu: 2
+#    environmentVariables:
+#      Env: Staging
+#      Foo: Bar
+#    instanceCount: 2
+#    jvmOptions: -XX:+PrintGC
+#    memoryInGb: 4
+#    name: deploy1
+#    runtimeVersion: Java_11
+#    springCloudAppId: ${azurerm_spring_cloud_app.example.id}
+#  providerConfigRef:
+#    name: example

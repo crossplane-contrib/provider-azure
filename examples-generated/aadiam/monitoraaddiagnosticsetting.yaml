@@ -1,0 +1,45 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: aadiam.azure.jet.crossplane.io/v1alpha1
+#kind: MonitorAADDiagnosticSetting
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    log:
+#    - category: SignInLogs
+#      enabled: true
+#      retentionPolicy:
+#      - days: 1
+#        enabled: true
+#    - category: AuditLogs
+#      enabled: true
+#      retentionPolicy:
+#      - days: 1
+#        enabled: true
+#    - category: NonInteractiveUserSignInLogs
+#      enabled: true
+#      retentionPolicy:
+#      - days: 1
+#        enabled: true
+#    - category: ServicePrincipalSignInLogs
+#      enabled: true
+#      retentionPolicy:
+#      - days: 1
+#        enabled: true
+#    - category: ManagedIdentitySignInLogs
+#      enabled: false
+#      retentionPolicy:
+#      - {}
+#    - category: ProvisioningLogs
+#      enabled: false
+#      retentionPolicy:
+#      - {}
+#    - category: ADFSSignInLogs
+#      enabled: false
+#      retentionPolicy:
+#      - {}
+#    name: setting1
+#    storageAccountId: ${azurerm_storage_account.example.id}
+#  providerConfigRef:
+#    name: example

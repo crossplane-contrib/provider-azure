@@ -1,0 +1,31 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha2
+#kind: VirtualNetwork
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    addressSpace:
+#    - 10.0.0.0/16
+#    ddosProtectionPlan:
+#    - enable: true
+#      id: ${azurerm_network_ddos_protection_plan.example.id}
+#    dnsServers:
+#    - 10.0.0.4
+#    - 10.0.0.5
+#    location: West Europe
+#    resourceGroupNameRef:
+#      name: example
+#    subnet:
+#    - addressPrefix: 10.0.1.0/24
+#      name: subnet1
+#    - addressPrefix: 10.0.2.0/24
+#      name: subnet2
+#    - addressPrefix: 10.0.3.0/24
+#      name: subnet3
+#      securityGroup: ${azurerm_network_security_group.example.id}
+#    tags:
+#      environment: Production
+#  providerConfigRef:
+#    name: example

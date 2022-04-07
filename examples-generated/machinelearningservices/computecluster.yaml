@@ -1,0 +1,22 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: machinelearningservices.azure.jet.crossplane.io/v1alpha1
+#kind: ComputeCluster
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    identity:
+#    - type: SystemAssigned
+#    location: West Europe
+#    machineLearningWorkspaceId: ${azurerm_machine_learning_workspace.example.id}
+#    name: example
+#    scaleSettings:
+#    - maxNodeCount: 1
+#      minNodeCount: 0
+#      scaleDownNodesAfterIdleDuration: PT30S
+#    subnetResourceId: ${azurerm_subnet.example.id}
+#    vmPriority: LowPriority
+#    vmSize: Standard_DS2_v2
+#  providerConfigRef:
+#    name: example

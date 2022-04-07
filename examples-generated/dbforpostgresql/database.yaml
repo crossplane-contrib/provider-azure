@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbforpostgresql.azure.jet.crossplane.io/v1alpha2
+#kind: Database
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    charset: UTF8
+#    collation: English_United States.1252
+#    resourceGroupNameRef:
+#      name: example
+#    serverNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

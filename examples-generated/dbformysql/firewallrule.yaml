@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbformysql.azure.jet.crossplane.io/v1alpha1
+#kind: FirewallRule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    endIpAddress: 40.112.8.12
+#    name: office
+#    resourceGroupNameRef:
+#      name: example
+#    serverName: example-mysqlserver
+#    startIpAddress: 40.112.8.12
+#  providerConfigRef:
+#    name: example

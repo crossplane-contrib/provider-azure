@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: security.azure.jet.crossplane.io/v1alpha1
+#kind: IOTSecuritySolution
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    displayName: Iot Security Solution
+#    iothubIds:
+#    - ${azurerm_iothub.example.id}
+#    location: West Europe
+#    name: example-Iot-Security-Solution
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

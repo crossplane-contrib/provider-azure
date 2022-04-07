@@ -1,0 +1,12 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: securityinsights.azure.jet.crossplane.io/v1alpha1
+#kind: SentinelDataConnectorAzureSecurityCenter
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    logAnalyticsWorkspaceId: ${azurerm_log_analytics_workspace.example.id}
+#    name: example
+#  providerConfigRef:
+#    name: example

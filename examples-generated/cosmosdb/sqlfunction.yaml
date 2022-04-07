@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: cosmosdb.azure.jet.crossplane.io/v1alpha2
+#kind: SQLFunction
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    body: function trigger(){}
+#    containerIdRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

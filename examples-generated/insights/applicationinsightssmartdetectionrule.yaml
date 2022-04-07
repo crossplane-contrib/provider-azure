@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: insights.azure.jet.crossplane.io/v1alpha1
+#kind: ApplicationInsightsSmartDetectionRule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    applicationInsightsId: ${azurerm_application_insights.example.id}
+#    enabled: false
+#    name: Slow server response time
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: synapse.azure.jet.crossplane.io/v1alpha1
+#kind: FirewallRule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    endIpAddress: 255.255.255.255
+#    name: AllowAll
+#    startIpAddress: 0.0.0.0
+#    synapseWorkspaceId: ${azurerm_synapse_workspace.test.id}
+#  providerConfigRef:
+#    name: example

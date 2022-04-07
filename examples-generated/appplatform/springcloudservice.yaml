@@ -1,0 +1,26 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: appplatform.azure.jet.crossplane.io/v1alpha1
+#kind: SpringCloudService
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    configServerGitSetting:
+#    - label: config
+#      searchPaths:
+#      - dir1
+#      - dir2
+#      uri: https://github.com/Azure-Samples/piggymetrics
+#    location: West Europe
+#    name: example-springcloud
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: S0
+#    tags:
+#      Env: staging
+#    trace:
+#    - connectionString: ${azurerm_application_insights.example.connection_string}
+#      sampleRate: 10
+#  providerConfigRef:
+#    name: example

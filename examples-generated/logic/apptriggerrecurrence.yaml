@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: logic.azure.jet.crossplane.io/v1alpha1
+#kind: AppTriggerRecurrence
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    frequency: Day
+#    interval: 1
+#    logicAppId: ${azurerm_logic_app_workflow.example.id}
+#    name: run-every-day
+#  providerConfigRef:
+#    name: example

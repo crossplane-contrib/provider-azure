@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbformysql.azure.jet.crossplane.io/v1alpha1
+#kind: VirtualNetworkRule
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: mysql-vnet-rule
+#    resourceGroupNameRef:
+#      name: example
+#    serverName: example-mysqlserver
+#    subnetIdRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

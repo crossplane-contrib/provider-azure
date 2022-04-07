@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: recoveryservices.azure.jet.crossplane.io/v1alpha1
+#kind: SiteRecoveryFabric
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: primary-fabric
+#    recoveryVaultName: example_recovery_vault
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

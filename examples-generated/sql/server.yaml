@@ -1,0 +1,29 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: sql.azure.jet.crossplane.io/v1alpha2
+#kind: Server
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    administratorLogin: mradministrator
+#    administratorLoginPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    extendedAuditingPolicy:
+#    - retentionInDays: 6
+#      storageAccountAccessKeyIsSecondary: true
+#      storageAccountAccessKeySecretRef:
+#        key: attribute.primary_access_key
+#        name: example-storage-account
+#        namespace: crossplane-system
+#      storageEndpoint: ${azurerm_storage_account.example.primary_blob_endpoint}
+#    location: West Europe
+#    resourceGroupNameRef:
+#      name: example
+#    tags:
+#      environment: production
+#    version: "12.0"
+#  providerConfigRef:
+#    name: example

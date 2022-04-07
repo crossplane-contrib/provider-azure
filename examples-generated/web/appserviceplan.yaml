@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: web.azure.jet.crossplane.io/v1alpha1
+#kind: AppServicePlan
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: api-appserviceplan-pro
+#    resourceGroupNameRef:
+#      name: example
+#    sku:
+#    - size: S1
+#      tier: Standard
+#  providerConfigRef:
+#    name: example

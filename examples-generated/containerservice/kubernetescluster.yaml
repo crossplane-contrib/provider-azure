@@ -1,0 +1,22 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: containerservice.azure.jet.crossplane.io/v1alpha2
+#kind: KubernetesCluster
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    defaultNodePool:
+#    - name: default
+#      nodeCount: 1
+#      vmSize: Standard_D2_v2
+#    dnsPrefix: exampleaks1
+#    identity:
+#    - type: SystemAssigned
+#    location: West Europe
+#    resourceGroupNameRef:
+#      name: example
+#    tags:
+#      Environment: Production
+#  providerConfigRef:
+#    name: example

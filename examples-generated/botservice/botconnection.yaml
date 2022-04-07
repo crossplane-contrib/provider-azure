@@ -1,0 +1,21 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: botservice.azure.jet.crossplane.io/v1alpha1
+#kind: BotConnection
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    botName: example
+#    clientId: exampleId
+#    clientSecretSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    location: global
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#    serviceProviderName: box
+#  providerConfigRef:
+#    name: example

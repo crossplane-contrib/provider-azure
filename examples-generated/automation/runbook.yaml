@@ -1,0 +1,21 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: automation.azure.jet.crossplane.io/v1alpha1
+#kind: RunBook
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    automationAccountName: automationAccount1
+#    description: This is an example runbook
+#    location: West Europe
+#    logProgress: "true"
+#    logVerbose: "true"
+#    name: Get-AzureVMTutorial
+#    publishContentLink:
+#    - uri: https://raw.githubusercontent.com/Azure/azure-quickstart-templates/c4935ffb69246a6058eb24f54640f53f69d3ac9f/101-automation-runbook-getvms/Runbooks/Get-AzureVMTutorial.ps1
+#    resourceGroupNameRef:
+#      name: example
+#    runbookType: PowerShellWorkflow
+#  providerConfigRef:
+#    name: example

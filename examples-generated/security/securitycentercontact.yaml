@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: security.azure.jet.crossplane.io/v1alpha1
+#kind: SecurityCenterContact
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    alertNotifications: true
+#    alertsToAdmins: true
+#    email: contact@example.com
+#    phone: +1-555-555-5555
+#  providerConfigRef:
+#    name: example

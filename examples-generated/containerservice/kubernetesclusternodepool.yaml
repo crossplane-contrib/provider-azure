@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: containerservice.azure.jet.crossplane.io/v1alpha2
+#kind: KubernetesClusterNodePool
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    kubernetesClusterIdRef:
+#      name: example
+#    nodeCount: 1
+#    tags:
+#      Environment: Production
+#    vmSize: Standard_DS2_v2
+#  providerConfigRef:
+#    name: example

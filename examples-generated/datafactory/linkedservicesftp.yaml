@@ -1,0 +1,22 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datafactory.azure.jet.crossplane.io/v1alpha1
+#kind: LinkedServiceSFTP
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    authenticationType: Basic
+#    dataFactoryName: example
+#    host: http://www.bing.com
+#    name: example
+#    passwordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    port: 22
+#    resourceGroupNameRef:
+#      name: example
+#    username: foo
+#  providerConfigRef:
+#    name: example

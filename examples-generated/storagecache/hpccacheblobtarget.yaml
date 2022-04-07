@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: storagecache.azure.jet.crossplane.io/v1alpha1
+#kind: HPCCacheBlobTarget
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    cacheName: examplehpccache
+#    name: examplehpccblobtarget
+#    namespacePath: /blob_storage
+#    resourceGroupNameRef:
+#      name: example
+#    storageContainerId: ${azurerm_storage_container.example.resource_manager_id}
+#  providerConfigRef:
+#    name: example

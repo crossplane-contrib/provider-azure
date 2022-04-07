@@ -1,5 +1,5 @@
 /*
-Copyright 2019 The Crossplane Authors.
+Copyright 2021 The Crossplane Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,6 +22,12 @@ import (
 	"path/filepath"
 	"time"
 
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	xpcontroller "github.com/crossplane/crossplane-runtime/pkg/controller"
+	"github.com/crossplane/crossplane-runtime/pkg/feature"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"gopkg.in/alecthomas/kingpin.v2"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,27 +35,31 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	xpcontroller "github.com/crossplane/crossplane-runtime/pkg/controller"
-	"github.com/crossplane/crossplane-runtime/pkg/feature"
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
-	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	tjcontroller "github.com/crossplane/terrajet/pkg/controller"
+	"github.com/crossplane/terrajet/pkg/terraform"
 
-	"github.com/crossplane/provider-azure/apis"
-	"github.com/crossplane/provider-azure/apis/v1alpha1"
-	"github.com/crossplane/provider-azure/pkg/controller"
-	"github.com/crossplane/provider-azure/pkg/features"
+	"github.com/crossplane-contrib/provider-jet-azure/apis"
+	classicapis "github.com/crossplane-contrib/provider-jet-azure/apis/classic"
+	"github.com/crossplane-contrib/provider-jet-azure/apis/v1alpha1"
+	"github.com/crossplane-contrib/provider-jet-azure/config"
+	"github.com/crossplane-contrib/provider-jet-azure/internal/clients"
+	"github.com/crossplane-contrib/provider-jet-azure/internal/controller"
+	"github.com/crossplane-contrib/provider-jet-azure/internal/features"
+	classiccontrollers "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/controller"
 )
 
 func main() {
 	var (
 		app              = kingpin.New(filepath.Base(os.Args[0]), "Azure support for Crossplane.").DefaultEnvars()
 		debug            = app.Flag("debug", "Run with debug logging.").Short('d').Bool()
-		syncInterval     = app.Flag("sync", "Sync interval controls how often all resources will be double checked for drift.").Short('s').Default("1h").Duration()
-		pollInterval     = app.Flag("poll", "Poll interval controls how often an individual resource should be checked for drift.").Default("1m").Duration()
-		leaderElection   = app.Flag("leader-election", "Use leader election for the conroller manager.").Short('l').Default("false").OverrideDefaultFromEnvar("LEADER_ELECTION").Bool()
+		syncPeriod       = app.Flag("sync", "Controller manager sync period such as 300ms, 1.5h, or 2h45m").Short('s').Default("1h").Duration()
+		leaderElection   = app.Flag("leader-election", "Use leader election for the controller manager.").Short('l').Default("false").OverrideDefaultFromEnvar("LEADER_ELECTION").Bool()
+		terraformVersion = app.Flag("terraform-version", "Terraform version.").Required().Envar("TERRAFORM_VERSION").String()
+		providerSource   = app.Flag("terraform-provider-source", "Terraform provider source.").Required().Envar("TERRAFORM_PROVIDER_SOURCE").String()
+		providerVersion  = app.Flag("terraform-provider-version", "Terraform provider version.").Required().Envar("TERRAFORM_PROVIDER_VERSION").String()
 		maxReconcileRate = app.Flag("max-reconcile-rate", "The global maximum rate per second at which resources may checked for drift from the desired state.").Default("10").Int()
+		// command-line options compatibility for the classic provider
+		pollInterval = app.Flag("poll", "Poll interval controls how often an individual resource should be checked for drift.").Default("1m").Duration()
 
 		namespace                  = app.Flag("namespace", "Namespace used to set as default scope in default secret store config.").Default("crossplane-system").Envar("POD_NAMESPACE").String()
 		enableExternalSecretStores = app.Flag("enable-external-secret-stores", "Enable support for ExternalSecretStores.").Default("false").Envar("ENABLE_EXTERNAL_SECRET_STORES").Bool()
@@ -57,7 +67,7 @@ func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	zl := zap.New(zap.UseDevMode(*debug))
-	log := logging.NewLogrLogger(zl.WithName("provider-azure"))
+	log := logging.NewLogrLogger(zl.WithName("provider-jet-azure"))
 	if *debug {
 		// The controller-runtime runs with a no-op logger by default. It is
 		// *very* verbose even at info level, so we only provide it a real
@@ -65,31 +75,34 @@ func main() {
 		ctrl.SetLogger(zl)
 	}
 
-	log.Debug("Starting", "sync-period", syncInterval.String())
+	log.Debug("Starting", "sync-period", syncPeriod.String())
 
 	cfg, err := ctrl.GetConfig()
 	kingpin.FatalIfError(err, "Cannot get API server rest config")
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		SyncPeriod: syncInterval,
-
-		// controller-runtime uses both ConfigMaps and Leases for leader
-		// election by default. Leases expire after 15 seconds, with a
-		// 10 second renewal deadline. We've observed leader loss due to
-		// renewal deadlines being exceeded when under high load - i.e.
-		// hundreds of reconciles per second and ~200rps to the API
-		// server. Switching to Leases only and longer leases appears to
-		// alleviate this.
 		LeaderElection:             *leaderElection,
-		LeaderElectionID:           "crossplane-leader-election-provider-azure",
+		LeaderElectionID:           "crossplane-leader-election-provider-jet-azure",
+		SyncPeriod:                 syncPeriod,
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 		LeaseDuration:              func() *time.Duration { d := 60 * time.Second; return &d }(),
 		RenewDeadline:              func() *time.Duration { d := 50 * time.Second; return &d }(),
 	})
 	kingpin.FatalIfError(err, "Cannot create controller manager")
-	kingpin.FatalIfError(apis.AddToScheme(mgr.GetScheme()), "Cannot add Azure APIs to scheme")
-
-	o := xpcontroller.Options{
+	kingpin.FatalIfError(apis.AddToScheme(mgr.GetScheme()), "Cannot add terrajet-generated APIs to scheme")
+	kingpin.FatalIfError(classicapis.AddToScheme(mgr.GetScheme()), "Cannot add classic APIs to scheme")
+	tjOpts := tjcontroller.Options{
+		Options: xpcontroller.Options{
+			Logger:                  log,
+			GlobalRateLimiter:       ratelimiter.NewGlobal(*maxReconcileRate),
+			PollInterval:            *pollInterval,
+			MaxConcurrentReconciles: 1,
+		},
+		Provider:       config.GetProvider(),
+		WorkspaceStore: terraform.NewWorkspaceStore(log),
+		SetupFn:        clients.TerraformSetupBuilder(*terraformVersion, *providerSource, *providerVersion),
+	}
+	cOpts := xpcontroller.Options{
 		Logger:                  log,
 		MaxConcurrentReconciles: *maxReconcileRate,
 		PollInterval:            *pollInterval,
@@ -98,7 +111,7 @@ func main() {
 	}
 
 	if *enableExternalSecretStores {
-		o.Features.Enable(features.EnableAlphaExternalSecretStores)
+		tjOpts.SecretStoreConfigGVK = &v1alpha1.StoreConfigGroupVersionKind
 		log.Info("Alpha feature enabled", "flag", features.EnableAlphaExternalSecretStores)
 
 		// Ensure default store config exists.
@@ -116,6 +129,7 @@ func main() {
 		})), "cannot create default store config")
 	}
 
-	kingpin.FatalIfError(controller.Setup(mgr, o), "Cannot setup Azure controllers")
+	kingpin.FatalIfError(controller.Setup(mgr, tjOpts), "Cannot setup terrajet-generated controllers")
+	kingpin.FatalIfError(classiccontrollers.Setup(mgr, cOpts), "Cannot setup classic controllers")
 	kingpin.FatalIfError(mgr.Start(ctrl.SetupSignalHandler()), "Cannot start controller manager")
 }

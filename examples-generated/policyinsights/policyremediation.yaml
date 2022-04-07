@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: policyinsights.azure.jet.crossplane.io/v1alpha1
+#kind: PolicyRemediation
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    locationFilters:
+#    - West Europe
+#    name: example-policy-remediation
+#    policyAssignmentId: ${azurerm_policy_assignment.example.id}
+#    scope: ${azurerm_resource_group.example.id}
+#  providerConfigRef:
+#    name: example

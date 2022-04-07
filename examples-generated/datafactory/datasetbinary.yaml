@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datafactory.azure.jet.crossplane.io/v1alpha1
+#kind: DataSetBinary
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    dataFactoryName: example
+#    linkedServiceName: example
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#    sftpServerLocation:
+#    - filename: '**'
+#      path: /test/
+#  providerConfigRef:
+#    name: example

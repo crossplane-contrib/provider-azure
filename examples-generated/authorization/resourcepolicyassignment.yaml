@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: authorization.azure.jet.crossplane.io/v1alpha1
+#kind: ResourcePolicyAssignment
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: example-policy-assignment
+#    policyDefinitionId: ${azurerm_policy_definition.example.id}
+#    resourceId: ${data.azurerm_virtual_network.example.id}
+#  providerConfigRef:
+#    name: example

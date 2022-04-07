@@ -1,0 +1,17 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: automation.azure.jet.crossplane.io/v1alpha1
+#kind: Account
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: automationAccount1
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: Basic
+#    tags:
+#      environment: development
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dataprotection.azure.jet.crossplane.io/v1alpha1
+#kind: BackupVault
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    datastoreType: VaultStore
+#    location: West Europe
+#    name: example-backup-vault
+#    redundancy: LocallyRedundant
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

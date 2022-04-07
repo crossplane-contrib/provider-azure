@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: operationalinsights.azure.jet.crossplane.io/v1alpha1
+#kind: LogAnalyticsCluster
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    identity:
+#    - type: SystemAssigned
+#    location: West Europe
+#    name: example-cluster
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

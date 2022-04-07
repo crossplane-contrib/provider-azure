@@ -1,0 +1,15 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: Subnet
+metadata:
+  name: example-sub
+spec:
+  resourceGroupNameRef:
+    name: example-rg
+  virtualNetworkNameRef:
+    name: example-vn
+  properties:
+    addressPrefix: 10.2.0.0/24
+    serviceEndpoints:
+      - service: Microsoft.Sql
+  providerConfigRef:
+    name: example

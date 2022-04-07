@@ -1,0 +1,14 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: web.azure.jet.crossplane.io/v1alpha1
+#kind: AppServiceSlotVirtualNetworkSwiftConnection
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    appServiceId: ${azurerm_app_service.example.id}
+#    slotName: ${random_id.server.hex}
+#    subnetIdRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: maintenance.azure.jet.crossplane.io/v1alpha1
+#kind: MaintenanceAssignmentVirtualMachine
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    maintenanceConfigurationId: ${azurerm_maintenance_configuration.example.id}
+#    virtualMachineId: ${azurerm_linux_virtual_machine.example.id}
+#  providerConfigRef:
+#    name: example

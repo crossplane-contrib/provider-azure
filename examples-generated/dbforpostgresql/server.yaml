@@ -1,0 +1,27 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: dbforpostgresql.azure.jet.crossplane.io/v1alpha2
+#kind: Server
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    administratorLogin: psqladminun
+#    administratorLoginPasswordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    autoGrowEnabled: true
+#    backupRetentionDays: 7
+#    geoRedundantBackupEnabled: true
+#    location: West Europe
+#    publicNetworkAccessEnabled: false
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: GP_Gen5_4
+#    sslEnforcementEnabled: true
+#    sslMinimalTlsVersionEnforced: TLS1_2
+#    storageMb: 640000
+#    version: "9.6"
+#  providerConfigRef:
+#    name: example

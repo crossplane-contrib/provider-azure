@@ -1,0 +1,11 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: portal.azure.jet.crossplane.io/v1alpha1
+#kind: TenantConfiguration
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    privateMarkdownStorageEnforced: true
+#  providerConfigRef:
+#    name: example

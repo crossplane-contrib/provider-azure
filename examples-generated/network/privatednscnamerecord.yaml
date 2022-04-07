@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha1
+#kind: PrivateDNSCNAMERecord
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: test
+#    record: contoso.com
+#    resourceGroupNameRef:
+#      name: example
+#    ttl: 300
+#    zoneName: mydomain.com
+#  providerConfigRef:
+#    name: example

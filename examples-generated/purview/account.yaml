@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: purview.azure.jet.crossplane.io/v1alpha1
+#kind: Account
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: Standard_4
+#  providerConfigRef:
+#    name: example

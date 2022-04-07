@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: apimanagement.azure.jet.crossplane.io/v1alpha1
+#kind: Product
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    apiManagementName: example-apim
+#    approvalRequired: true
+#    displayName: Test Product
+#    productId: test-product
+#    published: true
+#    resourceGroupNameRef:
+#      name: example
+#    subscriptionRequired: true
+#  providerConfigRef:
+#    name: example

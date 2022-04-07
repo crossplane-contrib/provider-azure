@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: timeseriesinsights.azure.jet.crossplane.io/v1alpha1
+#kind: StandardEnvironment
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    dataRetentionTime: P30D
+#    location: West Europe
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#    skuName: S1_1
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,16 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: eventhub.azure.jet.crossplane.io/v1alpha1
+#kind: EventHub
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    messageRetention: 1
+#    name: acceptanceTestEventHub
+#    namespaceName: example-namespace
+#    partitionCount: 2
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

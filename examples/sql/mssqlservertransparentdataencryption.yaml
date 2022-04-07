@@ -1,0 +1,12 @@
+apiVersion: sql.azure.jet.crossplane.io/v1alpha2
+kind: MSSQLServerTransparentDataEncryption
+metadata:
+  name: transparent-encryption-example
+spec:
+  forProvider:
+    serverIdRef:
+      name: mssql-server-example
+    keyVaultKeyIdRef:
+      name: transparent-encryption 
+  providerConfigRef:
+    name: example

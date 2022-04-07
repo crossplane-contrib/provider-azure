@@ -1,0 +1,19 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: apimanagement.azure.jet.crossplane.io/v1alpha1
+#kind: NamedValue
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    apiManagementName: example-apim
+#    displayName: ExampleProperty
+#    name: example-apimg
+#    resourceGroupNameRef:
+#      name: example
+#    valueSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#  providerConfigRef:
+#    name: example

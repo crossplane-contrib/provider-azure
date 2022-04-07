@@ -1,0 +1,19 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: keyvault.azure.jet.crossplane.io/v1alpha2
+#kind: CertificateIssuer
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    accountId: "0000"
+#    keyVaultIdRef:
+#      name: example
+#    orgId: ExampleOrgName
+#    passwordSecretRef:
+#      key: example-key
+#      name: example-secret
+#      namespace: crossplane-system
+#    providerName: DigiCert
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,22 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: storagecache.azure.jet.crossplane.io/v1alpha1
+#kind: HPCCacheNFSTarget
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    cacheName: examplehpccache
+#    name: examplehpcnfstarget
+#    namespaceJunction:
+#    - namespacePath: /nfs/a1
+#      nfsExport: /export/a
+#      targetPath: "1"
+#    - namespacePath: /nfs/b
+#      nfsExport: /export/b
+#    resourceGroupNameRef:
+#      name: example
+#    targetHostName: ${azurerm_linux_virtual_machine.example.private_ip_address}
+#    usageModel: READ_HEAVY_INFREQ
+#  providerConfigRef:
+#    name: example

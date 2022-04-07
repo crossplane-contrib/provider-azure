@@ -1,0 +1,15 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: eventgrid.azure.jet.crossplane.io/v1alpha1
+#kind: EventSubscription
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    name: defaultEventSubscription
+#    scope: ${azurerm_resource_group.default.id}
+#    storageQueueEndpoint:
+#    - queueName: mysamplequeue
+#      storageAccountId: ${azurerm_storage_account.default.id}
+#  providerConfigRef:
+#    name: example

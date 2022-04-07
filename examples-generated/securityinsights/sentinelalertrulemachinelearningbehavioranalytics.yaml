@@ -1,0 +1,13 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: securityinsights.azure.jet.crossplane.io/v1alpha1
+#kind: SentinelAlertRuleMachineLearningBehaviorAnalytics
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    alertRuleTemplateGuid: 737a2ce1-70a3-4968-9e90-3e6aca836abf
+#    logAnalyticsWorkspaceId: ${azurerm_log_analytics_workspace.example.id}
+#    name: example-ml-alert-rule
+#  providerConfigRef:
+#    name: example

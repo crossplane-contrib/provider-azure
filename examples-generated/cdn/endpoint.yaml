@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: cdn.azure.jet.crossplane.io/v1alpha1
+#kind: Endpoint
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    location: West Europe
+#    name: example
+#    origin:
+#    - hostName: www.contoso.com
+#      name: example
+#    profileName: exampleCdnProfile
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

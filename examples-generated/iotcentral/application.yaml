@@ -1,0 +1,20 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: iotcentral.azure.jet.crossplane.io/v1alpha1
+#kind: Application
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    displayName: example-iotcentral-app-display-name
+#    location: West Europe
+#    name: example-iotcentral-app
+#    resourceGroupNameRef:
+#      name: example
+#    sku: S1
+#    subDomain: example-iotcentral-app-subdomain
+#    tags:
+#      Foo: Bar
+#    template: iotc-default@1.0.0
+#  providerConfigRef:
+#    name: example

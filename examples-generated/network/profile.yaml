@@ -1,0 +1,20 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: network.azure.jet.crossplane.io/v1alpha1
+#kind: Profile
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    containerNetworkInterface:
+#    - ipConfiguration:
+#      - name: exampleipconfig
+#        subnetIdRef:
+#          name: example
+#      name: examplecnic
+#    location: West Europe
+#    name: examplenetprofile
+#    resourceGroupNameRef:
+#      name: example
+#  providerConfigRef:
+#    name: example

@@ -1,0 +1,18 @@
+# This example manifest is auto-generated, and has not been tested.
+# Please make the necessary adjustments before using it.
+#apiVersion: datafactory.azure.jet.crossplane.io/v1alpha1
+#kind: LinkedServiceDataLakeStorageGen2
+#metadata:
+#  name: example
+#spec:
+#  forProvider:
+#    dataFactoryName: example
+#    name: example
+#    resourceGroupNameRef:
+#      name: example
+#    servicePrincipalId: ${data.azurerm_client_config.current.client_id}
+#    servicePrincipalKey: exampleKey
+#    tenant: 11111111-1111-1111-1111-111111111111
+#    url: https://datalakestoragegen2
+#  providerConfigRef:
+#    name: example
