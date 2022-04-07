@@ -2,7 +2,7 @@
 # Setup Project
 
 PROJECT_NAME := provider-azure
-PROJECT_REPO := github.com/crossplane-contrib/$(PROJECT_NAME)
+PROJECT_REPO := github.com/crossplane/$(PROJECT_NAME)
 
 export TERRAFORM_VERSION ?= 1.0.5
 export TERRAFORM_PROVIDER_SOURCE ?= hashicorp/azurerm
