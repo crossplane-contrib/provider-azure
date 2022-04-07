@@ -25,15 +25,16 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
+	"github.com/google/go-cmp/cmp"
+	"github.com/pkg/errors"
+
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
-	"github.com/google/go-cmp/cmp"
-	"github.com/pkg/errors"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
-	azurev1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 const (

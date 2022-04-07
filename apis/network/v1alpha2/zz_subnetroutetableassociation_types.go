@@ -35,7 +35,7 @@ type SubnetRouteTableAssociationParameters struct {
 	RouteTableID *string `json:"routeTableId" tf:"route_table_id,omitempty"`
 
 	// +crossplane:generate:reference:type=Subnet
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	SubnetID *string `json:"subnetId,omitempty" tf:"subnet_id,omitempty"`
 

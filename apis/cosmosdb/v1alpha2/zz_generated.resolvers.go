@@ -19,11 +19,14 @@ package v1alpha2
 
 import (
 	"context"
-	v1alpha2 "github.com/crossplane-contrib/provider-jet-azure/apis/azure/v1alpha2"
-	rconfig "github.com/crossplane-contrib/provider-jet-azure/apis/rconfig"
-	reference "github.com/crossplane/crossplane-runtime/pkg/reference"
+
 	errors "github.com/pkg/errors"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+
+	reference "github.com/crossplane/crossplane-runtime/pkg/reference"
+
+	v1alpha2 "github.com/crossplane/provider-azure/apis/azure/v1alpha2"
+	rconfig "github.com/crossplane/provider-azure/apis/rconfig"
 )
 
 // ResolveReferences of this Account.

@@ -50,7 +50,7 @@ type WorkspaceParameters struct {
 	// +kubebuilder:validation:Optional
 	ReservationCapcityInGbPerDay *float64 `json:"reservationCapcityInGbPerDay,omitempty" tf:"reservation_capcity_in_gb_per_day,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/azure/v1alpha2.ResourceGroup
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/azure/v1alpha2.ResourceGroup
 	// +kubebuilder:validation:Optional
 	ResourceGroupName *string `json:"resourceGroupName,omitempty" tf:"resource_group_name,omitempty"`
 

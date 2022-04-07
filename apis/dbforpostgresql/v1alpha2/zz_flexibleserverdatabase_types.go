@@ -38,7 +38,7 @@ type FlexibleServerDatabaseParameters struct {
 	Collation *string `json:"collation,omitempty" tf:"collation,omitempty"`
 
 	// +crossplane:generate:reference:type=FlexibleServer
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	ServerID *string `json:"serverId,omitempty" tf:"server_id,omitempty"`
 

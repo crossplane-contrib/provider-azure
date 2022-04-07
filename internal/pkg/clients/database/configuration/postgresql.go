@@ -23,10 +23,10 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
 
-	azuredbv1beta1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 // NOTE: postgresql and mysql structs and functions live in their respective

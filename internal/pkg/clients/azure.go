@@ -33,8 +33,8 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1beta1"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/v1beta1"
 )
 
 const (

@@ -21,16 +21,17 @@ package redislinkedserver
 import (
 	"time"
 
+	tjcontroller "github.com/crossplane/terrajet/pkg/controller"
+	"github.com/crossplane/terrajet/pkg/terraform"
+	ctrl "sigs.k8s.io/controller-runtime"
+
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	xpresource "github.com/crossplane/crossplane-runtime/pkg/resource"
-	tjcontroller "github.com/crossplane/terrajet/pkg/controller"
-	"github.com/crossplane/terrajet/pkg/terraform"
-	ctrl "sigs.k8s.io/controller-runtime"
 
-	v1alpha2 "github.com/crossplane-contrib/provider-jet-azure/apis/cache/v1alpha2"
+	v1alpha2 "github.com/crossplane/provider-azure/apis/cache/v1alpha2"
 )
 
 // Setup adds a controller that reconciles RedisLinkedServer managed resources.

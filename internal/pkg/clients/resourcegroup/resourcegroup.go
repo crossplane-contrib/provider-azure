@@ -26,9 +26,9 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 // A GroupsClient handles CRUD operations for Azure Resource Group resources.

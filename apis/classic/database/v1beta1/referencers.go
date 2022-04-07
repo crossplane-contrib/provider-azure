@@ -24,7 +24,7 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 // ResolveReferences of this MySQLServer.

@@ -10,9 +10,9 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/dns/v1alpha1"
+	"github.com/crossplane/provider-azure/apis/classic/dns/v1alpha1"
 )
 
 const (

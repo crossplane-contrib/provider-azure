@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pkg/errors"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/rconfig"
-	"github.com/crossplane-contrib/provider-jet-azure/config/common"
+	"github.com/crossplane/provider-azure/apis/rconfig"
+	"github.com/crossplane/provider-azure/config/common"
 )
 
 // Configure configures kubernetes group

@@ -16,7 +16,7 @@ limitations under the License.
 
 package configuration
 
-import azuredbv1beta1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
+import azuredbv1beta1 "github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
 
 const (
 	testValue1 = "testValue1"

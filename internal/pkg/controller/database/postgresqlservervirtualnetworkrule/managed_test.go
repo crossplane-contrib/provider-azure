@@ -23,20 +23,21 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/go-autorest/autorest"
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	"github.com/crossplane/crossplane-runtime/pkg/meta"
-	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
-	"github.com/crossplane/crossplane-runtime/pkg/test"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients/fake"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1alpha3"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
+	"github.com/crossplane/provider-azure/internal/pkg/clients/fake"
+
+	"github.com/crossplane/provider-azure/apis/classic/database/v1alpha3"
 )
 
 const (

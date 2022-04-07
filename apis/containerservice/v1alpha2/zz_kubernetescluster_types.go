@@ -33,7 +33,7 @@ type AciConnectorLinuxParameters struct {
 	// +kubebuilder:validation:Required
 	Enabled *bool `json:"enabled" tf:"enabled,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/network/v1alpha2.Subnet
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/network/v1alpha2.Subnet
 	// +kubebuilder:validation:Optional
 	SubnetName *string `json:"subnetName,omitempty" tf:"subnet_name,omitempty"`
 
@@ -241,8 +241,8 @@ type DefaultNodePoolParameters struct {
 	// +kubebuilder:validation:Optional
 	OsSku *string `json:"osSku,omitempty" tf:"os_sku,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/network/v1alpha2.Subnet
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/network/v1alpha2.Subnet
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	PodSubnetID *string `json:"podSubnetId,omitempty" tf:"pod_subnet_id,omitempty"`
 
@@ -270,8 +270,8 @@ type DefaultNodePoolParameters struct {
 	// +kubebuilder:validation:Required
 	VMSize *string `json:"vmSize" tf:"vm_size,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/network/v1alpha2.Subnet
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/network/v1alpha2.Subnet
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	VnetSubnetID *string `json:"vnetSubnetId,omitempty" tf:"vnet_subnet_id,omitempty"`
 
@@ -338,8 +338,8 @@ type IngressApplicationGatewayParameters struct {
 	// +kubebuilder:validation:Optional
 	SubnetCidr *string `json:"subnetCidr,omitempty" tf:"subnet_cidr,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/network/v1alpha2.Subnet
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/network/v1alpha2.Subnet
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	SubnetID *string `json:"subnetId,omitempty" tf:"subnet_id,omitempty"`
 
@@ -508,7 +508,7 @@ type KubernetesClusterParameters struct {
 	// +kubebuilder:validation:Optional
 	PrivateLinkEnabled *bool `json:"privateLinkEnabled,omitempty" tf:"private_link_enabled,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/azure/v1alpha2.ResourceGroup
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/azure/v1alpha2.ResourceGroup
 	// +kubebuilder:validation:Optional
 	ResourceGroupName *string `json:"resourceGroupName,omitempty" tf:"resource_group_name,omitempty"`
 

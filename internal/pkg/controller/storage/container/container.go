@@ -38,10 +38,10 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients/storage"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
+	"github.com/crossplane/provider-azure/internal/pkg/clients/storage"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/storage/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/storage/v1alpha3"
 )
 
 const (

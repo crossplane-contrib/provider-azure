@@ -21,7 +21,7 @@ import (
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
-	apisv1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	apisv1alpha3 "github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 // Possible state strings for SQL types.

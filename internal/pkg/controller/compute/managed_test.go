@@ -24,19 +24,20 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients/compute/fake"
+	"github.com/crossplane/provider-azure/internal/pkg/clients/compute/fake"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/compute/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/compute/v1alpha3"
 )
 
 const (

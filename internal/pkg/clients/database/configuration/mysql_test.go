@@ -22,7 +22,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
 	"github.com/google/go-cmp/cmp"
 
-	azuredbv1beta1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
+	azuredbv1beta1 "github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
 )
 
 type mysqlConfigurationModifier func(configuration *mysql.Configuration)

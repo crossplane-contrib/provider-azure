@@ -26,10 +26,10 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1alpha3"
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
+	"github.com/crossplane/provider-azure/apis/classic/database/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
 )
 
 type postgreSQLVirtualNetworkRuleModifier func(*v1alpha3.PostgreSQLServerVirtualNetworkRule)

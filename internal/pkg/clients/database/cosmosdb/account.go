@@ -27,9 +27,9 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/pkg/errors"
 
-	azure "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
+	azure "github.com/crossplane/provider-azure/internal/pkg/clients"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/database/v1alpha3"
 )
 
 // A AccountClient handles CRUD operations for Azure CosmosDB Accounts.

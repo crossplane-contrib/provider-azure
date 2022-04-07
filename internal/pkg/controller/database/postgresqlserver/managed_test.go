@@ -35,10 +35,10 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients/database"
+	"github.com/crossplane/provider-azure/internal/pkg/clients/database"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
-	azurev1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 var (

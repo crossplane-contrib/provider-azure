@@ -22,7 +22,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
+	"github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
 )
 
 type postgresqlConfigurationModifier func(configuration *postgresql.Configuration)

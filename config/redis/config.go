@@ -25,8 +25,8 @@ import (
 
 	"github.com/crossplane/terrajet/pkg/config"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/rconfig"
-	"github.com/crossplane-contrib/provider-jet-azure/config/common"
+	"github.com/crossplane/provider-azure/apis/rconfig"
+	"github.com/crossplane/provider-azure/config/common"
 )
 
 // Configure configures redis group

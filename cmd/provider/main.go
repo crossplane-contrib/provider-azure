@@ -22,12 +22,6 @@ import (
 	"path/filepath"
 	"time"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
-	xpcontroller "github.com/crossplane/crossplane-runtime/pkg/controller"
-	"github.com/crossplane/crossplane-runtime/pkg/feature"
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
-	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
-	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"gopkg.in/alecthomas/kingpin.v2"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,17 +29,24 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	xpcontroller "github.com/crossplane/crossplane-runtime/pkg/controller"
+	"github.com/crossplane/crossplane-runtime/pkg/feature"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
+
 	tjcontroller "github.com/crossplane/terrajet/pkg/controller"
 	"github.com/crossplane/terrajet/pkg/terraform"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis"
-	classicapis "github.com/crossplane-contrib/provider-jet-azure/apis/classic"
-	"github.com/crossplane-contrib/provider-jet-azure/apis/v1alpha1"
-	"github.com/crossplane-contrib/provider-jet-azure/config"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/clients"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/controller"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/features"
-	classiccontrollers "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/controller"
+	"github.com/crossplane/provider-azure/apis"
+	classicapis "github.com/crossplane/provider-azure/apis/classic"
+	"github.com/crossplane/provider-azure/apis/v1alpha1"
+	"github.com/crossplane/provider-azure/config"
+	"github.com/crossplane/provider-azure/internal/clients"
+	"github.com/crossplane/provider-azure/internal/controller"
+	"github.com/crossplane/provider-azure/internal/features"
+	classiccontrollers "github.com/crossplane/provider-azure/internal/pkg/controller"
 )
 
 func main() {

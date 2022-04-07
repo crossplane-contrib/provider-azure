@@ -134,7 +134,7 @@ type AccountParameters struct {
 	// +kubebuilder:validation:Optional
 	QueueProperties []QueuePropertiesParameters `json:"queueProperties,omitempty" tf:"queue_properties,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/azure/v1alpha2.ResourceGroup
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/azure/v1alpha2.ResourceGroup
 	// +kubebuilder:validation:Optional
 	ResourceGroupName *string `json:"resourceGroupName,omitempty" tf:"resource_group_name,omitempty"`
 

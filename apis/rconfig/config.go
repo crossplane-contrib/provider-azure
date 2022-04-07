@@ -25,7 +25,7 @@ import (
 
 const (
 	// APISPackagePath is the package path for generated APIs root package
-	APISPackagePath = "github.com/crossplane-contrib/provider-jet-azure/apis"
+	APISPackagePath = "github.com/crossplane/provider-azure/apis"
 	// ExtractResourceIDFuncPath holds the Azure resource ID extractor func name
 	ExtractResourceIDFuncPath = APISPackagePath + "/rconfig.ExtractResourceID()"
 

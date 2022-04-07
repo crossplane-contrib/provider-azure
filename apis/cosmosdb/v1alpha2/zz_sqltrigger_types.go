@@ -35,7 +35,7 @@ type SQLTriggerParameters struct {
 	Body *string `json:"body" tf:"body,omitempty"`
 
 	// +crossplane:generate:reference:type=SQLContainer
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	ContainerID *string `json:"containerId,omitempty" tf:"container_id,omitempty"`
 

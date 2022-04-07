@@ -31,7 +31,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/dns/v1alpha1"
+	"github.com/crossplane/provider-azure/apis/classic/dns/v1alpha1"
 )
 
 type MockZoneAPI struct {

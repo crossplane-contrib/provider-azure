@@ -33,12 +33,12 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	azureclients "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients/network"
-	"github.com/crossplane-contrib/provider-jet-azure/internal/pkg/features"
+	azureclients "github.com/crossplane/provider-azure/internal/pkg/clients"
+	"github.com/crossplane/provider-azure/internal/pkg/clients/network"
+	"github.com/crossplane/provider-azure/internal/pkg/features"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/network/v1alpha3"
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha1"
+	"github.com/crossplane/provider-azure/apis/classic/network/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha1"
 )
 
 // Error strings.

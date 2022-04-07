@@ -24,8 +24,8 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
 
-	networkv1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/network/v1alpha3"
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	networkv1alpha3 "github.com/crossplane/provider-azure/apis/classic/network/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 // ResolveReferences of this AKSCluster.

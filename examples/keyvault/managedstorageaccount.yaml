@@ -3,7 +3,7 @@ kind: ManagedStorageAccount
 metadata:
   name: examplemanagedstorage # This field must be between 3-24 characters.
   # If a name longer than 24 characters is used, Azure SDK returns a misleading HTTP 404 error.
-  # For details please check the following issue: https://github.com/crossplane-contrib/provider-jet-azure/issues/128
+  # For details please check the following issue: https://github.com/crossplane/provider-azure/issues/128
 spec:
   forProvider:
     keyVaultIdRef:

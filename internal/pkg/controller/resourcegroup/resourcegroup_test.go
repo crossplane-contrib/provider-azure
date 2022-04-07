@@ -35,9 +35,9 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	fakerg "github.com/crossplane-contrib/provider-jet-azure/internal/pkg/clients/resourcegroup/fake"
+	fakerg "github.com/crossplane/provider-azure/internal/pkg/clients/resourcegroup/fake"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
+	"github.com/crossplane/provider-azure/apis/classic/v1alpha3"
 )
 
 const (

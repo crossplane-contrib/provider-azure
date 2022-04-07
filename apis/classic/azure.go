@@ -20,17 +20,17 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	cachev1beta1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/cache/v1beta1"
-	computev1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/compute/v1alpha3"
-	databasev1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1alpha3"
-	databasev1beta1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/database/v1beta1"
-	dnsv1alpha1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/dns/v1alpha1"
-	keyvaultv1alpha1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/keyvault/v1alpha1"
-	networkv1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/network/v1alpha3"
-	storagev1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/storage/v1alpha3"
-	azurev1alpha1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha1"
-	azurev1alpha3 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1alpha3"
-	azurev1beta1 "github.com/crossplane-contrib/provider-jet-azure/apis/classic/v1beta1"
+	cachev1beta1 "github.com/crossplane/provider-azure/apis/classic/cache/v1beta1"
+	computev1alpha3 "github.com/crossplane/provider-azure/apis/classic/compute/v1alpha3"
+	databasev1alpha3 "github.com/crossplane/provider-azure/apis/classic/database/v1alpha3"
+	databasev1beta1 "github.com/crossplane/provider-azure/apis/classic/database/v1beta1"
+	dnsv1alpha1 "github.com/crossplane/provider-azure/apis/classic/dns/v1alpha1"
+	keyvaultv1alpha1 "github.com/crossplane/provider-azure/apis/classic/keyvault/v1alpha1"
+	networkv1alpha3 "github.com/crossplane/provider-azure/apis/classic/network/v1alpha3"
+	storagev1alpha3 "github.com/crossplane/provider-azure/apis/classic/storage/v1alpha3"
+	azurev1alpha1 "github.com/crossplane/provider-azure/apis/classic/v1alpha1"
+	azurev1alpha3 "github.com/crossplane/provider-azure/apis/classic/v1alpha3"
+	azurev1beta1 "github.com/crossplane/provider-azure/apis/classic/v1beta1"
 )
 
 func init() {

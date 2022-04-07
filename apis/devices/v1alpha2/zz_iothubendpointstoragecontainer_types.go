@@ -37,7 +37,7 @@ type IOTHubEndpointStorageContainerParameters struct {
 	// +kubebuilder:validation:Required
 	ConnectionStringSecretRef v1.SecretKeySelector `json:"connectionStringSecretRef" tf:"-"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/storage/v1alpha2.Container
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/storage/v1alpha2.Container
 	// +kubebuilder:validation:Optional
 	ContainerName *string `json:"containerName,omitempty" tf:"container_name,omitempty"`
 
@@ -66,7 +66,7 @@ type IOTHubEndpointStorageContainerParameters struct {
 	// +kubebuilder:validation:Optional
 	MaxChunkSizeInBytes *float64 `json:"maxChunkSizeInBytes,omitempty" tf:"max_chunk_size_in_bytes,omitempty"`
 
-	// +crossplane:generate:reference:type=github.com/crossplane-contrib/provider-jet-azure/apis/azure/v1alpha2.ResourceGroup
+	// +crossplane:generate:reference:type=github.com/crossplane/provider-azure/apis/azure/v1alpha2.ResourceGroup
 	// +kubebuilder:validation:Optional
 	ResourceGroupName *string `json:"resourceGroupName,omitempty" tf:"resource_group_name,omitempty"`
 

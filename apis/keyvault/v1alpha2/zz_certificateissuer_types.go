@@ -56,7 +56,7 @@ type CertificateIssuerParameters struct {
 	Admin []AdminParameters `json:"admin,omitempty" tf:"admin,omitempty"`
 
 	// +crossplane:generate:reference:type=Vault
-	// +crossplane:generate:reference:extractor=github.com/crossplane-contrib/provider-jet-azure/apis/rconfig.ExtractResourceID()
+	// +crossplane:generate:reference:extractor=github.com/crossplane/provider-azure/apis/rconfig.ExtractResourceID()
 	// +kubebuilder:validation:Optional
 	KeyVaultID *string `json:"keyVaultId,omitempty" tf:"key_vault_id,omitempty"`
 

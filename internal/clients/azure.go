@@ -5,17 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
 	"github.com/crossplane/terrajet/pkg/terraform"
 
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	xpresource "github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane-contrib/provider-jet-azure/apis/v1alpha1"
+	"github.com/crossplane/provider-azure/apis/v1alpha1"
 )
 
 const (
@@ -83,7 +84,7 @@ func TerraformSetupBuilder(version, providerSource, providerVersion string) terr
 			// trying to create is not registered and the returned error is
 			// ambiguous. However, this requires service principal to have provider
 			// registration permissions which are irrelevant in most contexts.
-			// For details, see https://github.com/crossplane-contrib/provider-jet-azure/issues/104
+			// For details, see https://github.com/crossplane/provider-azure/issues/104
 			keySkipProviderRegistration: true,
 		}
 
