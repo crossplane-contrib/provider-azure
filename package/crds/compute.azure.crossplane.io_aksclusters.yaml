@@ -79,10 +79,10 @@ spec:
                 description: Identity is the managed identity configuration for the
                   control-plane.
                 properties:
-                  identityNames:
-                    description: IdentityNames are the names of the user-assigned
-                      managed identity resources to be used by the control-plane.
-                      Required if Type is `UserAssigned`.
+                  resourceIDs:
+                    description: ResourceIDs are the Azure resource IDs of the user-assigned
+                      managed identities to be used by the control-plane. Required
+                      if Type is `UserAssigned`.
                     items:
                       type: string
                     type: array

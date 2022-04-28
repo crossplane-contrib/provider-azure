@@ -18,7 +18,6 @@ package compute
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2022-01-01/containerservice"
 	"github.com/Azure/go-autorest/autorest"
@@ -40,8 +39,6 @@ const (
 const (
 	// error strings
 	errInvalidUserAssignedManagedIdentity = "at least one user-assigned managed identity resource name must be specified when identity.type is UserAssigned"
-
-	fmtUserAssignedManagedIdentityID = "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ManagedIdentity/userAssignedIdentities/%s"
 )
 
 // An AKSClient can create, read, and delete AKS clusters and the various other
@@ -78,7 +75,7 @@ func (c AggregateClient) GetManagedCluster(ctx context.Context, ac *v1alpha3.AKS
 
 // EnsureManagedCluster ensures the supplied AKS cluster exists.
 func (c AggregateClient) EnsureManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) error {
-	mc, err := newManagedCluster(ac, c.subscriptionID)
+	mc, err := newManagedCluster(ac)
 	if err != nil {
 		return err
 	}
@@ -111,7 +108,7 @@ func (c AggregateClient) GetKubeConfig(ctx context.Context, ac *v1alpha3.AKSClus
 	return *((*creds.Kubeconfigs)[0].Value), nil
 }
 
-func newManagedCluster(c *v1alpha3.AKSCluster, subscriptionID string) (containerservice.ManagedCluster, error) {
+func newManagedCluster(c *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error) {
 	nodeCount := int32(v1alpha3.DefaultNodeCount)
 	if c.Spec.NodeCount != nil {
 		nodeCount = int32(*c.Spec.NodeCount)
@@ -140,12 +137,11 @@ func newManagedCluster(c *v1alpha3.AKSCluster, subscriptionID string) (container
 		p.Identity.Type = containerservice.ResourceIdentityTypeSystemAssigned
 	case containerservice.ResourceIdentityTypeUserAssigned:
 		p.Identity.Type = containerservice.ResourceIdentityTypeUserAssigned
-		if len(c.Spec.Identity.IdentityNames) == 0 {
+		if len(c.Spec.Identity.ResourceIDs) == 0 {
 			return p, errors.New(errInvalidUserAssignedManagedIdentity)
 		}
-		p.Identity.UserAssignedIdentities = make(map[string]*containerservice.ManagedClusterIdentityUserAssignedIdentitiesValue, len(c.Spec.Identity.IdentityNames))
-		for _, n := range c.Spec.Identity.IdentityNames {
-			resourceID := fmt.Sprintf(fmtUserAssignedManagedIdentityID, subscriptionID, c.Spec.ResourceGroupName, n)
+		p.Identity.UserAssignedIdentities = make(map[string]*containerservice.ManagedClusterIdentityUserAssignedIdentitiesValue, len(c.Spec.Identity.ResourceIDs))
+		for _, resourceID := range c.Spec.Identity.ResourceIDs {
 			p.Identity.UserAssignedIdentities[resourceID] = &containerservice.ManagedClusterIdentityUserAssignedIdentitiesValue{}
 		}
 	}

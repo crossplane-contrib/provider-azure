@@ -96,11 +96,11 @@ type Identity struct {
 	// +required
 	// +kubebuilder:validation:Enum=SystemAssigned;UserAssigned
 	Type string `json:"type"`
-	// IdentityNames are the names of the user-assigned managed identity
-	// resources to be used by the control-plane.
-	// Required if Type is `UserAssigned`.
+	// ResourceIDs are the Azure resource IDs of the
+	// user-assigned managed identities to be used by
+	// the control-plane. Required if Type is `UserAssigned`.
 	// +optional
-	IdentityNames []string `json:"identityNames,omitempty"`
+	ResourceIDs []string `json:"resourceIDs,omitempty"`
 }
 
 // An AKSClusterSpec defines the desired state of a AKSCluster.
