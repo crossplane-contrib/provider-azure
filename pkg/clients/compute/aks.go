@@ -76,8 +76,7 @@ func (c AggregateClient) GetManagedCluster(ctx context.Context, ac *v1alpha3.AKS
 	return c.ManagedClusters.Get(ctx, ac.Spec.ResourceGroupName, meta.GetExternalName(ac))
 }
 
-// EnsureManagedCluster ensures the supplied AKS cluster exists, including
-// ensuring any required service principals and role assignments exist.
+// EnsureManagedCluster ensures the supplied AKS cluster exists.
 func (c AggregateClient) EnsureManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) error {
 	mc, err := newManagedCluster(ac, c.subscriptionID)
 	if err != nil {
@@ -87,8 +86,7 @@ func (c AggregateClient) EnsureManagedCluster(ctx context.Context, ac *v1alpha3.
 	return err
 }
 
-// DeleteManagedCluster deletes the supplied AKS cluster, including its service
-// principals and any role assignments.
+// DeleteManagedCluster deletes the supplied AKS cluster.
 func (c AggregateClient) DeleteManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) error {
 	_, err := c.ManagedClusters.Delete(ctx, ac.Spec.ResourceGroupName, meta.GetExternalName(ac))
 	return err
@@ -154,14 +152,7 @@ func newManagedCluster(c *v1alpha3.AKSCluster, subscriptionID string) (container
 
 	if c.Spec.VnetSubnetID != "" {
 		p.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfile{NetworkPlugin: containerservice.NetworkPluginAzure}
-		p.ManagedClusterProperties.AgentPoolProfiles = &[]containerservice.ManagedClusterAgentPoolProfile{
-			{
-				Name:         to.StringPtr(AgentPoolProfileName),
-				Count:        &nodeCount,
-				VMSize:       to.StringPtr(c.Spec.NodeVMSize),
-				VnetSubnetID: to.StringPtr(c.Spec.VnetSubnetID),
-			},
-		}
+		(*p.ManagedClusterProperties.AgentPoolProfiles)[0].VnetSubnetID = to.StringPtr(c.Spec.VnetSubnetID)
 	}
 
 	return p, nil
