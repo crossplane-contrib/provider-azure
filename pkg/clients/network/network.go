@@ -182,7 +182,7 @@ func GeneratePublicIPAddressObservation(az networkmgmt.PublicIPAddress) *v1alpha
 	v.ID = azure.ToString(az.ID)
 	v.Address = azure.ToString(az.IPAddress)
 	v.Version = string(az.PublicIPAddressVersion)
-	if az.IPConfiguration != nil {
+	if az.PublicIPAddressPropertiesFormat != nil && az.PublicIPAddressPropertiesFormat.IPConfiguration != nil && az.PublicIPAddressPropertiesFormat.IPConfiguration.IPConfigurationPropertiesFormat != nil {
 		v.IPConfiguration = &v1alpha3.IPConfiguration{
 			PrivateIPAllocationMethod: string(az.IPConfiguration.PrivateIPAllocationMethod),
 			PrivateIPAddress:          az.IPConfiguration.PrivateIPAddress,
