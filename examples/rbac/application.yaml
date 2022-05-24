@@ -1,0 +1,13 @@
+apiVersion: rbac.azure.crossplane.io/v1alpha1
+kind: Application
+metadata:
+  name: example-app
+spec:
+  forProvider:
+    availableToOtherTenants: false
+    displayName: exampleapp
+    homepage: https://exampleapp.com
+    identifierUris:
+      - https://exampleapp.com
+  providerConfigRef:
+    name: example

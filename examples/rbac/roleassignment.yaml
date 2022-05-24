@@ -1,0 +1,11 @@
+apiVersion: rbac.azure.crossplane.io/v1alpha1
+kind: RoleAssignment
+metadata:
+  name: contributor-sp
+spec:
+  forProvider:
+    roleID: /providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c
+    principalIDRef:
+      name: example-sp
+  providerConfigRef:
+    name: example
