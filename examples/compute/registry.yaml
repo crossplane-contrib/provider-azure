@@ -1,0 +1,14 @@
+apiVersion: compute.azure.crossplane.io/v1alpha3
+kind: Registry
+metadata:
+  name: example
+  labels:
+    example: "true"
+spec:
+  resourceGroupNameRef:
+    name: example-rg
+  providerConfigRef:
+    name: example
+  sku: Basic
+  adminUserEnabled: true
+  location: West Us 2

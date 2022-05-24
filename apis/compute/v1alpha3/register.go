@@ -43,8 +43,14 @@ var (
 	AKSClusterGroupKind        = schema.GroupKind{Group: Group, Kind: AKSClusterKind}.String()
 	AKSClusterKindAPIVersion   = AKSClusterKind + "." + SchemeGroupVersion.String()
 	AKSClusterGroupVersionKind = SchemeGroupVersion.WithKind(AKSClusterKind)
+
+	RegistryKind             = reflect.TypeOf(Registry{}).Name()
+	RegistryGroupKind        = schema.GroupKind{Group: Group, Kind: RegistryKind}.String()
+	RegistryKindAPIVersion   = RegistryKind + "." + SchemeGroupVersion.String()
+	RegistryGroupVersionKind = SchemeGroupVersion.WithKind(RegistryKind)
 )
 
 func init() {
 	SchemeBuilder.Register(&AKSCluster{}, &AKSClusterList{})
+	SchemeBuilder.Register(&Registry{}, &RegistryList{})
 }
