@@ -25,6 +25,17 @@ import (
 const (
 	// DefaultNodeCount is the default node count for a cluster.
 	DefaultNodeCount = 1
+
+	// AgentPoolProfileName is a format string for the name of the automatically
+	// created cluster agent pool profile
+	AgentPoolProfileName = "agentpool"
+
+	// NetworkContributorRoleID lets the AKS cluster managed networks, but not
+	// access them.
+	NetworkContributorRoleID = "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+
+	// AppCredsValidYears default value creds lifetime limit
+	AppCredsValidYears = 5
 )
 
 // AKSClusterParameters define the desired state of an Azure Kubernetes Engine
@@ -50,6 +61,7 @@ type AKSClusterParameters struct {
 
 	// VnetSubnetID is the subnet to which the cluster will be deployed.
 	// +optional
+	// +immutable
 	VnetSubnetID string `json:"vnetSubnetID,omitempty"`
 
 	// VnetSubnetIDRef - A reference to a Subnet to retrieve its ID

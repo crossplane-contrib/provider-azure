@@ -1,0 +1,22 @@
+apiVersion: compute.azure.crossplane.io/v1alpha3
+kind: AgentPool
+metadata:
+  name: example
+  labels:
+    example: "true"
+spec:
+  resourceGroupNameRef:
+    name: example-rg
+  vnetSubnetIDRef:
+    name: example-sub
+  aksClusterNameRef:
+    name: example-akscluster
+  minNodeCount: 1
+  maxNodeCount: 3
+  nodeCount: 1
+  nodeTaints:
+    - "NginxOnly=true:NoSchedule"
+  enableAutoScaling: true
+  nodeVMSize: Standard_B2s
+  providerConfigRef:
+    name: example
