@@ -21,7 +21,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
 
-	"github.com/crossplane/provider-azure/apis/compute/v1alpha3"
+	"github.com/crossplane-contrib/provider-azure/apis/compute/v1alpha3"
 )
 
 // AKSClient is a fake AKS client.

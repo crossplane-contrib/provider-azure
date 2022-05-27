@@ -22,8 +22,8 @@ import (
 	redismgmt "github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/crossplane/provider-azure/apis/cache/v1beta1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/apis/cache/v1beta1"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 )
 
 const (

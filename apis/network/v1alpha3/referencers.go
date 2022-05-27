@@ -25,7 +25,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane-contrib/provider-azure/apis/v1alpha3"
 )
 
 // SubnetID extracts status.ID from the supplied managed resource, which must be

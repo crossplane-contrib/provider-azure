@@ -33,9 +33,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
-	"github.com/crossplane/provider-azure/pkg/clients/keyvault/secret/fake"
+	"github.com/crossplane-contrib/provider-azure/apis/keyvault/v1alpha1"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/pkg/clients/keyvault/secret/fake"
 )
 
 var (

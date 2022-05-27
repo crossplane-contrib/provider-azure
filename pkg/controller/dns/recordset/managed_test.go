@@ -31,7 +31,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane/provider-azure/apis/dns/v1alpha1"
+	"github.com/crossplane-contrib/provider-azure/apis/dns/v1alpha1"
 )
 
 type MockRecordSetAPI struct {

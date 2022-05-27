@@ -24,7 +24,7 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
+	storagev1alpha3 "github.com/crossplane-contrib/provider-azure/apis/storage/v1alpha3"
 )
 
 // MockAccount builder for testing account object
