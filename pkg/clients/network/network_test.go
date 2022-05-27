@@ -27,8 +27,8 @@ import (
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
-	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/apis/network/v1alpha3"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 )
 
 var (

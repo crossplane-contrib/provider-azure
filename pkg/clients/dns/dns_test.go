@@ -24,8 +24,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/crossplane/provider-azure/apis/dns/v1alpha1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/apis/dns/v1alpha1"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 )
 
 var (

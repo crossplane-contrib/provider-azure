@@ -33,11 +33,11 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
-	keyvaultv1alpha1 "github.com/crossplane/provider-azure/apis/keyvault/v1alpha1"
-	"github.com/crossplane/provider-azure/apis/v1alpha1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
-	secretclients "github.com/crossplane/provider-azure/pkg/clients/keyvault/secret"
-	"github.com/crossplane/provider-azure/pkg/features"
+	keyvaultv1alpha1 "github.com/crossplane-contrib/provider-azure/apis/keyvault/v1alpha1"
+	"github.com/crossplane-contrib/provider-azure/apis/v1alpha1"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
+	secretclients "github.com/crossplane-contrib/provider-azure/pkg/clients/keyvault/secret"
+	"github.com/crossplane-contrib/provider-azure/pkg/features"
 )
 
 const (

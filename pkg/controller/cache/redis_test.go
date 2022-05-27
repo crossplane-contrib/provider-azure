@@ -34,10 +34,10 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane/provider-azure/apis/cache/v1beta1"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
-	redisclient "github.com/crossplane/provider-azure/pkg/clients/redis"
-	"github.com/crossplane/provider-azure/pkg/clients/redis/fake"
+	"github.com/crossplane-contrib/provider-azure/apis/cache/v1beta1"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
+	redisclient "github.com/crossplane-contrib/provider-azure/pkg/clients/redis"
+	"github.com/crossplane-contrib/provider-azure/pkg/clients/redis/fake"
 )
 
 const (

@@ -25,8 +25,8 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/test"
 
-	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/apis/database/v1alpha3"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 )
 
 func TestNewCosmosDBAccountClient(t *testing.T) {
