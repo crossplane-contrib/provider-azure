@@ -24,7 +24,7 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
 
-	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane-contrib/provider-azure/apis/v1alpha3"
 )
 
 // ResolveReferences of this Redis.

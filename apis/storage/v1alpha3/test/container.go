@@ -22,7 +22,7 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	storagev1alpha3 "github.com/crossplane/provider-azure/apis/storage/v1alpha3"
+	storagev1alpha3 "github.com/crossplane-contrib/provider-azure/apis/storage/v1alpha3"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -21,7 +21,7 @@ import (
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
-	apisv1alpha3 "github.com/crossplane/provider-azure/apis/v1alpha3"
+	apisv1alpha3 "github.com/crossplane-contrib/provider-azure/apis/v1alpha3"
 )
 
 // +kubebuilder:object:root=true

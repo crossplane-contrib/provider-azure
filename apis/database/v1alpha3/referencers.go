@@ -24,9 +24,9 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/reference"
 
-	"github.com/crossplane/provider-azure/apis/database/v1beta1"
-	networkv1alpha3 "github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	"github.com/crossplane/provider-azure/apis/v1alpha3"
+	"github.com/crossplane-contrib/provider-azure/apis/database/v1beta1"
+	networkv1alpha3 "github.com/crossplane-contrib/provider-azure/apis/network/v1alpha3"
+	"github.com/crossplane-contrib/provider-azure/apis/v1alpha3"
 )
 
 // ResolveReferences of this MySQLServerVirtualNetworkRule.

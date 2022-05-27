@@ -25,8 +25,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/crossplane/provider-azure/apis/network/v1alpha3"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/apis/network/v1alpha3"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 )
 
 // NewVirtualNetworkParameters returns an Azure VirtualNetwork object from a virtual network spec

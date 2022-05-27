@@ -20,7 +20,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/date"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/crossplane/provider-azure/apis/database/v1beta1"
+	"github.com/crossplane-contrib/provider-azure/apis/database/v1beta1"
 )
 
 // Get a pointer to a CreateMode

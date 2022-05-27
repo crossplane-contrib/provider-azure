@@ -24,8 +24,8 @@ import (
 
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
 
-	"github.com/crossplane/provider-azure/apis/v1alpha3"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/apis/v1alpha3"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 )
 
 const (

@@ -33,9 +33,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/crossplane/provider-azure/apis/database/v1alpha3"
-	azure "github.com/crossplane/provider-azure/pkg/clients"
-	"github.com/crossplane/provider-azure/pkg/clients/fake"
+	"github.com/crossplane-contrib/provider-azure/apis/database/v1alpha3"
+	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
+	"github.com/crossplane-contrib/provider-azure/pkg/clients/fake"
 )
 
 const (
