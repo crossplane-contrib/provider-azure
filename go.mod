@@ -1,4 +1,4 @@
-module github.com/crossplane/provider-azure
+module github.com/crossplane-contrib/provider-azure
 
 go 1.17
 
