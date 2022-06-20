@@ -75,6 +75,10 @@ spec:
                   to the Kubernetes API when managing containers after creating the
                   cluster.
                 type: string
+              enablePrivateCluster:
+                description: EnablePrivateCluster determines whether the cluster will
+                  be created as a private cluster default false
+                type: boolean
               location:
                 description: Location is the Azure location that the cluster will
                   be created in

@@ -19,7 +19,7 @@ package fake
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 
 	"github.com/crossplane-contrib/provider-azure/apis/compute/v1alpha3"
 )

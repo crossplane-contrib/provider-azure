@@ -23,7 +23,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	authorizationmgmt "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2019-11-01/containerservice"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
@@ -288,11 +288,16 @@ func newManagedCluster(c *v1alpha3.AKSCluster, appID, secret string) containerse
 				Secret:   to.StringPtr(secret),
 			},
 			EnableRBAC: to.BoolPtr(!c.Spec.DisableRBAC),
+			APIServerAccessProfile: &containerservice.ManagedClusterAPIServerAccessProfile{
+				EnablePrivateCluster: to.BoolPtr(c.Spec.EnablePrivateCluster),
+			},
 		},
 	}
 
 	if c.Spec.VnetSubnetID != "" {
-		p.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfile{NetworkPlugin: containerservice.Azure}
+		p.ManagedClusterProperties.NetworkProfile = &containerservice.NetworkProfileType{
+			NetworkPlugin: containerservice.Azure,
+		}
 		p.ManagedClusterProperties.AgentPoolProfiles = &[]containerservice.ManagedClusterAgentPoolProfile{
 			{
 				Name:         to.StringPtr(AgentPoolProfileName),

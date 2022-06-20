@@ -16,6 +16,7 @@ spec:
   nodeVMSize: Standard_B2s
   dnsNamePrefix: crossplane-aks
   disableRBAC: false
+  enablePrivateCluster: false
   providerConfigRef:
     name: example
   writeConnectionSecretToRef:

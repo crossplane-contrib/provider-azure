@@ -81,6 +81,10 @@ type AKSClusterParameters struct {
 	// cluster.
 	// +optional
 	DisableRBAC bool `json:"disableRBAC,omitempty"`
+	// EnablePrivateCluster determines whether the cluster will be created as a private cluster
+	// default false
+	// +optional
+	EnablePrivateCluster bool `json:"enablePrivateCluster,omitempty"`
 }
 
 // An AKSClusterSpec defines the desired state of a AKSCluster.
