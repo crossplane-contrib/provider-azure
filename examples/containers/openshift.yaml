@@ -1,0 +1,112 @@
+---
+# Azure Admin service account secret - used by Azure Provider
+apiVersion: v1
+data:
+  credentials: "******************************"
+kind: Secret
+metadata:
+  name: example-provider-azure
+type: Opaque
+---
+# Azure Provider with service account secret reference - used to provision cache resources
+apiVersion: azure.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: example
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: default
+      name: example-provider-azure
+      key: credentials
+---
+apiVersion: azure.crossplane.io/v1alpha3
+kind: ResourceGroup
+metadata:
+  name: openshift-example
+spec:
+  location: East US
+  providerConfigRef:
+    name: example
+---
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: VirtualNetwork
+metadata:
+  name: openshift-example
+spec:
+  resourceGroupNameRef:
+    name: openshift-example
+  location: eastus
+  properties:
+    addressSpace:
+      addressPrefixes:
+        - 10.2.0.0/16
+  providerConfigRef:
+    name: example
+---
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: Subnet
+metadata:
+  name: openshift-example-master
+spec:
+  resourceGroupNameRef:
+    name: openshift-example
+  virtualNetworkNameRef:
+    name: openshift-example
+  properties:
+    addressPrefix: 10.2.0.0/24
+  providerConfigRef:
+    name: example
+---
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: Subnet
+metadata:
+  name: openshift-example-worker
+spec:
+  resourceGroupNameRef:
+    name: openshift-example
+  virtualNetworkNameRef:
+    name: openshift-example
+  properties:
+    addressPrefix: 10.2.1.0/24
+  providerConfigRef:
+    name: example
+---
+apiVersion: containers.azure.crossplane.io/v1alpha1
+kind: Openshift
+metadata:
+  name: example
+  labels:
+    example: "true"
+spec:
+  forProvider:
+    location: eastus
+    resourceGroupNameRef:
+      name: openshift-example
+    networkProfile:
+      podCidr: "10.100.0.0/14"
+      serviceCidr: "172.30.0.0/16"
+    servicePrincipalProfile:
+      clientId: "****************************"
+      clientSecret: "****************************"
+    clusterProfile:
+      domain: crossplane
+      resourceGroupId: "/subscriptions/***************************/resourceGroups/crossplane"
+      pullSecret: |
+        {"auths":{"cloud.openshift.com":{"auth":"************************","email":"******************"}}}
+    workerProfile:
+      count: 3
+      subnetIDRef: 
+        name: openshift-example-worker
+      vmSize: Standard_D8s_v3
+      diskSizeGB: 128
+    masterProfile: 
+      vmSize: Standard_D8s_v3
+      subnetIDRef: 
+        name: openshift-example-master
+  writeConnectionSecretToRef:
+    namespace: default
+    name: example-openshift
+  providerConfigRef:
+    name: example
