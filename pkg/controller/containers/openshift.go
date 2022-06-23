@@ -122,12 +122,18 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	var conn managed.ConnectionDetails
 	switch cr.Status.AtProvider.ProvisioningState {
 	case openshiftclient.ProvisioningStateSucceeded:
-		k, err := c.client.ListAdminCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+		kubeConfig, err := c.client.ListAdminCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+		if err != nil {
+			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
+		}
+		creds, err := c.client.ListCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 		if err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
 		conn = managed.ConnectionDetails{
-			xpv1.ResourceCredentialsSecretKubeconfigKey: []byte(*k.Kubeconfig),
+			xpv1.ResourceCredentialsSecretKubeconfigKey: []byte(*kubeConfig.Kubeconfig),
+			xpv1.ResourceCredentialsSecretUserKey:       []byte(*creds.KubeadminUsername),
+			xpv1.ResourceCredentialsSecretPasswordKey:   []byte(*creds.KubeadminPassword),
 		}
 		cr.Status.SetConditions(xpv1.Available())
 	case openshiftclient.ProvisioningStateCreating:
@@ -149,8 +155,12 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if !ok {
 		return managed.ExternalCreation{}, errors.New(errNotOpenshift)
 	}
+	cr, err := openshiftclient.ExtractSecrets(ctx, c.kube, cr)
+	if err != nil {
+		return managed.ExternalCreation{}, errors.Wrap(err, errGetCreds)
+	}
 
-	_, err := c.client.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr), openshiftclient.NewCreateParameters(cr))
+	_, err = c.client.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr), openshiftclient.NewCreateParameters(ctx, cr, c.kube))
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errNewClient)
 	}

@@ -40,15 +40,18 @@ type OpenshiftParameters struct {
 }
 
 type ClusterProfile struct {
-	PullSecret         string                 `json:"pullSecret,omitempty"`
-	Domain             string                 `json:"domain,omitempty"`
-	Version            string                 `json:"version,omitempty"`
-	ResourceGroupID    string                 `json:"resourceGroupId,omitempty"`
+	PullSecretRef   *xpv1.SecretKeySelector `json:"pullSecretRef,omitempty"`
+	PullSecret      string                  `json:"pullSecret,omitempty"`
+	Domain          string                  `json:"domain,omitempty"`
+	Version         string                  `json:"version,omitempty"`
+	ResourceGroupID string                  `json:"resourceGroupId,omitempty"`
 }
 
 type ServicePrincipalProfile struct {
-	ClientID             string                 `json:"clientId,omitempty"`
-	ClientSecret         string                 `json:"clientSecret,omitempty"`
+	ClientIDRef     *xpv1.SecretKeySelector `json:"clientIdRef,omitempty"`
+	ClientSecretRef *xpv1.SecretKeySelector `json:"clientSecretRef,omitempty"`
+	ClientID        string                  `json:"clientId,omitempty"`
+	ClientSecret    string                  `json:"clientSecret,omitempty"`
 }
 
 type NetworkProfile struct {

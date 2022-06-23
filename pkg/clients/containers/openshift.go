@@ -17,9 +17,16 @@ limitations under the License.
 package openshift
 
 import (
+	"context"
+
 	"github.com/Azure/azure-sdk-for-go/services/redhatopenshift/mgmt/2022-04-01/redhatopenshift"
 	"github.com/crossplane-contrib/provider-azure/apis/containers/v1alpha1"
 	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Resource states
@@ -28,11 +35,12 @@ const (
 	ProvisioningStateDeleting  = "Deleting"
 	ProvisioningStateFailed    = "Failed"
 	ProvisioningStateSucceeded = "Succeeded"
+	errGetPasswordSecretFailed = "Cannot get password secret"
 )
 
 // NewCreateParameters returns Openshift cluster resource creation parameters suitable for
 // use with the Azure API.
-func NewCreateParameters(cr *v1alpha1.Openshift) redhatopenshift.OpenShiftCluster {
+func NewCreateParameters(ctx context.Context, cr *v1alpha1.Openshift, c client.Client) redhatopenshift.OpenShiftCluster {
 	return redhatopenshift.OpenShiftCluster{
 		OpenShiftClusterProperties: &redhatopenshift.OpenShiftClusterProperties{
 			IngressProfiles: &[]redhatopenshift.IngressProfile{
@@ -97,13 +105,8 @@ func NewUpdateParameters(spec v1alpha1.OpenshiftParameters, state redhatopenshif
 				Visibility: redhatopenshift.VisibilityPublic,
 			},
 			ClusterProfile: &redhatopenshift.ClusterProfile{
-				PullSecret: azure.ToStringPtr(spec.ClusterProfile.PullSecret),
 				Domain:     azure.ToStringPtr(spec.ClusterProfile.Domain),
 				Version:    azure.ToStringPtr(spec.ClusterProfile.Version),
-			},
-			ServicePrincipalProfile: &redhatopenshift.ServicePrincipalProfile{
-				ClientID:     azure.ToStringPtr(spec.ServicePrincipalProfile.ClientID),
-				ClientSecret: azure.ToStringPtr(spec.ServicePrincipalProfile.ClientSecret),
 			},
 			NetworkProfile: &redhatopenshift.NetworkProfile{
 				PodCidr:     azure.ToStringPtr(spec.NetworkProfile.PodCidr),
@@ -156,4 +159,39 @@ func GenerateObservation(az redhatopenshift.OpenShiftCluster) v1alpha1.Openshift
 	}
 	o.ProvisioningState = string(az.OpenShiftClusterProperties.ProvisioningState)
 	return o
+}
+
+func ExtractSecrets(ctx context.Context, c client.Client, cr *v1alpha1.Openshift) (*v1alpha1.Openshift, error) {
+	pullSecret, err := GetPassword(ctx, c, cr.Spec.ForProvider.ClusterProfile.PullSecretRef)
+	if err != nil {
+		return nil, err
+	}
+	clientID, err := GetPassword(ctx, c, cr.Spec.ForProvider.ServicePrincipalProfile.ClientIDRef)
+	if err != nil {
+		return nil, err
+	}
+	clientSecret, err := GetPassword(ctx, c, cr.Spec.ForProvider.ServicePrincipalProfile.ClientSecretRef)
+	if err != nil {
+		return nil, err
+	}
+	cr.Spec.ForProvider.ClusterProfile.PullSecret = pullSecret
+	cr.Spec.ForProvider.ServicePrincipalProfile.ClientID = clientID
+	cr.Spec.ForProvider.ServicePrincipalProfile.ClientSecret = clientSecret
+	return cr, nil
+}
+
+func GetPassword(ctx context.Context, kube client.Client, in *xpv1.SecretKeySelector) (pwd string, err error) {
+	if in == nil {
+		return "", nil
+	}
+	nn := types.NamespacedName{
+		Name:      in.Name,
+		Namespace: in.Namespace,
+	}
+	s := &corev1.Secret{}
+	if err := kube.Get(ctx, nn, s); err != nil {
+		return "", errors.Wrap(err, errGetPasswordSecretFailed)
+	}
+
+	return string(s.Data[in.Key]), nil
 }
