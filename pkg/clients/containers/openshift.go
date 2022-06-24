@@ -18,11 +18,16 @@ package openshift
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
+	authorizationmgmt "github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/redhatopenshift/mgmt/2022-04-01/redhatopenshift"
 	"github.com/crossplane-contrib/provider-azure/apis/containers/v1alpha1"
 	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -36,6 +41,7 @@ const (
 	ProvisioningStateFailed    = "Failed"
 	ProvisioningStateSucceeded = "Succeeded"
 	errGetPasswordSecretFailed = "Cannot get password secret"
+	NetworkContributorRoleID   = "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
 )
 
 // NewCreateParameters returns Openshift cluster resource creation parameters suitable for
@@ -105,8 +111,8 @@ func NewUpdateParameters(spec v1alpha1.OpenshiftParameters, state redhatopenshif
 				Visibility: redhatopenshift.VisibilityPublic,
 			},
 			ClusterProfile: &redhatopenshift.ClusterProfile{
-				Domain:     azure.ToStringPtr(spec.ClusterProfile.Domain),
-				Version:    azure.ToStringPtr(spec.ClusterProfile.Version),
+				Domain:  azure.ToStringPtr(spec.ClusterProfile.Domain),
+				Version: azure.ToStringPtr(spec.ClusterProfile.Version),
 			},
 			NetworkProfile: &redhatopenshift.NetworkProfile{
 				PodCidr:     azure.ToStringPtr(spec.NetworkProfile.PodCidr),
@@ -174,9 +180,14 @@ func ExtractSecrets(ctx context.Context, c client.Client, cr *v1alpha1.Openshift
 	if err != nil {
 		return nil, err
 	}
+	principalID, err := GetPassword(ctx, c, cr.Spec.ForProvider.ServicePrincipalProfile.PrincipalIDRef)
+	if err != nil {
+		return nil, err
+	}
 	cr.Spec.ForProvider.ClusterProfile.PullSecret = pullSecret
 	cr.Spec.ForProvider.ServicePrincipalProfile.ClientID = clientID
 	cr.Spec.ForProvider.ServicePrincipalProfile.ClientSecret = clientSecret
+	cr.Spec.ForProvider.ServicePrincipalProfile.PrincipalID = principalID
 	return cr, nil
 }
 
@@ -194,4 +205,36 @@ func GetPassword(ctx context.Context, kube client.Client, in *xpv1.SecretKeySele
 	}
 
 	return string(s.Data[in.Key]), nil
+}
+
+func ExtractScopeFromSubnetID(subnetID string) string {
+	if subnetID == "" {
+		return ""
+	}
+	parts := strings.Split(subnetID, "/subnets")
+	fmt.Println(len(parts))
+	if len(parts) != 2 {
+		return ""
+	}
+	return parts[0]
+}
+
+func EnsureResourceGroup(ctx context.Context, principalID, scope string, c authorization.RoleAssignmentsClient) error {
+	// If scope was the empty string we probably needed a role assignment for
+	// an optional scope, for example a subnetwork.
+	if scope == "" {
+		return nil
+	}
+
+	p := authorizationmgmt.RoleAssignmentCreateParameters{Properties: &authorizationmgmt.RoleAssignmentProperties{
+		RoleDefinitionID: azure.ToStringPtr(NetworkContributorRoleID),
+		PrincipalID:      azure.ToStringPtr(principalID),
+	}}
+
+	name, err := uuid.NewRandom()
+	if err != nil {
+		return err
+	}
+	_, err = c.Create(ctx, scope, name.String(), p)
+	return err
 }

@@ -2,9 +2,10 @@
 # Azure Admin service account secret - used by Azure Provider
 apiVersion: v1
 data:
-  client-id: "************************************"
-  client-secret: "************************************"
-  pull-secret: "************************************"
+  client-id: "*************************************"
+  client-secret: "*************************************"
+  pull-secret: "*************************************"
+  principal-id: "*************************************"
 kind: Secret
 metadata:
   name: example-openshift-secret
@@ -12,7 +13,7 @@ type: Opaque
 ---
 apiVersion: v1
 data:
-  credentials: "************************************"
+  credentials: "*************************************"
 kind: Secret
 metadata:
   name: example-provider-azure
@@ -34,7 +35,7 @@ spec:
 apiVersion: azure.crossplane.io/v1alpha3
 kind: ResourceGroup
 metadata:
-  name: openshift-example-new1
+  name: openshift-example
 spec:
   location: East US
   providerConfigRef:
@@ -46,7 +47,7 @@ metadata:
   name: openshift-example
 spec:
   resourceGroupNameRef:
-    name: openshift-example-new1
+    name: openshift-example
   location: East US
   properties:
     addressSpace:
@@ -61,11 +62,13 @@ metadata:
   name: master
 spec:
   resourceGroupNameRef:
-    name: openshift-example-new1
+    name: openshift-example
   virtualNetworkNameRef:
     name: openshift-example
   properties:
     addressPrefix: 10.0.1.0/24
+    serviceEndpoints:
+      - service: Microsoft.ContainerRegistry
   providerConfigRef:
     name: example
 ---
@@ -75,29 +78,35 @@ metadata:
   name: worker
 spec:
   resourceGroupNameRef:
-    name: openshift-example-new1
+    name: openshift-example
   virtualNetworkNameRef:
     name: openshift-example
   properties:
     addressPrefix: 10.0.2.0/24
+    serviceEndpoints:
+      - service: Microsoft.ContainerRegistry
   providerConfigRef:
     name: example
 ---
 apiVersion: containers.azure.crossplane.io/v1alpha1
 kind: Openshift
 metadata:
-  name: example-new1
+  name: example
   labels:
     example: "true"
 spec:
   forProvider:
     location: eastus
     resourceGroupNameRef:
-      name: openshift-example-new1
+      name: openshift-example
     networkProfile:
       podCidr: "10.100.0.0/14"
       serviceCidr: "172.30.0.0/16"
     servicePrincipalProfile:
+      servicePrincipalIdRef:
+        name: example-openshift-secret
+        namespace: default
+        key: principal-id
       clientIdRef:
         namespace: default
         name: example-openshift-secret
@@ -108,7 +117,7 @@ spec:
         key: client-secret
     clusterProfile:
       domain: crossplane
-      resourceGroupId: "/subscriptions/***************************/resourceGroups/crossplane"
+      resourceGroupId: "/subscriptions/*************************************/resourceGroups/crossplane"
       pullSecretRef: 
         namespace: default
         name: example-openshift-secret

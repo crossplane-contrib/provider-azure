@@ -19,6 +19,7 @@ package containers
 import (
 	"context"
 
+	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/redhatopenshift/mgmt/2022-04-01/redhatopenshift"
 	"github.com/Azure/azure-sdk-for-go/services/redhatopenshift/mgmt/2022-04-01/redhatopenshift/redhatopenshiftapi"
 	"github.com/crossplane-contrib/provider-azure/apis/containers/v1alpha1"
@@ -94,14 +95,17 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 	cl := redhatopenshift.NewOpenShiftClustersClient(creds[azure.CredentialsKeySubscriptionID])
 	cl.Authorizer = auth
-	return &external{kube: c.kube, client: cl}, nil
+	rac := authorization.NewRoleAssignmentsClient(creds[azure.CredentialsKeySubscriptionID])
+	rac.Authorizer = auth
+	return &external{kube: c.kube, redhatClient: cl, roleClient: rac}, nil
 }
 
 // An ExternalClient observes, then either creates, updates, or deletes an
 // external resource to ensure it reflects the managed resource's desired state.
 type external struct {
-	kube   client.Client
-	client redhatopenshiftapi.OpenShiftClustersClientAPI
+	kube       client.Client
+	redhatClient     redhatopenshiftapi.OpenShiftClustersClientAPI
+	roleClient authorization.RoleAssignmentsClient
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
@@ -109,7 +113,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	if !ok {
 		return managed.ExternalObservation{}, errors.New(errNotOpenshift)
 	}
-	openShiftCluster, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+	openShiftCluster, err := c.redhatClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 	if err != nil {
 		return managed.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(azure.IsNotFound, err), errGetFailed)
 	}
@@ -122,11 +126,11 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	var conn managed.ConnectionDetails
 	switch cr.Status.AtProvider.ProvisioningState {
 	case openshiftclient.ProvisioningStateSucceeded:
-		kubeConfig, err := c.client.ListAdminCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+		kubeConfig, err := c.redhatClient.ListAdminCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 		if err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
-		creds, err := c.client.ListCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+		creds, err := c.redhatClient.ListCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 		if err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
@@ -160,7 +164,12 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.Wrap(err, errGetCreds)
 	}
 
-	_, err = c.client.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr), openshiftclient.NewCreateParameters(ctx, cr, c.kube))
+	err = openshiftclient.EnsureResourceGroup(ctx, cr.Spec.ForProvider.ServicePrincipalProfile.PrincipalID ,openshiftclient.ExtractScopeFromSubnetID(cr.Spec.ForProvider.MasterProfile.SubnetID), c.roleClient )
+	if err != nil {
+		return managed.ExternalCreation{}, errors.Wrap(err, errGetCreds)
+	}
+
+	_, err = c.redhatClient.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr), openshiftclient.NewCreateParameters(ctx, cr, c.kube))
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errNewClient)
 	}
@@ -178,12 +187,12 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalUpdate{}, nil
 	}
 
-	openShiftCluster, err := c.client.Get(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+	openShiftCluster, err := c.redhatClient.Get(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errGetFailed)
 	}
 
-	_, err = c.client.Update(
+	_, err = c.redhatClient.Update(
 		ctx,
 		cr.Spec.ForProvider.ResourceGroupNameRef.Name,
 		meta.GetExternalName(cr),
@@ -200,6 +209,6 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	if cr.Status.AtProvider.ProvisioningState == openshiftclient.ProvisioningStateDeleting {
 		return nil
 	}
-	_, err := c.client.Delete(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
+	_, err := c.redhatClient.Delete(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 	return errors.Wrap(resource.Ignore(azure.IsNotFound, err), errDeleteFailed)
 }
