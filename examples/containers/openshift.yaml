@@ -108,7 +108,7 @@ spec:
         key: client-secret
     clusterProfile:
       domain: crossplane
-      resourceGroupId: "/subscriptions/a5191807-15a4-44da-9cc3-2362f6ea759e/resourceGroups/crossplane"
+      resourceGroupId: "/subscriptions/***************************/resourceGroups/crossplane"
       pullSecretRef: 
         namespace: default
         name: example-openshift-secret
