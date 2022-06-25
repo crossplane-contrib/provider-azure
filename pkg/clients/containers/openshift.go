@@ -41,7 +41,7 @@ const (
 	ProvisioningStateFailed    = "Failed"
 	ProvisioningStateSucceeded = "Succeeded"
 	errGetPasswordSecretFailed = "Cannot get password secret"
-	NetworkContributorRoleID   = "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+	contributorRoleID   = "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
 )
 
 // NewCreateParameters returns Openshift cluster resource creation parameters suitable for
@@ -184,10 +184,15 @@ func ExtractSecrets(ctx context.Context, c client.Client, cr *v1alpha1.Openshift
 	if err != nil {
 		return nil, err
 	}
+	AzureRedHatOpenShiftRPPrincipalID, err := GetPassword(ctx, c, cr.Spec.ForProvider.ServicePrincipalProfile.AzureRedHatOpenShiftRPPrincipalIDRef)
+	if err != nil {
+		return nil, err
+	}
 	cr.Spec.ForProvider.ClusterProfile.PullSecret = pullSecret
 	cr.Spec.ForProvider.ServicePrincipalProfile.ClientID = clientID
 	cr.Spec.ForProvider.ServicePrincipalProfile.ClientSecret = clientSecret
 	cr.Spec.ForProvider.ServicePrincipalProfile.PrincipalID = principalID
+	cr.Spec.ForProvider.ServicePrincipalProfile.AzureRedHatOpenShiftRPPrincipalID = AzureRedHatOpenShiftRPPrincipalID
 	return cr, nil
 }
 
@@ -212,7 +217,7 @@ func ExtractScopeFromSubnetID(subnetID string) string {
 		return ""
 	}
 	parts := strings.Split(subnetID, "/subnets")
-	fmt.Println(len(parts))
+
 	if len(parts) != 2 {
 		return ""
 	}
@@ -226,8 +231,19 @@ func EnsureResourceGroup(ctx context.Context, principalID, scope string, c autho
 		return nil
 	}
 
+	filter := fmt.Sprintf("principalId eq '%s'", principalID)
+	for l, err := c.ListForScopeComplete(ctx, scope, filter); l.NotDone(); err = l.NextWithContext(ctx) {
+		if err != nil {
+			return err
+		}
+
+		// We really do want to stop here if our principal already has a role
+		// definition for this scope; we presume it's one we created earlier.
+		return nil // nolint:staticcheck
+	}
+
 	p := authorizationmgmt.RoleAssignmentCreateParameters{Properties: &authorizationmgmt.RoleAssignmentProperties{
-		RoleDefinitionID: azure.ToStringPtr(NetworkContributorRoleID),
+		RoleDefinitionID: azure.ToStringPtr(contributorRoleID),
 		PrincipalID:      azure.ToStringPtr(principalID),
 	}}
 

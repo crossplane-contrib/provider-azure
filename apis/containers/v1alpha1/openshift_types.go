@@ -48,12 +48,14 @@ type ClusterProfile struct {
 }
 
 type ServicePrincipalProfile struct {
-	PrincipalID     string                  `json:"servicePrincipalId,omitempty"`
-	PrincipalIDRef  *xpv1.SecretKeySelector `json:"servicePrincipalIdRef,omitempty"`
-	ClientIDRef     *xpv1.SecretKeySelector `json:"clientIdRef,omitempty"`
-	ClientSecretRef *xpv1.SecretKeySelector `json:"clientSecretRef,omitempty"`
-	ClientID        string                  `json:"clientId,omitempty"`
-	ClientSecret    string                  `json:"clientSecret,omitempty"`
+	AzureRedHatOpenShiftRPPrincipalIDRef *xpv1.SecretKeySelector `json:"azureRedHatOpenShiftRPPrincipalIDRef,omitempty"`
+	AzureRedHatOpenShiftRPPrincipalID    string                  `json:"azureRedHatOpenShiftRPPrincipalID,omitempty"`
+	PrincipalID                          string                  `json:"servicePrincipalId,omitempty"`
+	PrincipalIDRef                       *xpv1.SecretKeySelector `json:"servicePrincipalIdRef,omitempty"`
+	ClientIDRef                          *xpv1.SecretKeySelector `json:"clientIdRef,omitempty"`
+	ClientSecretRef                      *xpv1.SecretKeySelector `json:"clientSecretRef,omitempty"`
+	ClientID                             string                  `json:"clientId,omitempty"`
+	ClientSecret                         string                  `json:"clientSecret,omitempty"`
 }
 
 type NetworkProfile struct {

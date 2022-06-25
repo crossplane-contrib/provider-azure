@@ -169,6 +169,11 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.Wrap(err, errGetCreds)
 	}
 
+	err = openshiftclient.EnsureResourceGroup(ctx, cr.Spec.ForProvider.ServicePrincipalProfile.AzureRedHatOpenShiftRPPrincipalID ,openshiftclient.ExtractScopeFromSubnetID(cr.Spec.ForProvider.MasterProfile.SubnetID), c.roleClient )
+	if err != nil {
+		return managed.ExternalCreation{}, errors.Wrap(err, errGetCreds)
+	}
+
 	_, err = c.redhatClient.CreateOrUpdate(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr), openshiftclient.NewCreateParameters(ctx, cr, c.kube))
 	if err != nil {
 		return managed.ExternalCreation{}, errors.Wrap(err, errNewClient)

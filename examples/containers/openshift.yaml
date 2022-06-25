@@ -6,6 +6,7 @@ data:
   client-secret: "*************************************"
   pull-secret: "*************************************"
   principal-id: "*************************************"
+  az-red-hat-openshift-rp-principal-id: "*************************************"
 kind: Secret
 metadata:
   name: example-openshift-secret
@@ -103,6 +104,10 @@ spec:
       podCidr: "10.100.0.0/14"
       serviceCidr: "172.30.0.0/16"
     servicePrincipalProfile:
+      azureRedHatOpenShiftRPPrincipalIDRef:
+        name: example-openshift-secret
+        namespace: default
+        key: az-red-hat-openshift-rp-principal-id
       servicePrincipalIdRef:
         name: example-openshift-secret
         namespace: default
