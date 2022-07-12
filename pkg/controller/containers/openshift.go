@@ -18,6 +18,7 @@ package containers
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/redhatopenshift/mgmt/2022-04-01/redhatopenshift"
@@ -130,12 +131,16 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		if err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
+		kubeconfigDecoded, err := base64.StdEncoding.DecodeString(*kubeConfig.Kubeconfig)
+		if err != nil {
+			return managed.ExternalObservation{}, errors.Wrap(err, errGetCreds)
+		}
 		creds, err := c.redhatClient.ListCredentials(ctx, cr.Spec.ForProvider.ResourceGroupNameRef.Name, meta.GetExternalName(cr))
 		if err != nil {
 			return managed.ExternalObservation{}, errors.Wrap(err, errListAccessKeysFailed)
 		}
 		conn = managed.ConnectionDetails{
-			xpv1.ResourceCredentialsSecretKubeconfigKey: []byte(*kubeConfig.Kubeconfig),
+			xpv1.ResourceCredentialsSecretKubeconfigKey: []byte(kubeconfigDecoded),
 			xpv1.ResourceCredentialsSecretUserKey:       []byte(*creds.KubeadminUsername),
 			xpv1.ResourceCredentialsSecretPasswordKey:   []byte(*creds.KubeadminPassword),
 		}
