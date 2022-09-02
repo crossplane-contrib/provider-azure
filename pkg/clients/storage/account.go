@@ -42,7 +42,7 @@ func NewStorageAccountClient(data []byte) (*storage.AccountsClient, error) {
 
 	authorizer, err := config.Authorizer()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get authorizer from config: %+v", err)
+		return nil, fmt.Errorf("failed to get authorizer from config: %w", err)
 	}
 
 	client := storage.NewAccountsClient(creds.SubscriptionID)
