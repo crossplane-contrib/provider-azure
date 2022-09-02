@@ -47,7 +47,7 @@ GO111MODULE = on
 # Setup Images
 
 IMAGES = provider-azure 
--include build/makelib/image.mk
+-include build/makelib/imagelight.mk
 
 # ====================================================================================
 # Targets
