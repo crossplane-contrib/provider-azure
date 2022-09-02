@@ -46,8 +46,7 @@ GO111MODULE = on
 # ====================================================================================
 # Setup Images
 
-DOCKER_REGISTRY = crossplane
-IMAGES = provider-azure provider-azure-controller
+IMAGES = provider-azure 
 -include build/makelib/image.mk
 
 # ====================================================================================
