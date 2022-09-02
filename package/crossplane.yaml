@@ -17,6 +17,3 @@ metadata:
       [slack.crossplane.io](https://slack.crossplane.io) and create an issue in
       the [crossplane/provider-azure](https://github.com/crossplane/provider-azure)
       repo.
-spec:
-  controller:
-    image: crossplane/provider-azure-controller:VERSION
