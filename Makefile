@@ -61,6 +61,10 @@ XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/crossplane
 XPKGS = provider-azure
 -include build/makelib/xpkg.mk
 
+# NOTE(hasheddan): we force image building to happen prior to xpkg build so that
+# we ensure image is present in daemon.
+xpkg.build.provider-azure: do.build.images
+
 # ====================================================================================
 # Targets
 
