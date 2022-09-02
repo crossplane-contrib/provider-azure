@@ -41,6 +41,8 @@ GO111MODULE = on
 # ====================================================================================
 # Setup Kubernetes tools
 
+UP_VERSION = v0.13.0
+UP_CHANNEL = stable
 -include build/makelib/k8s_tools.mk
 
 # ====================================================================================
@@ -48,6 +50,16 @@ GO111MODULE = on
 
 IMAGES = provider-azure 
 -include build/makelib/imagelight.mk
+
+# ====================================================================================
+# Setup XPKG
+
+XPKG_REG_ORGS ?= xpkg.upbound.io/crossplane index.docker.io/crossplane
+# NOTE(hasheddan): skip promoting on xpkg.upbound.io as channel tags are
+# inferred.
+XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/crossplane
+XPKGS = provider-azure
+-include build/makelib/xpkg.mk
 
 # ====================================================================================
 # Targets
@@ -71,6 +83,11 @@ fallthrough: submodules
 # identify its location in CI so that we cache between builds.
 go.cachedir:
 	@go env GOCACHE
+
+# NOTE(hasheddan): we must ensure up is installed in tool cache prior to build
+# as including the k8s_tools machinery prior to the xpkg machinery sets UP to
+# point to tool cache.
+build.init: $(UP)
 
 # Generate a coverage report for cobertura applying exclusions on
 # - generated file
