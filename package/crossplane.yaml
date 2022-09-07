@@ -13,64 +13,7 @@ metadata:
       `provider-azure` is the Crossplane infrastructure provider for [Microsoft
       Azure](https://azure.microsoft.com/).
 
-      Available resources and their fields can be found in the [CRD
-      Docs](https://doc.crds.dev/github.com/crossplane/provider-azure).
-
       If you encounter an issue please reach out on
       [slack.crossplane.io](https://slack.crossplane.io) and create an issue in
       the [crossplane/provider-azure](https://github.com/crossplane/provider-azure)
       repo.
-    meta.crossplane.io/iconURI: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NSIgaGVpZ2h0PSI2NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIj48cmVjdCB3aWR0aD0iNjUiIGhlaWdodD0iNjUiIGZpbGw9IiMxQTFBMUYiIHJ4PSIxNiIvPjxnIHN0cm9rZS13aWR0aD0iLjUiPjxwYXRoIGZpbGw9IiNGMjUwMjIiIHN0cm9rZT0iI0YyNTAyMiIgZD0iTTE4LjAwMzE0MTY0IDE4LjQ0NTE5MjI5YzAtLjE0Mjc3MDU5IDAtLjI5MzkzOTQ1LjAwODQwMTQ3LS40NDUxOTIyOSA0LjY2MjgxODk3LjAwODQ4MjI1IDkuMzI1NjM3OTMgMCAxMy45ODg0NTY4OS4wMDg0ODIyNVYzMS45OTE2MDE3Yy00LjY2MjgxODk2LjAxNjc5NjYtOS4zMjU2Mzc5MiAwLTEzLjk4ODQ1Njg5LjAwODM5ODMtLjAyNTIwNDQyLTQuNTE4MjY5MjQgMC05LjAzNjUzODQ3LS4wMDg0MDE0Ny0xMy41NTQ4MDc3MXoiLz48cGF0aCBmaWxsPSIjN0ZCQTAwIiBzdHJva2U9IiM3RkJBMDAiIGQ9Ik0zNCAxOC4wMzM1OTMwOEMzNC4xMDA3Nzk4IDE4LjAwODM5ODI3IDM0LjIwMTU1OTcgMTggMzQuMzEwNzM3OSAxOGM0LjU2MDI4NzkuMDA4NDgyMjUgOS4xMjg5NzQyIDAgMTMuNjg5MjYyMS4wMDg0ODIyNVYzMS45OTE2MDE3Yy00LjY2MTA2NzguMDE2Nzk2Ni05LjMyMjEzNTYgMC0xMy45ODMyMDM0LjAwODM5ODMtLjAzMzU5MzItNC42NTI3MjU1NC4wMDgzOTg0LTkuMzEzNzY1MzYtLjAxNjc5NjYtMTMuOTY2NDA2OTJ6Ii8+PHBhdGggZmlsbD0iIzAwQTRFRiIgc3Ryb2tlPSIjMDBBNEVGIiBkPSJNMTggNDcuOTY2MzIyOWMuMDMzNTkzMjgtNC42NTI2NDE1LS4wMTY3OTY2NC05LjMxMzY4MTMuMDI1MTk0OTYtMTMuOTY2MzIyOSA0LjY1MjY2OTQ3LjAwODM5ODMgOS4zMTM3MzcyNS0uMDA4Mzk4MyAxMy45NzQ4MDUwNC4wMDgzOTgzdjEzLjk4MzExOTRjLTQuNDg0NzAzMDYuMDA4NDgyMy04Ljk2MTAwNzggMC0xMy40NDU3MTA4Ni4wMDg0ODIzLS4xODQ3NjMwNCAwLS4zNjk1MjYxIDAtLjU1NDI4OTE0LS4wMzM2NzcxaDB6Ii8+PHBhdGggZmlsbD0iI0ZGQjkwMCIgc3Ryb2tlPSIjRkZCOTAwIiBkPSJNMzQuMDA4Mzk4MyAzNS4wMzI5ODcyYzAtLjM0NDMyOTEtLjAxNjc5NjYtLjY4ODY1ODEuMDA4Mzk4My0xLjAzMjk4NzIgNC42NjEwNjc4LjAwODM5ODMgOS4zMjIxMzU2LS4wMDgzOTgzIDEzLjk4MzIwMzQuMDA4Mzk4M3YxMy45ODMxMTk0Yy00LjU2MDI4NzkuMDA4NDgyMy05LjEyODk3NDIgMC0xMy42ODkyNjIxLjAwODQ4MjMtLjEwOTE3ODItLjAwODQ4MjMtLjIwOTk1ODEtLjAxNjc5NjUtLjMxMDczNzktLjAyNTE5NDguMDE2Nzk2Ni00LjMxNjc5NDggMC04LjYyNTEwNzIuMDA4Mzk4My0xMi45NDE4MTh6Ii8+PC9nPjwvZz48L3N2Zz4=
-    friendly-name.meta.crossplane.io: Provider Azure
-
-    friendly-group-name.meta.crossplane.io/cache.azure.crossplane.io: Caches
-    friendly-group-name.meta.crossplane.io/compute.azure.crossplane.io: Compute
-    friendly-group-name.meta.crossplane.io/database.azure.crossplane.io: Databases
-    friendly-group-name.meta.crossplane.io/network.azure.crossplane.io: Network
-    friendly-group-name.meta.crossplane.io/storage.azure.crossplane.io: Storage
-
-    friendly-kind-name.meta.crossplane.io/resourcegroup.azure.crossplane.io: Resource Group
-    friendly-kind-name.meta.crossplane.io/redis.cache.azure.crossplane.io: Redis Cluster
-    friendly-kind-name.meta.crossplane.io/akscluster.compute.azure.crossplane.io: AKS Cluster
-    friendly-kind-name.meta.crossplane.io/cosmosdbaccount.database.azure.crossplane.io: CosmosDB Account
-    friendly-kind-name.meta.crossplane.io/mysqlserverfirewallrule.database.azure.crossplane.io: MySQL Firewall Rule
-    friendly-kind-name.meta.crossplane.io/mysqlserver.database.azure.crossplane.io: MySQL Server
-    friendly-kind-name.meta.crossplane.io/mysqlservervirtualnetworkrule.database.azure.crossplane.io: MySQL Virtual Network Rule
-    friendly-kind-name.meta.crossplane.io/postgresqlserverfirewallrule.database.azure.crossplane.io: PostgreSQL Server Firewall Rule
-    friendly-kind-name.meta.crossplane.io/postgresqlserver.database.azure.crossplane.io: PostgreSQL Server
-    friendly-kind-name.meta.crossplane.io/postgresqlservervirtualnetworkrule.database.azure.crossplane.io: PostgreSQL Server Virtual Network Rule
-    friendly-kind-name.meta.crossplane.io/subnet.network.azure.crossplane.io: Subnet
-    friendly-kind-name.meta.crossplane.io/virtualnetwork.network.azure.crossplane.io: Virtual Network
-    friendly-kind-name.meta.crossplane.io/account.storage.azure.crossplane.io: Storage Account
-    friendly-kind-name.meta.crossplane.io/container.storage.azure.crossplane.io: Storage Container
-
-    # TODO(negz): Remove the below metadata once we're two releases past v0.16,
-    # which should be enough time for consumers to update.
-    company: Crossplane
-    maintainer: Crossplane Maintainers <info@crossplane.io>
-    source: github.com/crossplane/provider-azure
-    license: Apache-2.0
-    descriptionShort: |
-      The Azure Crossplane provider enables infrastructure management for the
-      Microsoft Azure Cloud Platform.
-
-    description: |
-      The Microsoft Azure Crossplane provider adds support for managing Azure
-      resources in Kubernetes.
-
-    readme: |
-      `provider-azure` is the Crossplane infrastructure provider for [Microsoft
-      Azure](https://azure.microsoft.com/).
-
-      Available resources and their fields can be found in the [CRD
-      Docs](https://doc.crds.dev/github.com/crossplane/provider-azure).
-
-      If you encounter an issue please reach out on
-      [slack.crossplane.io](https://slack.crossplane.io) and create an issue in
-      the [crossplane/provider-azure](https://github.com/crossplane/provider-azure)
-      repo.
-    iconData: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NSIgaGVpZ2h0PSI2NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJub256ZXJvIj48cmVjdCB3aWR0aD0iNjUiIGhlaWdodD0iNjUiIGZpbGw9IiMxQTFBMUYiIHJ4PSIxNiIvPjxnIHN0cm9rZS13aWR0aD0iLjUiPjxwYXRoIGZpbGw9IiNGMjUwMjIiIHN0cm9rZT0iI0YyNTAyMiIgZD0iTTE4LjAwMzE0MTY0IDE4LjQ0NTE5MjI5YzAtLjE0Mjc3MDU5IDAtLjI5MzkzOTQ1LjAwODQwMTQ3LS40NDUxOTIyOSA0LjY2MjgxODk3LjAwODQ4MjI1IDkuMzI1NjM3OTMgMCAxMy45ODg0NTY4OS4wMDg0ODIyNVYzMS45OTE2MDE3Yy00LjY2MjgxODk2LjAxNjc5NjYtOS4zMjU2Mzc5MiAwLTEzLjk4ODQ1Njg5LjAwODM5ODMtLjAyNTIwNDQyLTQuNTE4MjY5MjQgMC05LjAzNjUzODQ3LS4wMDg0MDE0Ny0xMy41NTQ4MDc3MXoiLz48cGF0aCBmaWxsPSIjN0ZCQTAwIiBzdHJva2U9IiM3RkJBMDAiIGQ9Ik0zNCAxOC4wMzM1OTMwOEMzNC4xMDA3Nzk4IDE4LjAwODM5ODI3IDM0LjIwMTU1OTcgMTggMzQuMzEwNzM3OSAxOGM0LjU2MDI4NzkuMDA4NDgyMjUgOS4xMjg5NzQyIDAgMTMuNjg5MjYyMS4wMDg0ODIyNVYzMS45OTE2MDE3Yy00LjY2MTA2NzguMDE2Nzk2Ni05LjMyMjEzNTYgMC0xMy45ODMyMDM0LjAwODM5ODMtLjAzMzU5MzItNC42NTI3MjU1NC4wMDgzOTg0LTkuMzEzNzY1MzYtLjAxNjc5NjYtMTMuOTY2NDA2OTJ6Ii8+PHBhdGggZmlsbD0iIzAwQTRFRiIgc3Ryb2tlPSIjMDBBNEVGIiBkPSJNMTggNDcuOTY2MzIyOWMuMDMzNTkzMjgtNC42NTI2NDE1LS4wMTY3OTY2NC05LjMxMzY4MTMuMDI1MTk0OTYtMTMuOTY2MzIyOSA0LjY1MjY2OTQ3LjAwODM5ODMgOS4zMTM3MzcyNS0uMDA4Mzk4MyAxMy45NzQ4MDUwNC4wMDgzOTgzdjEzLjk4MzExOTRjLTQuNDg0NzAzMDYuMDA4NDgyMy04Ljk2MTAwNzggMC0xMy40NDU3MTA4Ni4wMDg0ODIzLS4xODQ3NjMwNCAwLS4zNjk1MjYxIDAtLjU1NDI4OTE0LS4wMzM2NzcxaDB6Ii8+PHBhdGggZmlsbD0iI0ZGQjkwMCIgc3Ryb2tlPSIjRkZCOTAwIiBkPSJNMzQuMDA4Mzk4MyAzNS4wMzI5ODcyYzAtLjM0NDMyOTEtLjAxNjc5NjYtLjY4ODY1ODEuMDA4Mzk4My0xLjAzMjk4NzIgNC42NjEwNjc4LjAwODM5ODMgOS4zMjIxMzU2LS4wMDgzOTgzIDEzLjk4MzIwMzQuMDA4Mzk4M3YxMy45ODMxMTk0Yy00LjU2MDI4NzkuMDA4NDgyMy05LjEyODk3NDIgMC0xMy42ODkyNjIxLjAwODQ4MjMtLjEwOTE3ODItLjAwODQ4MjMtLjIwOTk1ODEtLjAxNjc5NjUtLjMxMDczNzktLjAyNTE5NDguMDE2Nzk2Ni00LjMxNjc5NDggMC04LjYyNTEwNzIuMDA4Mzk4My0xMi45NDE4MTh6Ii8+PC9nPjwvZz48L3N2Zz4=
-
-spec:
-  controller:
-    image: crossplane/provider-azure-controller:VERSION

@@ -249,12 +249,12 @@ func FetchAsyncOperation(ctx context.Context, client autorest.Sender, as *v1alph
 
 // IsNotFound returns a value indicating whether the given error represents that the resource was not found.
 func IsNotFound(err error) bool {
-	detailedError, ok := err.(autorest.DetailedError)
-	if !ok {
+	var aErr autorest.DetailedError
+	if !errors.As(err, &aErr) {
 		return false
 	}
 
-	statusCode, ok := detailedError.StatusCode.(int)
+	statusCode, ok := aErr.StatusCode.(int)
 	if !ok {
 		return false
 	}

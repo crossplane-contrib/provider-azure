@@ -1,6 +1,6 @@
 module github.com/crossplane-contrib/provider-azure
 
-go 1.17
+go 1.18
 
 require (
 	github.com/Azure/azure-sdk-for-go v61.4.0+incompatible

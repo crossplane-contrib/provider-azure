@@ -257,7 +257,7 @@ func TestReconciler_Reconcile(t *testing.T) {
 				Initializer:      managed.NewNameAsExternalName(tt.fields.Client),
 				log:              logging.NewNopLogger(),
 			}
-			got, err := r.Reconcile(context.Background(), req)
+			got, err := r.Reconcile(ctx, req)
 			if diff := cmp.Diff(tt.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("Reconciler.Reconcile(): -want error, +got error:\n%s", diff)
 			}

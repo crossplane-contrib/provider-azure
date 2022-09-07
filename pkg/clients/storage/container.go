@@ -18,6 +18,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -104,10 +105,6 @@ func emtpyMetaToNil(m azblob.Metadata) azblob.Metadata {
 
 // IsNotFoundError tests for azblob not found error
 func IsNotFoundError(err error) bool {
-	storageErr, ok := err.(azblob.StorageError)
-	if !ok {
-		return false
-	}
-
-	return storageErr.Response().StatusCode == http.StatusNotFound // nolint: bodyclose
+	var sErr azblob.StorageError
+	return errors.As(err, &sErr) && sErr.Response().StatusCode == http.StatusNotFound // nolint: bodyclose
 }
