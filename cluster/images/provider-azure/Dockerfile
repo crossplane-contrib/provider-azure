@@ -6,4 +6,4 @@ ARG TARGETARCH
 ADD bin/$TARGETOS\_$TARGETARCH/provider /usr/local/bin/crossplane-azure-provider
 
 USER 65532
-ENTRYPOINT ["crossplane-gcp-provider"]
+ENTRYPOINT ["crossplane-azure-provider"]
