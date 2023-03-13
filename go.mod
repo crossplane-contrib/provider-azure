@@ -11,7 +11,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.0
 	github.com/Azure/go-autorest/autorest/date v0.3.0
 	github.com/Azure/go-autorest/autorest/to v0.3.0
-	github.com/crossplane/crossplane-runtime v0.15.1-0.20220315141414-988c9ba9c255
+	github.com/crossplane/crossplane-runtime v0.16.1
 	github.com/crossplane/crossplane-tools v0.0.0-20220310165030-1f43fc12793e
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.1.2
