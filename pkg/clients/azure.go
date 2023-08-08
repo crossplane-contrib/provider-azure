@@ -20,7 +20,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
+	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -30,6 +36,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
@@ -44,6 +52,10 @@ const (
 	// that indicates the operation is still ongoing.
 	AsyncOperationStatusInProgress = "InProgress"
 	asyncOperationPollingMethod    = "AsyncOperation"
+	defaultScope                   = "/.default"
+	chinaCloudARMScope             = "https://management.core.chinacloudapi.cn/" + defaultScope
+	publicCloudARMScope            = "https://management.core.windows.net/" + defaultScope
+	usGovCloudARMScope             = "https://management.core.usgovcloudapi.net/" + defaultScope
 )
 
 // Error strings.
@@ -53,7 +65,11 @@ const (
 	errGetProvider               = "cannot get referenced Provider"
 	errNeitherPCNorPGiven        = "neither providerConfigRef nor providerRef was supplied"
 	errUnmarshalCredentialSecret = "cannot unmarshal the data in credentials secret"
-	errGetAuthorizer             = "cannot get authorizer from client credentials config"
+	errClientCredentials         = "cannot get credentials"
+	errClientSecretAuth          = "failed to initialize Azure identity client secret credential"
+	errDefaultAuth               = "failed to initialize Azure identity default credential"
+	errFetchAccessToken          = "failed to get Azure identity access token"
+	errSubscriptionIDNotSet      = "subscription ID must be set in ProviderConfig when credential source is not Secret"
 )
 
 // A FieldOption determines how common Go types are translated to the types
@@ -71,82 +87,144 @@ const (
 
 // Credentials Secret content is a json whose keys are below.
 const (
-	CredentialsKeyClientID                       = "clientId"
-	CredentialsKeyClientSecret                   = "clientSecret"
-	CredentialsKeyTenantID                       = "tenantId"
-	CredentialsKeySubscriptionID                 = "subscriptionId"
-	CredentialsKeyActiveDirectoryEndpointURL     = "activeDirectoryEndpointUrl"
-	CredentialsKeyResourceManagerEndpointURL     = "resourceManagerEndpointUrl"
-	CredentialsKeyActiveDirectoryGraphResourceID = "activeDirectoryGraphResourceId"
-	CredentialsKeySQLManagementEndpointURL       = "sqlManagementEndpointUrl"
-	CredentialsKeyGalleryEndpointURL             = "galleryEndpointUrl"
-	CredentialsManagementEndpointURL             = "managementEndpointUrl"
+	CredentialsKeyClientID                   = "clientId"
+	CredentialsKeyClientSecret               = "clientSecret"
+	CredentialsKeyTenantID                   = "tenantId"
+	CredentialsKeySubscriptionID             = "subscriptionId"
+	CredentialsKeyActiveDirectoryEndpointURL = "activeDirectoryEndpointUrl"
+	CredentialsKeyResourceManagerEndpointURL = "resourceManagerEndpointUrl"
 )
 
 // GetAuthInfo figures out how to connect to Azure API and returns the necessary
 // information to be used for controllers to construct their specific clients.
-func GetAuthInfo(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
+func GetAuthInfo(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) {
 	switch {
 	case mg.GetProviderConfigReference() != nil:
 		return UseProviderConfig(ctx, c, mg)
 	case mg.GetProviderReference() != nil:
 		return UseProvider(ctx, c, mg)
 	default:
-		return nil, nil, errors.New(errNeitherPCNorPGiven)
+		return "", nil, errors.New(errNeitherPCNorPGiven)
 	}
 }
 
 // UseProvider to return the necessary information to construct an Azure client.
 // Deprecated: Use UseProviderConfig
-func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
+func UseProvider(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) {
 	p := &v1alpha3.Provider{}
 	if err := c.Get(ctx, types.NamespacedName{Name: mg.GetProviderReference().Name}, p); err != nil {
-		return nil, nil, errors.Wrap(err, errGetProvider)
+		return "", nil, errors.Wrap(err, errGetProvider)
 	}
 
 	ref := p.Spec.CredentialsSecretRef
 	s := &corev1.Secret{}
 	if err := c.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: ref.Namespace}, s); err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 	m := map[string]string{}
 	if err := json.Unmarshal(s.Data[ref.Key], &m); err != nil {
-		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
+		return "", nil, errors.Wrap(err, errUnmarshalCredentialSecret)
 	}
-	cfg := auth.NewClientCredentialsConfig(m[CredentialsKeyClientID], m[CredentialsKeyClientSecret], m[CredentialsKeyTenantID])
-	cfg.AADEndpoint = m[CredentialsKeyActiveDirectoryEndpointURL]
-	cfg.Resource = m[CredentialsKeyResourceManagerEndpointURL]
-
-	a, err := cfg.Authorizer()
-	return m, a, errors.Wrap(err, errGetAuthorizer)
+	a, err := clientSecretAuth(ctx, m)
+	return m[CredentialsKeySubscriptionID], a, err
 }
 
 // UseProviderConfig to return the necessary information to construct an Azure
 // client.
-func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (content map[string]string, authorizer autorest.Authorizer, err error) {
+func UseProviderConfig(ctx context.Context, c client.Client, mg resource.Managed) (string, autorest.Authorizer, error) { //nolint:gocyclo
 	pc := &v1beta1.ProviderConfig{}
 	t := resource.NewProviderConfigUsageTracker(c, &v1beta1.ProviderConfigUsage{})
 	if err := t.Track(ctx, mg); err != nil {
-		return nil, nil, errors.Wrap(err, errTrackProviderConfigUsage)
+		return "", nil, errors.Wrap(err, errTrackProviderConfigUsage)
 	}
 	if err := c.Get(ctx, types.NamespacedName{Name: mg.GetProviderConfigReference().Name}, pc); err != nil {
-		return nil, nil, errors.Wrap(err, errGetProviderConfig)
+		return "", nil, errors.Wrap(err, errGetProviderConfig)
 	}
 
+	var authorizer autorest.Authorizer
+	var err error
+	subscriptionID := ""
+	switch pc.Spec.Credentials.Source { //nolint:exhaustive
+	case xpv1.CredentialsSourceSecret:
+		m, mErr := getCredentialsMap(ctx, pc, c)
+		if mErr != nil {
+			return "", nil, err
+		}
+		subscriptionID = m[CredentialsKeySubscriptionID]
+		authorizer, err = clientSecretAuth(ctx, m)
+	case xpv1.CredentialsSourceInjectedIdentity:
+		if pc.Spec.SubscriptionID == nil || len(*pc.Spec.SubscriptionID) == 0 {
+			return "", nil, errors.New(errSubscriptionIDNotSet)
+		}
+		subscriptionID = *pc.Spec.SubscriptionID
+		authorizer, err = managedIdentityAuth(ctx, pc.Spec.ClientID, pc.Spec.ARMEndpoint)
+	default:
+		if pc.Spec.SubscriptionID == nil || len(*pc.Spec.SubscriptionID) == 0 {
+			return "", nil, errors.New(errSubscriptionIDNotSet)
+		}
+		subscriptionID = *pc.Spec.SubscriptionID
+		authorizer, err = defaultAuth(ctx)
+	}
+	return subscriptionID, authorizer, err
+}
+
+func getCredentialsMap(ctx context.Context, pc *v1beta1.ProviderConfig, c client.Client) (map[string]string, error) {
 	data, err := resource.CommonCredentialExtractor(ctx, pc.Spec.Credentials.Source, c, pc.Spec.Credentials.CommonCredentialSelectors)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot get credentials")
+		return nil, errors.Wrap(err, errClientCredentials)
 	}
 	m := map[string]string{}
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, nil, errors.Wrap(err, errUnmarshalCredentialSecret)
-	}
-	cfg := auth.NewClientCredentialsConfig(m[CredentialsKeyClientID], m[CredentialsKeyClientSecret], m[CredentialsKeyTenantID])
-	cfg.AADEndpoint = m[CredentialsKeyActiveDirectoryEndpointURL]
-	cfg.Resource = m[CredentialsKeyResourceManagerEndpointURL]
+	return m, errors.Wrap(json.Unmarshal(data, &m), errUnmarshalCredentialSecret)
+}
 
-	a, err := cfg.Authorizer()
-	return m, a, errors.Wrap(err, errGetAuthorizer)
+func clientSecretAuth(ctx context.Context, m map[string]string) (autorest.Authorizer, error) {
+	cred, err := azidentity.NewClientSecretCredential(m[CredentialsKeyTenantID], m[CredentialsKeyClientID], m[CredentialsKeyClientSecret],
+		&azidentity.ClientSecretCredentialOptions{
+			AuthorityHost: azidentity.AuthorityHost(m[CredentialsKeyActiveDirectoryEndpointURL]),
+		})
+	if err != nil {
+		return nil, errors.Wrap(err, errClientSecretAuth)
+	}
+	return fetchAccessToken(ctx, cred, m[CredentialsKeyResourceManagerEndpointURL])
+}
+
+func managedIdentityAuth(ctx context.Context, clientID, armEndpoint *string) (autorest.Authorizer, error) {
+	var opts *azidentity.ManagedIdentityCredentialOptions
+	// if user-assigned managed identity
+	if clientID != nil && len(*clientID) != 0 {
+		opts = &azidentity.ManagedIdentityCredentialOptions{
+			ID: azidentity.ClientID(*clientID),
+		}
+	}
+	cred, err := azidentity.NewManagedIdentityCredential(opts)
+	if err != nil {
+		return nil, errors.Wrap(err, errClientSecretAuth)
+	}
+	return fetchAccessToken(ctx, cred, to.String(armEndpoint))
+}
+
+func defaultAuth(ctx context.Context) (autorest.Authorizer, error) {
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, errors.Wrap(err, errDefaultAuth)
+	}
+	return fetchAccessToken(ctx, cred, "")
+}
+
+func fetchAccessToken(ctx context.Context, cred azcore.TokenCredential, armEndpoint string) (autorest.Authorizer, error) {
+	token, err := cred.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: []string{endpointToScope(armEndpoint)},
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, errFetchAccessToken)
+	}
+	return autorest.NewBearerAuthorizer(defaultCredentialsTokenProvider(token.Token)), nil
+}
+
+type defaultCredentialsTokenProvider string
+
+func (d defaultCredentialsTokenProvider) OAuthToken() string {
+	return string(d)
 }
 
 // Client struct that represents the information needed to connect to the Azure services as a client
@@ -292,7 +370,7 @@ func ToInt32Ptr(i int, o ...FieldOption) *int32 {
 }
 
 // ToInt32PtrFromIntPtr converts the supplied int pointer for use with the Azure Go SDK.
-func ToInt32PtrFromIntPtr(i *int, o ...FieldOption) *int32 {
+func ToInt32PtrFromIntPtr(i *int, _ ...FieldOption) *int32 {
 	if i == nil {
 		return nil
 	}
@@ -454,4 +532,29 @@ func LateInitializeStringValArrFromArrPtr(in []string, from *[]string) []string 
 		return in
 	}
 	return to.StringSlice(from)
+}
+
+// endpointToScope converts the provided URL endpoint to its default scope.
+func endpointToScope(endpoint string) string {
+	// default endpoint is the ARM public cloud endpoint
+	if len(endpoint) == 0 {
+		endpoint = string(arm.AzurePublicCloud)
+	}
+	parsed, err := url.Parse(endpoint)
+	if err == nil {
+		host := parsed.Hostname()
+		switch {
+		case strings.HasSuffix(host, "management.azure.com"):
+			return publicCloudARMScope
+		case strings.HasSuffix(host, "management.usgovcloudapi.net"):
+			return usGovCloudARMScope
+		case strings.HasSuffix(host, "management.chinacloudapi.cn"):
+			return chinaCloudARMScope
+		}
+	}
+	// fall back to legacy behavior when endpoint doesn't parse or match a known cloud's ARM endpoint
+	if endpoint[len(endpoint)-1] != '/' {
+		endpoint += "/"
+	}
+	return endpoint + defaultScope
 }

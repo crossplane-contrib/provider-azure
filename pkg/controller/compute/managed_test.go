@@ -21,14 +21,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2022-01-01/containerservice"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/to"
-	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -36,11 +33,6 @@ import (
 
 	"github.com/crossplane-contrib/provider-azure/apis/compute/v1alpha3"
 	"github.com/crossplane-contrib/provider-azure/pkg/clients/compute/fake"
-)
-
-const (
-	testPasswd         = "pass123"
-	testExistingSecret = "existingSecret"
 )
 
 type modifier func(*v1alpha3.AKSCluster)
@@ -63,12 +55,6 @@ func withEndpoint(ep string) modifier {
 	}
 }
 
-func withConnectionSecretRef(ref *xpv1.SecretReference) modifier {
-	return func(c *v1alpha3.AKSCluster) {
-		c.Spec.WriteConnectionSecretToReference = ref
-	}
-}
-
 func aksCluster(m ...modifier) *v1alpha3.AKSCluster {
 	ac := &v1alpha3.AKSCluster{}
 
@@ -84,7 +70,7 @@ func TestObserve(t *testing.T) {
 	id := "koolAD"
 	stateSucceeded := "Succeeded"
 	stateWat := "Wat"
-	endpoint := "http://wat.example.org"
+	endpoint := "https://wat.example.org"
 
 	type args struct {
 		ctx context.Context
@@ -241,23 +227,10 @@ func TestCreate(t *testing.T) {
 				err: errors.New(errNotAKSCluster),
 			},
 		},
-		"ErrGeneratePassword": {
-			e: &external{
-				newPasswordFn: func() (string, error) { return "", errBoom },
-			},
-			args: args{
-				ctx: context.Background(),
-				mg:  aksCluster(),
-			},
-			want: want{
-				err: errors.Wrap(errBoom, errGenPassword),
-			},
-		},
 		"ErrEnsureCluster": {
 			e: &external{
-				newPasswordFn: func() (string, error) { return "", nil },
 				client: fake.AKSClient{
-					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster, _ string) error {
+					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) error {
 						return errBoom
 					},
 				},
@@ -268,18 +241,13 @@ func TestCreate(t *testing.T) {
 			},
 			want: want{
 				err: errors.Wrap(errBoom, errCreateAKSCluster),
-				ec: managed.ExternalCreation{
-					ConnectionDetails: map[string][]byte{
-						"password": {},
-					},
-				},
+				ec:  managed.ExternalCreation{},
 			},
 		},
 		"SuccessEnsureCluster": {
 			e: &external{
-				newPasswordFn: func() (string, error) { return testPasswd, nil },
 				client: fake.AKSClient{
-					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster, _ string) error {
+					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) error {
 						return nil
 					},
 				},
@@ -289,102 +257,7 @@ func TestCreate(t *testing.T) {
 				mg:  aksCluster(),
 			},
 			want: want{
-				ec: managed.ExternalCreation{
-					ConnectionDetails: map[string][]byte{
-						"password": []byte(testPasswd),
-					},
-				},
-			},
-		},
-		"SuccessExistingEmptyAppSecret": {
-			e: &external{
-				newPasswordFn: func() (string, error) { return testPasswd, nil },
-				client: fake.AKSClient{
-					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster, _ string) error {
-						return nil
-					},
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, _ client.ObjectKey, o client.Object) error {
-						s, ok := o.(*v1.Secret)
-						if !ok {
-							t.Fatalf("not a *v1.Secret")
-						}
-						s.Data = map[string][]byte{"password": {}}
-						return nil
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg: aksCluster(withConnectionSecretRef(&xpv1.SecretReference{
-					Name:      "test-secret",
-					Namespace: "test-ns",
-				})),
-			},
-			want: want{
-				ec: managed.ExternalCreation{
-					ConnectionDetails: map[string][]byte{
-						"password": []byte(testPasswd),
-					},
-				},
-			},
-		},
-		"SuccessExistingNonEmptyAppSecret": {
-			e: &external{
-				newPasswordFn: func() (string, error) { return testPasswd, nil },
-				client: fake.AKSClient{
-					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster, _ string) error {
-						return nil
-					},
-				},
-				kube: &test.MockClient{
-					MockGet: func(_ context.Context, _ client.ObjectKey, o client.Object) error {
-						s, ok := o.(*v1.Secret)
-						if !ok {
-							t.Fatalf("not a *v1.Secret")
-						}
-						s.Data = map[string][]byte{"password": []byte(testExistingSecret)}
-						return nil
-					},
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg: aksCluster(withConnectionSecretRef(&xpv1.SecretReference{
-					Name:      "test-secret",
-					Namespace: "test-ns",
-				})),
-			},
-			want: want{
-				ec: managed.ExternalCreation{
-					ConnectionDetails: map[string][]byte{
-						"password": []byte(testExistingSecret),
-					},
-				},
-			},
-		},
-		"ErrExistingAppSecret": {
-			e: &external{
-				newPasswordFn: func() (string, error) { return testPasswd, nil },
-				client: fake.AKSClient{
-					MockEnsureManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster, _ string) error {
-						return nil
-					},
-				},
-				kube: &test.MockClient{
-					MockGet: test.NewMockGetFn(errBoom),
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				mg: aksCluster(withConnectionSecretRef(&xpv1.SecretReference{
-					Name:      "test-secret",
-					Namespace: "test-ns",
-				})),
-			},
-			want: want{
-				err: errors.Wrap(errBoom, errGetConnSecret),
+				ec: managed.ExternalCreation{},
 			},
 		},
 	}
@@ -425,7 +298,6 @@ func TestDelete(t *testing.T) {
 		},
 		"ErrDeleteCluster": {
 			e: &external{
-				newPasswordFn: func() (string, error) { return "", nil },
 				client: fake.AKSClient{
 					MockDeleteManagedCluster: func(_ context.Context, _ *v1alpha3.AKSCluster) error {
 						return errBoom

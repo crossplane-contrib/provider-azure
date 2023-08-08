@@ -132,12 +132,12 @@ type accountSyncdeleterMaker struct {
 }
 
 func (m *accountSyncdeleterMaker) newSyncdeleter(ctx context.Context, b *v1alpha3.Account, poll time.Duration) (syncdeleter, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, m.Client, b)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, m.Client, b)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get auth information")
 	}
 
-	cl := storage.NewAccountsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl := storage.NewAccountsClient(subscriptionID)
 	cl.Authorizer = auth
 
 	return newAccountSyncDeleter(

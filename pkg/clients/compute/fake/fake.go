@@ -19,7 +19,7 @@ package fake
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2018-03-31/containerservice"
+	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2022-01-01/containerservice"
 
 	"github.com/crossplane-contrib/provider-azure/apis/compute/v1alpha3"
 )
@@ -27,7 +27,7 @@ import (
 // AKSClient is a fake AKS client.
 type AKSClient struct {
 	MockGetManagedCluster    func(ctx context.Context, ac *v1alpha3.AKSCluster) (containerservice.ManagedCluster, error)
-	MockEnsureManagedCluster func(ctx context.Context, ac *v1alpha3.AKSCluster, secret string) error
+	MockEnsureManagedCluster func(ctx context.Context, ac *v1alpha3.AKSCluster) error
 	MockDeleteManagedCluster func(ctx context.Context, ac *v1alpha3.AKSCluster) error
 	MockGetKubeConfig        func(ctx context.Context, ac *v1alpha3.AKSCluster) ([]byte, error)
 }
@@ -38,8 +38,8 @@ func (c AKSClient) GetManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluste
 }
 
 // EnsureManagedCluster calls MockEnsureManagedCluster.
-func (c AKSClient) EnsureManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster, secret string) error {
-	return c.MockEnsureManagedCluster(ctx, ac, secret)
+func (c AKSClient) EnsureManagedCluster(ctx context.Context, ac *v1alpha3.AKSCluster) error {
+	return c.MockEnsureManagedCluster(ctx, ac)
 }
 
 // DeleteManagedCluster calls DeleteManagedCluster.
