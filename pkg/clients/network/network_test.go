@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	networkmgmt200301 "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2020-03-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,20 +48,24 @@ var (
 	purpose      = "cool-purpose"
 	address      = "20.46.134.23"
 
-	ipVersion           = networkmgmt.IPv6
-	skuName             = string(networkmgmt.PublicIPAddressSkuNameStandard)
-	ipAllocMethod       = networkmgmt.Static
-	prefixID            = "/test-prefix-id"
-	dnsLabel            = "test-label"
-	fqdn                = "test.fqdn"
-	reverseFQDN         = "fqdn.reverse"
-	timeout       int32 = 1
-	ipTagType           = "FirstPartyUsage"
-	ipTag               = "SQL"
-	ipTagType2          = "FirstPartyUsage2"
-	ipTag2              = "SQL2"
-	tagKey              = "tagKey"
-	tagVal              = "tagValue"
+	ipVersion               = networkmgmt.IPv6
+	skuName                 = string(networkmgmt.PublicIPAddressSkuNameStandard)
+	ipAllocMethod           = networkmgmt.Static
+	prefixID                = "/test-prefix-id"
+	dnsLabel                = "test-label"
+	fqdn                    = "test.fqdn"
+	reverseFQDN             = "fqdn.reverse"
+	timeout           int32 = 1
+	ipTagType               = "FirstPartyUsage"
+	ipTag                   = "SQL"
+	ipTagType2              = "FirstPartyUsage2"
+	ipTag2                  = "SQL2"
+	tagKey                  = "tagKey"
+	tagVal                  = "tagValue"
+	subnetId                = "a-nice-subnet-id"
+	serviceId               = "a-nice-service-id"
+	resourceGroupName       = "a-cool-resource-group-name"
+	resourceName            = "my-resource"
 )
 
 func TestNewVirtualNetworkParameters(t *testing.T) {
@@ -1129,6 +1134,303 @@ func TestLateInitializePublicIPAddress(t *testing.T) {
 			LateInitializePublicIPAddress(&tt.args.p, &tt.args.in)
 			if diff := cmp.Diff(tt.want, tt.args.p); diff != "" {
 				t.Errorf("LateInitializePublicIPAddress(tt.args.p, tt.args.in): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestNewPrivateEndpointParameters(t *testing.T) {
+	connections := []networkmgmt200301.PrivateLinkServiceConnection{{
+		PrivateLinkServiceConnectionProperties: &networkmgmt200301.PrivateLinkServiceConnectionProperties{
+			PrivateLinkServiceID: azure.ToStringPtr(serviceId),
+			GroupIds:             azure.ToStringArrayPtr([]string{resourceType}),
+		},
+	}}
+
+	cases := []struct {
+		name string
+		r    *v1alpha3.PrivateEndpoint
+		want networkmgmt200301.PrivateEndpoint
+	}{
+		{
+			name: "SuccessfulFullAuto",
+			r: &v1alpha3.PrivateEndpoint{
+				Spec: v1alpha3.PrivateEndpointSpec{
+					PrivateConnectionDetails: v1alpha3.PrivateConnectionDetails{
+						IsManualConnection:          false,
+						ResourceType:                resourceType,
+						PrivateConnectionResourceId: serviceId,
+					},
+					ResourceGroupName: resourceGroupName,
+					SubnetId:          subnetId,
+					Location:          location,
+					Tags:              tags,
+				},
+			},
+			want: networkmgmt200301.PrivateEndpoint{
+				Location: azure.ToStringPtr(location),
+				Type:     azure.ToStringPtr(resourceType),
+				Tags:     azure.ToStringPtrMap(tags),
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					PrivateLinkServiceConnections:       &connections,
+					ManualPrivateLinkServiceConnections: &[]networkmgmt200301.PrivateLinkServiceConnection{},
+				},
+			},
+		},
+		{
+			name: "SuccessfulFullManual",
+			r: &v1alpha3.PrivateEndpoint{
+				Spec: v1alpha3.PrivateEndpointSpec{
+					PrivateConnectionDetails: v1alpha3.PrivateConnectionDetails{
+						IsManualConnection:          true,
+						ResourceType:                resourceType,
+						PrivateConnectionResourceId: serviceId,
+					},
+					ResourceGroupName: resourceGroupName,
+					SubnetId:          subnetId,
+					Location:          location,
+					Tags:              tags,
+				},
+			},
+			want: networkmgmt200301.PrivateEndpoint{
+				Location: azure.ToStringPtr(location),
+				Type:     azure.ToStringPtr(resourceType),
+				Tags:     azure.ToStringPtrMap(tags),
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					PrivateLinkServiceConnections:       &[]networkmgmt200301.PrivateLinkServiceConnection{},
+					ManualPrivateLinkServiceConnections: &connections,
+				},
+			},
+		},
+		{
+			name: "SuccessfulFullAutoNoTags",
+			r: &v1alpha3.PrivateEndpoint{
+				Spec: v1alpha3.PrivateEndpointSpec{
+					PrivateConnectionDetails: v1alpha3.PrivateConnectionDetails{
+						IsManualConnection:          false,
+						ResourceType:                resourceType,
+						PrivateConnectionResourceId: serviceId,
+					},
+					ResourceGroupName: resourceGroupName,
+					SubnetId:          subnetId,
+					Location:          location,
+				},
+			},
+			want: networkmgmt200301.PrivateEndpoint{
+				Location: azure.ToStringPtr(location),
+				Type:     azure.ToStringPtr(resourceType),
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					PrivateLinkServiceConnections:       &connections,
+					ManualPrivateLinkServiceConnections: &[]networkmgmt200301.PrivateLinkServiceConnection{},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := NewPrivateEndpointParameters(tc.r)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("NewPrivateEndpointParameters(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestPrivateEndpointNeedsUpdate(t *testing.T) {
+	azTagsSame := make(map[string]*string)
+
+	for k, v := range tags {
+		azTagsSame[k] = azure.ToStringPtr(v)
+	}
+
+	cases := []struct {
+		name string
+		kube *v1alpha3.PrivateEndpoint
+		az   networkmgmt200301.PrivateEndpoint
+		want bool
+	}{
+		{
+			name: "NoUpdate",
+			kube: &v1alpha3.PrivateEndpoint{
+				Spec: v1alpha3.PrivateEndpointSpec{
+					PrivateConnectionDetails: v1alpha3.PrivateConnectionDetails{
+						IsManualConnection:          false,
+						ResourceType:                resourceType,
+						PrivateConnectionResourceId: id,
+					},
+					ResourceGroupName: resourceGroupName,
+					SubnetId:          subnetId,
+					Location:          location,
+					Tags:              tags,
+				},
+			},
+			az: networkmgmt200301.PrivateEndpoint{
+				ID:       azure.ToStringPtr(id),
+				Name:     azure.ToStringPtr(resourceName),
+				Type:     azure.ToStringPtr(resourceType),
+				Location: azure.ToStringPtr(location),
+				Tags:     azTagsSame,
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					PrivateLinkServiceConnections: &[]networkmgmt200301.PrivateLinkServiceConnection{{
+						PrivateLinkServiceConnectionProperties: &networkmgmt200301.PrivateLinkServiceConnectionProperties{
+							PrivateLinkServiceID: azure.ToStringPtr(id),
+							GroupIds:             azure.ToStringArrayPtr([]string{resourceType}),
+						},
+					},
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "NeedsUpdateTags",
+			kube: &v1alpha3.PrivateEndpoint{
+				Spec: v1alpha3.PrivateEndpointSpec{
+					PrivateConnectionDetails: v1alpha3.PrivateConnectionDetails{
+						IsManualConnection:          false,
+						ResourceType:                resourceType,
+						PrivateConnectionResourceId: id,
+					},
+					ResourceGroupName: resourceGroupName,
+					SubnetId:          subnetId,
+					Location:          location,
+					Tags:              tags,
+				},
+			},
+			az: networkmgmt200301.PrivateEndpoint{
+				ID:       azure.ToStringPtr(id),
+				Name:     azure.ToStringPtr(resourceName),
+				Type:     azure.ToStringPtr(resourceType),
+				Location: azure.ToStringPtr(location),
+				Tags:     map[string]*string{"three": azure.ToStringPtr("test")},
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					PrivateLinkServiceConnections: &[]networkmgmt200301.PrivateLinkServiceConnection{{
+						PrivateLinkServiceConnectionProperties: &networkmgmt200301.PrivateLinkServiceConnectionProperties{
+							PrivateLinkServiceID: azure.ToStringPtr(id),
+							GroupIds:             azure.ToStringArrayPtr([]string{resourceType}),
+						},
+					},
+					},
+				},
+			},
+			want: true,
+		}}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := PrivateEndpointNeedsUpdate(tc.kube, tc.az)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("PrivateEndpointNeedsUpdate(...): -want, +got\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestUpdatePrivateEndpointStatusFromAzure(t *testing.T) {
+	mockCondition := xpv1.Condition{Message: "mockMessage"}
+	resourceStatus := xpv1.ResourceStatus{
+		ConditionedStatus: xpv1.ConditionedStatus{
+			Conditions: []xpv1.Condition{mockCondition},
+		},
+	}
+
+	connections := []networkmgmt200301.PrivateLinkServiceConnection{{
+		Name: azure.ToStringPtr(id),
+		PrivateLinkServiceConnectionProperties: &networkmgmt200301.PrivateLinkServiceConnectionProperties{
+			PrivateLinkServiceID: azure.ToStringPtr(serviceId),
+			GroupIds:             azure.ToStringArrayPtr([]string{resourceName}),
+		},
+	}}
+
+	cases := []struct {
+		name string
+		r    networkmgmt200301.PrivateEndpoint
+		want v1alpha3.PrivateEndpointStatus
+	}{
+		{
+			name: "SuccessfulFull",
+			r: networkmgmt200301.PrivateEndpoint{
+				Location: azure.ToStringPtr(location),
+				Etag:     azure.ToStringPtr(etag),
+				ID:       azure.ToStringPtr(id),
+				Type:     azure.ToStringPtr(resourceType),
+				Tags:     azure.ToStringPtrMap(nil),
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					ProvisioningState:             networkmgmt200301.ProvisioningState("Succeeded"),
+					PrivateLinkServiceConnections: &connections,
+				},
+			},
+			want: v1alpha3.PrivateEndpointStatus{
+				AtProvider: v1alpha3.PrivateEndpointStatusObservation{
+					State: string(networkmgmt.Succeeded),
+					Type:  resourceType,
+					ID:    id,
+					Etag:  etag,
+				},
+			},
+		},
+		{
+			name: "SuccessfulPartial",
+			r: networkmgmt200301.PrivateEndpoint{
+				Location: azure.ToStringPtr(location),
+				ID:       azure.ToStringPtr(id),
+				Tags:     azure.ToStringPtrMap(nil),
+				PrivateEndpointProperties: &networkmgmt200301.PrivateEndpointProperties{
+					Subnet: &networkmgmt200301.Subnet{
+						ID: azure.ToStringPtr(subnetId),
+					},
+					ProvisioningState:             networkmgmt200301.ProvisioningState("Succeeded"),
+					PrivateLinkServiceConnections: &connections,
+				},
+			},
+			want: v1alpha3.PrivateEndpointStatus{
+				AtProvider: v1alpha3.PrivateEndpointStatusObservation{
+					State: string(networkmgmt.Succeeded),
+					ID:    id,
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			v := &v1alpha3.PrivateEndpoint{
+				Status: v1alpha3.PrivateEndpointStatus{
+					ResourceStatus: resourceStatus,
+				},
+			}
+
+			UpdatePrivateEndpointStatusFromAzure(v, tc.r)
+
+			// make sure that internal resource status hasn't changed
+			if diff := cmp.Diff(mockCondition, v.Status.ResourceStatus.Conditions[0]); diff != "" {
+				t.Errorf("UpdatePrivateEndpointStatusFromAzure(...): -want, +got\n%s", diff)
+			}
+
+			// make sure that other resource parameters are updated
+			tc.want.ResourceStatus = resourceStatus
+			if diff := cmp.Diff(tc.want, v.Status); diff != "" {
+				t.Errorf("UpdatePrivateEndpointStatusFromAzure(...): -want, +got\n%s", diff)
 			}
 		})
 	}

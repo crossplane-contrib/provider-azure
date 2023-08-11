@@ -1,0 +1,20 @@
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: PrivateEndpoint
+metadata:
+  name: example-pe
+spec:
+  location: West Europe
+  resourceGroupNameRef:
+    name: example-rg
+  subnetIdRef:
+    name: example-sub
+  privateConnectionDetails:
+    isManualConnection: false
+    # see https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
+    resourceType: mysqlServer
+    privateConnectionResourceIdRef:
+      name: example-mysql
+  tags:
+    application: crossplane
+  providerConfigRef:
+    name: example
