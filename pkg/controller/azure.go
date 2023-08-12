@@ -42,6 +42,7 @@ import (
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/resourcegroup"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/storage/account"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/storage/container"
+	"github.com/crossplane-contrib/provider-azure/pkg/controller/containers"
 )
 
 // Setup Azure controllers.
@@ -67,6 +68,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		secret.SetupSecret,
 		zone.Setup,
 		recordset.Setup,
+		containers.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

@@ -7,8 +7,9 @@ PROJECT_REPO := github.com/crossplane-contrib/$(PROJECT_NAME)
 PLATFORMS ?= linux_amd64 linux_arm64
 
 # kind-related versions
-KIND_VERSION ?= v0.11.1
-KIND_NODE_IMAGE_TAG ?= v1.23.1
+KIND_VERSION ?= v0.12.0
+KIND_NODE_IMAGE_TAG ?= v1.23.4
+
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse
@@ -132,6 +133,21 @@ run: go.build
 	@# To see other arguments that can be provided, run the command with --help instead
 	$(GO_OUT_DIR)/provider --debug
 
+dev: $(KIND) $(KUBECTL)
+	@$(INFO) Creating kind cluster
+	@$(KIND) create cluster --name=$(PROJECT_NAME)-dev
+	@$(KUBECTL) cluster-info --context kind-$(PROJECT_NAME)-dev
+	@$(INFO) Installing Crossplane CRDs
+	@$(KUBECTL) apply -k https://github.com/crossplane/crossplane//cluster?ref=master
+	@$(INFO) Installing Provider Openshift CRDs
+	@$(KUBECTL) apply -R -f package/crds
+	@$(INFO) Starting Provider Openshift controllers
+	@$(GO) run cmd/provider/main.go --debug
+
+dev-clean: $(KIND) $(KUBECTL)
+	@$(INFO) Deleting kind cluster
+	@$(KIND) delete cluster --name=$(PROJECT_NAME)-dev
+
 manifests:
 	@$(WARN) Deprecated. Please run make generate instead.
 
@@ -151,6 +167,43 @@ test.init: $(KUBEBUILDER)
 
 # ====================================================================================
 # Special Targets
+# Install gomplate
+GOMPLATE_VERSION := 3.10.0
+GOMPLATE := $(TOOLS_HOST_DIR)/gomplate-$(GOMPLATE_VERSION)
+
+$(GOMPLATE):
+	@$(INFO) installing gomplate $(SAFEHOSTPLATFORM)
+	@mkdir -p $(TOOLS_HOST_DIR)
+	@curl -fsSLo $(GOMPLATE) https://github.com/hairyhenderson/gomplate/releases/download/v$(GOMPLATE_VERSION)/gomplate_$(SAFEHOSTPLATFORM) || $(FAIL)
+	@chmod +x $(GOMPLATE)
+	@$(OK) installing gomplate $(SAFEHOSTPLATFORM)
+
+export GOMPLATE
+
+# This target prepares repo for your provider by replacing all "openshift"
+# occurrences with your provider name.
+# This target can only be run once, if you want to rerun for some reason,
+# consider stashing/resetting your git state.
+# Arguments:
+#   provider: Camel case name of your provider, e.g. GitHub, PlanetScale
+provider.prepare:
+	@[ "${provider}" ] || ( echo "argument \"provider\" is not set"; exit 1 )
+	@PROVIDER=$(provider) ./hack/helpers/prepare.sh
+
+# This target adds a new api type and its controller.
+# You would still need to register new api in "apis/<provider>.go" and
+# controller in "internal/controller/<provider>.go".
+# Arguments:
+#   provider: Camel case name of your provider, e.g. GitHub, PlanetScale
+#   group: API group for the type you want to add.
+#   kind: Kind of the type you want to add
+#	apiversion: API version of the type you want to add. Optional and defaults to "v1alpha1"
+provider.addtype: $(GOMPLATE)
+	@[ "${provider}" ] || ( echo "argument \"provider\" is not set"; exit 1 )
+	@[ "${group}" ] || ( echo "argument \"group\" is not set"; exit 1 )
+	@[ "${kind}" ] || ( echo "argument \"kind\" is not set"; exit 1 )
+	@PROVIDER=$(provider) GROUP=$(group) KIND=$(kind) APIVERSION=$(apiversion) ./hack/helpers/addtype.sh
+
 
 define CROSSPLANE_MAKE_HELP
 Crossplane Targets:

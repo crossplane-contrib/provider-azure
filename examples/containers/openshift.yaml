@@ -1,0 +1,144 @@
+---
+# Azure Admin service account secret - used by Azure Provider
+apiVersion: v1
+data:
+  client-id: "*************************************"
+  client-secret: "*************************************"
+  pull-secret: "*************************************"
+  principal-id: "*************************************"
+  az-red-hat-openshift-rp-principal-id: "*************************************"
+kind: Secret
+metadata:
+  name: example-openshift-secret
+type: Opaque
+---
+apiVersion: v1
+data:
+  credentials: "*************************************"
+kind: Secret
+metadata:
+  name: example-provider-azure
+type: Opaque
+---
+# Azure Provider with service account secret reference - used to provision cache resources
+apiVersion: azure.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: example
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: default
+      name: example-provider-azure
+      key: credentials
+---
+apiVersion: azure.crossplane.io/v1alpha3
+kind: ResourceGroup
+metadata:
+  name: openshift-example
+spec:
+  location: East US
+  providerConfigRef:
+    name: example
+---
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: VirtualNetwork
+metadata:
+  name: openshift-example
+spec:
+  resourceGroupNameRef:
+    name: openshift-example
+  location: East US
+  properties:
+    addressSpace:
+      addressPrefixes:
+        - 10.0.0.0/16
+  providerConfigRef:
+    name: example
+---
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: Subnet
+metadata:
+  name: master
+spec:
+  resourceGroupNameRef:
+    name: openshift-example
+  virtualNetworkNameRef:
+    name: openshift-example
+  properties:
+    addressPrefix: 10.0.1.0/24
+    serviceEndpoints:
+      - service: Microsoft.ContainerRegistry
+  providerConfigRef:
+    name: example
+---
+apiVersion: network.azure.crossplane.io/v1alpha3
+kind: Subnet
+metadata:
+  name: worker
+spec:
+  resourceGroupNameRef:
+    name: openshift-example
+  virtualNetworkNameRef:
+    name: openshift-example
+  properties:
+    addressPrefix: 10.0.2.0/24
+    serviceEndpoints:
+      - service: Microsoft.ContainerRegistry
+  providerConfigRef:
+    name: example
+---
+apiVersion: containers.azure.crossplane.io/v1alpha1
+kind: Openshift
+metadata:
+  name: example
+  labels:
+    example: "true"
+spec:
+  forProvider:
+    location: eastus
+    resourceGroupNameRef:
+      name: openshift-example
+    networkProfile:
+      podCidr: "10.100.0.0/14"
+      serviceCidr: "172.30.0.0/16"
+    servicePrincipalProfile:
+      azureRedHatOpenShiftRPPrincipalIDRef:
+        name: example-openshift-secret
+        namespace: default
+        key: az-red-hat-openshift-rp-principal-id
+      servicePrincipalIdRef:
+        name: example-openshift-secret
+        namespace: default
+        key: principal-id
+      clientIdRef:
+        namespace: default
+        name: example-openshift-secret
+        key: client-id
+      clientSecretRef:
+        namespace: default
+        name: example-openshift-secret
+        key: client-secret
+    clusterProfile:
+      domain: crossplane
+      resourceGroupId: "/subscriptions/*************************************/resourceGroups/crossplane"
+      pullSecretRef: 
+        namespace: default
+        name: example-openshift-secret
+        key: pull-secret
+    workerProfile:
+      count: 3
+      subnetIDRef: 
+        name: worker
+      vmSize: Standard_D4as_v4
+      diskSizeGB: 128
+    masterProfile: 
+      vmSize: Standard_D8s_v3
+      subnetIDRef: 
+        name: master
+  writeConnectionSecretToRef:
+    namespace: default
+    name: example-openshift
+  providerConfigRef:
+    name: example

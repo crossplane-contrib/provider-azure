@@ -3,7 +3,7 @@ module github.com/crossplane-contrib/provider-azure
 go 1.18
 
 require (
-	github.com/Azure/azure-sdk-for-go v61.4.0+incompatible
+	github.com/Azure/azure-sdk-for-go v65.0.0+incompatible
 	github.com/Azure/azure-storage-blob-go v0.7.0
 	// azure-sdk-for-go repository does not use go.mod so we need to maintain this dependency manually.
 	github.com/Azure/go-autorest/autorest v0.11.18
