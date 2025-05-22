@@ -1,4 +1,13 @@
-# provider-azure
+# provider-azure (archived)
+
+> [!WARNING]
+> This project has been archived as per [Crossplane's project
+> governance](https://github.com/crossplane/crossplane/blob/main/GOVERNANCE.md#archival-policy)
+> for community extension projects and is no longer actively maintained.
+>
+> It is recommended to use the
+> [provider-upjet-azure](https://github.com/crossplane-contrib/provider-upjet-azure)
+> project instead.
 
 ## Overview
 
