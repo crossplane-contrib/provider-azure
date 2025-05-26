@@ -81,16 +81,16 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl := postgresql.NewConfigurationsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl := postgresql.NewConfigurationsClient(subscriptionID)
 	cl.Authorizer = auth
 	return &external{
 		kube:           c.client,
 		client:         configuration.NewPostgreSQLConfigurationClient(cl),
-		subscriptionID: creds[azure.CredentialsKeySubscriptionID],
+		subscriptionID: subscriptionID,
 	}, nil
 }
 

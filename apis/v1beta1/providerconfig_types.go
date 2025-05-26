@@ -26,12 +26,27 @@ import (
 type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
+	// ClientID is the user-assigned managed identity's ID
+	// when Credentials.Source is `InjectedIdentity`. If unset and
+	// Credentials.Source is `InjectedIdentity`, then a system-assigned
+	// managed identity is used.
+	// +kubebuilder:validation:Optional
+	ClientID *string `json:"clientID,omitempty"`
+	// ARMEndpoint is the Azure Resource Manager endpoint to use.
+	// Defaults to ARM public cloud endpoint.
+	// +kubebuilder:validation:Optional
+	ARMEndpoint *string `json:"armEndpoint,omitempty"`
+	// SubscriptionID is the Azure subscription ID to be used.
+	// If unset, subscription ID from Credentials will be used.
+	// Required if Credentials.Source is not Secret.
+	// +kubebuilder:validation:Optional
+	SubscriptionID *string `json:"subscriptionID,omitempty"`
 }
 
 // ProviderCredentials required to authenticate.
 type ProviderCredentials struct {
 	// Source of the provider credentials.
-	// +kubebuilder:validation:Enum=None;Secret;Environment;Filesystem
+	// +kubebuilder:validation:Enum=None;Secret;Environment;Filesystem;InjectedIdentity
 	Source xpv1.CredentialsSource `json:"source"`
 
 	xpv1.CommonCredentialSelectors `json:",inline"`

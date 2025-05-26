@@ -21,8 +21,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,7 +30,6 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
-	"github.com/crossplane/crossplane-runtime/pkg/password"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
@@ -45,13 +42,11 @@ import (
 
 // Error strings.
 const (
-	errGenPassword      = "cannot generate service principal secret"
 	errNotAKSCluster    = "managed resource is not a AKSCluster"
 	errCreateAKSCluster = "cannot create AKSCluster"
 	errGetAKSCluster    = "cannot get AKSCluster"
 	errGetKubeConfig    = "cannot get AKSCluster kubeconfig"
 	errDeleteAKSCluster = "cannot delete AKSCluster"
-	errGetConnSecret    = "cannot get connection secret"
 )
 
 // SetupAKSCluster adds a controller that reconciles AKSClusters.
@@ -82,21 +77,20 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, c.client, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl, err := compute.NewAggregateClient(creds, auth)
+	cl, err := compute.NewAggregateClient(subscriptionID, auth)
 	if err != nil {
 		return nil, err
 	}
-	return &external{kube: c.client, client: cl, newPasswordFn: password.Generate}, nil
+	return &external{kube: c.client, client: cl}, nil
 }
 
 type external struct {
-	kube          client.Client
-	client        compute.AKSClient
-	newPasswordFn func() (password string, err error)
+	kube   client.Client
+	client compute.AKSClient
 }
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
@@ -150,38 +144,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	}
 	cr.SetConditions(xpv1.Creating())
 
-	pw, err := e.getPassword(ctx, cr)
-	if err != nil {
-		return managed.ExternalCreation{}, err
-	}
-	if pw == "" {
-		pw, err = e.newPasswordFn()
-		if err != nil {
-			return managed.ExternalCreation{}, errors.Wrap(err, errGenPassword)
-		}
-	}
-	return managed.ExternalCreation{
-		ConnectionDetails: managed.ConnectionDetails{
-			xpv1.ResourceCredentialsSecretPasswordKey: []byte(pw),
-		},
-	}, errors.Wrap(e.client.EnsureManagedCluster(ctx, cr, pw), errCreateAKSCluster)
-}
-
-func (e *external) getPassword(ctx context.Context, cr *v1alpha3.AKSCluster) (string, error) {
-	if cr.Spec.WriteConnectionSecretToReference == nil ||
-		cr.Spec.WriteConnectionSecretToReference.Name == "" || cr.Spec.WriteConnectionSecretToReference.Namespace == "" {
-		return "", nil
-	}
-
-	s := &v1.Secret{}
-	if err := e.kube.Get(ctx, types.NamespacedName{
-		Namespace: cr.Spec.WriteConnectionSecretToReference.Namespace,
-		Name:      cr.Spec.WriteConnectionSecretToReference.Name,
-	}, s); err != nil {
-		return "", errors.Wrap(err, errGetConnSecret)
-	}
-
-	return string(s.Data[xpv1.ResourceCredentialsSecretPasswordKey]), nil
+	return managed.ExternalCreation{}, errors.Wrap(e.client.EnsureManagedCluster(ctx, cr), errCreateAKSCluster)
 }
 
 func (e *external) Update(_ context.Context, _ resource.Managed) (managed.ExternalUpdate, error) {

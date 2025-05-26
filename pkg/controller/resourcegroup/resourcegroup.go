@@ -78,11 +78,11 @@ type connecter struct {
 }
 
 func (c *connecter) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	creds, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
+	subscriptionID, auth, err := azure.GetAuthInfo(ctx, c.kube, mg)
 	if err != nil {
 		return nil, err
 	}
-	cl := resources.NewGroupsClient(creds[azure.CredentialsKeySubscriptionID])
+	cl := resources.NewGroupsClient(subscriptionID)
 	cl.Authorizer = auth
 	return &external{client: cl}, nil
 }
