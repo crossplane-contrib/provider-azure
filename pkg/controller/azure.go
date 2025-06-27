@@ -36,6 +36,7 @@ import (
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/dns/recordset"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/dns/zone"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/keyvault/secret"
+	"github.com/crossplane-contrib/provider-azure/pkg/controller/network/privateendpoint"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/network/publicipaddress"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/network/subnet"
 	"github.com/crossplane-contrib/provider-azure/pkg/controller/network/virtualnetwork"
@@ -67,6 +68,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		secret.SetupSecret,
 		zone.Setup,
 		recordset.Setup,
+		privateendpoint.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err

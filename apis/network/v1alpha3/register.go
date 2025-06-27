@@ -61,8 +61,17 @@ var (
 	PublicIPAddressGroupVersionKind = SchemeGroupVersion.WithKind(PublicIPAddressKind)
 )
 
+// PrivateEndpoint type metadata.
+var (
+	PrivateEndpointKind        = reflect.TypeOf(PrivateEndpoint{}).Name()
+	PrivateEndpointGroupKind   = schema.GroupKind{Group: Group, Kind: PrivateEndpointKind}.String()
+	PrivateEndpointAPIVersion  = PrivateEndpointKind + "." + SchemeGroupVersion.String()
+	PrivateEndpointVersionKind = SchemeGroupVersion.WithKind(PrivateEndpointKind)
+)
+
 func init() {
 	SchemeBuilder.Register(&VirtualNetwork{}, &VirtualNetworkList{})
 	SchemeBuilder.Register(&Subnet{}, &SubnetList{})
 	SchemeBuilder.Register(&PublicIPAddress{}, &PublicIPAddressList{})
+	SchemeBuilder.Register(&PrivateEndpoint{}, &PrivateEndpointList{})
 }

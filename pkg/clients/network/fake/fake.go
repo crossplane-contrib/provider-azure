@@ -19,8 +19,8 @@ package fake
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network/networkapi"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2020-03-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2020-03-01/network/networkapi"
 )
 
 var _ networkapi.VirtualNetworksClientAPI = &MockVirtualNetworksClient{}
@@ -116,5 +116,35 @@ func (c *MockPublicIPAddressClient) Get(ctx context.Context, resourceGroupName s
 
 // List calls the MockPublicIPAddressClient's MockListKeys method.
 func (c *MockPublicIPAddressClient) List(ctx context.Context, resourceGroupName string) (result network.PublicIPAddressListResultPage, err error) {
+	return c.MockList(ctx, resourceGroupName)
+}
+
+// MockPublicIPAddressClient is a fake implementation of network.PublicIPAddressClient.
+type MockPrivateEndpointClient struct {
+	networkapi.PrivateEndpointsClientAPI
+
+	MockCreateOrUpdate func(ctx context.Context, resourceGroupName string, privateEndpointName string, parameters network.PrivateEndpoint) (result network.PrivateEndpointsCreateOrUpdateFuture, err error)
+	MockDelete         func(ctx context.Context, resourceGroupName string, privateEndpointName string) (result network.PrivateEndpointsDeleteFuture, err error)
+	MockGet            func(ctx context.Context, resourceGroupName string, privateEndpointName string, expand string) (result network.PrivateEndpoint, err error)
+	MockList           func(ctx context.Context, resourceGroupName string) (result network.PrivateEndpointListResultPage, err error)
+}
+
+// CreateOrUpdate calls the MockPublicIPAddressClient's MockCreateOrUpdate method.
+func (c *MockPrivateEndpointClient) CreateOrUpdate(ctx context.Context, resourceGroupName string, privateEndpointName string, parameters network.PrivateEndpoint) (result network.PrivateEndpointsCreateOrUpdateFuture, err error) {
+	return c.MockCreateOrUpdate(ctx, resourceGroupName, privateEndpointName, parameters)
+}
+
+// Delete calls the MockPublicIPAddressClient's MockDelete method.
+func (c *MockPrivateEndpointClient) Delete(ctx context.Context, resourceGroupName string, privateEndpointName string) (result network.PrivateEndpointsDeleteFuture, err error) {
+	return c.MockDelete(ctx, resourceGroupName, privateEndpointName)
+}
+
+// Get calls the MockPublicIPAddressClient's MockGet method.
+func (c *MockPrivateEndpointClient) Get(ctx context.Context, resourceGroupName string, privateEndpointName string, expand string) (result network.PrivateEndpoint, err error) {
+	return c.MockGet(ctx, resourceGroupName, privateEndpointName, expand)
+}
+
+// List calls the MockPublicIPAddressClient's MockListKeys method.
+func (c *MockPrivateEndpointClient) List(ctx context.Context, resourceGroupName string) (result network.PrivateEndpointListResultPage, err error) {
 	return c.MockList(ctx, resourceGroupName)
 }

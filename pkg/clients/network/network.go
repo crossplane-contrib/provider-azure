@@ -22,11 +22,21 @@ import (
 	"strings"
 
 	networkmgmt "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-06-01/network"
+	networkmgmt200301 "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2020-03-01/network"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/crossplane-contrib/provider-azure/apis/network/v1alpha3"
 	azure "github.com/crossplane-contrib/provider-azure/pkg/clients"
+)
+
+// Resource states
+const (
+	ProvisioningStateCreating  = "Creating"
+	ProvisioningStateDeleting  = "Deleting"
+	ProvisioningStateFailed    = "Failed"
+	ProvisioningStateSucceeded = "Succeeded"
 )
 
 // NewVirtualNetworkParameters returns an Azure VirtualNetwork object from a virtual network spec
@@ -329,4 +339,57 @@ func isSKUUpToDate(s *v1alpha3.SKU, in *networkmgmt.PublicIPAddressSku) bool {
 		s = &v1alpha3.SKU{}
 	}
 	return s.Name == string(in.Name)
+}
+
+// NewPublicIPAddressParameters returns an Azure PublicIPAddress object from a public ip address spec
+func NewPrivateEndpointParameters(s *v1alpha3.PrivateEndpoint) networkmgmt200301.PrivateEndpoint {
+	p := s.Spec
+
+	privateLinkServiceConnectionDescriptor := []networkmgmt200301.PrivateLinkServiceConnection{{
+		Name: azure.ToStringPtr(meta.GetExternalName(s)),
+		PrivateLinkServiceConnectionProperties: &networkmgmt200301.PrivateLinkServiceConnectionProperties{
+			PrivateLinkServiceID: azure.ToStringPtr(p.PrivateConnectionResourceId),
+			GroupIds:             azure.ToStringArrayPtr([]string{p.ResourceType}),
+		},
+	}}
+
+	manual := []networkmgmt200301.PrivateLinkServiceConnection{}
+	auto := []networkmgmt200301.PrivateLinkServiceConnection{}
+
+	if p.IsManualConnection {
+		manual = privateLinkServiceConnectionDescriptor
+	} else {
+		// Default to manual: false
+		auto = privateLinkServiceConnectionDescriptor
+	}
+	properties :=
+		networkmgmt200301.PrivateEndpointProperties{
+			Subnet: &networkmgmt200301.Subnet{
+				ID: azure.ToStringPtr(p.SubnetId),
+			},
+			ManualPrivateLinkServiceConnections: &manual,
+			PrivateLinkServiceConnections:       &auto,
+		}
+	return networkmgmt200301.PrivateEndpoint{
+		Location:                  &p.Location,
+		Tags:                      azure.ToStringPtrMap(p.Tags),
+		PrivateEndpointProperties: &properties,
+		Type:                      azure.ToStringPtr(p.ResourceType),
+	}
+}
+
+func UpdatePrivateEndpointStatusFromAzure(v *v1alpha3.PrivateEndpoint, az networkmgmt200301.PrivateEndpoint) {
+	state := string(az.ProvisioningState)
+	v.Status.AtProvider.State = azure.ToString(&state)
+	v.Status.AtProvider.ID = azure.ToString(az.ID)
+	v.Status.AtProvider.Etag = azure.ToString(az.Etag)
+	v.Status.AtProvider.Type = azure.ToString(az.Type)
+}
+
+// PrivateEndpointNeedsUpdate determines if a virtual network need to be updated
+func PrivateEndpointNeedsUpdate(kube *v1alpha3.PrivateEndpoint, az networkmgmt200301.PrivateEndpoint) bool {
+	up := NewPrivateEndpointParameters(kube)
+
+	// We only care about tags, no other params should be mutated
+	return !reflect.DeepEqual(up.Tags, az.Tags)
 }
