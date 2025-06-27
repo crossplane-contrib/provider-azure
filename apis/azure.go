@@ -31,6 +31,7 @@ import (
 	azurev1alpha1 "github.com/crossplane-contrib/provider-azure/apis/v1alpha1"
 	azurev1alpha3 "github.com/crossplane-contrib/provider-azure/apis/v1alpha3"
 	azurev1beta1 "github.com/crossplane-contrib/provider-azure/apis/v1beta1"
+	openshiftv1alpha1 "github.com/crossplane-contrib/provider-azure/apis/containers/v1alpha1"
 )
 
 func init() {
@@ -47,6 +48,7 @@ func init() {
 		networkv1alpha3.SchemeBuilder.AddToScheme,
 		storagev1alpha3.SchemeBuilder.AddToScheme,
 		dnsv1alpha1.SchemeBuilder.AddToScheme,
+		openshiftv1alpha1.SchemeBuilder.AddToScheme,
 	)
 }
 
